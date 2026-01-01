@@ -25,7 +25,7 @@
 
     <div id="app-preloader">
       <div class="loader-spinner"></div>
-      <div style="font-family: sans-serif; color: #fff; font-size: 12px; letter-spacing: 2px;">AUTHENTICATING SYSTEM...</div>
+      <div style="font-family: sans-serif; color: #fff; font-size: 12px; letter-spacing: 2px;">AUTHENTICATING...</div>
     </div>
 
     <div id="gerbang-login" style="display:none;">
@@ -36,17 +36,14 @@
       <div class="sidebar">
         <?!= include('sidebar'); ?>
       </div>
-      <div class="main-content" id="main-content">
-        </div>
+      <div class="main-content" id="main-content"></div>
     </div>
 
     <div id="logoutModal" class="modal-overlay">
       <div class="modal-content">
-        <div style="font-size: 40px; color: #e74c3c; margin-bottom: 20px;">
-          <i class="fas fa-sign-out-alt"></i>
-        </div>
+        <div style="font-size: 40px; color: #e74c3c; margin-bottom: 20px;"><i class="fas fa-sign-out-alt"></i></div>
         <h3 style="color:#fff;">Konfirmasi Keluar</h3>
-        <p style="color: #ccc; margin-bottom: 25px;">Apakah Anda yakin ingin mengakhiri sesi ini dan keluar dari sistem?</p>
+        <p style="color: #ccc; margin-bottom: 25px;">Apakah Anda yakin ingin keluar?</p>
         <div class="modal-actions">
           <button class="cancel-btn" onclick="tutupLogoutModal()">BATAL</button>
           <button class="delete-btn-confirm" id="confirmLogoutBtn">YA, KELUAR</button>
@@ -55,26 +52,5 @@
     </div>
 
     <?!= include('javascript'); ?>
-
-    <script>
-      window.addEventListener('load', function() {
-        // CEK STATUS LOGIN DI MEMORI BROWSER
-        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-
-        $('#app-preloader').fadeOut(500, function() {
-          if (isLoggedIn === 'true') {
-            // JIKA SUDAH LOGIN, LANGSUNG BUKA DASHBOARD
-            $('#website-utama').show();
-            if(typeof window.loadPageContent === 'function'){
-               window.loadPageContent('page_home');
-            }
-          } else {
-            // JIKA BELUM LOGIN, TAMPILKAN FORM LOGIN
-            $('#gerbang-login').fadeIn(500);
-          }
-        });
-      });
-    </script>
-
   </body>
 </html>

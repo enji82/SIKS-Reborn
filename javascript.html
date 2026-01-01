@@ -1,43 +1,3 @@
-<div id="appModal" class="modal-overlay">
-    <div class="modal-content">
-        <div id="modalSpinner" style="display: none;"><div class="spinner-container"><div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div></div></div>
-        <h3 id="modalTitle"></h3>
-        <p id="modalMessage"></p>
-        <div class="modal-actions">
-            <button id="modalOkBtn" class="submit-btn" style="background-color: #3498db;">OK</button>
-        </div>
-    </div>
-</div>
-
-<div id="deleteModal" class="modal-overlay">
-    <div class="modal-content">
-        <h3 id="deleteModalTitle">Konfirmasi Hapus</h3>
-        <div id="deleteModalBody"></div>
-        <div class="modal-actions">
-            <button id="cancelDeleteBtn" class="cancel-btn">Batal</button>
-            <button id="confirmDeleteBtn" class="delete-btn-confirm">Ya, Hapus</button>
-        </div>
-    </div>
-</div>
-
-<div id="previewModal" class="modal-overlay">
-    <div class="modal-content" style="width: 90%; max-width: 1000px; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #2c3e50;">
-        <div style="padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <h3 style="margin: 0; color: white; font-size: 1.1em;"><i class="fas fa-file-pdf" style="margin-right:8px; color:#e74c3c;"></i>Pratinjau Dokumen</h3>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <a id="previewDownloadBtn" href="#" target="_blank" style="display: none; align-items: center; color: #3498db; text-decoration: none; font-weight: bold; font-size: 0.9em; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 4px;">
-                    <i class="fas fa-download" style="margin-right: 5px;"></i> Unduh
-                </a>
-                <button onclick="App.closePreview()" style="background: none; border: none; color: #bdc3c7; font-size: 1.5em; cursor: pointer; transition: color 0.2s;">&times;</button>
-            </div>
-        </div>
-        <div style="flex-grow: 1; position: relative; background: #fff;">
-            <iframe id="previewFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
-            <div id="previewLoading" style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:rgba(255,255,255,0.8); color:#333;">Memuat dokumen...</div>
-        </div>
-    </div>
-</div>
-
 <script>
 /**
  * ===================================================================
@@ -487,59 +447,7 @@ App.initializeGenericTablePage = (config) => {
                         const val = getRowValue(row, header);
                         totals[header] += (parseFloat(val) || 0);
                     }
-                });<!DOCTYPE html>
-<html>
-<head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SIKS - REBORN</title>
-  
-  <?!= include('css'); ?>
-</head>
-<body>
-
-  <div id="app-login-container">
-     <?!= include('page_login'); ?>
-  </div>
-
-  <div id="app-main-container" style="display: none;">
-    
-    <div class="d-flex" id="wrapper">
-        
-        <div class="border-end bg-white" id="sidebar-wrapper">
-            <?!= include('sidebar'); ?>
-        </div>
-        
-        <div id="page-content-wrapper">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-                <div class="container-fluid">
-                    <button class="btn btn-primary" id="sidebarToggle"><i class="bi bi-list"></i> Menu</button>
-                    
-                    <div class="d-flex align-items-center">
-                       <span class="me-3 fw-bold text-primary" id="user-display-name">Guest</span>
-                       <button class="btn btn-danger btn-sm" onclick="App.logout()">
-                         <i class="bi bi-power"></i> Keluar
-                       </button>
-                    </div>
-                </div>
-            </nav>
-            
-            <div class="container-fluid p-4" id="app-content">
-               <div class="text-center mt-5">
-                  <div class="spinner-border text-primary" role="status"></div>
-                  <p>Memuat Data...</p>
-               </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <?!= include('dropdown_data.js'); ?>
-  <?!= include('javascript'); ?>
-
-</body>
-</html>
+                });
 
                 const tfootTr = document.createElement('tr');
                 let footerCells = [];
@@ -11266,40 +11174,52 @@ var App = {
  * 1. INISIALISASI SISTEM (Document Ready)
  */
 $(document).ready(function() {
-  // --- 1. CEK SESI (ANTI REFRESH) ---
-  if (sessionStorage.getItem('isLoggedIn') === 'true') {
-    $('#gerbang-login').hide();
-    $('#website-utama').css('display', 'flex').show();
-    window.loadPageContent('page_home');
-  } else {
-    $('#gerbang-login').css('display', 'flex').show();
-  }
+  // 1. CEK SESI (ANTI REFRESH)
+  const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+  $('#app-preloader').delay(600).fadeOut(400, function() {
+    if (isLoggedIn === 'true') {
+      $('#website-utama').css('display', 'flex').show();
+      window.loadPageContent('page_home');
+    } else {
+      $('#gerbang-login').fadeIn(500);
+    }
+  });
 
-  // --- 2. FUNGSI ACCORDION (Menu, Submenu, Sub-submenu) ---
+  // 2. FUNGSI ACCORDION (UNTUK MENU BAPAK & ANAK)
   $(document).on('click', '.sidebar-menu a', function(e) {
     var $this = $(this);
     var $parent = $this.parent();
     var page = $this.data('page');
 
-    // Jika punya anak (Submenu/Sub-submenu)
     if ($parent.hasClass('has-submenu')) {
       e.preventDefault();
-      var $nextSubmenu = $this.next('.submenu');
+      var $submenu = $this.next('.submenu');
       
-      // Slide toggle anak langsung
-      $nextSubmenu.slideToggle(300);
+      // Jika diklik, buka ini dan tutup menu lain yang setara
+      $parent.siblings().removeClass('open').find('.submenu').slideUp(250);
+      
+      $submenu.slideToggle(250);
       $parent.toggleClass('open');
       
-      // Putar icon
+      // Putar icon panah
       $this.find('.submenu-icon').toggleClass('fa-chevron-right fa-chevron-down');
       return;
     }
 
-    // Jika halaman tujuan
     if (page) {
       e.preventDefault();
       window.loadPageContent(page);
     }
+  });
+
+  // 3. LOGOUT SYSTEM
+  $(document).on('click', '.btn-logout-premium', function() {
+    $('#logoutModal').addClass('show');
+  });
+
+  $(document).on('click', '#confirmLogoutBtn', function() {
+    sessionStorage.clear();
+    location.reload();
   });
 });
 
@@ -11330,19 +11250,17 @@ function checkUserSession() {
 window.loadPageContent = function(pageName) {
   if (!pageName) return;
 
-  // Highlight Menu Aktif (Sorot Sidebar)
+  // Highlight Sidebar
   $('.sidebar-menu a').removeClass('active');
-  $(`a[data-page="${pageName}"]`).addClass('active');
-  $(`a[data-page="${pageName}"]`).parents('.has-submenu').children('a').addClass('active');
+  var $activeLink = $(`.sidebar-menu a[data-page="${pageName}"]`);
+  $activeLink.addClass('active');
+  $activeLink.parents('.has-submenu').children('a').addClass('active');
 
-  // KEMBALIKAN SPINNER BAR ASLI ANDA
+  // SPINNER BAR ASLI (Sesuai Permintaan)
   $('#main-content').html(`
     <div class="loading-container" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:400px;">
         <div class="spinner-container" style="display:flex; gap:8px; height:30px; justify-content:center; align-items:center;">
-            <div class="spinner-bar"></div>
-            <div class="spinner-bar"></div>
-            <div class="spinner-bar"></div>
-            <div class="spinner-bar"></div>
+            <div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div>
         </div>
         <p style="color: #fff; margin-top: 15px; font-weight: bold;">Memproses Permintaan...</p>
     </div>
@@ -11361,19 +11279,19 @@ window.loadPageContent = function(pageName) {
 function handleLoginAsli(event) {
   event.preventDefault();
   const btn = $('#btn-submit');
-  btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> VERIFYING...');
-
+  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> VERIFYING...');
+  
   google.script.run
     .withSuccessHandler(function(response) {
       if (response && response.success) {
         sessionStorage.setItem('isLoggedIn', 'true');
-        $('#gerbang-login').fadeOut(500, function() {
-          $('#website-utama').css('display', 'flex').fadeIn();
+        $('#gerbang-login').fadeOut(400, function() {
+          $('#website-utama').css('display', 'flex').show();
           window.loadPageContent('page_home');
         });
       } else {
         btn.prop('disabled', false).html('AUTHENTICATE');
-        alert('Akses Ditolak!');
+        alert('Login Gagal!');
       }
     })
     .cekLoginStatus($('input[name="username"]').val(), $('input[name="password"]').val());
@@ -11421,9 +11339,7 @@ function prosesLogout() {
   $('#logoutModal').addClass('show'); // Memanggil Modal CSS Anda
 }
 
-function tutupLogoutModal() {
-  $('#logoutModal').removeClass('show');
-}
+function tutupLogoutModal() { $('#logoutModal').removeClass('show'); }
 
 $(document).on('click', '#confirmLogoutBtn', function() {
   sessionStorage.clear();
