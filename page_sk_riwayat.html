@@ -1,41 +1,171 @@
-<header>
-  <h2>RIWAYAT PENGIRIMAN SK PEMBAGIAN TUGAS</h2>
-</header>
+<?!= include('css'); ?>
 
-<div class="filter-container">
+<div class="main-wrapper" style="animation: fadeIn 0.5s ease-in-out;">
+  <div class="page-title-container">
+    <h2 class="page-title">Riwayat Pengiriman SK</h2>
+  </div>
+
+  <div class="filter-container">
   <div class="filter-group">
-    <label for="filterTahun">Tahun Ajaran:</label>
+    <label>Tahun:</label>
     <select id="filterTahun"></select>
   </div>
+  
   <div class="filter-group">
-    <label for="filterSemester">Semester:</label>
+    <label>Semester:</label>
     <select id="filterSemester"></select>
   </div>
+  
   <div class="filter-group">
-    <label for="filterNamaSekolah">Nama Sekolah:</label>
+    <label>Sekolah:</label>
     <select id="filterNamaSekolah"></select>
   </div>
+
+  <button onclick="initPageSKRiwayat()" class="btn-refresh-filter" title="Refresh Data">
+    <i class="fas fa-sync-alt"></i>
+  </button>
 </div>
 
-<main class="table-view-container">
-  <div id="loadingStatus" class="loading-container">
-    <div class="spinner-container">
+  <main class="table-view-container" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+
+    <div id="loadingStatus" class="loading-container" style="display:none; border:none; background:transparent;">
+    <div class="spinner-container" style="display:flex; gap:8px; height:30px; justify-content:center; align-items:center;">
         <div class="spinner-bar"></div>
         <div class="spinner-bar"></div>
         <div class="spinner-bar"></div>
         <div class="spinner-bar"></div>
     </div>
-    <p>Memuat data riwayat, mohon tunggu...</p>
+    <p style="color: #fff; margin-top: 15px; font-size: 14px;">Memuat data, mohon tunggu...</p>
 </div>
 
-  <div id="tableWrapper" style="display:none;">
-    <div class="table-container">
-      <table id="riwayatTable" class="data-table freeze-pane-table">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
+    <div id="tableWrapper" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        
+        <div class="table-container" style="flex:1; overflow:auto; border:1px solid rgba(255,255,255,0.1);">
+            <table id="riwayatTable" class="data-table" style="width:100%; border-collapse:separate; border-spacing:0;">
+                <thead style="position: sticky; top: 0; z-index: 100; background: #1a252f;"></thead>
+                <tbody style="color:#fff;"></tbody>
+            </table>
+        </div>
+        
+        <div style="padding: 10px 0; color: #fff; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.1);">
+            Total Data: <span id="totalDataCount">0</span>
+        </div>
+
+    </div> <div id="previewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999;">
+        <div style="position:relative; width:90%; height:90%; margin:2% auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+            <div style="padding:12px 20px; background:#1a252f; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:bold;">Preview Dokumen SK</span>
+                <button onclick="closePreview()" style="background:#e74c3c; border:none; color:#fff; cursor:pointer; padding:5px 12px; border-radius:4px; font-weight:bold;">TUTUP</button>
+            </div>
+            <iframe id="previewIframe" src="" style="width:100%; height:calc(100% - 50px); border:none;"></iframe>
+        </div>
     </div>
-  </div>
-  
-  <div id="pagination-container" class="pagination-container"></div>
+
 </main>
+</div>
+
+<script>
+  var allRiwayatData = []; 
+
+  function initPageSKRiwayat() {
+  // Gunakan 'flex' agar tulisan dan spinner rapi di tengah
+  $('#loadingStatus').css('display', 'flex'); 
+  $('#tableWrapper').hide();
+  
+  // Reset filter ke awal
+  $('#filterTahun, #filterSemester, #filterNamaSekolah').val('Semua');
+  
+  // 3. Tarik data terbaru dari server
+  google.script.run
+    .withSuccessHandler(renderRiwayatTable)
+    .withFailureHandler(function(err) {
+       alert("Gagal sinkronisasi data: " + err.message);
+    })
+    .getSKRiwayatData(); 
+}
+
+  function renderRiwayatTable(data) {
+    allRiwayatData = data.rows || [];
+    var $thead = $('#riwayatTable thead').empty();
+    
+    // Header (DIKEMBALIKAN WARNA BIRU MUDA LEWAT CSS)
+    var h = '<tr><th class="text-center" style="padding:10px;">No</th><th class="text-left" style="padding:10px;">Nama SD</th>';
+    ["Tahun Ajaran","Semester","Nomor SK","Tanggal SK","Kriteria SK","Tanggal Unggah"].forEach(function(col) {
+       h += '<th class="text-center" style="padding:10px;">'+col+'</th>';
+    });
+    h += '<th class="text-center" style="padding:10px;">Status</th><th class="text-center" style="padding:10px;">Aksi</th><th class="text-center" style="padding:10px;">User Input</th></tr>';
+    $thead.append(h);
+
+    // ISI PILIHAN FILTER (DIKEMBALIKAN)
+    populateFilter('filterTahun', 'Tahun Ajaran');
+    populateFilter('filterSemester', 'Semester');
+    populateFilter('filterNamaSekolah', 'Nama SD');
+    
+    applyRiwayatFilter();
+    $('#loadingStatus').hide();
+    $('#tableWrapper').show();
+  }
+
+  function applyRiwayatFilter() {
+    var fTahun = $('#filterTahun').val() || 'Semua';
+    var fSem = $('#filterSemester').val() || 'Semua';
+    var fSekolah = $('#filterNamaSekolah').val() || 'Semua';
+
+    var filtered = allRiwayatData.filter(function(r) {
+      return (fTahun === 'Semua' || r['Tahun Ajaran'] === fTahun) && 
+             (fSem === 'Semua' || r['Semester'] === fSem) &&
+             (fSekolah === 'Semua' || r['Nama SD'] === fSekolah);
+    });
+    
+    var $tbody = $('#riwayatTable tbody').empty();
+    filtered.forEach(function(r, i) {
+      var s = r['Status'] || 'Diproses';
+      var sClass = 'status-' + s.toLowerCase().replace(/\s/g, '-');
+      
+      var tr = '<tr>';
+      tr += '<td class="text-center" style="padding:8px;">'+(i+1)+'</td>';
+      tr += '<td class="text-left" style="padding:8px;">'+(r['Nama SD']||'-')+'</td>';
+      ["Tahun Ajaran","Semester","Nomor SK","Tanggal SK","Kriteria SK","Tanggal Unggah"].forEach(function(k) {
+        tr += '<td class="text-center" style="padding:8px;">'+(r[k]||'-')+'</td>';
+      });
+      tr += '<td class="text-center '+sClass+'" style="padding:8px;">'+s+'</td>';
+      
+      var btn = r['Dokumen'] ? '<button onclick="openPreview(\''+r['Dokumen']+'\')" class="btn-aksi"><i class="fas fa-eye"></i> Lihat</button>' : '-';
+      tr += '<td class="text-center" style="padding:8px;">'+btn+'</td>';
+      tr += '<td class="text-left" style="padding:8px;">'+(r['User Input']||'-')+'</td></tr>';
+      $tbody.append(tr);
+    });
+    $('#totalDataCount').text(filtered.length);
+  }
+
+  function populateFilter(id, key) {
+    var unique = [...new Set(allRiwayatData.map(function(r){ return r[key]; }))].sort();
+    var $sel = $('#' + id);
+    var current = $sel.val();
+    $sel.empty().append('<option value="Semua">Semua</option>');
+    unique.forEach(function(v){ if(v) $sel.append('<option value="'+v+'">'+v+'</option>') });
+    if(current) $sel.val(current);
+  }
+
+  // EVENT LISTENER UNTUK FILTER
+  $('#filterTahun, #filterSemester, #filterNamaSekolah').on('change', applyRiwayatFilter);
+
+  initPageSKRiwayat();
+
+  function openPreview(url) {
+  if (!url) return;
+  
+  // Kode ini hanya mengubah bagian akhir link agar Google mengizinkan Iframe
+  // Dari .../view?usp=sharing MENJADI .../preview
+  var id = url.match(/[-\w]{25,}/); // Mengambil ID unik file saja
+  var previewUrl = "https://drive.google.com/file/d/" + id + "/preview";
+  
+  $('#previewIframe').attr('src', previewUrl);
+  $('#previewModal').show();
+}
+
+function closePreview() {
+  $('#previewModal').hide(); // Sembunyikan kotak
+  $('#previewIframe').attr('src', ''); // Matikan dokumen agar tidak berat
+}
+</script>

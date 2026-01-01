@@ -1,0 +1,160 @@
+<style>
+  #gerbang-login {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100vh;
+    background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
+    z-index: 999999;
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px;
+  }
+
+  .kotak-login-premium {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 50px 40px; 
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    width: 100%; 
+    max-width: 400px; 
+    animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .brand-logo {
+    font-size: 2.5rem;
+    font-weight: 900;
+    background: linear-gradient(to right, #00c3ff, #fffffe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+    letter-spacing: -1px;
+  }
+
+  .login-subtitle {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+  }
+
+  .input-wrapper { margin-bottom: 25px; text-align: left; }
+  
+  .input-label-premium {
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: block;
+    margin-left: 5px;
+  }
+
+  .btn-login-premium {
+    width: 100%;
+    padding: 15px;
+    background: #00c3ff;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0, 195, 255, 0.2);
+    margin-top: 10px;
+  }
+
+  .btn-login-premium:hover {
+    background: #00a0d1;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0, 195, 255, 0.3);
+  }
+
+  .btn-login-premium:active { transform: translateY(0); }
+
+  #error-toast {
+    color: #ff4757;
+    font-size: 13px;
+    margin-top: 20px;
+    display: none;
+    background: rgba(255, 71, 87, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+  }
+</style>
+
+<div id="gerbang-login">
+  <div class="kotak-login-premium">
+    <div class="brand-logo">SIKS</div>
+    <div class="login-subtitle">Reborn Architecture</div>
+    
+    <form id="form-login-asli" onsubmit="handleLoginAsli(event)">
+      <div class="input-wrapper">
+        <label class="input-label-premium">ACCOUNT IDENTIFIER</label>
+        <input type="text" name="username" class="custom-modal-input" required 
+               placeholder="Username Sekolah" style="margin-top:0;">
+      </div>
+
+      <div class="input-wrapper">
+        <label class="input-label-premium">SECURITY ACCESS</label>
+        <input type="password" name="password" class="custom-modal-input" required 
+               placeholder="••••••••" style="margin-top:0;">
+      </div>
+
+      <button type="submit" class="btn-login-premium" id="btn-submit">
+        AUTHENTICATE
+      </button>
+
+      <div id="error-toast">
+        <i class="fas fa-shield-alt"></i> Access Denied. Check credentials.
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function handleLoginAsli(event) {
+  event.preventDefault();
+  const btn = $('#btn-submit');
+  const error = $('#error-toast');
+  
+  // Tampilkan efek loading pada tombol
+  btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> VERIFYING...');
+  error.fadeOut();
+
+  const user = $('input[name="username"]').val();
+  const pass = $('input[name="password"]').val();
+
+  // Memanggil server untuk cek login
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response.success) {
+        // CATAT DI MEMORI BROWSER (Agar saat refresh tidak balik login)
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('namaUser', response.nama);
+        sessionStorage.setItem('roleUser', response.role);
+        
+        $('#gerbang-login').fadeOut(600, function() {
+            $('#website-utama').fadeIn();
+            window.loadPageContent('page_home');
+        });
+    }
+
+      } else {
+        // Jika login gagal:
+        btn.prop('disabled', false).html('AUTHENTICATE');
+        error.fadeIn();
+      }
+    })
+    .withFailureHandler(function(err) {
+       // Jika ada error koneksi server
+       btn.prop('disabled', false).html('AUTHENTICATE');
+       alert("Terjadi kesalahan sistem: " + err.message);
+    })
+    .cekLoginStatus(user, pass);
+}
+</script>

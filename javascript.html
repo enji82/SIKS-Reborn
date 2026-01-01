@@ -48,6 +48,13 @@
 // DEKLARASI NAMESPACE UTAMA
 const App = {};
 
+function disableBack() {
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = function() {
+    window.history.pushState(null, "", window.location.href);
+  };
+}
+
 // Helper Validasi Tanggal Dinas
 // Aturan: Mulai >= SPT, Selesai >= Mulai
 function setupDateValidation(idSpt, idMulai, idSelesai) {
@@ -480,7 +487,59 @@ App.initializeGenericTablePage = (config) => {
                         const val = getRowValue(row, header);
                         totals[header] += (parseFloat(val) || 0);
                     }
-                });
+                });<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIKS - REBORN</title>
+  
+  <?!= include('css'); ?>
+</head>
+<body>
+
+  <div id="app-login-container">
+     <?!= include('page_login'); ?>
+  </div>
+
+  <div id="app-main-container" style="display: none;">
+    
+    <div class="d-flex" id="wrapper">
+        
+        <div class="border-end bg-white" id="sidebar-wrapper">
+            <?!= include('sidebar'); ?>
+        </div>
+        
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" id="sidebarToggle"><i class="bi bi-list"></i> Menu</button>
+                    
+                    <div class="d-flex align-items-center">
+                       <span class="me-3 fw-bold text-primary" id="user-display-name">Guest</span>
+                       <button class="btn btn-danger btn-sm" onclick="App.logout()">
+                         <i class="bi bi-power"></i> Keluar
+                       </button>
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="container-fluid p-4" id="app-content">
+               <div class="text-center mt-5">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p>Memuat Data...</p>
+               </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <?!= include('dropdown_data.js'); ?>
+  <?!= include('javascript'); ?>
+
+</body>
+</html>
 
                 const tfootTr = document.createElement('tr');
                 let footerCells = [];
@@ -1096,98 +1155,6 @@ function initMenuPage() {
     // Fungsi ini berlaku untuk semua halaman menu yang menggunakan .menu-button
     document.querySelectorAll('#main-content .menu-button').forEach((button, index) => {
         button.style.animationDelay = `${index * 0.07}s`;
-    });
-}
-
-function initSkUnggahPage() {
-    const form = document.getElementById('manualUploadForm');
-    if (!form) return;
-
-    function populateSingleDropdown(elementId, optionsArray, defaultText) {
-        const dropdown = document.getElementById(elementId);
-        if (!dropdown) return;
-        dropdown.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
-        if (optionsArray && optionsArray.length > 0) {
-            optionsArray.forEach(item => {
-                let option = document.createElement("option");
-                option.value = item;
-                option.textContent = item;
-                dropdown.appendChild(option);
-            });
-        }
-    }
-
-    google.script.run
-        .withSuccessHandler(optionsObject => {
-            populateSingleDropdown("namaSD", optionsObject["Nama SD"], "Pilih Sekolah");
-            populateSingleDropdown("tahunAjaran", optionsObject["Tahun Ajaran"], "Pilih Tahun Ajaran");
-            populateSingleDropdown("semester", optionsObject["Semester"], "Pilih Semester");
-            populateSingleDropdown("kriteriaSK", optionsObject["Kriteria SK"], "Pilih Kriteria SK");
-            
-            // --- TAMBAHKAN 2 BARIS INI ---
-            document.getElementById('skeleton-loader').style.display = 'none';
-            document.getElementById('form-content').style.display = 'block';
-            // --- AKHIR TAMBAHAN ---
-        })
-        .withFailureHandler(error => {
-            console.error('Gagal memuat opsi form SK:', error);
-            // --- TAMBAHKAN 2 BARIS INI JUGA ---
-            document.getElementById('skeleton-loader').style.display = 'none';
-            document.getElementById('form-content').style.display = 'block';
-            // --- AKHIR TAMBAHAN ---
-        })
-        .getMasterSkOptions();
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const submitButton = document.getElementById('submitBtn');
-        submitButton.disabled = true;
-        App.showAppModal('loading', 'Sedang memproses dan mengunggah file...');
-        const file = document.getElementById('fileUpload').files[0];
-        if (!file || file.size > 1024 * 1024) {
-            App.showAppModal('error', 'Unggah scan file format PDF ukuran maksimal 1 MB.');
-            submitButton.disabled = false;
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = event => {
-            const fileData = { fileName: file.name, mimeType: file.type, data: event.target.result.split(',')[1] };
-            const formData = {
-                namaSD: form.namaSD.value,
-                tahunAjaran: form.tahunAjaran.value,
-                semester: form.semester.value,
-                kriteriaSK: form.kriteriaSK.value,
-                nomorSK: form.nomorSK.value,
-                tanggalSK: form.tanggalSK.value,
-                fileData: fileData
-            };
-            google.script.run
-                .withSuccessHandler(response => App.showAppModal('success', response, 'sk_riwayat'))
-                .withFailureHandler(error => {
-                    App.showAppModal('error', `Gagal menyimpan: ${error.message}`);
-                    submitButton.disabled = false;
-                })
-                .processManualForm(formData);
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-function initSkRiwayatPage() {
-    App.initializeGenericTablePage({
-        tableId: 'riwayatTable', 
-        serverFunction: 'getSKRiwayatData', 
-        // Menggunakan filter mandiri (Non-Cascading)
-        filters: [ 
-            // Tahun Ajaran
-            { id: 'filterTahun', dataColumn: 'Tahun Ajaran', type: 'dropdown', sortReverse: true, defaultText: 'Semua Tahun' },
-            
-            // Semester
-            { id: 'filterSemester', dataColumn: 'Semester', type: 'dropdown', defaultText: 'Semua Semester' },
-            
-            // Nama Sekolah
-            { id: 'filterNamaSekolah', dataColumn: 'Nama SD', type: 'dropdown', defaultText: 'Semua Sekolah' }
-        ]
     });
 }
 
@@ -11169,4 +11136,298 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+/**
+ * OBJECT UTAMA APLIKASI (Global App)
+ */
+var App = {
+    // Menyimpan data user yang sedang login
+    currentUser: null,
+
+    // Fungsi Inisialisasi Saat Website Dibuka
+    init: function() {
+        // Cek apakah ada sesi tersimpan (opsional, tahap awal kita buat login ulang tiap refresh biar aman)
+        // Default: Tampilkan Login, Sembunyikan Main App
+        $('#app-login-container').show();
+        $('#app-main-container').hide();
+    },
+
+    // Fungsi Login
+    login: function(formElement) {
+        // Tampilkan Loading di tombol
+        const btn = $(formElement).find('button[type="submit"]');
+        const originalText = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Loading...');
+
+        // Ambil data form
+        const formData = {
+            username: formElement.username.value,
+            password: formElement.password.value
+        };
+
+        // Panggil Backend (google.script.run)
+        google.script.run
+            .withSuccessHandler(function(response) {
+                // Kembalikan tombol
+                btn.prop('disabled', false).html(originalText);
+
+                if (response.success) {
+                    // 1. Simpan Data User
+                    App.currentUser = response.user;
+                    $('#user-display-name').text("Hi, " + response.user.nama);
+
+                    // 2. Notifikasi Sukses
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Berhasil',
+                        text: 'Selamat datang ' + response.user.nama,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    // 3. Pindah Tampilan (Switch View)
+                    $('#app-login-container').fadeOut(300, function() {
+                        $('#app-main-container').fadeIn(300);
+                        // Load Halaman Home setelah login
+                        App.loadPage('home'); 
+                    });
+
+                } else {
+                    // Login Gagal
+                    Swal.fire('Gagal', response.message, 'error');
+                }
+            })
+            .withFailureHandler(function(error) {
+                btn.prop('disabled', false).html(originalText);
+                Swal.fire('Error Sistem', error.message, 'error');
+            })
+            .checkLoginCredentials(formData);
+    },
+
+    // Fungsi Logout
+    logout: function() {
+        Swal.fire({
+            title: 'Keluar Aplikasi?',
+            text: "Anda harus login ulang untuk masuk kembali.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Keluar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Reset State
+                App.currentUser = null;
+                // Reload halaman untuk membersihkan memori
+                location.reload(); 
+                // Atau manual switch view:
+                // $('#app-main-container').hide();
+                // $('#app-login-container').show();
+                // $('#form-login')[0].reset();
+            }
+        });
+    },
+
+    // Fungsi Load Halaman (Dari Sidebar)
+    loadPage: function(pageName) {
+        // Tampilkan loading spinner di konten utama
+        $('#app-content').html(`
+            <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <p class="mt-2 text-muted">Memuat Halaman...</p>
+                </div>
+            </div>
+        `);
+
+        // Panggil Server untuk minta potongan HTML
+        google.script.run
+            .withSuccessHandler(function(html) {
+                // Masukkan HTML ke div konten
+                $('#app-content').html(html);
+                
+                // Jika halaman input data, inisialisasi script khususnya (jika ada)
+                // App.initPageScripts(pageName);
+            })
+            .withFailureHandler(function(error) {
+                $('#app-content').html(`<div class="alert alert-danger">Gagal memuat halaman: ${error.message}</div>`);
+            })
+            .getPageContent(pageName); // Asumsi fungsi ini ada di Code.gs (standar SPA)
+    }
+};
+
+/**
+ * 1. INISIALISASI SISTEM (Document Ready)
+ */
+$(document).ready(function() {
+  // --- 1. CEK SESI (ANTI REFRESH) ---
+  if (sessionStorage.getItem('isLoggedIn') === 'true') {
+    $('#gerbang-login').hide();
+    $('#website-utama').css('display', 'flex').show();
+    window.loadPageContent('page_home');
+  } else {
+    $('#gerbang-login').css('display', 'flex').show();
+  }
+
+  // --- 2. FUNGSI ACCORDION (Menu, Submenu, Sub-submenu) ---
+  $(document).on('click', '.sidebar-menu a', function(e) {
+    var $this = $(this);
+    var $parent = $this.parent();
+    var page = $this.data('page');
+
+    // Jika punya anak (Submenu/Sub-submenu)
+    if ($parent.hasClass('has-submenu')) {
+      e.preventDefault();
+      var $nextSubmenu = $this.next('.submenu');
+      
+      // Slide toggle anak langsung
+      $nextSubmenu.slideToggle(300);
+      $parent.toggleClass('open');
+      
+      // Putar icon
+      $this.find('.submenu-icon').toggleClass('fa-chevron-right fa-chevron-down');
+      return;
+    }
+
+    // Jika halaman tujuan
+    if (page) {
+      e.preventDefault();
+      window.loadPageContent(page);
+    }
+  });
+});
+
+/**
+ * 2. FUNGSI CEK SESSION (Mencegah Balik ke Login Saat Refresh)
+ */
+function checkUserSession() {
+    var isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    
+    // Hilangkan Preloader Bawaan
+    $('#app-preloader').delay(500).fadeOut(300);
+
+    if (isLoggedIn === 'true') {
+        $('#gerbang-login').hide();
+        $('#website-utama').css('display', 'flex').hide().fadeIn(400);
+        
+        // Buka Beranda Otomatis
+        window.loadPageContent('page_home');
+    } else {
+        $('#website-utama').hide();
+        $('#gerbang-login').css('display', 'flex').hide().fadeIn(400);
+    }
+}
+
+/**
+ * 3. FUNGSI LOAD HALAMAN (AJAX dengan Spinner Mahal)
+ */
+window.loadPageContent = function(pageName) {
+  if (!pageName) return;
+
+  // Highlight Menu Aktif (Sorot Sidebar)
+  $('.sidebar-menu a').removeClass('active');
+  $(`a[data-page="${pageName}"]`).addClass('active');
+  $(`a[data-page="${pageName}"]`).parents('.has-submenu').children('a').addClass('active');
+
+  // KEMBALIKAN SPINNER BAR ASLI ANDA
+  $('#main-content').html(`
+    <div class="loading-container" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:400px;">
+        <div class="spinner-container" style="display:flex; gap:8px; height:30px; justify-content:center; align-items:center;">
+            <div class="spinner-bar"></div>
+            <div class="spinner-bar"></div>
+            <div class="spinner-bar"></div>
+            <div class="spinner-bar"></div>
+        </div>
+        <p style="color: #fff; margin-top: 15px; font-weight: bold;">Memproses Permintaan...</p>
+    </div>
+  `);
+
+  google.script.run
+    .withSuccessHandler(function(html) {
+      $('#main-content').hide().html(html).fadeIn(300);
+    })
+    .getPageContent(pageName);
+};
+
+/**
+ * 4. FUNGSI LOGIN (Dipanggil dari Form page_login)
+ */
+function handleLoginAsli(event) {
+  event.preventDefault();
+  const btn = $('#btn-submit');
+  btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i> VERIFYING...');
+
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response && response.success) {
+        sessionStorage.setItem('isLoggedIn', 'true');
+        $('#gerbang-login').fadeOut(500, function() {
+          $('#website-utama').css('display', 'flex').fadeIn();
+          window.loadPageContent('page_home');
+        });
+      } else {
+        btn.prop('disabled', false).html('AUTHENTICATE');
+        alert('Akses Ditolak!');
+      }
+    })
+    .cekLoginStatus($('input[name="username"]').val(), $('input[name="password"]').val());
+}
+
+/**
+ * 5. NAVIGASI SIDEBAR (Dropdown & Klik Halaman)
+ */
+function initSidebarNavigation() {
+    $('.sidebar-menu a').off('click').on('click', function(e) {
+        var $this = $(this);
+        var pageName = $this.data('page'); 
+        var hasSubmenu = $this.parent().hasClass('has-submenu');
+
+        // JIKA MENU PUNYA ANAK (DROPDOWN)
+        if (hasSubmenu) {
+            e.preventDefault();
+            var $parentLi = $this.parent();
+            var $submenu = $this.next('.submenu');
+            
+            // Toggle Buka/Tutup
+            $submenu.slideToggle(250);
+            $parentLi.toggleClass('open');
+            
+            // Putar Icon Panah (Jika ada)
+            $this.find('.submenu-icon').toggleClass('fa-chevron-right fa-chevron-down');
+            return; 
+        }
+
+        // JIKA MENU TUJUAN (PUNYA DATA-PAGE)
+        if (pageName) {
+            e.preventDefault();
+            window.loadPageContent(pageName);
+            
+            // Tutup sidebar di mobile
+            if ($(window).width() <= 768) { $('.sidebar').removeClass('show'); }
+        }
+    });
+}
+
+/**
+ * 6. SISTEM LOGOUT (Modal Premium)
+ */
+function prosesLogout() {
+  $('#logoutModal').addClass('show'); // Memanggil Modal CSS Anda
+}
+
+function tutupLogoutModal() {
+  $('#logoutModal').removeClass('show');
+}
+
+$(document).on('click', '#confirmLogoutBtn', function() {
+  sessionStorage.clear();
+  location.reload();
+});
+
 </script>

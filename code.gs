@@ -157,8 +157,57 @@ const COLUMNS_MAP = {
  * ===================================================================
  */
 
-function doGet(e) {
-  return HtmlService.createTemplateFromFile('index').evaluate();
+function cekLoginStatus(username, password) {
+  var ss = SpreadsheetApp.openById("1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA");
+  var sheet = ss.getSheetByName("DATA_USERS");
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0].toString() === username && data[i][1].toString() === password) {
+      return { success: true, nama: data[i][2], role: data[i][3] };
+    }
+  }
+  return { success: false };
+}
+
+function getPageContent(pageName) {
+  var namaFile = pageName;
+  // Jika memanggil home, pastikan ke page_home
+  if (pageName === 'home') namaFile = 'page_home';
+  
+  try {
+    return HtmlService.createTemplateFromFile(namaFile).evaluate().getContent();
+  } catch (e) {
+    // Jika tidak ketemu, coba tambah awalan page_
+    try {
+      return HtmlService.createTemplateFromFile("page_" + namaFile).evaluate().getContent();
+    } catch (e2) {
+      return "<div style='color:white;padding:20px;'>Halaman " + namaFile + " tidak ditemukan.</div>";
+    }
+  }
+}
+
+// Fungsi Bantuan Logout
+function getScriptUrl() {
+  return ScriptApp.getService().getUrl();
+}
+
+function getStatistikPTK() {
+  // Nanti di sini coding ambil data dari Sheet
+  // Sekarang kita pakai data contoh dulu
+  return {
+    total: "156",
+    pns: "85",
+    pppk: "40",
+    honor: "31"
+  };
+}
+
+function doGet() {
+  return HtmlService.createTemplateFromFile('index').evaluate()
+      .setTitle('SIKS - REBORN')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function include(filename) {

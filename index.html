@@ -4,17 +4,77 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?!= include('css'); ?>
-    <?!= include('dropdown_data.js.html'); ?>
+    <?!= include('dropdown_data.js'); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <style>
+      #app-preloader {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+        background: #000; z-index: 9999999;
+        display: flex; justify-content: center; align-items: center; flex-direction: column;
+      }
+      .loader-spinner {
+        border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #00c3ff;
+        border-radius: 50%; width: 40px; height: 40px;
+        animation: spin 1s linear infinite; margin-bottom: 15px;
+      }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div class="app-container">
+
+    <div id="app-preloader">
+      <div class="loader-spinner"></div>
+      <div style="font-family: sans-serif; color: #fff; font-size: 12px; letter-spacing: 2px;">AUTHENTICATING SYSTEM...</div>
+    </div>
+
+    <div id="gerbang-login" style="display:none;">
+      <?!= include('page_login'); ?>
+    </div>
+
+    <div class="app-container" id="website-utama" style="display:none;">
       <div class="sidebar">
         <?!= include('sidebar'); ?>
       </div>
-      <div id="main-content" class="main-content">
+      <div class="main-content" id="main-content">
+        </div>
+    </div>
+
+    <div id="logoutModal" class="modal-overlay">
+      <div class="modal-content">
+        <div style="font-size: 40px; color: #e74c3c; margin-bottom: 20px;">
+          <i class="fas fa-sign-out-alt"></i>
+        </div>
+        <h3 style="color:#fff;">Konfirmasi Keluar</h3>
+        <p style="color: #ccc; margin-bottom: 25px;">Apakah Anda yakin ingin mengakhiri sesi ini dan keluar dari sistem?</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="tutupLogoutModal()">BATAL</button>
+          <button class="delete-btn-confirm" id="confirmLogoutBtn">YA, KELUAR</button>
+        </div>
       </div>
     </div>
+
     <?!= include('javascript'); ?>
+
+    <script>
+      window.addEventListener('load', function() {
+        // CEK STATUS LOGIN DI MEMORI BROWSER
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+
+        $('#app-preloader').fadeOut(500, function() {
+          if (isLoggedIn === 'true') {
+            // JIKA SUDAH LOGIN, LANGSUNG BUKA DASHBOARD
+            $('#website-utama').show();
+            if(typeof window.loadPageContent === 'function'){
+               window.loadPageContent('page_home');
+            }
+          } else {
+            // JIKA BELUM LOGIN, TAMPILKAN FORM LOGIN
+            $('#gerbang-login').fadeIn(500);
+          }
+        });
+      });
+    </script>
+
   </body>
 </html>

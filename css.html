@@ -39,9 +39,6 @@ padding-top: 15px;
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
-  #tableWrapper .table-container::-webkit-scrollbar {
-    display: none !important; 
-  }
 
 /* --- Animasi Global --- */
 @keyframes stretch-bounce { 0% { transform: scaleX(0.5); } 50% { transform: scaleX(1); } 100% { transform: scaleX(0.5); } }
@@ -234,27 +231,105 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
   /* =================================================================== */
   /* ======================= 5. GAYA TABEL UMUM ======================== */
   /* =================================================================== */
- 
-  .table-container { 
-    
-    background: rgba(0, 0, 0, 0.15); 
-    backdrop-filter: blur(8px); 
-    -webkit-backdrop-filter: blur(8px); 
-    border-radius: 10px; 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
-    width: 100%; 
-    box-sizing: border-box; 
-    margin: 0 auto; }
-  .data-table { border-collapse: separate; border-spacing: 0; font-size: 13px; width: 100%; }
-  .data-table th, .data-table td { border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 12px; vertical-align: middle; white-space: nowrap; height: 24px; }
-  .data-table th:not(:last-child),
-  .data-table td:not(:last-child) { border-right: 1px solid rgba(255, 255, 255, 0.1); }
-  .data-table th { position: sticky; top: 0; z-index: 5; background-color: #101E26; border-bottom: 2px solid rgba(0, 195, 255, 0.5); font-weight: 600; }
-  .data-table tbody tr:hover td { background-color: rgba(255, 255, 255, 0.08); }
-  .data-table tfoot.has-content td { position: sticky; bottom: -1px; z-index: 5; background-color: #101E26; font-weight: bold; border-top: 2px solid rgba(0, 195, 255, 0.5); }
-  .data-table tbody tr:hover .sticky-col { background-color: #2a4152; }
-  .action-buttons { display: flex; justify-content: center; align-items: center; gap: 8px; }
+
+/* Pastikan ini ada untuk memperbaiki scroll dan footnote */
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; 
+  padding: 15px;
+  box-sizing: border-box;
+  overflow: hidden; /* Mencegah seluruh halaman ikut tergulung */
+}
+
+.table-view-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.table-container {
+  flex: 1;
+  overflow: auto !important; /* Kunci scroll lancar */
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Warna Status Global Lengkap */
+.status-label { font-weight: bold; text-transform: capitalize; }
+.status-ok { color: #2ecc71 !important; font-weight: bold; } /* Hijau */
+.status-ditolak { color: #e74c3c !important;  font-weight: bold;}   /* Merah */
+.status-diproses { color: #3498db !important; font-weight: bold; }  /* Biru */
+.status-revisi { color: #f1c40f !important;  font-weight: bold;}    /* Kuning */
+.status-awal { color: #9b59b6 !important;  font-weight: bold;}      /* Ungu (opsional) */
+
+.btn-aksi {
+  cursor: pointer;
+  background: #3498db; /* Warna solid agar lebih terlihat */
+  color: #fff !important;
+  border: none;
+  padding: 6px 15px; /* Lebih lebar */
+  border-radius: 4px;
+  font-size: 13px; /* Lebih besar */
+  transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-aksi:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+/* Loading harus benar-benar hilang dari sistem sentuhan saat tidak aktif */
+#loadingStatus {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+  display: none;
+  pointer-events: all; /* Aktif saat muncul */
+}
+
+#loadingStatus.hidden {
+  display: none !important;
+  pointer-events: none !important; /* Benar-benar tidak bisa disentuh saat hilang */
+}
+
+.data-table th, .data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  white-space: nowrap;
+}
+
+/* Penyelamat agar teks tidak berantakan */
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+
+/* Menyelaraskan Tombol Refresh dengan Filter Kaca */
+.btn-refresh-filter {
+  height: 42px; /* Menyesuaikan tinggi select yang dipasangi padding */
+  width: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-refresh-filter:hover {
+  background: rgba(52, 152, 219, 0.3); /* Biru transparan saat disentuh */
+  border-color: rgba(52, 152, 219, 0.5);
+}
+
+/* 5. STATUS WARNA */
+.status-label { font-weight: bold; }
   
 /* --- TOMBOL AKSI GLOBAL (STANDARDISASI) --- */
   .action-buttons { 
@@ -263,6 +338,12 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
       align-items: center; 
       gap: 5px; /* Jarak antar tombol */
   }
+
+  .btn-aksi-lihat {
+  cursor: pointer; background: rgba(52, 152, 219, 0.1); 
+  border: 1px solid #3498db; color: #3498db; 
+  padding: 3px 10px; border-radius: 4px; font-size: 11px;
+}
 
   .action-btn { 
       display: inline-flex; 
@@ -812,52 +893,11 @@ main.manual-form.form-tab-container > form {
   .custom-modal-input::placeholder { color: rgba(255, 255, 255, 0.4); }
   .custom-modal-input:focus { outline: none; border-color: #00c3ff; box-shadow: 0 0 10px rgba(0, 195, 255, 0.5); background: rgba(0, 0, 0, 0.3); }
   .loading-container { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; }
-  .spinner-container { display: flex; justify-content: center; align-items: center; gap: 6px; height: 50px; }
   .spinner-bar { width: 8px; height: 100%; border-radius: 4px; animation: bounce 1.2s infinite ease-in-out; }
   .spinner-bar:nth-child(1) { background-color: #e74c3c; }
   .spinner-bar:nth-child(2) { background-color: #2ecc71; animation-delay: -1.1s; }
   .spinner-bar:nth-child(3) { background-color: #f1c40f; animation-delay: -1.0s; }
   .spinner-bar:nth-child(4) { background-color: #3498db; animation-delay: -0.9s; }
-
-  /* =================================================================== */
-  /* [BERSIH] KELAS UTILITAS: FREEZE PANE UNTUK SEMUA TABEL (v4.0 - FINAL) */
-  /* =================================================================== */
-  .freeze-pane-table th,
-  .freeze-pane-table td { text-align: center; vertical-align: middle; }
-  .freeze-pane-table thead th { 
-    position: sticky; 
-    top: 0; 
-    background-color: #101E26; 
-    z-index: 5 !important; 
-  }
-  .freeze-pane-table tfoot td { 
-    position: sticky; 
-    bottom: 0; 
-    background-color: #101E26; 
-    border-top: 2px solid rgba(0, 195, 255, 0.5); 
-    z-index: 5 !important; /* HARUS CUKUP TINGGI */
-  }
-  .freeze-pane-table tbody td:nth-child(1),
-  .freeze-pane-table tbody td:nth-child(2) { position: sticky; background-color: #1c2e3a; z-index: 3; }
-  .freeze-pane-table thead th:nth-child(1),
-  .freeze-pane-table tbody td:nth-child(1),
-  .freeze-pane-table tfoot td:nth-child(1) { left: 0; z-index: 6 !important; }
-  .freeze-pane-table thead th:nth-child(2),
-  .freeze-pane-table tbody td:nth-child(2),
-  .freeze-pane-table tfoot td:nth-child(2) { left: 50px; z-index: 6 !important; } /* Z-INDEX LEBIH TINGGI DARI KOLOM NON-FREEZE */
-  .freeze-pane-table thead tr:first-child th { top: 0; }
-  .freeze-pane-table thead tr:nth-child(2) th { top: 40px; }
-  .freeze-pane-table tbody td { z-index: 1; }
-  .freeze-pane-table tbody td:nth-child(1),
-  .freeze-pane-table tbody td:nth-child(2) { z-index: 2; }
-  .freeze-pane-table thead th,
-  .freeze-pane-table tfoot td { z-index: 3; }
-  .freeze-pane-table thead th:nth-child(1),
-  .freeze-pane-table thead th:nth-child(2),
-  .freeze-pane-table tfoot td:nth-child(1),
-  .freeze-pane-table tfoot td:nth-child(2) { z-index: 4; }
-  .freeze-pane-table tbody tr:hover td:nth-child(1),
-  .freeze-pane-table tbody tr:hover td:nth-child(2) { background-color: #2a4152 !important; }
 
 /* =================================================================== */
   /* ============= 9. GAYA SPESIFIK HALAMAN (DIKELOMPOKKAN) ============ */
@@ -1027,11 +1067,6 @@ main.manual-form.form-tab-container > form {
 /* --- OPTIONAL: Perbaikan visual padding di dalam tab content --- */
 #dataMurid fieldset {
     margin-bottom: 25px; /* Jarak antar fieldset di dalam tab */
-}
-
-#tableWrapper .table-container {
-overflow: auto;
-flex-grow: 1;
 }
 
 /* css.html - Sekitar baris 43 */
@@ -1352,6 +1387,73 @@ flex-grow: 1;
 /* Sembunyikan ikon kiri pada submenu */
 .sidebar-menu .submenu a > i:not(.submenu-icon) {
   display: none; 
+}
+
+/* Judul Halaman Standar */
+.page-title-container {
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 4px solid rgba(255, 255, 255, 0.4); /* Garis lebih tebal (4px) */
+}
+
+.page-title {
+  color: #ffffff;
+  font-size: 1.5rem; /* Ukuran lebih kecil dan proporsional */
+  font-weight: 700;
+  margin: 0;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #1a252f;
+  color: #fff;
+  border-bottom: 2px solid #00c3ff; /* Warna Header Biru Muda */
+  padding: 10px;
+  white-space: nowrap;
+}
+
+/* Menghilangkan garis tepi dan kotak pada loading */
+#loadingStatus {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  padding: 20px 0 !important; /* Menjaga jarak secukupnya tanpa garis tebal */
+  box-sizing: border-box !important;
+}
+
+/* Memastikan animasi bounce tersedia (nyawa untuk spinner Anda) */
+@keyframes bounce {
+  0%, 40%, 100% { transform: scaleY(0.4); }
+  20% { transform: scaleY(1.0); }
+}
+
+.btn-logout-premium {
+  width: 100%;
+  padding: 10px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #ff4757;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+}
+
+.btn-logout-premium:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #ff4757;
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.2);
 }
 
 </style>
