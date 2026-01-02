@@ -1,19 +1,37 @@
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-/**
- * ===================================================================
- * ======================= 1. FUNGSI INTI & UTILITAS =================
- * ===================================================================
- */
- 
-// DEKLARASI NAMESPACE UTAMA
-const App = {};
+// --- 1. JARING PENGAMAN (WAJIB DI ATAS) ---
+// Agar aplikasi tidak layar putih jika fungsi halaman belum siap
+window.initSkUnggahPage = window.initSkUnggahPage || function(){};
+window.initSkRiwayatPage = window.initSkRiwayatPage || function(){};
+window.initSkStatusPage = window.initSkStatusPage || function(){};
+window.initSkKelolaPage = window.initSkKelolaPage || function(){};
+window.initMenuPage = window.initMenuPage || function(){};
+
+// --- 2. DEKLARASI NAMESPACE ---
+var App = App || {};
+App.currentUser = null;
+
+// JARING PENGAMAN: Mencegah Layar Putih akibat fungsi yang belum dibuat
+const safeInitializers = [
+  'initSkRiwayatPage', 'initSkUnggahPage', 'initSkStatusPage', 
+  'initSkKelolaPage', 'initSkArsipPage', 'initMenuPage'
+];
+safeInitializers.forEach(fn => {
+  if (typeof window[fn] === 'undefined') {
+    window[fn] = function() { console.warn('Fungsi ' + fn + ' belum didefinisikan.'); };
+  }
+});
 
 function disableBack() {
   window.history.pushState(null, "", window.location.href);
   window.onpopstate = function() {
     window.history.pushState(null, "", window.location.href);
   };
-}
+};
 
 // Helper Validasi Tanggal Dinas
 // Aturan: Mulai >= SPT, Selesai >= Mulai
@@ -68,7 +86,7 @@ function setupDateValidation(idSpt, idMulai, idSelesai) {
             }
         }
     });
-}
+};
 
 App.showAppModal = (state, message, redirectPage = null) => {
     const modal = document.getElementById('appModal');
@@ -117,8 +135,11 @@ App.loadPage = (event, pageName, params = {}) => {
         .withSuccessHandler(html => {
             try {
                 contentArea.innerHTML = html;
+                $('.sidebar-menu a').removeClass('active');
+                $(`.sidebar-menu a[data-page="${pageName}"]`).addClass('active');
 
-                
+                // Jika menu tersebut ada di dalam menu bapak, bapaknya juga ikut menyala
+                $(`.sidebar-menu a[data-page="${pageName}"]`).parents('.has-submenu').children('a').addClass('active');
                 
                 // KEMBALIKAN KE 0
                 setTimeout(() => {
@@ -10905,7 +10926,7 @@ App.closePreview = () => {
 App.pageInitializers = {
     'home': initMenuPage,
     'sk_menu': initMenuPage,
-    'sk_unggah': initSkUnggahPage,
+    'sk_unggah': 'initSkUnggahPage',
     'sk_riwayat': initSkRiwayatPage,
     'sk_status': initSkStatusPage,
     'sk_kelola': initSkKelolaPage,
@@ -10985,7 +11006,7 @@ App.pageInitializers = {
     'asn_skp_edit': initAsnSkpEditPage,
     'asn_skp_kirim': initAsnSkpDaftarKirimPage,
     'asn_pak_menu': initMenuPage,
-    'asn_pak_unggah': initAsnPakUnggahPage,
+    'asn_pak_unggah': 'initAsnPakUnggahPage',
     'asn_pak_kelola': initAsnPakKelolaPage,
     'asn_pak_edit': initAsnPakEditPage,
     'asn_pak_kirim': initAsnPakDaftarKirimPage,
@@ -11187,6 +11208,8 @@ $(document).ready(function() {
 
   // 2. FUNGSI ACCORDION (UNTUK MENU BAPAK & ANAK)
   $(document).on('click', '.sidebar-menu a', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
     var $this = $(this);
     var $parent = $this.parent();
     var page = $this.data('page');
@@ -11309,6 +11332,7 @@ function initSidebarNavigation() {
         // JIKA MENU PUNYA ANAK (DROPDOWN)
         if (hasSubmenu) {
             e.preventDefault();
+            e.stopPropagation();
             var $parentLi = $this.parent();
             var $submenu = $this.next('.submenu');
             
@@ -11339,11 +11363,36 @@ function prosesLogout() {
   $('#logoutModal').addClass('show'); // Memanggil Modal CSS Anda
 }
 
-function tutupLogoutModal() { $('#logoutModal').removeClass('show'); }
+// Fungsi untuk menutup modal konfirmasi keluar
+function tutupLogoutModal() {
+  $('#logoutModal').removeClass('show');
+}
 
+// FUNGSI KELUAR - METODE TUKAR LAYAR (ANTI LAYAR PUTIH)
 $(document).on('click', '#confirmLogoutBtn', function() {
+  // 1. Tutup modal konfirmasi
+  $('#logoutModal').removeClass('show');
+  
+  // 2. Hapus memori login
   sessionStorage.clear();
-  location.reload();
+  localStorage.clear();
+
+  // 3. TUKAR TAMPILAN (Sangat Stabil)
+  $('#website-utama').fadeOut(300, function() {
+      // Bersihkan konten agar ringan
+      $('#main-content').html('');
+      // Matikan warna aktif di sidebar
+      $('.sidebar-menu a').removeClass('active');
+      // Munculkan layar login SIKS (Gunakan Flex agar posisi tengah)
+      $('#gerbang-login').css('display', 'flex').hide().fadeIn(500);
+      
+      // Reset isian form login
+      if($('#form-login-asli').length) $('#form-login-asli')[0].reset();
+  });
+  
+  console.log("Logout Berhasil - Tanpa Reload");
 });
+
+
 
 </script>

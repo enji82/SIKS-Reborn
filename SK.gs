@@ -92,30 +92,32 @@ function processManualForm(formData) {
 
 function getSKRiwayatData() {
   try {
-    // Pastikan nama sheet ini BENAR sesuai nama sheet di spreadsheet Anda
-    const targetSheetName = "Unggah_SK"; 
+    // === KONFIGURASI ===
+    // Pastikan SPREADSHEET_CONFIG sudah ada di file Config.gs atau Code.gs
+    // Jika belum ada, ganti baris di bawah dengan ID manual: 
+    // const sheetId = "ID_SPREADSHEET_ANDA_DISINI";
+    
     const config = SPREADSHEET_CONFIG.SK_FORM_RESPONSES; 
+    const targetSheetName = "Unggah_SK"; 
+    
     const ss = SpreadsheetApp.openById(config.id);
     const sheet = ss.getSheetByName(targetSheetName);
 
     if (!sheet) {
-      // Jika sheet tidak ketemu, kembalikan array kosong agar spinner berhenti
       return { headers: [], rows: [] }; 
     }
 
     const allData = sheet.getDataRange().getValues();
     if (allData.length < 2) return { headers: [], rows: [] };
 
-    // Ambil Header Asli
-    const originalHeaders = allData[0].map(h => String(h).trim());
-    
-    // Mapping Header agar script tahu posisi kolom (Nama SD ada di kolom ke berapa, dst)
+    // Mapping Header (Lowercase)
+    const originalHeaders = allData[0].map(h => String(h).trim().toLowerCase());
     const headerMap = {};
-    originalHeaders.forEach((h, index) => { headerMap[h.toLowerCase()] = index; });
+    originalHeaders.forEach((h, index) => { headerMap[h] = index; });
 
     const dataRows = allData.slice(1);
     
-    // Sort berdasarkan Tanggal Unggah (Terbaru diatas)
+    // Sort Data (Terbaru di atas)
     const timestampIndex = headerMap['tanggal unggah'];
     if (timestampIndex !== undefined) {
         dataRows.sort((a, b) => {
@@ -125,59 +127,42 @@ function getSKRiwayatData() {
         });
     }
 
-    // Header yang akan ditampilkan di Tabel HTML
-    const displayHeaders = [
-        "Nama SD", "Tahun Ajaran", "Semester", "Nomor SK", 
-        "Tanggal SK", "Kriteria SK", "Dokumen", 
-        "User Input", "Status", "Tanggal Unggah"
-    ];
-
+    // Ambil Data
     let structuredRows = dataRows.map(row => {
-      const rowObject = {};
-      
-      // Ambil data berdasarkan nama kolom di Spreadsheet
-      // Pastikan nama di headerMap[...] sama dengan tulisan di Baris 1 Spreadsheet (huruf kecil semua)
-      rowObject['Nama SD']      = row[headerMap['nama sd']] || '-';
-      rowObject['Tahun Ajaran'] = row[headerMap['tahun ajaran']] || '-';
-      rowObject['Semester']     = row[headerMap['semester']] || '-';
-      rowObject['Nomor SK']     = row[headerMap['nomor sk']] || '-';
-      rowObject['Kriteria SK']  = row[headerMap['kriteria sk']] || '-';
-      
-      // Ambil Link Dokumen
-      const idxDok = headerMap['link dokumen'] !== undefined ? headerMap['link dokumen'] : headerMap['dokumen'];
-      rowObject['Dokumen'] = (idxDok !== undefined) ? row[idxDok] : '#';
+      const getVal = (key) => {
+         const idx = headerMap[key];
+         return (idx !== undefined) ? row[idx] : null;
+      };
 
-      // Ambil User Input (Cari 'user input' atau 'userinput')
-      let idxUser = headerMap['user input'];
-      if (idxUser === undefined) idxUser = headerMap['userinput'];
-      rowObject['User Input'] = (idxUser !== undefined) ? row[idxUser] : '-';
+      const rowObj = {};
+      rowObj['Nama SD']      = getVal('nama sd') || '-';
+      rowObj['Tahun Ajaran'] = getVal('tahun ajaran') || '-';
+      rowObj['Semester']     = getVal('semester') || '-';
+      rowObj['Nomor SK']     = getVal('nomor sk') || '-';
+      rowObj['Kriteria SK']  = getVal('kriteria sk') || '-';
+      
+      // Handle Link Dokumen
+      const dokVal = getVal('link dokumen') || getVal('dokumen');
+      rowObj['Dokumen'] = dokVal || '#';
 
-      // Ambil Status
-      let idxStatus = headerMap['status'];
-      rowObject['Status'] = (idxStatus !== undefined) ? row[idxStatus] : 'Diproses';
+      // Handle User Input
+      const userVal = getVal('user input') || getVal('userinput');
+      rowObj['User Input'] = userVal || '-';
+
+      // Handle Status
+      rowObj['Status'] = getVal('status') || 'Diproses';
 
       // Format Tanggal SK
-      let idxTglSK = headerMap['tanggal sk'];
-      if (idxTglSK !== undefined && row[idxTglSK] instanceof Date) {
-          rowObject['Tanggal SK'] = Utilities.formatDate(row[idxTglSK], Session.getScriptTimeZone(), "dd/MM/yyyy");
-      } else {
-          rowObject['Tanggal SK'] = (idxTglSK !== undefined) ? row[idxTglSK] : '';
-      }
+      const tglSK = getVal('tanggal sk');
+      rowObj['Tanggal SK'] = (tglSK instanceof Date) ? 
+          Utilities.formatDate(tglSK, Session.getScriptTimeZone(), "dd/MM/yyyy") : (tglSK || '');
 
-      // Format Tanggal Unggah
-      if (timestampIndex !== undefined && row[timestampIndex] instanceof Date) {
-          rowObject['Tanggal Unggah'] = Utilities.formatDate(row[timestampIndex], Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
-      } else {
-          rowObject['Tanggal Unggah'] = '-';
-      }
-
-      return rowObject;
+      return rowObj;
     });
 
-    return { headers: displayHeaders, rows: structuredRows };
+    return { headers: [], rows: structuredRows };
   } catch (e) {
-    // Jika error, lempar pesan error agar spinner berhenti dan muncul alert
-    throw new Error("Backend Error: " + e.message);
+    throw new Error("Backend Error (getSKRiwayatData): " + e.message);
   }
 }
 

@@ -255,14 +255,6 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
   border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Warna Status Global Lengkap */
-.status-label { font-weight: bold; text-transform: capitalize; }
-.status-ok { color: #2ecc71 !important; font-weight: bold; } /* Hijau */
-.status-ditolak { color: #e74c3c !important;  font-weight: bold;}   /* Merah */
-.status-diproses { color: #3498db !important; font-weight: bold; }  /* Biru */
-.status-revisi { color: #f1c40f !important;  font-weight: bold;}    /* Kuning */
-.status-awal { color: #9b59b6 !important;  font-weight: bold;}      /* Ungu (opsional) */
-
 .btn-aksi {
   cursor: pointer;
   background: #3498db; /* Warna solid agar lebih terlihat */
@@ -885,10 +877,47 @@ main.manual-form.form-tab-container > form {
   .modal-content h3 { margin-top: 0; color: #ffffff; }
   .modal-actions { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
   #deleteModal .modal-actions button { flex-grow: 1; padding: 10px; font-size: 1em; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent; display: flex; align-items: center; justify-content: center; }
-  #deleteModal .cancel-btn { background-color: rgba(144, 164, 174, 0.2); border-color: rgba(144, 164, 174, 0.4); color: #e0e0e0; }
-  #deleteModal .cancel-btn:hover { background-color: rgba(144, 164, 174, 0.4); }
-  #deleteModal .delete-btn-confirm { background-color: rgba(229, 115, 115, 0.3); border-color: rgba(229, 115, 115, 0.5); color: #e0e0e0; }
-  #deleteModal .delete-btn-confirm:hover { background-color: rgba(229, 115, 115, 0.5); color: #ffffff; }
+  /* GAYA TOMBOL KONFIRMASI (BERLAKU UNTUK SEMUA MODAL) */
+.delete-btn-confirm {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.delete-btn-confirm:hover {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+  color: #fff !important;
+}
+
+/* GAYA TOMBOL BATAL */
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
   .custom-modal-input { width: 100%; padding: 12px; box-sizing: border-box; font-size: 1.2em; text-align: center; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 8px; color: #ffffff; margin-top: 15px; transition: all 0.3s ease; }
   .custom-modal-input::placeholder { color: rgba(255, 255, 255, 0.4); }
   .custom-modal-input:focus { outline: none; border-color: #00c3ff; box-shadow: 0 0 10px rgba(0, 195, 255, 0.5); background: rgba(0, 0, 0, 0.3); }
@@ -1454,6 +1483,101 @@ main.manual-form.form-tab-container > form {
   background: rgba(231, 76, 60, 0.2);
   border-color: #ff4757;
   box-shadow: 0 0 15px rgba(231, 76, 60, 0.2);
+}
+
+/* =================================================================== */
+/* ============= TAMBAHAN: KOMPONEN PREMIUM (GLOBAL) ================= */
+/* =================================================================== */
+
+/* 1. STATUS BADGE (Pill Shape) */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+}
+.status-diproses { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
+.status-ditolak { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
+.status-revisi { background: rgba(241, 196, 15, 0.15); color: #f1c40f; border: 1px solid rgba(241, 196, 15, 0.3); }
+.status-ok, .status-diterima { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+
+/* 2. TOMBOL LIHAT PREMIUM */
+.btn-lihat-premium {
+  background: linear-gradient(135deg, #00c3ff 0%, #0087b3 100%);
+  color: white;
+  border: none;
+  padding: 6px 15px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(0, 195, 255, 0.2);
+  text-decoration: none; /* Jaga-jaga jika dipakai di tag <a> */
+}
+.btn-lihat-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 195, 255, 0.4);
+  filter: brightness(1.1);
+  color: #fff;
+}
+
+/* 3. FILTER GROUP VERTICAL & ALIGNMENT */
+/* Tambahan class untuk filter yang labelnya di atas input */
+.filter-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start; /* Label rata kiri */
+}
+.filter-group-vertical label {
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+/* Memaksa container filter agar item sejajar di bawah (untuk tombol refresh) */
+.filter-container.items-bottom {
+  align-items: flex-end;
+}
+
+/* 4. CUSTOM SELECT (Seragam) */
+.custom-select {
+  background: #1a252f;
+  border: 1px solid #34495e;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  outline: none;
+  height: 38px;
+}
+
+/* 5. TOMBOL REFRESH KACA */
+.btn-refresh-glass {
+  height: 38px;
+  width: 38px;
+  background: #2c3e50;
+  border: 1px solid #34495e;
+  color: #00c3ff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.btn-refresh-glass:hover {
+  background: #34495e;
+  color: #fff;
+  transform: rotate(180deg);
 }
 
 </style>

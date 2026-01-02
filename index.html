@@ -44,13 +44,42 @@
         <div style="font-size: 40px; color: #e74c3c; margin-bottom: 20px;"><i class="fas fa-sign-out-alt"></i></div>
         <h3 style="color:#fff;">Konfirmasi Keluar</h3>
         <p style="color: #ccc; margin-bottom: 25px;">Apakah Anda yakin ingin keluar?</p>
-        <div class="modal-actions">
-          <button class="cancel-btn" onclick="tutupLogoutModal()">BATAL</button>
-          <button class="delete-btn-confirm" id="confirmLogoutBtn">YA, KELUAR</button>
+        <div class="modal-actions" style="justify-content: center; gap: 15px; margin-top: 20px;">
+            <button type="button" class="cancel-btn" onclick="tutupLogoutModal()">
+                <i class="fas fa-times"></i> BATAL
+            </button>
+            
+            <button type="button" class="delete-btn-confirm" id="confirmLogoutBtn">
+                <i class="fas fa-power-off"></i> YA, KELUAR
+            </button>
         </div>
       </div>
     </div>
 
     <?!= include('javascript'); ?>
+
+    <script>
+      window.addEventListener('load', function() {
+        // OBAT KUAT: Spinner AUTHENTICATING wajib hilang dalam 1.5 detik
+        setTimeout(function() {
+          var loader = document.getElementById('app-preloader');
+          if(loader) loader.style.display = 'none';
+          
+          var status = sessionStorage.getItem('isLoggedIn');
+          if (status === 'true') {
+            $('#website-utama').show();
+            // Nyalakan sidebar beranda otomatis
+            $('.sidebar-menu a').removeClass('active');
+            $('.sidebar-menu a[data-page="home"]').addClass('active');
+            
+            if(typeof App !== 'undefined' && typeof App.loadPage === 'function') {
+               App.loadPage(null, 'home');
+            }
+          } else {
+            $('#gerbang-login').css('display', 'flex').show();
+          }
+        }, 1500);
+      });
+    </script>
   </body>
 </html>
