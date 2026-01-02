@@ -168,48 +168,113 @@ function getSKRiwayatData() {
 
 function getSKStatusData() {
   try {
-    const config = SPREADSHEET_CONFIG.SK_BAGI_TUGAS;
-    const sheet = SpreadsheetApp.openById(config.id).getSheetByName(config.sheet);
+    const config = SPREADSHEET_CONFIG.SK_FORM_RESPONSES; 
+    const targetSheetName = "Status_SK"; 
+    
+    const ss = SpreadsheetApp.openById(config.id);
+    const sheet = ss.getSheetByName(targetSheetName);
 
-    if (!sheet || sheet.getLastRow() < 2) {
-      return { headers: [], rows: [] };
+    if (!sheet) return { headers: [], rows: [] }; 
+
+    // Ambil Semua Data
+    const data = sheet.getDataRange().getDisplayValues(); // getDisplayValues agar tanggal/angka sesuai tampilan sheet
+    if (data.length < 2) return { headers: [], rows: [] };
+
+    // BARIS 1: Header
+    const headers = data[0]; // ["No", "Nama Sekolah", "2021 Ganjil", "2021 Genap", ...]
+
+    // BARIS 2 dst: Isi Data
+    const rows = data.slice(1);
+
+    return { 
+      headers: headers,
+      rows: rows 
+    };
+    
+  } catch (e) {
+    throw new Error("Gagal mengambil data Status: " + e.message);
+  }
+}
+
+function getArsipData(folderId) {
+  try {
+    // 1. AMBIL ID DARI CONFIG TERPUSAT (Code.gs)
+    // Pastikan FOLDER_CONFIG.MAIN_SK sudah didefinisikan di Code.gs
+    const rootId = FOLDER_CONFIG.MAIN_SK; 
+    
+    if (!rootId) {
+      throw new Error("ID Folder belum diset di FOLDER_CONFIG.MAIN_SK (Code.gs)");
+    }
+    
+    // Jika frontend tidak kirim ID (saat pertama buka), pakai Root ID dari Config
+    const targetId = folderId || rootId; 
+    
+    const folder = DriveApp.getFolderById(targetId);
+    if (!folder) throw new Error("Folder tidak ditemukan di Google Drive");
+
+    let items = [];
+
+    // 2. AMBIL FOLDER (Sub-folder)
+    const subFolders = folder.getFolders();
+    while (subFolders.hasNext()) {
+      let f = subFolders.next();
+      items.push({
+        id: f.getId(),
+        name: f.getName(),
+        type: 'folder',
+        mimeType: 'application/vnd.google-apps.folder',
+        date: f.getLastUpdated(),
+        size: '-'
+      });
     }
 
-    const dataRange = sheet.getDataRange();
-    // Ambil nilai teks biasa
-    const displayValues = dataRange.getDisplayValues();
-    // Ambil nilai rich text untuk mendapatkan URL
-    const richTextValues = dataRange.getRichTextValues();
+    // 3. AMBIL FILE
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      let f = files.next();
+      // Format ukuran file (KB/MB)
+      let sizeBytes = f.getSize();
+      let sizeStr = (sizeBytes / 1024).toFixed(1) + " KB";
+      if (sizeBytes > 1024 * 1024) sizeStr = (sizeBytes / (1024 * 1024)).toFixed(1) + " MB";
 
-    const headers = displayValues[0].map(h => String(h).trim());
-    const dataRows = displayValues.slice(1);
-    const richTextRows = richTextValues.slice(1);
-
-    // Cari tahu di kolom mana 'Dokumen' berada
-    const docIndex = headers.indexOf('Dokumen');
-
-    const structuredRows = dataRows.map((row, rowIndex) => {
-      const rowObject = {};
-      headers.forEach((header, colIndex) => {
-        // Jika ini adalah kolom "Dokumen" dan ada linknya, ambil URL-nya
-        if (colIndex === docIndex) {
-          const richText = richTextRows[rowIndex][colIndex];
-          const linkUrl = richText.getLinkUrl();
-          // Jika ada link, gunakan URL-nya. Jika tidak, gunakan teks biasa.
-          rowObject[header] = linkUrl || row[colIndex]; 
-        } else {
-          rowObject[header] = row[colIndex];
-        }
+      items.push({
+        id: f.getId(),
+        name: f.getName(),
+        type: 'file',
+        mimeType: f.getMimeType(),
+        url: f.getUrl(), // Link untuk buka file
+        date: f.getLastUpdated(),
+        size: sizeStr
       });
-      return rowObject;
+    }
+
+    // 4. SORTING: Folder di atas, File di bawah. Lalu urut abjad.
+    items.sort((a, b) => {
+      if (a.type === b.type) return a.name.localeCompare(b.name);
+      return a.type === 'folder' ? -1 : 1;
     });
 
+    // 5. BREADCRUMB (Jalur Navigasi)
+    let parentId = null;
+    // Cek apakah kita sedang berada di dalam sub-folder (bukan di root)
+    if (targetId !== rootId) {
+      const parents = folder.getParents();
+      if (parents.hasNext()) parentId = parents.next().getId();
+    }
+
     return {
-      headers: headers,
-      rows: structuredRows
+      currentId: targetId,
+      currentName: folder.getName(),
+      parentId: parentId,
+      isRoot: (targetId === rootId),
+      items: items.map(i => ({
+         ...i,
+         date: Utilities.formatDate(i.date, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm")
+      }))
     };
+
   } catch (e) {
-    return handleError('getSKStatusData', e);
+    throw new Error("Gagal akses Drive: " + e.message);
   }
 }
 

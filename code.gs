@@ -171,19 +171,29 @@ function cekLoginStatus(username, password) {
 }
 
 function getPageContent(pageName) {
-  var namaFile = pageName;
-  // Jika memanggil home, pastikan ke page_home
-  if (pageName === 'home') namaFile = 'page_home';
+  if (!pageName) return "<h3>Error: Nama halaman kosong</h3>";
+
+  // 1. PEMBERSIHAN INPUT (SANITIZATION)
+  // Kode ini membuang awalan 'page_' jika frontend tidak sengaja mengirimnya ganda.
+  // Contoh: Input "page_home" -> Diubah jadi "home"
+  // Contoh: Input "home"      -> Tetap "home"
+  var cleanName = pageName.toString().replace(/^page_/, ''); 
+
+  // 2. PEMBENTUKAN NAMA FILE STANDAR
+  // Kita pastikan format akhirnya selalu: "page_" + namaBersih
+  var fileName = 'page_' + cleanName; 
   
+  // 3. CARI FILE
   try {
-    return HtmlService.createTemplateFromFile(namaFile).evaluate().getContent();
+    return HtmlService.createTemplateFromFile(fileName).evaluate().getContent();
   } catch (e) {
-    // Jika tidak ketemu, coba tambah awalan page_
-    try {
-      return HtmlService.createTemplateFromFile("page_" + namaFile).evaluate().getContent();
-    } catch (e2) {
-      return "<div style='color:white;padding:20px;'>Halaman " + namaFile + " tidak ditemukan.</div>";
-    }
+    return "<div style='padding:20px; color:red; border:1px solid red; background:#fff3cd;'>" +
+           "<h3>Error 404: File Tidak Ditemukan</h3>" +
+           "<p>Sistem mencoba membuka file: <b>" + fileName + ".html</b> tapi tidak ada.</p>" +
+           "<p><b>Diagnosa:</b><br>" +
+           "- Input dari Sidebar: " + pageName + "<br>" +
+           "- Nama File yang Dicari: " + fileName + "</p>" +
+           "</div>";
   }
 }
 
