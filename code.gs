@@ -3,18 +3,19 @@
  * ======================= 1. KONFIGURASI PUSAT ======================
  * ===================================================================
  */
-// 1. DAFTAR ID UNIK (BEST PRACTICE: SINGLE SOURCE OF TRUTH)
 const SPREADSHEET_IDS = {
   SK_DATA: "1AmvOJAhOfdx09eT54x62flWzBZ1xNQ8Sy5lzvT9zJA4",
+  
+  // INI ID DATABASE USER (Yang Bapak Konfirmasi Benar)
+  DROPDOWN_DATA: "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA", 
+  
+  // ID Lainnya (Tetap kita simpan agar fitur lain tidak rusak)
   PAUD_DATA: "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs",
   SD_DATA: "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s",
-  
-  // ID unik lainnya
   LAPBUL_GABUNGAN: "1aKEIkhKApmONrCg-QQbMhXyeGDJBjCZrhR-fvXZFtJU",
   PTK_PAUD_DB: "1XetGkBymmN2NZQlXpzZ2MQyG0nhhZ0sXEPcNsLffhEU",
   PTK_SD_DB: "1HlyLv3Ai3_vKFJu3EKznqI9v8g0tfqiNg0UbIojNMQ0",
   DATA_SEKOLAH: "1qeOYVfqFQdoTpysy55UIdKwAJv3VHo4df3g6u6m72Bs",   
-  DROPDOWN_DATA: "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA",
   FORM_OPTIONS_DB: "1prqqKQBYzkCNFmuzblNAZE41ag9rZTCiY2a0WvZCTvU",
   SIABA_REKAP: "1x3b-yzZbiqP2XfJNRC3XTbMmRTHLd8eEdUqAlKY3v9U",
   SIABA_TIDAK_PRESENSI: "1mjXz5l_cqBiiR3x9qJ7BU4yQ3f0ghERT9ph8CC608Zc",
@@ -23,77 +24,14 @@ const SPREADSHEET_IDS = {
   SIABA_DINAS_DB: "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M",
   SIABA_CUTI_DB: "1DhBjmLHFMuJqWM6yJHsm-1EKvHzG8U4zK2GuU-dIgn8",
   SIABA_REKAP_HELPER: "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA",
-  SIABA_SKP_SOURCE: "1ReJt2qoDE2f_8LeR8DXJbROB9EAHK8qP2kYp-ZZ3V9w", // Daftar ASN
+  SIABA_SKP_SOURCE: "1ReJt2qoDE2f_8LeR8DXJbROB9EAHK8qP2kYp-ZZ3V9w", 
   SIABA_SKP_DB: "1T-AQ0jYJ_jXYEPxzu_KZauOlRTTforVtFEZ_1UrWHwk",
   SIABA_PNS_DB: "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA",
   SIABA_PAK_DB: "1mAXwf7cHaOqIj2uf51Fup5tyyBzijTeIxVS8uO1E4dM",
 };
 
-const SPREADSHEET_CONFIG = {
-  // --- Modul SK Pembagian Tugas ---
-  SK_BAGI_TUGAS: { id: SPREADSHEET_IDS.SK_DATA, sheet: "SK Tabel Kirim" },
-  SK_FORM_RESPONSES: { id: SPREADSHEET_IDS.SK_DATA, sheet: "Form Responses 1" },
-
-  // --- Modul Laporan Bulanan & Data Murid ---
-  LAPBUL_FORM_RESPONSES_PAUD: { id: SPREADSHEET_IDS.PAUD_DATA, sheet: "Form Responses 1" },
-  LAPBUL_FORM_RESPONSES_SD: { id: SPREADSHEET_IDS.SD_DATA, sheet: "Input" },
-  LAPBUL_GABUNGAN: { id: SPREADSHEET_IDS.LAPBUL_GABUNGAN },
-  // Konfigurasi LAPBUL_RIWAYAT yang dirujuk dari ID pusat
-  LAPBUL_RIWAYAT: {
-      'PAUD': { 
-          id: SPREADSHEET_IDS.PAUD_DATA,
-          sheet: 'Form Responses 1' 
-      },
-      'SD': { 
-          id: SPREADSHEET_IDS.SD_DATA,
-          sheet: 'Input' 
-      },
-  },
-  LAPBUL_STATUS: {
-      'PAUD': { 
-          id: SPREADSHEET_IDS.PAUD_DATA,
-          sheet: 'Status' 
-      },
-      'SD': { 
-          id: SPREADSHEET_IDS.SD_DATA,
-          sheet: 'Status' 
-      }
-  },
-
-  // --- Modul Data PTK ---
-  PTK_PAUD_KEADAAN: { id: SPREADSHEET_IDS.PAUD_DATA, sheet: "Keadaan PTK PAUD" },
-  PTK_PAUD_JUMLAH_BULANAN: { id: SPREADSHEET_IDS.PAUD_DATA, sheet: "Jumlah PTK Bulanan" },
-  PTK_PAUD_DB: { id: SPREADSHEET_IDS.PTK_PAUD_DB, sheet: "PTK PAUD" },
-  PTK_PAUD_TIDAK_AKTIF: { id: SPREADSHEET_IDS.PTK_PAUD_DB, sheet: "PTK PAUD Tidak Aktif" },
-  PTK_SD_KEADAAN: { id: SPREADSHEET_IDS.SD_DATA, sheet: "Keadaan PTK SD" },
-  PTK_SD_JUMLAH_BULANAN: { id: SPREADSHEET_IDS.SD_DATA, sheet: "PTK Bulanan SD"},
-  PTK_SD_KEBUTUHAN: { id: SPREADSHEET_IDS.SD_DATA, sheet: "Kebutuhan Guru"},
-  PTK_SD_DB: { id: SPREADSHEET_IDS.PTK_SD_DB },
-
-  // --- Modul Data Murid ---
-  MURID_PAUD_KELAS: { id: SPREADSHEET_IDS.PAUD_DATA, sheet: "Murid Kelas" },
-  MURID_PAUD_JK: { id: SPREADSHEET_IDS.PAUD_DATA, sheet: "Murid JK" },
-  MURID_PAUD_BULANAN: { id: SPREADSHEET_IDS.PAUD_DATA, sheet: "Murid Bulanan" },
-  MURID_SD_KELAS: { id: SPREADSHEET_IDS.SD_DATA, sheet: "SD Tabel Kelas" },
-  MURID_SD_ROMBEL: { id: SPREADSHEET_IDS.SD_DATA, sheet: "SD Tabel Rombel" },
-  MURID_SD_JK: { id: SPREADSHEET_IDS.SD_DATA, sheet: "SD Tabel JK" },
-  MURID_SD_AGAMA: { id: SPREADSHEET_IDS.SD_DATA, sheet: "SD Tabel Agama" },
-  MURID_SD_BULANAN: { id: SPREADSHEET_IDS.SD_DATA, sheet: "SD Tabel Bulanan" },
-
-  // --- Data Pendukung & Dropdown ---
-  DATA_SEKOLAH: { id: SPREADSHEET_IDS.DATA_SEKOLAH },   
-  DROPDOWN_DATA: { id: SPREADSHEET_IDS.DROPDOWN_DATA },
-  FORM_OPTIONS_DB: { id: SPREADSHEET_IDS.FORM_OPTIONS_DB },
-
-  // --- Data SIABA ---
-  SIABA_REKAP: { id: SPREADSHEET_IDS.SIABA_REKAP, sheet: "Rekap Script" },
-  SIABA_TIDAK_PRESENSI: { id: SPREADSHEET_IDS.SIABA_TIDAK_PRESENSI, sheet: "Rekap Script" },
-  SIABA_SALAH_OPTIONS: { id: SPREADSHEET_IDS.SIABA_SALAH_DB, sheet: "Database" },
-  SIABA_SALAH_RESPONSES: { id: SPREADSHEET_IDS.SIABA_SALAH_DB, sheet: "Salah Presensi" },
-};
-
 const FOLDER_CONFIG = {
-  MAIN_SK: "1GwIow8B4O1OWoq3nhpzDbMO53LXJJUKs",
+  MAIN_SK: "1GwIow8B4O1OWoq3nhpzDbMO53LXJJUKs", 
   LAPBUL_KB: "18CxRT-eledBGRtHW1lFd2AZ8Bub6q5ra",
   LAPBUL_TK: "1WUNz_BSFmcwRVlrG67D2afm9oJ-bVI9H",
   LAPBUL_SD: "1I8DRQYpBbTt1mJwtD1WXVD6UK51TC8El",
@@ -105,206 +43,499 @@ const FOLDER_CONFIG = {
   SIABA_PAK_DOCS: "1cvn-pOufs-OIbFQfqhmxc3fcmFuox4Sc",
 };
 
-const STATUS_COLUMNS_MAP = {
-    'Tahun': 0, 'Bulan': 1, 'Jenjang': 2, 'Nama Sekolah': 3
-};
-
-const PAUD_STATUS_SHEET_ID = SPREADSHEET_IDS.PAUD_DATA;
-const SD_STATUS_SHEET_ID = SPREADSHEET_IDS.SD_DATA;
-const STATUS_SHEET_NAME = "Status"; // Nama sheet yang digunakan di kedua SS
-
-const LAPBUL_STATUS_HEADERS = [
-    "Nama Sekolah", "Jenjang", "Status", "Tahun", "Januari", 
-    "Februari", "Maret", "April", "Mei", "Juni", 
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-];
-
-const START_ROW = 2; 
-const NUM_COLUMNS_TO_FETCH = 16; 
-const STATUS_COLUMN_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-
-const COLUMNS_MAP = {
-    // PAUD (Sheet: "Form Responses 1")
-    PAUD: {
-        "Tanggal Unggah": 0,  // Kolom A
-        "Bulan": 1,           // Kolom B
-        "Tahun": 2,           // Kolom C
-        "Status": 4,         
-        "Jenjang": 6,         // Kolom G
-        "Nama Sekolah": 7,    // Kolom H
-        "Dokumen": 36,        // Kolom AK
-        "Update": 37,         // Kolom AL
-        "Jumlah Rombel": 5,   // Kolom F
-    },
-  
-   // SD (Sheet: "Input")
-    SD: {
-        "Tanggal Unggah": 0,  // Kolom A
-        "Bulan": 1,           // Kolom B
-        "Tahun": 2,           // Kolom C
-        "Status": 3,          // Kolom D
-        "Nama Sekolah": 4,    // Kolom E
-        "Dokumen": 7,         // Kolom H
-        "Jenjang": 217,       // Kolom HJ (Indeks 217)
-        "Update": 218,        // Kolom HK (Indeks 218)
-        "Jumlah Rombel": 6,   // Kolom G (Asumsi)
-    }
-};
 
 /**
  * ===================================================================
- * ===================== 2. FUNGSI INTI APLIKASI =====================
+ * ===================== 2. FUNGSI DASAR WEB =========================
  * ===================================================================
  */
 
-function cekLoginStatus(username, password) {
-  var ss = SpreadsheetApp.openById("1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA");
-  var sheet = ss.getSheetByName("DATA_USERS");
-  var data = sheet.getDataRange().getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0].toString() === username && data[i][1].toString() === password) {
-      return { success: true, nama: data[i][2], role: data[i][3] };
-    }
-  }
-  return { success: false };
-}
-
-function getPageContent(pageName) {
-  if (!pageName) return "<h3>Error: Nama halaman kosong</h3>";
-
-  // 1. PEMBERSIHAN INPUT (SANITIZATION)
-  // Kode ini membuang awalan 'page_' jika frontend tidak sengaja mengirimnya ganda.
-  // Contoh: Input "page_home" -> Diubah jadi "home"
-  // Contoh: Input "home"      -> Tetap "home"
-  var cleanName = pageName.toString().replace(/^page_/, ''); 
-
-  // 2. PEMBENTUKAN NAMA FILE STANDAR
-  // Kita pastikan format akhirnya selalu: "page_" + namaBersih
-  var fileName = 'page_' + cleanName; 
-  
-  // 3. CARI FILE
-  try {
-    return HtmlService.createTemplateFromFile(fileName).evaluate().getContent();
-  } catch (e) {
-    return "<div style='padding:20px; color:red; border:1px solid red; background:#fff3cd;'>" +
-           "<h3>Error 404: File Tidak Ditemukan</h3>" +
-           "<p>Sistem mencoba membuka file: <b>" + fileName + ".html</b> tapi tidak ada.</p>" +
-           "<p><b>Diagnosa:</b><br>" +
-           "- Input dari Sidebar: " + pageName + "<br>" +
-           "- Nama File yang Dicari: " + fileName + "</p>" +
-           "</div>";
-  }
-}
-
-// Fungsi Bantuan Logout
-function getScriptUrl() {
-  return ScriptApp.getService().getUrl();
-}
-
-function getStatistikPTK() {
-  // Nanti di sini coding ambil data dari Sheet
-  // Sekarang kita pakai data contoh dulu
-  return {
-    total: "156",
-    pns: "85",
-    pppk: "40",
-    honor: "31"
-  };
-}
-
+// Menampilkan Halaman Utama (index.html)
 function doGet() {
-  return HtmlService.createTemplateFromFile('index').evaluate()
+  return HtmlService.createTemplateFromFile('index')
+      .evaluate() 
       .setTitle('SIKS - REBORN')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/**
+ * Fungsi Include (DIPERBAIKI)
+ * Menggunakan createTemplate agar kode CSS/JS di dalam file pecahan 
+ * diproses dengan benar (menghilangkan teks mentah <?!= include ?>)
+ */
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  try {
+    return HtmlService.createTemplateFromFile(filename).evaluate().getContent();
+  } catch (e) {
+    // Jika gagal sebagai template, coba sebagai HTML biasa
+    return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  }
 }
 
 /**
- * ===================================================================
- * ===================== 3. FUNGSI UTILITAS UMUM =====================
- * ===================================================================
+ * FUNGSI PEMANGGIL HALAMAN (ROUTING)
+ * pageName adalah nama file (tanpa 'page_') yang dikirim oleh muatHalaman()
  */
+function getPageContent(pageName) {
+  if (!pageName) return "<h3>Error: Nama halaman kosong</h3>";
 
-function handleError(functionName, error) {
-  Logger.log(`Error di ${functionName}: ${error.message}\nStack: ${error.stack}`);
-  return { error: error.message }; // Return object error ke client
-}
-
-function getOrCreateFolder(parentFolder, folderName) {
-  const folders = parentFolder.getFoldersByName(folderName);
-  if (folders.hasNext()) { return folders.next(); }
-  return parentFolder.createFolder(folderName);
-}
-
-function getDataFromSheet(configKey) {
-  const config = SPREADSHEET_CONFIG[configKey];
-  if (!config) throw new Error(`Konfigurasi untuk '${configKey}' tidak ditemukan.`);
-  const sheet = SpreadsheetApp.openById(config.id).getSheetByName(config.sheet);
-  if (!sheet) throw new Error(`Sheet '${config.sheet}' di spreadsheet '${config.id}' tidak ditemukan.`);
-  return sheet.getDataRange().getDisplayValues();
-}
-
-function getCachedData(key, fetchFunction) {
-  const cache = CacheService.getScriptCache();
-  const cached = cache.get(key);
-  if (cached != null) {
-    return JSON.parse(cached);
+  // Pastikan format file selalu: page_namafile
+  var cleanName = pageName.toString().replace(/^page_/, ''); 
+  var fileName = 'page_' + cleanName; 
+  
+  try {
+    // WAJIB ADA .evaluate() agar isi file (yang mungkin ada include lagi) dimasak dulu
+    return HtmlService.createTemplateFromFile(fileName).evaluate().getContent();
+  } catch (e) {
+    return "<div style='color:red; padding:20px; background:rgba(255,0,0,0.1); border-radius:8px;'>" +
+           "<h3><i class='fas fa-exclamation-triangle'></i> File Tidak Ditemukan</h3>" +
+           "<p>Sistem mencari file <b>" + fileName + ".html</b> tapi tidak ada.</p></div>";
   }
-  const freshData = fetchFunction();
-  cache.put(key, JSON.stringify(freshData), 21600); // Cache for 6 hours
-  return freshData;
 }
+
+// Bantuan URL untuk Script (Opsional)
+function getScriptUrl() { return ScriptApp.getService().getUrl(); }
 
 
 /**
  * ===================================================================
- * =================== MODUL GOOGLE DRIVE (ARSIP) ====================
+ * ===================== 3. FUNGSI LOGIN (SUKSES) ====================
  * ===================================================================
  */
 
-
-
-function getFolders(folderId) {
+function doLogin(form) {
   try {
-    const parentFolder = DriveApp.getFolderById(folderId);
-    const subFolders = parentFolder.getFolders();
-    const folderList = [];
-    while (subFolders.hasNext()) {
-      const folder = subFolders.next();
-      folderList.push({
-        id: folder.getId(),
-        name: folder.getName()
-      });
+    var username = form.username;
+    var password = form.password;
+    
+    // Pastikan SPREADSHEET_IDS.DROPDOWN_DATA sudah didefinisikan di bagian KONFIGURASI PUSAT
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DROPDOWN_DATA);
+    var sheet = ss.getSheetByName('Data User'); 
+    
+    if (!sheet) {
+      return { status: 'error', message: 'Tab "Data User" tidak ditemukan di Spreadsheet.' };
     }
-    folderList.sort((a, b) => b.name.localeCompare(a.name));
-    return folderList;
+
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    // Loop User (Mulai baris 2 untuk melewati header)
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      // Cek apakah Username (Kolom A) dan Password (Kolom B) cocok
+      if (String(row[0]).trim() == username && String(row[1]).trim() == password) {
+        
+        // Kirim balik data user ke browser untuk disimpan sebagai sesi
+        return {
+          status: 'success',
+          data: {
+            username: row[0],
+            nama: row[2] || row[0], // Ambil Nama Lengkap (Kolom C)
+            role: row[3] || 'User'  // Ambil Role (Kolom D)
+          }
+        };
+      }
+    }
+
+    return { status: 'error', message: 'Username atau Password salah.' };
+
   } catch (e) {
-    return handleError("getFolders", e);
+    return { status: 'error', message: 'Error System: ' + e.message };
   }
 }
 
-function getFiles(folderId) {
+
+/**
+ * ===================================================================
+ * ===================== 4. MODUL: DATA SK (DATA) ====================
+ * ===================================================================
+ */
+
+// A. PROSES UNGGAH SK
+function processManualForm(form) {
   try {
-    const parentFolder = DriveApp.getFolderById(folderId);
-    const files = parentFolder.getFiles();
-    const fileList = [];
-    while (files.hasNext()) {
-      const file = files.next();
-      fileList.push({
-        name: file.getName(),
-        url: file.getUrl()
-      });
+    var folder = DriveApp.getFolderById(FOLDER_CONFIG.MAIN_SK); // Pakai Config Folder Bapak
+    var fileUrl = "#"; 
+
+    if (form.fileData && form.fileData.data) {
+       var blob = Utilities.newBlob(Utilities.base64Decode(form.fileData.data), form.fileData.mimeType, form.fileData.name);
+       var file = folder.createFile(blob);
+       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+       fileUrl = file.getUrl();
     }
-    fileList.sort((a, b) => a.name.localeCompare(b.name));
-    return fileList;
-  } catch (e) {
-    return handleError("getFiles", e);
-  }
+
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA); // Pakai ID SK Data Bapak
+    var sheet = ss.getSheetByName("Unggah_SK"); 
+    
+    // Format Tanggal
+    var tglSKFormatted = form.tanggalSK;
+    if(form.tanggalSK && form.tanggalSK.includes('-')){
+       var parts = form.tanggalSK.split('-');
+       tglSKFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+
+    sheet.appendRow([
+      "'" + form.nomorSK, form.namaSD, form.tahunAjaran, form.semester,
+      tglSKFormatted, form.kriteriaSK, fileUrl, "Diproses", 
+      new Date(), form.userInput, 
+      "", "", "", "", "" 
+    ]);
+
+    return "Data berhasil dikirim.";
+  } catch (e) { return "Error Upload: " + e.message; }
+}
+
+// B. AMBIL DATA SK (Tabel)
+function getSKData() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheet = ss.getSheetByName("Unggah_SK");
+    var isAdmin = true; 
+
+    var data = sheet.getDataRange().getDisplayValues();
+    if (data.length <= 1) return { rows: [], isAdmin: isAdmin };
+
+    var headers = data[0];
+    var rows = data.slice(1);
+    
+    // Helper Cari Kolom
+    function findCol(candidates) {
+      for (var i = 0; i < candidates.length; i++) {
+        var target = candidates[i].toLowerCase();
+        for (var j = 0; j < headers.length; j++) {
+           if (headers[j].toString().toLowerCase().trim() === target) return j;
+        }
+      }
+      return -1; 
+    }
+
+    var idx = {
+      noSK: findCol(["Nomor SK", "No SK"]),
+      namaSD: findCol(["Nama Sekolah", "Nama SD"]),
+      tahun: findCol(["Tahun Ajaran", "Tahun"]),
+      sem: findCol(["Semester"]),
+      tglSK: findCol(["Tanggal SK"]),
+      kriteria: findCol(["Kriteria SK"]),
+      dok: findCol(["Link File", "Dokumen"]),
+      status: findCol(["Status"]),
+      tglUpload: findCol(["Timestamp", "Tanggal Unggah"]),
+      userInput: findCol(["User Input"]),
+      update: findCol(["Update"]),
+      userUpdate: findCol(["User Update"]),
+      verval: findCol(["Verval"]),
+      verifikator: findCol(["Verifikator"]),
+      ket: findCol(["Keterangan"])
+    };
+
+    var result = rows.map(function(row, i) {
+      var v = function(c) { return (c > -1 && row[c]) ? row[c] : '-'; };
+      var cleanDate = function(d) { return (d !== '-') ? d.split(' ')[0] : '-'; };
+      
+      return {
+        rowIndex: i + 1, 
+        noSK: v(idx.noSK), namaSD: v(idx.namaSD), tahun: v(idx.tahun),
+        sem: v(idx.sem), tglSK: v(idx.tglSK), kriteria: v(idx.kriteria),
+        dok: v(idx.dok) === '-' ? '#' : v(idx.dok),
+        status: (idx.status > -1 && row[idx.status]) ? row[idx.status] : 'Diproses',
+        tglUpload: cleanDate(v(idx.tglUpload)), userInput: v(idx.userInput),
+        update: cleanDate(v(idx.update)), userUpdate: v(idx.userUpdate),
+        verval: cleanDate(v(idx.verval)), verifikator: v(idx.verifikator),
+        ket: v(idx.ket)
+      };
+    });
+
+    return { rows: result, isAdmin: isAdmin }; 
+  } catch (e) { return { error: "Error Backend: " + e.message }; }
+}
+
+// C. PROSES EDIT SK
+function processEditSK(form) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheet = ss.getSheetByName("Unggah_SK");
+    var rowIdx = parseInt(form.rowIndex) + 1; 
+
+    function getColIdx(name) {
+      var h = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var ix = h.indexOf(name);
+      if(ix < 0 && name == "Nama Sekolah") ix = h.indexOf("Nama SD");
+      if(ix < 0 && name == "Link File") ix = h.indexOf("Dokumen");
+      return ix + 1;
+    }
+
+    if (form.fileData && form.fileData.data) {
+       var colFile = getColIdx("Link File");
+       var oldUrl = sheet.getRange(rowIdx, colFile).getValue();
+       
+       var blob = Utilities.newBlob(Utilities.base64Decode(form.fileData.data), form.fileData.mimeType, form.fileData.name);
+       var file = DriveApp.getFolderById(FOLDER_CONFIG.MAIN_SK).createFile(blob); // Folder Config Bapak
+       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+       
+       sheet.getRange(rowIdx, colFile).setValue(file.getUrl());
+       
+       if (oldUrl && oldUrl.length > 10) {
+         try { DriveApp.getFileById(oldUrl.match(/[-\w]{25,}/)[0]).setTrashed(true); } catch(e){}
+       }
+    }
+
+    sheet.getRange(rowIdx, getColIdx("Nomor SK")).setValue(form.nomorSK);
+    if(form.tanggalSK) { 
+       var p = form.tanggalSK.split('-'); 
+       if(p.length===3) sheet.getRange(rowIdx, getColIdx("Tanggal SK")).setValue(p[2]+'/'+p[1]+'/'+p[0]);
+    }
+
+    var stCol = getColIdx("Status");
+    var oldSt = sheet.getRange(rowIdx, stCol).getValue();
+    if(oldSt == 'Revisi' || oldSt == 'Ditolak') sheet.getRange(rowIdx, stCol).setValue('Diproses');
+
+    sheet.getRange(rowIdx, getColIdx("Update")).setValue(new Date());
+    sheet.getRange(rowIdx, getColIdx("User Update")).setValue(form.userUpdate);
+
+    return "Data berhasil diperbarui.";
+  } catch(e) { return "Error: " + e.message; }
+}
+
+// D. PROSES HAPUS SK
+function processDeleteSK(form) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheetSource = ss.getSheetByName("Unggah_SK");
+    var sheetTrash = ss.getSheetByName("Trash_SK");
+    if(!sheetTrash) sheetTrash = ss.insertSheet("Trash_SK");
+
+    var rowIdx = parseInt(form.rowIndex) + 1;
+    var rowData = sheetSource.getRange(rowIdx, 1, 1, sheetSource.getLastColumn()).getValues()[0];
+
+    rowData.push("Dihapus: " + form.userDelete + ", Alasan: " + form.alasan);
+    sheetTrash.appendRow(rowData);
+    sheetSource.deleteRow(rowIdx);
+
+    return "Data dipindahkan ke Trash.";
+  } catch(e) { return "Error: " + e.message; }
+}
+
+function getStatistikPTK() {
+  return { total: "156", pns: "85", pppk: "40", honor: "31" };
+}
+
+
+/**
+ * ===================================================================
+ * ===================== 4. MODUL: DATA SK (FINAL) ===================
+ * ===================================================================
+ */
+
+// A. PROSES UNGGAH SK
+function processManualForm(form) {
+  try {
+    // 1. Upload File ke Folder MAIN_SK (Sesuai Konfig Bapak)
+    var folder = DriveApp.getFolderById(FOLDER_CONFIG.MAIN_SK);
+    var fileUrl = "#"; 
+
+    if (form.fileData && form.fileData.data) {
+       var blob = Utilities.newBlob(Utilities.base64Decode(form.fileData.data), form.fileData.mimeType, form.fileData.name);
+       var file = folder.createFile(blob);
+       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+       fileUrl = file.getUrl();
+    }
+
+    // 2. Simpan ke Spreadsheet SK_DATA
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheet = ss.getSheetByName("Unggah_SK"); 
+    
+    // Format Tanggal SK
+    var tglSKFormatted = form.tanggalSK;
+    if(form.tanggalSK && form.tanggalSK.includes('-')){
+       var parts = form.tanggalSK.split('-');
+       tglSKFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+
+    // Append Data
+    sheet.appendRow([
+      "'" + form.nomorSK,
+      form.namaSD,
+      form.tahunAjaran,
+      form.semester,
+      tglSKFormatted,
+      form.kriteriaSK,
+      fileUrl,
+      "Diproses", 
+      new Date(), 
+      form.userInput, 
+      "", "", "", "", "" 
+    ]);
+
+    return "Data berhasil dikirim.";
+  } catch (e) { return "Error Upload: " + e.message; }
+}
+
+// B. AMBIL DATA SK (Tabel)
+function getSKData() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheet = ss.getSheetByName("Unggah_SK");
+    var isAdmin = true; 
+
+    var data = sheet.getDataRange().getDisplayValues();
+    if (data.length <= 1) return { rows: [], isAdmin: isAdmin };
+
+    var headers = data[0];
+    var rows = data.slice(1);
+    
+    function findCol(candidates) {
+      for (var i = 0; i < candidates.length; i++) {
+        var target = candidates[i].toLowerCase();
+        for (var j = 0; j < headers.length; j++) {
+           if (headers[j].toString().toLowerCase().trim() === target) return j;
+        }
+      }
+      return -1; 
+    }
+
+    var idx = {
+      noSK: findCol(["Nomor SK", "No SK"]),
+      namaSD: findCol(["Nama Sekolah", "Nama SD"]),
+      tahun: findCol(["Tahun Ajaran", "Tahun"]),
+      sem: findCol(["Semester"]),
+      tglSK: findCol(["Tanggal SK"]),
+      kriteria: findCol(["Kriteria SK"]),
+      dok: findCol(["Link File", "Dokumen"]),
+      status: findCol(["Status"]),
+      tglUpload: findCol(["Timestamp", "Tanggal Unggah"]),
+      userInput: findCol(["User Input"]),
+      update: findCol(["Update"]),
+      userUpdate: findCol(["User Update"]),
+      verval: findCol(["Verval"]),
+      verifikator: findCol(["Verifikator"]),
+      ket: findCol(["Keterangan"])
+    };
+
+    var result = rows.map(function(row, i) {
+      var v = function(c) { return (c > -1 && row[c]) ? row[c] : '-'; };
+      var cleanDate = function(d) { return (d !== '-') ? d.split(' ')[0] : '-'; };
+      var parseSort = function(d) {
+         if(!d || d==='-') return 0;
+         try {
+           var p = d.split(' ')[0].split('/'); 
+           if(p.length===3) return new Date(p[2], p[1]-1, p[0]).getTime();
+           return new Date(d).getTime() || 0;
+         } catch(e){ return 0; }
+      };
+      var sKey = Math.max(parseSort(v(idx.tglUpload)), parseSort(v(idx.update)), parseSort(v(idx.verval)));
+
+      return {
+        rowIndex: i + 1, 
+        noSK: v(idx.noSK), namaSD: v(idx.namaSD), tahun: v(idx.tahun),
+        sem: v(idx.sem), tglSK: v(idx.tglSK), kriteria: v(idx.kriteria),
+        dok: v(idx.dok) === '-' ? '#' : v(idx.dok),
+        status: (idx.status > -1 && row[idx.status]) ? row[idx.status] : 'Diproses',
+        tglUpload: cleanDate(v(idx.tglUpload)), userInput: v(idx.userInput),
+        update: cleanDate(v(idx.update)), userUpdate: v(idx.userUpdate),
+        verval: cleanDate(v(idx.verval)), verifikator: v(idx.verifikator),
+        ket: v(idx.ket), _sortKey: sKey
+      };
+    });
+
+    result.sort(function(a, b) { return b._sortKey - a._sortKey; });
+    return { rows: result, isAdmin: isAdmin }; 
+  } catch (e) { return { error: "Error Backend: " + e.message }; }
+}
+
+// C. PROSES EDIT SK
+function processEditSK(form) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheet = ss.getSheetByName("Unggah_SK");
+    var rowIdx = parseInt(form.rowIndex) + 1; 
+
+    // Helper Find Col (Local)
+    function getColIdx(name) {
+      var h = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var ix = h.indexOf(name);
+      if(ix < 0 && name == "Nama Sekolah") ix = h.indexOf("Nama SD");
+      if(ix < 0 && name == "Link File") ix = h.indexOf("Dokumen");
+      return ix + 1;
+    }
+
+    // Logic Ganti File (Pakai FOLDER_CONFIG.MAIN_SK)
+    if (form.fileData && form.fileData.data) {
+       var colFile = getColIdx("Link File");
+       var oldUrl = sheet.getRange(rowIdx, colFile).getValue();
+       
+       var blob = Utilities.newBlob(Utilities.base64Decode(form.fileData.data), form.fileData.mimeType, form.fileData.name);
+       var file = DriveApp.getFolderById(FOLDER_CONFIG.MAIN_SK).createFile(blob);
+       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+       
+       sheet.getRange(rowIdx, colFile).setValue(file.getUrl());
+       
+       // Soft Delete File Lama
+       if (oldUrl && oldUrl.length > 10) {
+         try { DriveApp.getFileById(oldUrl.match(/[-\w]{25,}/)[0]).setTrashed(true); } catch(e){}
+       }
+    }
+
+    sheet.getRange(rowIdx, getColIdx("Nomor SK")).setValue(form.nomorSK);
+    if(form.tanggalSK) { 
+       var p = form.tanggalSK.split('-'); 
+       if(p.length===3) sheet.getRange(rowIdx, getColIdx("Tanggal SK")).setValue(p[2]+'/'+p[1]+'/'+p[0]);
+    }
+
+    var stCol = getColIdx("Status");
+    var oldSt = sheet.getRange(rowIdx, stCol).getValue();
+    if(oldSt == 'Revisi' || oldSt == 'Ditolak') sheet.getRange(rowIdx, stCol).setValue('Diproses');
+
+    sheet.getRange(rowIdx, getColIdx("Update")).setValue(new Date());
+    sheet.getRange(rowIdx, getColIdx("User Update")).setValue(form.userUpdate);
+
+    return "Data berhasil diperbarui.";
+  } catch(e) { return "Error: " + e.message; }
+}
+
+// D. PROSES HAPUS SK
+function processDeleteSK(form) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheetSource = ss.getSheetByName("Unggah_SK");
+    var sheetTrash = ss.getSheetByName("Trash_SK");
+    if(!sheetTrash) sheetTrash = ss.insertSheet("Trash_SK");
+
+    var rowIdx = parseInt(form.rowIndex) + 1;
+    var rowData = sheetSource.getRange(rowIdx, 1, 1, sheetSource.getLastColumn()).getValues()[0];
+
+    rowData.push("Dihapus: " + form.userDelete + ", Alasan: " + form.alasan);
+    sheetTrash.appendRow(rowData);
+    sheetSource.deleteRow(rowIdx);
+
+    return "Data dipindahkan ke Trash.";
+  } catch(e) { return "Error: " + e.message; }
+}
+
+// E. PROSES VERIFIKASI
+function processVerifySK(form) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    var sheet = ss.getSheetByName("Unggah_SK");
+    var rowIdx = parseInt(form.rowIndex) + 1;
+
+    function getColIdx(name) { 
+       var h = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+       var i = h.indexOf(name);
+       if(i<0 && name=="Keterangan") i = h.indexOf("Catatan");
+       return i+1; 
+    }
+
+    sheet.getRange(rowIdx, getColIdx("Status")).setValue(form.statusVerif);
+    sheet.getRange(rowIdx, getColIdx("Keterangan")).setValue(form.keterangan);
+    sheet.getRange(rowIdx, getColIdx("Verval")).setValue(new Date());
+    sheet.getRange(rowIdx, getColIdx("Verifikator")).setValue(form.verifikator);
+
+    return "Verifikasi disimpan.";
+  } catch(e) { return "Error: " + e.message; }
+}
+
+// Data Dashboard (Placeholder)
+function getStatistikPTK() {
+  return { total: "156", pns: "85", pppk: "40", honor: "31" };
 }
 
 
@@ -422,45 +653,3 @@ const SD_FORM_INDEX_MAP = [
   // 224: Update
   'Update'
 ];
-
-
-
-/**
- * ===================================================================
- * ======================== MODUL: DATA MURID ========================
- * ===================================================================
- */
-
-
-
-/**
- * ===================================================================
- * ========================= MODUL: DATA PTK =========================
- * ===================================================================
- */
- 
-
-
-
-/**
- * ===================================================================
- * ========================== MODUL: DATA SK =========================
- * ===================================================================
- */
-
-
-
-
-
-/**
- * [REFACTOR - FINAL V4] Mengambil data riwayat pengiriman SK.
- * Memperbaiki parsing tanggal untuk pengurutan yang benar.
- */
-
-
-/**
- * ===================================================================
- * ======================== MODUL: DATA SIABA ========================
- * ===================================================================
- */
-

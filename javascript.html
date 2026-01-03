@@ -3,91 +3,360 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// --- 1. JARING PENGAMAN (WAJIB DI ATAS) ---
-// Agar aplikasi tidak layar putih jika fungsi halaman belum siap
-window.initSkUnggahPage = window.initSkUnggahPage || function(){};
-window.initSkRiwayatPage = window.initSkRiwayatPage || function(){};
-window.initSkStatusPage = window.initSkStatusPage || function(){};
-window.initSkKelolaPage = window.initSkKelolaPage || function(){};
-window.initMenuPage = window.initMenuPage || function(){};
-window.initSkArsipPage = window.initSkArsipPage || dummyFunction;
+/**
+ * ====================================================================
+ * BAGIAN 1: GLOBAL APP STATE & ROUTING (MESIN UTAMA)
+ * ====================================================================
+ */
 
-// --- 2. DEKLARASI NAMESPACE ---
 var App = App || {};
 App.currentUser = null;
+App.isLoggedIn = false;
 
-// JARING PENGAMAN: Mencegah Layar Putih akibat fungsi yang belum dibuat
-const safeInitializers = [
-  'initSkRiwayatPage', 'initSkUnggahPage', 'initSkStatusPage', 
-  'initSkKelolaPage', 'initSkArsipPage', 'initMenuPage'
-];
-safeInitializers.forEach(fn => {
-  if (typeof window[fn] === 'undefined') {
-    window[fn] = function() { console.warn('Fungsi ' + fn + ' belum didefinisikan.'); };
-  }
+// 1. CEK STATUS LOGIN SAAT WEB DIBUKA (Startup)
+function checkLoginStatus() {
+    // Menggunakan kunci 'sesi_user' agar sinkron dengan page_login.html
+    var savedSession = localStorage.getItem('sesi_user');
+    
+    if (savedSession) {
+        try {
+            App.currentUser = JSON.parse(savedSession);
+            App.isLoggedIn = true;
+            
+            // Tampilkan Website Utama, Sembunyikan Gerbang Login
+            document.getElementById('gerbang-login').style.display = 'none';
+            document.getElementById('website-utama').style.display = 'block';
+            
+            // Masuk ke Beranda (page_home)
+            muatHalaman('home');
+            
+        } catch(e) {
+            console.error("Session rusak:", e);
+            prosesLogout(false); // Logout tanpa konfirmasi jika data rusak
+        }
+    } else {
+        // Jika tidak ada sesi, pastikan kotak login muncul
+        document.getElementById('gerbang-login').style.display = 'flex';
+        document.getElementById('website-utama').style.display = 'none';
+    }
+}
+
+// 2. FUNGSI LOGIN (Dipanggil dari formLogin di page_login.html)
+function prosesLogin(e) {
+    if(e) e.preventDefault(); 
+    
+    var btn = document.getElementById('tombolMasuk');
+    var form = document.getElementById('formLogin');
+    
+    var formData = {
+        username: form.username.value,
+        password: form.password.value
+    };
+
+    btn.disabled = true;
+    btn.innerText = "MEMERIKSA...";
+
+    google.script.run
+        .withSuccessHandler(function(response) {
+            if (response && response.status === 'success') {
+                // Simpan Sesi
+                localStorage.setItem('sesi_user', JSON.stringify(response.data));
+                App.currentUser = response.data;
+                App.isLoggedIn = true;
+
+                // Animasi Transisi UI
+                $('#gerbang-login').fadeOut(400, function() {
+                    $('#website-utama').fadeIn(400);
+                    muatHalaman('home'); 
+                });
+                
+                showToast('success', 'Akses Diterima', 'Selamat datang, ' + response.data.nama);
+            } else {
+                btn.disabled = false;
+                btn.innerText = "MASUK";
+                Swal.fire('Gagal', response.message || 'Login Gagal', 'error');
+            }
+        })
+        .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerText = "MASUK";
+            Swal.fire('Error', 'Gangguan server: ' + err.message, 'error');
+        })
+        .doLogin(formData);
+}
+
+// 3. MESIN LOAD HALAMAN (muatHalaman)
+// pageName di sini adalah nama file tanpa awalan 'page_'
+function muatHalaman(pageName, params) {
+    var currentParams = params || {};
+    var areaKonten = document.getElementById('main-content');
+    
+    // Loading State
+    areaKonten.innerHTML = '<div style="text-align:center; padding-top:100px; color:white;"><i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top:15px;">Memuat Halaman...</p></div>';
+
+    google.script.run
+        .withSuccessHandler(function(html) {
+            // Masukkan Konten ke dalam Div Utama
+            areaKonten.innerHTML = html;
+
+            // Update Sidebar Menu Aktif
+            $('.sidebar-menu a').removeClass('active');
+            $('.sidebar-menu a[data-page="' + pageName + '"]').addClass('active');
+
+            // Jalankan Inisialisasi Script Halaman (Jika ada di Kamus Modul)
+            if (App.pageInitializers && typeof App.pageInitializers[pageName] === 'function') {
+                App.pageInitializers[pageName](currentParams);
+            }
+        })
+        .withFailureHandler(function(err) {
+            areaKonten.innerHTML = '<div class="alert alert-danger">Gagal memuat halaman: ' + pageName + '<br>Detail: ' + err.message + '</div>';
+        })
+        .getPageContent(pageName);
+}
+
+// 4. FUNGSI LOGOUT (Dipanggil tombol Keluar)
+window.prosesLogout = function(withConfirm) {
+    var logoutAction = function() {
+        // A. Hapus data sesi
+        localStorage.removeItem('sesi_user');
+        App.currentUser = null;
+        App.isLoggedIn = false;
+        
+        // B. Reset Tombol Login agar bisa diklik lagi
+        var btnMasuk = document.getElementById('tombolMasuk');
+        if (btnMasuk) {
+            btnMasuk.disabled = false; // Aktifkan tombol
+            btnMasuk.innerText = "MASUK"; // Kembalikan teks asli
+        }
+        
+        // C. Tukar Tampilan
+        document.getElementById('website-utama').style.display = 'none';
+        var gerbang = document.getElementById('gerbang-login');
+        if (gerbang) {
+            gerbang.style.display = 'flex';
+        }
+        
+        // D. Reset isi form login
+        var form = document.getElementById('formLogin');
+        if(form) form.reset();
+    };
+
+    if (withConfirm !== false) {
+        Swal.fire({
+            title: 'Keluar Aplikasi?',
+            text: "Sesi Anda akan diakhiri.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Ya, Keluar',
+            cancelButtonText: 'Batal'
+        }).then(function(result) {
+            if (result.isConfirmed) logoutAction();
+        });
+    } else {
+        logoutAction();
+    }
+}
+
+window.onload = function() {
+    var sesi = localStorage.getItem('sesi_user');
+    
+    // Pastikan tombol login selalu hidup saat startup
+    var btnMasuk = document.getElementById('tombolMasuk');
+    if (btnMasuk) {
+        btnMasuk.disabled = false;
+        btnMasuk.innerText = "MASUK";
+    }
+
+    if (sesi) {
+        // ... kode muat beranda ...
+    }
+}
+
+/**
+ * ====================================================================
+ * BAGIAN 2: KAMUS HALAMAN (INISIALISASI MODUL)
+ * ====================================================================
+ */
+
+App.pageInitializers = {
+    // HOME & UTAMA
+    'home': initMenuPage,
+
+    // --- SK PEMBAGIAN TUGAS (REVISI STRUKTUR BARU) ---
+    'sk_menu': initMenuPage, // Menu Utama (Optional)
+    
+    // 1. Dashboard (Baru)
+    'sk_dashboard': function(p) { 
+        if(typeof window.initSkDashboardPage === 'function') window.initSkDashboardPage(p); 
+    },
+    
+    // 2. Unggah (Lama)
+    'sk_unggah': function(p) { 
+        if(typeof window.initPageSKUnggah === 'function') window.initPageSKUnggah(p);
+        else if(typeof window.initSkUnggahPage === 'function') window.initSkUnggahPage(p);
+    },
+    
+    // 3. Data SK (Baru - Gabungan)
+    'sk_data': function(p) { 
+        if(typeof window.initSkDataPage === 'function') window.initSkDataPage(p); 
+    },
+    
+    // 4. Arsip (Lama)
+    'sk_arsip': function(p) { 
+        if(typeof window.initSkArsipPage === 'function') window.initSkArsipPage(p); 
+    },
+    
+    // HALAMAN EDIT (Perlu tetap ada route-nya meski tidak ada di menu sidebar)
+    'sk_edit': function(p) { 
+        // Pastikan ada file page_sk_edit.html dan fungsinya
+        if(typeof window.initSkEditPage === 'function') window.initSkEditPage(p); 
+    },
+    'sk_status': function(p) { window.initSkStatusPage(p); },
+
+    // LAPBUL
+    'lapbul_menu': initMenuPage,
+    'lapbul_unggah': function(p) { if(window.initLapbulUnggahPage) window.initLapbulUnggahPage(p); },
+    'lapbul_riwayat': function(p) { if(window.initLapbulRiwayatPage) window.initLapbulRiwayatPage(p); },
+    'lapbul_status': function(p) { if(window.initLapbulStatusPage) window.initLapbulStatusPage(p); },
+    'lapbul_arsip': function(p) { if(window.initLapbulArsipPage) window.initLapbulArsipPage(p); },
+    'lapbul_kelola': function(p) { if(window.initLapbulKelolaPage) window.initLapbulKelolaPage(p); },
+    'lapbul_unduh_format': function(p) { if(window.initLapbulUnduhFormatPage) window.initLapbulUnduhFormatPage(p); },
+    'lapbul_edit_paud': function(p) { if(window.initLapbulEditPaudPage) window.initLapbulEditPaudPage(p); },
+    'lapbul_edit_sd': function(p) { if(window.initLapbulEditSdPage) window.initLapbulEditSdPage(p); },
+
+    // PTK
+    'ptk_menu': initMenuPage,
+    'ptk_paud_menu': initMenuPage,
+    'ptk_keadaan_paud': function(p) { if(window.initPtkKeadaanPaudPage) window.initPtkKeadaanPaudPage(p); },
+    'ptk_jumlah_bulanan_paud': function(p) { if(window.initPtkJumlahBulananPaudPage) window.initPtkJumlahBulananPaudPage(p); },
+    'ptk_daftar_paud': function(p) { if(window.initPtkDaftarPaudPage) window.initPtkDaftarPaudPage(p); },
+    'ptk_kelola_paud': function(p) { if(window.initPtkKelolaPaudPage) window.initPtkKelolaPaudPage(p); },
+    'ptk_tambah_paud': function(p) { if(window.initPtkTambahPaudPage) window.initPtkTambahPaudPage(p); },
+    'ptk_edit_paud': function(p) { if(window.initPtkEditPaudPage) window.initPtkEditPaudPage(p); },
+    'ptk_sd_menu': initMenuPage,
+    'ptk_keadaan_sd': function(p) { if(window.initPtkKeadaanSdPage) window.initPtkKeadaanSdPage(p); },
+    'ptk_jumlah_bulanan_sd': function(p) { if(window.initPtkJumlahBulananSdPage) window.initPtkJumlahBulananSdPage(p); },
+    'ptk_daftar_sd_negeri': function(p) { if(window.initPtkDaftarSdnPage) window.initPtkDaftarSdnPage(p); },
+    'ptk_daftar_sd_swasta': function(p) { if(window.initPtkDaftarSdsPage) window.initPtkDaftarSdsPage(p); },
+    'ptk_kelola_sd': function(p) { if(window.initPtkKelolaSdPage) window.initPtkKelolaSdPage(p); },
+    'ptk_kebutuhan_sd_negeri': function(p) { if(window.initPtkKebutuhanSdPage) window.initPtkKebutuhanSdPage(p); },
+    'ptk_tambah_sd': function(p) { if(window.initPtkTambahSdPage) window.initPtkTambahSdPage(p); },
+    'ptk_edit_sd': function(p) { if(window.initPtkEditSdPage) window.initPtkEditSdPage(p); },
+
+    // MURID
+    'murid_menu': initMenuPage,
+    'murid_paud_menu': initMenuPage,
+    'murid_paud_kelas_usia': function(p) { if(window.initMuridPaudKelasUsiaPage) window.initMuridPaudKelasUsiaPage(p); },
+    'murid_paud_jenis_kelamin': function(p) { if(window.initMuridPaudJenisKelaminPage) window.initMuridPaudJenisKelaminPage(p); },
+    'murid_paud_jumlah_bulanan': function(p) { if(window.initMuridPaudJumlahBulananPage) window.initMuridPaudJumlahBulananPage(p); },
+    'murid_sd_menu': initMenuPage,
+    'murid_sd_kelas': function(p) { if(window.initMuridSdKelasPage) window.initMuridSdKelasPage(p); },
+    'murid_sd_rombel': function(p) { if(window.initMuridSdRombelPage) window.initMuridSdRombelPage(p); },
+    'murid_sd_jenis_kelamin': function(p) { if(window.initMuridSdJenisKelaminPage) window.initMuridSdJenisKelaminPage(p); },
+    'murid_sd_agama': function(p) { if(window.initMuridSdAgamaPage) window.initMuridSdAgamaPage(p); },
+    'murid_sd_jumlah_bulanan': function(p) { if(window.initMuridSdJumlahBulananPage) window.initMuridSdJumlahBulananPage(p); },
+
+    // SIABA & ASN (General)
+    'siaba_menu': initMenuPage,
+    'siaba_dashboard': function(p) { if(window.initSiabaDashboardPage) window.initSiabaDashboardPage(p); else initMenuPage(p); },
+    'asn_menu': initMenuPage,
+    'asn_dashboard': function(p) { if(window.initAsnDashboardPage) window.initAsnDashboardPage(p); else initMenuPage(p); }
+};
+    
+/**
+ * ====================================================================
+ * BAGIAN 3: EVENT LISTENERS SIDEBAR & UI
+ * ====================================================================
+ */
+
+$(document).ready(function() {
+    // 1. Cek Sesi saat pertama kali buka
+    checkLoginStatus();
+
+    // 2. Logic Klik Menu Sidebar (Accordion & Navigasi)
+    $('.sidebar-menu').on('click', 'a', function(e) {
+        var $link = $(this);
+        var $submenu = $link.next('ul');
+        var page = $link.data('page');
+        var $li = $link.parent();
+
+        // Kasus A: Jika Menu punya Sub-Menu (Dropdown)
+        if ($submenu.length > 0) {
+            e.preventDefault();
+            if ($li.hasClass('open')) {
+                $submenu.slideUp(200);
+                $li.removeClass('open');
+            } else {
+                $li.siblings('.open').removeClass('open').find('ul').slideUp(200);
+                $submenu.slideDown(200);
+                $li.addClass('open');
+            }
+            return;
+        }
+
+        // Kasus B: Jika Menu adalah Link Halaman (punya data-page)
+        if (page) {
+            e.preventDefault();
+            // Tutup sidebar otomatis di layar kecil (HP)
+            if ($(window).width() <= 768) $('.sidebar').removeClass('show');
+            
+            muatHalaman(page);
+        }
+    });
+
+    // 3. Tombol Logout di Sidebar
+    $(document).on('click', '.btn-logout-glass', function(e) {
+        e.preventDefault();
+        prosesLogout();
+    });
 });
 
-function disableBack() {
-  window.history.pushState(null, "", window.location.href);
-  window.onpopstate = function() {
-    window.history.pushState(null, "", window.location.href);
-  };
-};
+/**
+ * ====================================================================
+ * BAGIAN 4: UTILITY (TOAST & NOTIFIKASI)
+ * ====================================================================
+ */
 
-// Helper Validasi Tanggal Dinas
-// Aturan: Mulai >= SPT, Selesai >= Mulai
-function setupDateValidation(idSpt, idMulai, idSelesai) {
-    const elSpt = document.getElementById(idSpt);
-    const elMulai = document.getElementById(idMulai);
-    const elSelesai = document.getElementById(idSelesai);
-
-    if (!elSpt || !elMulai || !elSelesai) return;
-
-    // 1. Saat Tanggal SPT berubah
-    elSpt.addEventListener('change', () => {
-        if (elSpt.value) {
-            // Set batas minimal Tanggal Mulai = Tanggal SPT
-            elMulai.min = elSpt.value;
-            
-            // Jika Tanggal Mulai yang sudah dipilih ternyata lebih kecil, reset
-            if (elMulai.value && elMulai.value < elSpt.value) {
-                elMulai.value = elSpt.value;
-                // Picu event change di Mulai agar Selesai juga menyesuaikan
-                elMulai.dispatchEvent(new Event('change')); 
-            }
-        }
-    });
-
-    // 2. Saat Tanggal Mulai berubah
-    elMulai.addEventListener('change', () => {
-        if (elMulai.value) {
-            // Validasi Mundur: Mulai tidak boleh < SPT
-            if (elSpt.value && elMulai.value < elSpt.value) {
-                App.showAppModal('error', 'Tanggal Mulai tidak boleh sebelum Tanggal SPT.');
-                elMulai.value = elSpt.value;
-            }
-            
-            // Set batas minimal Tanggal Selesai = Tanggal Mulai
-            elSelesai.min = elMulai.value;
-            
-            // Jika Tanggal Selesai yang sudah dipilih lebih kecil, reset
-            if (elSelesai.value && elSelesai.value < elMulai.value) {
-                elSelesai.value = elMulai.value;
-            }
-        }
-    });
-
-    // 3. Saat Tanggal Selesai berubah
-    elSelesai.addEventListener('change', () => {
-        if (elSelesai.value && elMulai.value) {
-            // Validasi: Selesai tidak boleh < Mulai
-            if (elSelesai.value < elMulai.value) {
-                App.showAppModal('error', 'Tanggal Selesai tidak boleh sebelum Tanggal Mulai.');
-                elSelesai.value = elMulai.value;
-            }
-        }
+window.showToast = function(type, title, message) {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: type,
+        title: title,
+        text: message,
+        showConfirmButton: false,
+        timer: 3000
     });
 };
+
+function initMenuPage() {
+    document.querySelectorAll('#main-content .menu-button').forEach((button, index) => {
+        button.style.animationDelay = (index * 0.07) + "s";
+    });
+}
+
+App.showFilePreview = (url) => {
+    const modal = document.getElementById('previewModal');
+    const frame = document.getElementById('previewFrame');
+    if (!url) return;
+    let previewUrl = url.replace('/view', '/preview');
+    modal.classList.add('show');
+    frame.src = previewUrl;
+};
+
+App.closePreview = () => {
+    document.getElementById('previewModal').classList.remove('show');
+    document.getElementById('previewFrame').src = 'about:blank';
+};
+
+/**
+ * ====================================================================
+ * BAGIAN 2: BADAN & KAKI (JANGAN DIHAPUS)
+ * Mulai dari sini ke bawah adalah kode-kode fitur yang Anda sebutkan tadi.
+ * (App.setupTabForm, App.processDeletion, init..., dll)
+ * ====================================================================
+ */
 
 App.showAppModal = (state, message, redirectPage = null) => {
     const modal = document.getElementById('appModal');
@@ -124,96 +393,6 @@ App.showAppModal = (state, message, redirectPage = null) => {
     modal.classList.add('show');
 };
 
-App.loadPage = function(pageName, params) {
-    
-    // Default params jika kosong
-    params = params || {};
-
-    console.log("Memulai proses loadPage:", pageName);
-    const contentArea = document.getElementById('main-content');
-    
-    // Tampilan Loading Keren (Dari kode Bapak)
-    contentArea.innerHTML = '<div class="loading-container"><div class="spinner-container"><div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div></div><p>Memuat halaman...</p></div>';
-    
-    // Panggil Backend
-    google.script.run
-        .withSuccessHandler(function(html) {
-            try {
-                // 1. Masukkan Konten
-                contentArea.innerHTML = html;
-                
-                // 2. Update Sidebar Active State
-                // Matikan semua
-                $('.sidebar-menu a').removeClass('active');
-                
-                // Nyalakan yang diklik
-                var $activeLink = $(`.sidebar-menu a[data-page="${pageName}"]`);
-                if ($activeLink.length > 0) {
-                    $activeLink.addClass('active');
-                    // Nyalakan Bapaknya (Accordion)
-                    var $parentLi = $activeLink.parents('li.has-submenu');
-                    $parentLi.addClass('open'); 
-                    $parentLi.children('a').addClass('active');
-                    $parentLi.find('.submenu-icon').removeClass('fa-chevron-right').addClass('fa-chevron-down');
-                    $parentLi.children('ul').show();
-                }
-
-                // 3. Jalankan Script Halaman (Inisialisasi)
-                // Menggunakan setTimeout 0 agar HTML render dulu baru script jalan
-                setTimeout(function() {
-                    if (typeof App.pageInitializers !== 'undefined' && typeof App.pageInitializers[pageName] === 'function') {
-                        console.log("Menjalankan script:", pageName);
-                        App.pageInitializers[pageName](params);
-                    }
-                }, 0); 
-
-            } catch (e) {
-                console.error("Error Client-side:", e);
-                contentArea.innerHTML = `<div class="alert alert-danger">Error Javascript: ${e.message}</div>`;
-            }
-        })
-        .withFailureHandler(function(err) {
-            console.error("Error Server-side:", err);
-            contentArea.innerHTML = `<div class="alert alert-danger">
-                <h4>Gagal Memuat Konten!</h4>
-                <p>Pastikan file <b>page_${pageName}.html</b> sudah dibuat.</p>
-                <small>Error: ${err.message}</small>
-            </div>`;
-        })
-        // PENTING: Pastikan fungsi ini memanggil 'getPageContent' yang ada di Code.gs
-        .getPageContent(pageName); 
-};
-
-App.updateActiveMenu = function(pageName) {
-    // 1. Reset hanya class 'active' pada link
-    $('.sidebar-menu a').removeClass('active');
-    
-    // CATATAN: Jangan reset class 'open' di sini. Biarkan itu diurus oleh logika sidebar.
-    // Jika kita reset 'open' di sini, menu akan menutup paksa setiap kali halaman dimuat.
-
-    // 2. Cari link yang sesuai
-    var $activeLink = $(`.sidebar-menu a[data-page="${pageName}"]`);
-
-    if ($activeLink.length > 0) {
-        // Nyalakan link
-        $activeLink.addClass('active');
-
-        // 3. Cari Bapak/Kakeknya (Parent Li)
-        var $parents = $activeLink.parents('li.has-submenu');
-        
-        // Tambahkan class 'open' (SESUAI CSS BAPAK)
-        $parents.addClass('open');
-        
-        // Putar Panah ke Bawah
-        $parents.find('> a .submenu-icon').removeClass('fa-chevron-right').addClass('fa-chevron-down');
-        
-        // Nyalakan teks Bapaknya juga
-        $parents.children('a').addClass('active');
-
-        // Pastikan Submenu Terlihat
-        $parents.children('ul').show(); 
-    }
-};
 
 App.debounce = (func, timeout = 150) => {
     let timer;
@@ -1106,40 +1285,6 @@ function initMenuPage() {
     // Fungsi ini berlaku untuk semua halaman menu yang menggunakan .menu-button
     document.querySelectorAll('#main-content .menu-button').forEach((button, index) => {
         button.style.animationDelay = `${index * 0.07}s`;
-    });
-}
-
-function initSkKelolaPage() {
-    App.initializeGenericTablePage({
-        tableId: 'kelolaTable', // ID tabel di page_sk_kelola.html
-        serverFunction: 'getSKKelolaData', // Fungsi server untuk Kelola Data SK
-        editPage: 'sk_edit', // KUNCI PERBAIKAN: Menambahkan halaman tujuan edit
-        filters: [
-            // Filter Tahun Ajaran
-            { 
-                id: 'filterTahun', 
-                dataColumn: 'Tahun Ajaran', 
-                type: 'dropdown', 
-                sortReverse: true, 
-                defaultText: 'Semua Tahun' 
-            },
-            
-            // Filter Semester
-            { 
-                id: 'filterSemester', 
-                dataColumn: 'Semester', 
-                type: 'dropdown', 
-                defaultText: 'Semua Semester' 
-            },
-            
-            // Filter Nama Sekolah
-            { 
-                id: 'filterNamaSekolah', 
-                dataColumn: 'Nama SD', 
-                type: 'dropdown', 
-                defaultText: 'Semua Sekolah' 
-            }
-        ]
     });
 }
 
@@ -10935,567 +11080,6 @@ App.closePreview = () => {
     // Reset src agar video/audio/pdf berhenti loading di background
     setTimeout(() => { frame.src = 'about:blank'; }, 300); 
 };
-
-App.pageInitializers = {
-
-    // --- 1. MENU UTAMA ---
-    'home': initMenuPage,
-
-    // --- 2. SK PEMBAGIAN TUGAS ---
-    'sk_menu': initMenuPage,          // Menu Bapak (Hanya Accordion)
-    'sk_dashboard': function(params) {
-         // Pastikan file page_sk_dashboard.html sudah dibuat!
-         if(typeof window.initSkDashboardPage === 'function') window.initSkDashboardPage(params);
-    },
-    'sk_unggah': function(params) {
-         if(typeof window.initPageSKUnggah === 'function') window.initPageSKUnggah(params);
-         else if(typeof window.initSkUnggahPage === 'function') window.initSkUnggahPage(params);
-    },
-    'sk_riwayat': function(params) {
-         if(typeof window.initSkRiwayatPage === 'function') window.initSkRiwayatPage(params);
-    },
-    'sk_status': function(params) {
-         if(typeof window.initSkStatusPage === 'function') window.initSkStatusPage(params);
-    },
-    'sk_arsip': function(params) {
-         if(typeof window.initSkArsipPage === 'function') window.initSkArsipPage(params);
-    },
-    'sk_kelola': function(params) {
-         if(typeof window.initSkKelolaPage === 'function') window.initSkKelolaPage(params);
-    },
-
-    // --- 3. LAPORAN BULAN (LAPBUL) ---
-    'lapbul_menu': initMenuPage,
-    'lapbul_dashboard': initMenuPage, // Placeholder jika belum ada file page_lapbul_dashboard.html
-    'lapbul_unggah': initLapbulUnggahPage,
-    'lapbul_riwayat': initLapbulRiwayatPage,
-    'lapbul_status': initLapbulStatusPage,
-    'lapbul_arsip': initLapbulArsipPage,
-    'lapbul_kelola': initLapbulKelolaPage,
-    'lapbul_unduh_format': initLapbulUnduhFormatPage,
-
-    // --- 4. DATA PTK ---
-    'ptk_menu': initMenuPage,
-    'ptk_dashboard': initMenuPage,
-    
-    // PTK PAUD
-    'ptk_paud_menu': initMenuPage,
-    'ptk_keadaan_paud': initPtkKeadaanPaudPage,
-    'ptk_jumlah_bulanan_paud': initPtkJumlahBulananPaudPage,
-    'ptk_daftar_paud': initPtkDaftarPaudPage,
-    'ptk_kelola_paud': initPtkKelolaPaudPage,
-
-    // PTK SD
-    'ptk_sd_menu': initMenuPage,
-    'ptk_keadaan_sd': initPtkKeadaanSdPage,
-    'ptk_jumlah_bulanan_sd': initPtkJumlahBulananSdPage,
-    'ptk_daftar_sd_negeri': initPtkDaftarSdnPage,
-    'ptk_daftar_sd_swasta': initPtkDaftarSdsPage,
-    'ptk_kelola_sd': initPtkKelolaSdPage,
-    'ptk_kebutuhan_sd_negeri': initPtkKebutuhanSdPage,
-
-    // --- 5. DATA MURID ---
-    'murid_menu': initMenuPage,
-    'murid_dashboard': initMenuPage,
-    
-    // MURID PAUD
-    'murid_paud_menu': initMenuPage,
-    'murid_paud_kelas_usia': initMuridPaudKelasUsiaPage,
-    'murid_paud_jenis_kelamin': initMuridPaudJenisKelaminPage,
-    'murid_paud_jumlah_bulanan': initMuridPaudJumlahBulananPage,
-
-    // MURID SD
-    'murid_sd_menu': initMenuPage,
-    'murid_sd_kelas': initMuridSdKelasPage,
-    'murid_sd_rombel': initMuridSdRombelPage,
-    'murid_sd_jenis_kelamin': initMuridSdJenisKelaminPage,
-    'murid_sd_agama': initMuridSdAgamaPage,
-    'murid_sd_jumlah_bulanan': initMuridSdJumlahBulananPage,
-
-    // --- 6. SIABA ---
-    'siaba_menu': initMenuPage,
-    'siaba_dashboard': initMenuPage,
-    'siaba_panduan': initMenuPage,
-    'siaba_daftar_presensi': initSiabaDaftarPresensiPage,
-    'siaba_tidak_presensi': initSiabaTidakPresensiPage,
-    'siaba_apel_upacara': initSiabaApelUpacaraPage,
-
-    // SIABA LUPA
-    'siaba_lupa_presensi': initMenuPage, // Menu Bapak
-    'siaba_lupa_unggah': initSiabaLupaUnggahPage,
-    'siaba_lupa_cek': initSiabaLupaCekPage,
-    'siaba_lupa_rekap': initSiabaLupaRekapPage,
-    'siaba_lupa_unduh': initSiabaLupaUnduhPage,
-
-    // SIABA SALAH
-    'siaba_salah_presensi': initMenuPage,
-    'siaba_salah_form': initSiabaSalahFormPage,
-    'siaba_salah_cek': initSiabaSalahCekPage,
-
-    // SIABA DINAS
-    'siaba_perjalanan_dinas': initMenuPage,
-    'siaba_dinas_unggah': initSiabaDinasUnggahPage,
-    'siaba_dinas_cek': initSiabaDinasCekPage,
-    'siaba_dinas_unduh': initSiabaDinasUnduhPage,
-
-    // SIABA CUTI
-    'siaba_cuti': initMenuPage,
-    'siaba_cuti_form': initSiabaCutiFormPage,
-    'siaba_cuti_unduh': initSiabaCutiUnduhPage,
-    'siaba_cuti_sisa': initSiabaCutiSisaPage,
-    'siaba_cuti_data': initSiabaDataCutiPage,
-    'siaba_cuti_unggah': initSiabaCutiUnggahPage,
-    'siaba_cuti_cek': initSiabaCutiCekPage,
-    'siaba_cuti_informasi': initMenuPage,
-
-    // SIABA REKAP
-    'siaba_rekap_terlambat': initSiabaRekapTerlambatPage,
-    'siaba_rekap_pulang_awal': initSiabaRekapPulangAwalPage,
-    'siaba_unduh_rekap': initSiabaUnduhRekapPage,
-
-    // --- 7. ASN ---
-    'asn_menu': initMenuPage,
-    'asn_dashboard': initMenuPage,
-
-    // ASN SKP
-    'asn_skp_menu': initMenuPage,
-    'asn_skp_unggah': initAsnSkpUnggahPage,
-    'asn_skp_kelola': initAsnSkpKelolaPage,
-    'asn_skp_kirim': initAsnSkpDaftarKirimPage,
-
-    // ASN PAK
-    'asn_pak_menu': initMenuPage,
-    'asn_pak_unggah': initAsnPakUnggahPage,
-    'asn_pak_kelola': initAsnPakKelolaPage,
-    'asn_pak_kirim': initAsnPakDaftarKirimPage,
-
-    // ASN LAIN
-    'asn_kp': initMenuPage,
-    'asn_kgb': initMenuPage,
-    'asn_kp4': initMenuPage
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Load halaman home saat pertama kali dibuka
-    setTimeout(() => {
-        App.loadPage(null, 'home');
-    }, 0);
-    
-    document.body.addEventListener('click', function(e) {
-        // Cari elemen <a> terdekat yang diklik
-        const link = e.target.closest('a');
-        if (!link) return;
-
-        // Ambil data page
-        const pageName = link.dataset.page;
-        const parentLi = link.parentElement;
-        const isParentToggle = parentLi.classList.contains('has-submenu');
-
-        // LOGIKA 1: Jika yang diklik adalah tombol Toggle (Menu Induk yang punya anak)
-        if (isParentToggle) {
-            // Jika user mengklik panah chevron ATAU link itu tidak punya halaman tujuan (href="#" dan tidak ada data-page)
-            // Maka fungsinya hanya Buka/Tutup (Toggle)
-            const isChevronClick = e.target.classList.contains('submenu-icon');
-            
-            if (isChevronClick || !pageName) {
-                e.preventDefault();
-                parentLi.classList.toggle('open'); // Buka atau Tutup
-                return; // Berhenti di sini, jangan load page
-            }
-            
-            // Jika Menu Induk punya halaman tujuan (misal: SK Pembagian Tugas), biarkan lanjut ke Logika 2
-        }
-
-        // LOGIKA 2: Navigasi Halaman
-        if (pageName) {
-            e.preventDefault();
-            
-            // Khusus Mobile: Tutup sidebar setelah klik (opsional, jika Anda punya tombol toggle sidebar mobile)
-            // document.querySelector('.sidebar').classList.remove('show'); 
-
-            App.loadPage(null, pageName);
-        }
-    });
-});
-</script>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-/**
- * OBJECT UTAMA APLIKASI (Global App)
- */
-var App = {
-    // Menyimpan data user yang sedang login
-    currentUser: null,
-
-    // Fungsi Inisialisasi Saat Website Dibuka
-    init: function() {
-        // Cek apakah ada sesi tersimpan (opsional, tahap awal kita buat login ulang tiap refresh biar aman)
-        // Default: Tampilkan Login, Sembunyikan Main App
-        $('#app-login-container').show();
-        $('#app-main-container').hide();
-    },
-
-    // Fungsi Login
-    login: function(formElement) {
-        // Tampilkan Loading di tombol
-        const btn = $(formElement).find('button[type="submit"]');
-        const originalText = btn.html();
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Loading...');
-
-        // Ambil data form
-        const formData = {
-            username: formElement.username.value,
-            password: formElement.password.value
-        };
-
-        // Panggil Backend (google.script.run)
-        google.script.run
-            .withSuccessHandler(function(response) {
-                // Kembalikan tombol
-                btn.prop('disabled', false).html(originalText);
-
-                if (response.success) {
-                    // 1. Simpan Data User
-                    App.currentUser = response.user;
-                    $('#user-display-name').text("Hi, " + response.user.nama);
-
-                    // 2. Notifikasi Sukses
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Login Berhasil',
-                        text: 'Selamat datang ' + response.user.nama,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    // 3. Pindah Tampilan (Switch View)
-                    $('#app-login-container').fadeOut(300, function() {
-                        $('#app-main-container').fadeIn(300);
-                        // Load Halaman Home setelah login
-                        App.loadPage('home'); 
-                    });
-
-                } else {
-                    // Login Gagal
-                    Swal.fire('Gagal', response.message, 'error');
-                }
-            })
-            .withFailureHandler(function(error) {
-                btn.prop('disabled', false).html(originalText);
-                Swal.fire('Error Sistem', error.message, 'error');
-            })
-            .checkLoginCredentials(formData);
-    },
-
-    // Fungsi Logout
-    logout: function() {
-        Swal.fire({
-            title: 'Keluar Aplikasi?',
-            text: "Anda harus login ulang untuk masuk kembali.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Keluar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Reset State
-                App.currentUser = null;
-                // Reload halaman untuk membersihkan memori
-                location.reload(); 
-                // Atau manual switch view:
-                // $('#app-main-container').hide();
-                // $('#app-login-container').show();
-                // $('#form-login')[0].reset();
-            }
-        });
-    },
-
-    // Fungsi Load Halaman (Dari Sidebar)
-    loadPage: function(pageName) {
-        // Tampilkan loading spinner di konten utama
-        $('#app-content').html(`
-            <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                    <p class="mt-2 text-muted">Memuat Halaman...</p>
-                </div>
-            </div>
-        `);
-
-        // Panggil Server untuk minta potongan HTML
-        google.script.run
-            .withSuccessHandler(function(html) {
-                // Masukkan HTML ke div konten
-                $('#app-content').html(html);
-                
-                // Jika halaman input data, inisialisasi script khususnya (jika ada)
-                // App.initPageScripts(pageName);
-            })
-            .withFailureHandler(function(error) {
-                $('#app-content').html(`<div class="alert alert-danger">Gagal memuat halaman: ${error.message}</div>`);
-            })
-            .getPageContent(pageName); // Asumsi fungsi ini ada di Code.gs (standar SPA)
-    }
-};
-
-/**
- * 1. INISIALISASI SISTEM (Document Ready)
- */
-$(document).ready(function() {
-  // 1. CEK SESI (ANTI REFRESH)
-  const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-  $('#app-preloader').delay(600).fadeOut(400, function() {
-    if (isLoggedIn === 'true') {
-      $('#website-utama').css('display', 'flex').show();
-      window.loadPageContent('page_home');
-    } else {
-      $('#gerbang-login').fadeIn(500);
-    }
-  });
-
-/* ==========================================================
-   LOGIKA SIDEBAR FINAL (STRICT ACCORDION)
-   Aturan: 
-   1. Jika punya anak -> Hanya Buka/Tutup (Toggle)
-   2. Jika tidak punya anak -> Buka Halaman (Load Page)
-   ========================================================== */
-$(document).ready(function() {
-
-    // 1. Bersihkan listener lama (Wajib)
-    $('.sidebar-menu').off('click', 'a');
-
-    // 2. Pasang Listener Baru
-    $('.sidebar-menu').on('click', 'a', function(e) {
-        
-        var $link    = $(this);
-        var $li      = $link.parent();       // Container <li>
-        var $submenu = $link.next('ul');     // Menu Anak (jika ada)
-        var page     = $link.data('page');   // Tujuan Halaman
-        var $arrow   = $link.find('.submenu-icon');
-
-        // --- KASUS 1: INI ADALAH MENU BAPAK (PUNYA ANAK) ---
-        // Tugas: Hanya membuka/menutup menu. JANGAN load halaman.
-        if ($submenu.length > 0) {
-            e.preventDefault();   // Matikan link
-            e.stopPropagation();  // Jangan lapor ke atas
-
-            // Logika Buka / Tutup (Class 'open')
-            if ($li.hasClass('open')) {
-                // TUTUP
-                $submenu.stop(true, true).slideUp(200);
-                $li.removeClass('open');
-                $arrow.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-            } else {
-                // BUKA
-                // 1. Tutup Tetangga (Accordion Effect)
-                var $siblings = $li.siblings('.open');
-                $siblings.children('ul').stop(true, true).slideUp(200);
-                $siblings.removeClass('open');
-                $siblings.find('> a .submenu-icon').removeClass('fa-chevron-down').addClass('fa-chevron-right');
-
-                // 2. Buka Diri Sendiri
-                $submenu.stop(true, true).slideDown(200);
-                $li.addClass('open');
-                $arrow.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-            }
-
-            return; // BERHENTI DI SINI. Jangan lanjut ke kode load page di bawah.
-        }
-
-        // --- KASUS 2: INI ADALAH MENU DAUN (TIDAK PUNYA ANAK) ---
-        // Tugas: Memuat Halaman ke Content Area
-        if (page) {
-            e.preventDefault();
-            
-            // 1. Urusan Tampilan (Warna Aktif)
-            $('.sidebar-menu a').removeClass('active'); // Reset semua
-            $link.addClass('active');                   // Aktifkan diri sendiri
-            
-            // Aktifkan Bapak/Kakeknya (agar path tetap menyala)
-            $link.parents('li.has-submenu').children('a').addClass('active');
-
-            // 2. Mobile: Tutup Sidebar jika di HP
-            if ($(window).width() <= 768) {
-               $('.sidebar').removeClass('show');
-               $('.content').removeClass('push');
-               $('.sidebar-overlay').removeClass('show');
-            }
-
-            console.log("Membuka halaman:", page);
-            
-            // 3. Panggil Router
-            if (typeof App !== 'undefined' && App.loadPage) {
-                App.loadPage(page);
-            } else if (typeof window.loadPageContent === 'function') {
-                window.loadPageContent(page);
-            }
-        }
-    });
-
-});
-
-  // 3. LOGOUT SYSTEM
-  $(document).on('click', '.btn-logout-premium', function() {
-    $('#logoutModal').addClass('show');
-  });
-
-  $(document).on('click', '#confirmLogoutBtn', function() {
-    sessionStorage.clear();
-    location.reload();
-  });
-});
-
-/**
- * 2. FUNGSI CEK SESSION (Mencegah Balik ke Login Saat Refresh)
- */
-function checkUserSession() {
-    var isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    
-    // Hilangkan Preloader Bawaan
-    $('#app-preloader').delay(500).fadeOut(300);
-
-    if (isLoggedIn === 'true') {
-        $('#gerbang-login').hide();
-        $('#website-utama').css('display', 'flex').hide().fadeIn(400);
-        
-        // Buka Beranda Otomatis
-        window.loadPageContent('page_home');
-    } else {
-        $('#website-utama').hide();
-        $('#gerbang-login').css('display', 'flex').hide().fadeIn(400);
-    }
-}
-
-/**
- * 3. FUNGSI LOAD HALAMAN (AJAX dengan Spinner Mahal)
- */
-window.loadPageContent = function(pageName) {
-  if (!pageName) return;
-
-  // Highlight Sidebar
-  $('.sidebar-menu a').removeClass('active');
-  var $activeLink = $(`.sidebar-menu a[data-page="${pageName}"]`);
-  $activeLink.addClass('active');
-  $activeLink.parents('.has-submenu').children('a').addClass('active');
-
-  // SPINNER BAR ASLI (Sesuai Permintaan)
-  $('#main-content').html(`
-    <div class="loading-container" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:400px;">
-        <div class="spinner-container" style="display:flex; gap:8px; height:30px; justify-content:center; align-items:center;">
-            <div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div><div class="spinner-bar"></div>
-        </div>
-        <p style="color: #fff; margin-top: 15px; font-weight: bold;">Memproses Permintaan...</p>
-    </div>
-  `);
-
-  google.script.run
-    .withSuccessHandler(function(html) {
-      $('#main-content').hide().html(html).fadeIn(300);
-    })
-    .getPageContent(pageName);
-};
-
-/**
- * 4. FUNGSI LOGIN (Dipanggil dari Form page_login)
- */
-function handleLoginAsli(event) {
-  event.preventDefault();
-  const btn = $('#btn-submit');
-  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> VERIFYING...');
-  
-  google.script.run
-    .withSuccessHandler(function(response) {
-      if (response && response.success) {
-        sessionStorage.setItem('isLoggedIn', 'true');
-        $('#gerbang-login').fadeOut(400, function() {
-          $('#website-utama').css('display', 'flex').show();
-          window.loadPageContent('page_home');
-        });
-      } else {
-        btn.prop('disabled', false).html('AUTHENTICATE');
-        alert('Login Gagal!');
-      }
-    })
-    .cekLoginStatus($('input[name="username"]').val(), $('input[name="password"]').val());
-}
-
-/**
- * 5. NAVIGASI SIDEBAR (Dropdown & Klik Halaman)
- */
-function initSidebarNavigation() {
-    $('.sidebar-menu a').off('click').on('click', function(e) {
-        var $this = $(this);
-        var pageName = $this.data('page'); 
-        var hasSubmenu = $this.parent().hasClass('has-submenu');
-
-        // JIKA MENU PUNYA ANAK (DROPDOWN)
-        if (hasSubmenu) {
-            e.preventDefault();
-            e.stopPropagation();
-            var $parentLi = $this.parent();
-            var $submenu = $this.next('.submenu');
-            
-            // Toggle Buka/Tutup
-            $submenu.slideToggle(250);
-            $parentLi.toggleClass('open');
-            
-            // Putar Icon Panah (Jika ada)
-            $this.find('.submenu-icon').toggleClass('fa-chevron-right fa-chevron-down');
-            return; 
-        }
-
-        // JIKA MENU TUJUAN (PUNYA DATA-PAGE)
-        if (pageName) {
-            e.preventDefault();
-            window.loadPageContent(pageName);
-            
-            // Tutup sidebar di mobile
-            if ($(window).width() <= 768) { $('.sidebar').removeClass('show'); }
-        }
-    });
-}
-
-/**
- * 6. SISTEM LOGOUT (Modal Premium)
- */
-function prosesLogout() {
-  $('#logoutModal').addClass('show'); // Memanggil Modal CSS Anda
-}
-
-// Fungsi untuk menutup modal konfirmasi keluar
-function tutupLogoutModal() {
-  $('#logoutModal').removeClass('show');
-}
-
-// FUNGSI KELUAR - METODE TUKAR LAYAR (ANTI LAYAR PUTIH)
-$(document).on('click', '#confirmLogoutBtn', function() {
-  // 1. Tutup modal konfirmasi
-  $('#logoutModal').removeClass('show');
-  
-  // 2. Hapus memori login
-  sessionStorage.clear();
-  localStorage.clear();
-
-  // 3. TUKAR TAMPILAN (Sangat Stabil)
-  $('#website-utama').fadeOut(300, function() {
-      // Bersihkan konten agar ringan
-      $('#main-content').html('');
-      // Matikan warna aktif di sidebar
-      $('.sidebar-menu a').removeClass('active');
-      // Munculkan layar login SIKS (Gunakan Flex agar posisi tengah)
-      $('#gerbang-login').css('display', 'flex').hide().fadeIn(500);
-      
-      // Reset isian form login
-      if($('#form-login-asli').length) $('#form-login-asli')[0].reset();
-  });
-  
-  console.log("Logout Berhasil - Tanpa Reload");
-});
 
 
 

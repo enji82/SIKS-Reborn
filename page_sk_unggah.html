@@ -1,137 +1,234 @@
+<?!= include('css'); ?>
+
 <style>
-  /* Membuat hint/placeholder teks menjadi tipis */
-  .form-sk-upload input::placeholder,
-  .form-sk-upload select::placeholder {
-      font-weight: 300 !important;
-      color: rgba(255, 255, 255, 0.5) !important;
-      font-size: 0.95em;
+  :root { --page-accent: #00c3ff; } /* Biru untuk SK */
+  
+  /* Style khusus form input di halaman Unggah */
+  .form-group label {
+      font-weight: 500;
+      color: #ddd;
+      margin-bottom: 8px;
+      display: block;
+      font-size: 13px;
   }
-  .form-sk-upload select option[disabled] { color: #aaa; }
+  .form-group input, .form-group select {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      color: #fff !important;
+      border-radius: 6px;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+  }
+  .form-group input:focus, .form-group select:focus {
+      border-color: var(--page-accent) !important;
+      background: rgba(0, 0, 0, 0.3) !important;
+      outline: none;
+  }
 </style>
 
-<div class="page-header" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-  <h2 style="font-size: 1.5rem; font-weight: bold; color: #fff; margin: 0;">Unggah SK Pembagian Tugas</h2>
-</div>
+<div class="main-wrapper" style="animation: fadeIn 0.4s ease-in-out; height: 100%; display: flex; flex-direction: column; overflow-y: auto;">
+  
+  <div class="page-title-container" style="margin-bottom: 20px;">
+    <h2 class="page-title" style="border-left: 5px solid #00c3ff; padding-left: 15px;">
+        Unggah SK Pembagian Tugas
+    </h2>
+  </div>
 
-<div class="form-sk-upload" style="margin: 0 auto;">
-  <form id="manualUploadForm" class="manual-form" onsubmit="handleFormSubmit(event)">
+  <div id="skeleton-loader" style="max-width: 800px; margin: 0 auto; width: 100%;">
+      <div class="form-grid-12" style="margin-bottom: 20px;">
+          <div class="col-span-6"><div class="skeleton skeleton-input"></div></div>
+          <div class="col-span-6"><div class="skeleton skeleton-input"></div></div>
+      </div>
+      <div class="form-grid-12" style="margin-bottom: 20px;">
+          <div class="col-span-6"><div class="skeleton skeleton-input"></div></div>
+          <div class="col-span-6"><div class="skeleton skeleton-input"></div></div>
+      </div>
+      <div class="skeleton skeleton-input" style="height: 100px;"></div>
+  </div>
 
-    <div id="skeleton-loader">
-      <div class="form-grid">
-        <div class="form-group">
-          <div class="skeleton skeleton-text" style="width: 150px;"></div>
-          <div class="skeleton skeleton-input" style="width: 100%;"></div>
-        </div>
-        <div class="form-group">
-          <div class="skeleton skeleton-text" style="width: 150px;"></div>
-          <div class="skeleton skeleton-input" style="width: 100%;"></div>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <div class="skeleton skeleton-text" style="width: 100px;"></div>
-          <div class="skeleton skeleton-input" style="width: 100%;"></div>
-        </div>
-        <div class="form-group">
-          <div class="skeleton skeleton-text" style="width: 100px;"></div>
-          <div class="skeleton skeleton-input" style="width: 100%;"></div>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <div class="skeleton skeleton-text" style="width: 100px;"></div>
-          <div class="skeleton skeleton-input" style="width: 100%;"></div>
-        </div>
-        <div class="form-group">
-          <div class="skeleton skeleton-text" style="width: 100px;"></div>
-          <div class="skeleton skeleton-input" style="width: 100%;"></div>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="skeleton skeleton-text" style="width: 250px;"></div>
-        <div class="skeleton skeleton-input" style="width: 100%; height: 60px;"></div>
-      </div>
-      <div class="form-footer">
-        <div class="skeleton skeleton-button" style="width: 150px;"></div>
-      </div>
-    </div>
-
-    <div id="form-content" style="display: none;">
+  <div id="form-content" style="display: none; max-width: 800px; margin: 0 auto; width: 100%;">
       
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="namaSD">Nama Sekolah</label>
-          <select id="namaSD" name="namaSD" required>
-            <option value="" disabled selected>-- Pilih Sekolah --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="tahunAjaran">Tahun Ajaran</label>
-          <select id="tahunAjaran" name="tahunAjaran" required>
-            <option value="" disabled selected>-- Pilih Tahun --</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="semester">Semester</label>
-          <select id="semester" name="semester" required>
-            <option value="" disabled selected>-- Pilih Semester --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="kriteriaSK">Kriteria SK</label>
-          <select id="kriteriaSK" name="kriteriaSK" required>
-            <option value="" disabled selected>-- Pilih Kriteria --</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="form-grid">
-          <div class="form-group">
-              <label for="nomorSK">Nomor SK</label>
-              <input type="text" id="nomorSK" name="nomorSK" required placeholder="Contoh: 800/001/SD/2025">
-          </div>
-          <div class="form-group">
-              <label for="tanggalSK">Tanggal SK</label>
-              <input type="date" id="tanggalSK" name="tanggalSK" required>
+      <div class="glass-panel" style="padding: 15px 20px; margin-bottom: 25px; display: flex; align-items: flex-start; gap: 15px; border-left: 4px solid #00c3ff; background: rgba(0, 195, 255, 0.05);">
+          <i class="fas fa-info-circle" style="font-size: 1.3em; color: #00c3ff; margin-top: 2px;"></i>
+          <div>
+              <h4 style="margin: 0 0 5px 0; color: #fff; font-size: 14px; font-weight: 600;">Petunjuk Pengisian</h4>
+              <p style="margin: 0; color: #ccc; font-size: 13px; line-height: 1.4;">
+                  Silakan lengkapi formulir di bawah ini dengan data terkini. Pastikan file PDF yang diunggah bersih, terbaca jelas, dan tidak melebihi 1 MB.
+              </p>
           </div>
       </div>
 
-      <div class="form-group" style="margin-top: 20px;">
-          <label for="fileUpload">Unggah Scan File SK Pembagian Tugas (PDF, Maks. 1 MB)</label>
-          <input type="file" id="fileUpload" name="fileUpload" accept="application/pdf" required>
-          <small style="color: #ccc; font-size: 0.85em; display: block; margin-top: 5px;">*Pastikan file bersih dan terbaca.</small>
-      </div>
+      <form id="manualUploadForm" onsubmit="handleFormSubmit(event)">
+        
+        <div class="form-grid-12" style="margin-bottom: 20px; display: grid; gap: 20px; grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+                <label>Nama Sekolah <span style="color:red">*</span></label>
+                <select id="namaSD" required>
+                    <option value="" disabled selected>-- Memuat --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tahun Ajaran <span style="color:red">*</span></label>
+                <select id="tahunAjaran" required>
+                    <option value="" disabled selected>-- Memuat --</option>
+                </select>
+            </div>
+        </div>
 
-      <div class="form-footer" style="margin-top: 30px; text-align: center;">
-        <button type="submit" class="submit-btn" id="submitBtn" style="padding: 10px 25px;">
-            <i class="fas fa-paper-plane"></i> Kirim Dokumen
-        </button>
-      </div>
-    </div> 
-  </form>
+        <div class="form-grid-12" style="margin-bottom: 20px; display: grid; gap: 20px; grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+                <label>Semester <span style="color:red">*</span></label>
+                <select id="semester" required>
+                    <option value="" disabled selected>-- Memuat --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Kriteria SK <span style="color:red">*</span></label>
+                <select id="kriteriaSK" required>
+                    <option value="" disabled selected>-- Memuat --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grid-12" style="margin-bottom: 20px; display: grid; gap: 20px; grid-template-columns: 2fr 1fr;">
+            <div class="form-group">
+                <label>Nomor SK <span style="color:red">*</span></label>
+                <input type="text" id="nomorSK" required placeholder="Contoh: 800/001/SD/2025" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Tanggal SK <span style="color:red">*</span></label>
+                <input type="date" id="tanggalSK" required>
+            </div>
+        </div>
+
+        <div class="glass-panel" style="padding: 20px; margin-top: 20px; border: 1px dashed rgba(255,255,255,0.3); text-align: center;">
+            <i class="fas fa-cloud-upload-alt" style="font-size: 2em; color: #00c3ff; margin-bottom: 10px;"></i>
+            <br>
+            <label for="fileUpload" style="cursor: pointer; color: #fff; font-weight: bold;">
+                Klik untuk Memilih File PDF
+            </label>
+            <input type="file" id="fileUpload" accept="application/pdf" required style="display: block; margin: 10px auto; color: #aaa;">
+            <small style="color: #aaa;">Maksimal ukuran file 1 MB. Format PDF.</small>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <button type="submit" id="submitBtn" class="btn-lihat-premium" style="height: 40px !important; padding: 0 30px !important; font-size: 14px !important;">
+                <i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Kirim Dokumen
+            </button>
+        </div>
+
+      </form>
+  </div>
+  
 </div>
 
 <script>
+  // --- A. INIT PAGE ---
   function initPageSKUnggah() {
-      console.log("Memulai halaman Unggah SK...");
+      // Panggil Master Option (Sekolah, Tahun, dll)
       google.script.run
         .withSuccessHandler(function(data) {
             isiDropdown('namaSD', data['Nama SD']);
             isiDropdown('tahunAjaran', data['Tahun Ajaran']);
             isiDropdown('semester', data['Semester']);
             isiDropdown('kriteriaSK', data['Kriteria SK']);
+            
+            // Animasi Transisi
             $('#skeleton-loader').fadeOut(200, function(){ $('#form-content').fadeIn(300); });
         })
         .getMasterSkOptions();
   }
 
+  // --- B. HANDLE SUBMIT ---
+  function handleFormSubmit(e) {
+    e.preventDefault(); 
+    var btn = $('#submitBtn');
+    var originalText = '<i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Kirim Dokumen';
+    
+    var file = document.getElementById('fileUpload').files[0];
+    
+    // 1. VALIDASI DI AWAL (Gunakan showToast)
+    if (!file) { 
+        showToast('error', 'File Kosong', 'Silakan pilih file PDF terlebih dahulu.'); 
+        return; 
+    }
+    if (file.size > 1024 * 1024) { 
+        showToast('error', 'File Terlalu Besar', 'Maksimal ukuran file adalah 1 MB.'); 
+        return; 
+    }
+    if (file.type !== 'application/pdf') { 
+        showToast('error', 'Format Salah', 'Hanya file PDF yang diperbolehkan.'); 
+        return; 
+    }
+
+    // 2. LOADING STATE
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengirim...');
+
+    // Ambil User
+    var userNameInput = "Admin/Operator";
+    try {
+        if (typeof App !== 'undefined' && App.currentUser) userNameInput = App.currentUser.nama || App.currentUser.username;
+        else { var saved = localStorage.getItem('siks_user_session'); if(saved) userNameInput = JSON.parse(saved).nama || "Admin"; }
+    } catch (err) {}
+    
+    var reader = new FileReader();
+    
+    // Handle Error Baca File
+    reader.onerror = function() {
+        btn.prop('disabled', false).html(originalText);
+        showToast('error', 'Gagal', 'Terjadi kesalahan saat membaca file.');
+    };
+
+    reader.onload = function(e) {
+        var base64Data = e.target.result.split(',')[1];
+        var formData = {
+            namaSD: $('#namaSD').val(),
+            tahunAjaran: $('#tahunAjaran').val(),
+            semester: $('#semester').val(),
+            kriteriaSK: $('#kriteriaSK').val(),
+            nomorSK: $('#nomorSK').val(),
+            tanggalSK: $('#tanggalSK').val(),
+            userInput: userNameInput,
+            fileData: { mimeType: file.type, data: base64Data, name: file.name }
+        };
+
+        google.script.run
+          .withSuccessHandler(function(response) {
+               btn.prop('disabled', false).html(originalText);
+               
+               if (response.toString().toLowerCase().includes("berhasil")) {
+                   document.getElementById('manualUploadForm').reset();
+                   
+                   // Notifikasi Sukses
+                   showToast('success', 'Terkirim!', response);
+                   
+                   // Redirect setelah 2 detik
+                   setTimeout(function() {
+                       if(typeof App !== 'undefined') App.loadPage('sk_dashboard');
+                   }, 2000);
+
+               } else {
+                   // Notifikasi Error dari Server
+                   showToast('error', 'Gagal Mengirim', response);
+               }
+          })
+          .withFailureHandler(function(err) {
+               btn.prop('disabled', false).html(originalText);
+               showToast('error', 'Error Sistem', err.message);
+          })
+          .processManualForm(formData); 
+    };
+    reader.readAsDataURL(file);
+}
+
+  // --- C. HELPER ---
   function isiDropdown(id, listData) {
       var $select = $('#' + id);
-      var placeholder = $select.find('option:first').text();
-      $select.empty().append('<option value="" disabled selected>' + placeholder + '</option>');
+      var label = id === 'namaSD' ? 'Sekolah' : (id === 'tahunAjaran' ? 'Tahun' : (id === 'semester' ? 'Semester' : 'Kriteria'));
+      
+      $select.empty().append('<option value="" disabled selected>-- Pilih ' + label + ' --</option>');
+      
       if (listData) {
           listData.forEach(function(item) {
               $select.append('<option value="' + item + '">' + item + '</option>');
@@ -139,98 +236,6 @@
       }
   }
 
-  function handleFormSubmit(e) {
-      e.preventDefault(); 
-      var btn = $('#submitBtn');
-      var originalText = btn.html();
-      var file = document.getElementById('fileUpload').files[0];
-      
-      if (!file) { tampilkanPesan('Peringatan', 'Pilih file PDF!', 'warning'); return; }
-      if (file.size > 1024 * 1024) { tampilkanPesan('File Besar', 'Maksimal 1 MB.', 'error'); return; }
-      if (file.type !== 'application/pdf') { tampilkanPesan('Salah Format', 'Hanya PDF.', 'error'); return; }
-
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengirim...');
-
-      // --- PERBAIKAN LOGIKA PENGAMBILAN NAMA USER ---
-      var userNameInput = "Admin/Operator"; // 1. Default jika semua gagal
-      
-      try {
-          if (typeof App !== 'undefined' && App.currentUser && (App.currentUser.nama || App.currentUser.username)) {
-              userNameInput = App.currentUser.nama || App.currentUser.username; // 2. Coba dari App Session
-          } else {
-              var saved = localStorage.getItem('siks_user_session');
-              if(saved) {
-                  var u = JSON.parse(saved);
-                  userNameInput = u.nama || u.username; // 3. Coba dari LocalStorage
-              }
-          }
-      } catch (err) {
-          console.warn("Gagal mengambil nama user, menggunakan default.", err);
-      }
-      
-      console.log("Mengirim data sebagai:", userNameInput); // Cek di Console
-
-      var reader = new FileReader();
-      reader.onload = function(e) {
-          var base64Data = e.target.result.split(',')[1];
-          var formData = {
-              namaSD: $('#namaSD').val(),
-              tahunAjaran: $('#tahunAjaran').val(),
-              semester: $('#semester').val(),
-              kriteriaSK: $('#kriteriaSK').val(),
-              nomorSK: $('#nomorSK').val(),
-              tanggalSK: $('#tanggalSK').val(),
-              userInput: userNameInput, // <--- Data yang sudah dipastikan ada isinya
-              fileData: { mimeType: file.type, data: base64Data, name: file.name }
-          };
-
-          google.script.run
-            .withSuccessHandler(function(response) {
-                 btn.prop('disabled', false).html(originalText);
-                 if (response.toString().toLowerCase().includes("berhasil")) {
-                     document.getElementById('manualUploadForm').reset();
-                     // Panggil pindah halaman dengan jeda sedikit
-                     if(typeof Swal !== 'undefined') {
-                         Swal.fire({title: 'Berhasil!', text: response, icon: 'success', timer: 1500, showConfirmButton: false})
-                             .then(() => { pindahKeRiwayat(); });
-                     } else {
-                         alert(response);
-                         pindahKeRiwayat();
-                     }
-                 } else {
-                     tampilkanPesan('Gagal', response, 'error');
-                 }
-            })
-            .withFailureHandler(function(err) {
-                 btn.prop('disabled', false).html(originalText);
-                 tampilkanPesan('Error', err.message, 'error');
-            })
-            .processManualForm(formData); 
-      };
-      reader.readAsDataURL(file);
-  }
-
-  function tampilkanPesan(judul, teks, ikon) {
-      if(typeof Swal !== 'undefined') Swal.fire(judul, teks, ikon);
-      else alert(judul + ": " + teks);
-  }
-
-  function pindahKeRiwayat() {
-      // Pastikan fungsi loadPage ada
-      if (typeof loadPageContent === 'function') loadPageContent('sk_riwayat');
-      else if (typeof App !== 'undefined' && typeof App.loadPage === 'function') App.loadPage('sk_riwayat');
-      
-      $('.sidebar-menu a').removeClass('active');
-      $('.sidebar-menu a[data-page="sk_riwayat"]').addClass('active');
-  }
-
-  // Helper agar dropdown tidak error
-  function isiDropdown(id, listData) {
-      var $select = $('#' + id);
-      var placeholder = $select.find('option:first').text() || '-- Pilih --';
-      $select.empty().append('<option value="" disabled selected>' + placeholder + '</option>');
-      if (listData) listData.forEach(function(item) { $select.append('<option value="' + item + '">' + item + '</option>'); });
-  }
-
+  // START
   initPageSKUnggah();
 </script>

@@ -3,14 +3,18 @@
   <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?!= include('css'); ?>
-    <?!= include('dropdown_data.js'); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <title>Sistem Informasi Sekolah</title>
     
+    <?!= include('css'); ?>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
     <style>
       #app-preloader {
         position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-        background: #000; z-index: 9999999;
+        background: #0f171e; /* Sesuaikan dengan tema gelap */
+        z-index: 9999999;
         display: flex; justify-content: center; align-items: center; flex-direction: column;
       }
       .loader-spinner {
@@ -19,13 +23,18 @@
         animation: spin 1s linear infinite; margin-bottom: 15px;
       }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      
+      /* Helper untuk menyembunyikan scrollbar saat loading */
+      body.loading { overflow: hidden; }
     </style>
   </head>
-  <body>
+  <body class="loading">
 
     <div id="app-preloader">
       <div class="loader-spinner"></div>
-      <div style="font-family: sans-serif; color: #fff; font-size: 12px; letter-spacing: 2px;">AUTHENTICATING...</div>
+      <div style="font-family: sans-serif; color: #fff; font-size: 12px; letter-spacing: 2px;">
+        MEMUAT SISTEM...
+      </div>
     </div>
 
     <div id="gerbang-login" style="display:none;">
@@ -33,52 +42,75 @@
     </div>
 
     <div class="app-container" id="website-utama" style="display:none;">
+      
       <div class="sidebar">
         <?!= include('sidebar'); ?>
       </div>
-      <div class="main-content" id="main-content"></div>
-    </div>
-
-    <div id="logoutModal" class="modal-overlay">
-      <div class="modal-content">
-        <div style="font-size: 40px; color: #e74c3c; margin-bottom: 20px;"><i class="fas fa-sign-out-alt"></i></div>
-        <h3 style="color:#fff;">Konfirmasi Keluar</h3>
-        <p style="color: #ccc; margin-bottom: 25px;">Apakah Anda yakin ingin keluar?</p>
-        <div class="modal-actions" style="justify-content: center; gap: 15px; margin-top: 20px;">
-            <button type="button" class="cancel-btn" onclick="tutupLogoutModal()">
-                <i class="fas fa-times"></i> BATAL
-            </button>
-            
-            <button type="button" class="delete-btn-confirm" id="confirmLogoutBtn">
-                <i class="fas fa-power-off"></i> YA, KELUAR
-            </button>
-        </div>
-      </div>
+      
+      <div class="main-content" id="main-content">
+          </div>
+      
     </div>
 
     <?!= include('javascript'); ?>
+    <?!= include('dropdown_data.js'); ?>
 
     <script>
-      window.addEventListener('load', function() {
-        // OBAT KUAT: Spinner AUTHENTICATING wajib hilang dalam 1.5 detik
+      $(document).ready(function() {
+        
+        // --- OBAT KUAT (LOGIKA UTAMA) ---
+        // Memberi waktu sejenak agar semua library siap
         setTimeout(function() {
-          var loader = document.getElementById('app-preloader');
-          if(loader) loader.style.display = 'none';
           
-          var status = sessionStorage.getItem('isLoggedIn');
-          if (status === 'true') {
-            $('#website-utama').show();
-            // Nyalakan sidebar beranda otomatis
-            $('.sidebar-menu a').removeClass('active');
-            $('.sidebar-menu a[data-page="home"]').addClass('active');
-            
-            if(typeof App !== 'undefined' && typeof App.loadPage === 'function') {
-               App.loadPage(null, 'home');
+          // 1. Cek Sesi di LocalStorage (Sesuai sistem Login Baru)
+          var session = localStorage.getItem('siks_user_session');
+          var isLoggedIn = false;
+
+          if (session) {
+            try {
+              // Parse data user
+              var userData = JSON.parse(session);
+              
+              // SET GLOBAL VAR APP (PENTING! Agar Nama User terbaca di menu SK)
+              if (typeof App === 'undefined') window.App = {};
+              App.currentUser = userData;
+              App.isLoggedIn = true;
+              
+              isLoggedIn = true;
+              console.log('Auto Login: ', userData.nama);
+            } catch (e) {
+              console.warn('Sesi rusak, reset login.');
+              localStorage.removeItem('siks_user_session');
             }
-          } else {
-            $('#gerbang-login').css('display', 'flex').show();
           }
-        }, 1500);
+
+          // 2. Hilangkan Preloader
+          $('#app-preloader').fadeOut(500, function() {
+              $('body').removeClass('loading');
+          });
+
+          // 3. Tentukan Arah (Ke Login atau Ke Dashboard)
+          if (isLoggedIn) {
+            // A. JIKA SUDAH LOGIN
+            $('#gerbang-login').hide();    // Sembunyikan Login
+            $('#website-utama').fadeIn();  // Tampilkan Web Utama
+            
+            // Set Sidebar Active
+            $('.sidebar-menu a').removeClass('active');
+            $('.sidebar-menu a[data-page="sk_dashboard"]').addClass('active'); // Default ke Dashboard SK
+            
+            // Load Halaman Dashboard SK
+            if(typeof loadPageContent === 'function') {
+               loadPageContent('sk_dashboard');
+            }
+
+          } else {
+            // B. JIKA BELUM LOGIN
+            $('#website-utama').hide();   // Sembunyikan Web Utama
+            $('#gerbang-login').fadeIn(); // Tampilkan Form Login
+          }
+
+        }, 1000); // Jeda 1 detik agar transisi halus
       });
     </script>
   </body>

@@ -1,42 +1,134 @@
+<?!= include('css'); ?>
+
 <style>
-  /* Kita tidak gunakan ID gerbang-login di sini agar tidak tabrakan dengan index.html */
-  .pembungkus-login-premium {
-    width: 100%; height: 100vh;
-    background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
-    display: flex; justify-content: center; align-items: center;
+  /* Style Dasar untuk Halaman Login */
+  .login-page-wrapper {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+      background: #0f171e;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999;
   }
-  .kotak-login-premium {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    padding: 50px 40px; border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-    width: 100%; max-width: 400px; text-align: center;
+
+  .login-card {
+      width: 100%; max-width: 380px; padding: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      text-align: center;
+      color: white;
   }
-  .brand-logo { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, #00c3ff, #fffffe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
-  .login-subtitle { color: rgba(255,255,255,0.5); font-size: 13px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; }
-  .input-wrapper { margin-bottom: 25px; text-align: left; }
-  .input-label-premium { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; }
-  .btn-login-premium { width: 100%; padding: 15px; background: #00c3ff; color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
-  #error-toast { color: #ff4757; font-size: 13px; margin-top: 20px; display: none; background: rgba(255, 71, 87, 0.1); padding: 10px; border-radius: 8px; }
+
+  .login-card h2 { margin-bottom: 5px; color: #00c3ff; }
+  .login-card p { font-size: 12px; opacity: 0.6; margin-bottom: 30px; }
+
+  .form-group { margin-bottom: 20px; text-align: left; }
+  .form-group label { font-size: 11px; font-weight: bold; color: #00c3ff; display: block; margin-bottom: 8px; }
+  
+  .form-control {
+      width: 100%; padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: white; outline: none;
+      box-sizing: border-box;
+  }
+
+  .btn-primary {
+      width: 100%; padding: 14px;
+      background: #00c3ff; border: none; border-radius: 8px;
+      color: white; font-weight: bold; cursor: pointer;
+  }
+
+  .btn-primary:disabled { background: #555; cursor: not-allowed; }
 </style>
 
-<div class="pembungkus-login-premium">
-  <div class="kotak-login-premium">
-    <div class="brand-logo">SIKS</div>
-    <div class="login-subtitle">Reborn Architecture</div>
+<div class="login-page-wrapper" id="gerbang-login">
+  <div class="login-card">
+    <h2>SIKS - REBORN</h2>
+    <p>Korwil Disdikbud Kecamatan Secang</p>
     
-    <form id="form-login-asli" onsubmit="handleLoginAsli(event)">
-      <div class="input-wrapper">
-        <label class="input-label-premium">ACCOUNT IDENTIFIER</label>
-        <input type="text" name="username" class="custom-modal-input" required placeholder="Username Sekolah">
+    <form id="formLogin" onsubmit="prosesLogin(event)">
+      
+      <div class="form-group">
+        <label>USERNAME</label>
+        <input type="text" name="username" class="form-control" required placeholder="Username Sekolah">
       </div>
-      <div class="input-wrapper">
-        <label class="input-label-premium">SECURITY ACCESS</label>
-        <input type="password" name="password" class="custom-modal-input" required placeholder="••••••••">
+      
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <input type="password" name="password" class="form-control" required placeholder="••••••••">
       </div>
-      <button type="submit" class="btn-login-premium" id="btn-submit">AUTHENTICATE</button>
-      <div id="error-toast"><i class="fas fa-shield-alt"></i> Access Denied.</div>
+      
+      <button type="submit" id="tombolMasuk" class="btn-primary">
+        MASUK
+      </button>
+
     </form>
+    
+    <div style="margin-top: 25px; font-size: 10px; opacity: 0.3;">
+        &copy; 2026 Korwil Disdikbud Kecamatan Secang
+    </div>
   </div>
 </div>
+
+<script>
+  /**
+   * FUNGSI LOGIN (Default & Langsung)
+   * Menghapus semua class aneh, fokus pada logika utama.
+   */
+  function prosesLogin(e) {
+      e.preventDefault(); // Mencegah reload halaman
+      
+      var btn = document.getElementById('tombolMasuk');
+      var form = document.getElementById('formLogin');
+      
+      // Ambil data untuk dikirim ke server
+      var formData = {
+          username: form.username.value,
+          password: form.password.value
+      };
+
+      // 1. Loading State
+      btn.disabled = true;
+      btn.innerText = "MEMERIKSA...";
+
+      // 2. Jalankan fungsi di Code.gs
+      google.script.run
+        .withSuccessHandler(function(response) {
+            if (response.status === 'success') {
+                // SIMPAN SESI
+                localStorage.setItem('sesi_user', JSON.stringify(response.data));
+                
+                // PINDAH KE DASHBOARD
+                // Sembunyikan Gerbang Login, Tampilkan Web Utama
+                document.getElementById('gerbang-login').style.display = 'none';
+                
+                // Jika elemen website-utama ada di index.html, tampilkan
+                var webUtama = document.getElementById('website-utama');
+                if(webUtama) webUtama.style.display = 'block';
+
+                // Panggil fungsi muatHalaman (yang ada di javascript.html)
+                if (typeof muatHalaman === 'function') {
+                    muatHalaman('home');
+                } else if (typeof loadPageContent === 'function') {
+                    loadPageContent('home');
+                }
+                
+                // Notifikasi jika ada
+                if(typeof showToast === 'function') showToast('success', 'Berhasil', 'Selamat Datang');
+
+            } else {
+                // GAGAL LOGIN
+                alert(response.message || "Username atau Password Salah");
+                btn.disabled = false;
+                btn.innerText = "MASUK";
+            }
+        })
+        .withFailureHandler(function(err) {
+            alert("Terjadi kesalahan sistem: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "MASUK";
+        })
+        .doLogin(formData);
+  }
+</script>
