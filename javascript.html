@@ -17,22 +17,23 @@ if (typeof $.fn.IFrame !== 'undefined') {
 }
 
 function checkLoginStatus() {
-  console.log("Mengecek status login...");
   google.script.run
-    .withSuccessHandler(function(userObj) {
-      if (userObj && userObj.isLoggedIn) {
-        console.log("User terdeteksi, membuka dashboard");
-        $('#gerbang-login').hide(); // Sembunyikan login
-        $('#konten-aplikasi').show(); // Tampilkan dashboard
+    .withSuccessHandler(function(user) {
+      if (user && user.isLoggedIn) {
+        // PAKSA Munculkan Dashboard
+        $('#gerbang-login').attr('style', 'display: none !important;');
+        $('#konten-aplikasi').attr('style', 'display: block !important;');
         updateSidebarUserData();
-        loadPage('home'); // Memanggil page_home
+        loadPage('home'); 
       } else {
-        console.log("Tidak ada user, tetap di login");
-        $('#gerbang-login').show();
+        // PAKSA Munculkan Login
+        $('#konten-aplikasi').attr('style', 'display: none !important;');
+        $('#gerbang-login').attr('style', 'display: flex !important;');
       }
     })
     .withFailureHandler(function(err) {
-      alert("FATAL ERROR SERVER: " + err);
+      console.error("Eror Koneksi:", err);
+      $('#gerbang-login').attr('style', 'display: flex !important;');
     })
     .getCurrentUser();
 }
@@ -104,18 +105,16 @@ function showLoginError(message) {
  * ====================================================================
  */
 function loadPage(pageName) {
-  console.log("Memuat halaman: " + pageName);
-  var area = document.getElementById('main-content');
-  area.style.opacity = '0.4';
+  const contentArea = document.getElementById('main-content');
+  if (!contentArea) return;
+  contentArea.style.opacity = '0.3';
 
   google.script.run
     .withSuccessHandler(function(html) {
-      area.innerHTML = html;
-      area.style.opacity = '1';
-    })
-    .withFailureHandler(function(err) {
-      area.innerHTML = '<div class="alert alert-danger">Gagal memuat halaman: ' + err + '</div>';
-      area.style.opacity = '1';
+      contentArea.innerHTML = html;
+      contentArea.style.opacity = '1';
+      // Otomatis scroll ke atas setelah ganti halaman
+      window.scrollTo(0,0);
     })
     .getHalaman(pageName);
 }
@@ -155,12 +154,12 @@ function updateSidebarUserData() {
   google.script.run
     .withSuccessHandler(function(user) {
       if (user) {
-        // Gabungkan Nama & Role agar tidak dobel
+        // LOGIKA FOTO DRIVE: Mengubah ID menjadi Link Gambar
         var fotoUrl = user.photo ? "https://drive.google.com/thumbnail?id=" + user.photo + "&sz=w200" : "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404";
         
         $('#nav-user-photo, #dropdown-user-photo').attr('src', fotoUrl);
         $('#nav-user-name, #dropdown-user-name').text(user.fullName);
-        $('#dropdown-user-role').text(user.role || "User");
+        $('#dropdown-user-role').text(user.role); 
       }
     })
     .getUserInfo();
@@ -292,23 +291,24 @@ App.pageInitializers = {
  * ====================================================================
  */
 
-console.log("Sistem dimulai...");
+if (typeof $.fn.IFrame !== 'undefined') {
+    $.fn.IFrame = undefined; 
+}
 
 $(document).ready(function() {
-  // Matikan fitur bermasalah
-  try {
-    if ($.fn.IFrame) { $.fn.IFrame.defaults.autoIframeMode = false; }
-  } catch(e) { console.log("IFrame bypass"); }
+  console.log("Sistem Memulai...");
 
-  // 1. CEK STATUS LOGIN
-  checkLoginStatus();
-
-  // 2. NAVIGASI SIDEBAR
-  $(document).on('click', '.nav-link[data-page]', function(e) {
+  // 2. FIX SIDEBAR: Dengarkan klik pada '.nav-sidebar' (AdminLTE 3)
+  $(document).on('click', '.nav-sidebar .nav-link[data-page]', function(e) {
     e.preventDefault();
-    var hal = $(this).attr('data-page');
-    if (hal) { loadPage(hal); }
+    var page = $(this).attr('data-page');
+    if (page) {
+      console.log("Pindah ke halaman: " + page);
+      loadPage(page);
+    }
   });
+
+  checkLoginStatus();
 });
 
 /**

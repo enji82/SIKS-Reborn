@@ -103,7 +103,7 @@ html, body, .wrapper {
 }
 
 #gerbang-login, #konten-aplikasi {
-  display: none !important;
+  display: none;
 }
 
   /* =================================================================== */
@@ -170,11 +170,14 @@ html, body, .wrapper {
   /* =================================================================== */
   /* 6. MODUL KHUSUS (FOOTER & UTILITY)                                  */
   /* =================================================================== */
-  .main-footer {
+.main-footer {
   position: fixed;
   bottom: 0;
   width: 100%;
   z-index: 1032;
+  background-color: #ffffff !important;
+  border-top: 1px solid #dee2e6;
+  padding: 10px 20px !important;
 }
 
   #main-content { transition: opacity 0.5s ease-in-out; }

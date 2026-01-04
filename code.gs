@@ -112,11 +112,12 @@ function checkLogin(username, password) {
   const data = sheet.getDataRange().getValues();
   
   for (let i = 1; i < data.length; i++) {
+    // Urutan: A(User), B(Pass), C(Nama), D(Role), E(Foto ID)
     if (String(data[i][0]) == username && String(data[i][1]) == password) {
       const userObj = {
-        fullName: data[i][2], // Kolom C
-        role: data[i][3],     // Kolom D
-        photo: data[i][4],     // Kolom E (Foto ID)
+        fullName: data[i][2], 
+        role: data[i][3],     
+        photo: data[i][4],    
         isLoggedIn: true
       };
       PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
@@ -134,16 +135,6 @@ function getWebAppUrl() {
 function getCurrentUser() {
   const user = PropertiesService.getUserProperties().getProperty('currentUser');
   return user ? JSON.parse(user) : null;
-}
-
-function getHalaman(namaFile) {
-  try {
-    // Jika Bapak klik menu 'home', skrip mencari 'page_home'
-    var realName = namaFile.startsWith('page_') ? namaFile : 'page_' + namaFile;
-    return HtmlService.createTemplateFromFile(realName).evaluate().getContent();
-  } catch (err) {
-    throw "File " + namaFile + " tidak ditemukan di sistem.";
-  }
 }
 
 function resetSesiLama() {
@@ -206,13 +197,6 @@ function cekLoginServer(user, pass) {
   } catch (err) {
     return { status: "error", message: "Database Error: " + err.toString() };
   }
-}
-
-/**
- * FUNGSI UNTUK MENGAMBIL KONTEN PAGE
- */
-function getPageContent(pageName) {
-  return HtmlService.createTemplateFromFile(pageName).evaluate().getContent();
 }
 
 function doLogin(form) {
