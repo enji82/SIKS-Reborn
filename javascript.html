@@ -18,22 +18,21 @@ if (typeof $.fn.IFrame !== 'undefined') {
 
 function checkLoginStatus() {
   google.script.run
-    .withSuccessHandler(function(user) {
-      if (user && user.isLoggedIn) {
-        // PAKSA Munculkan Dashboard
+    .withSuccessHandler(function(userObj) {
+      if (userObj && userObj.isLoggedIn) {
+        // Jika login berhasil, pindah layar
         $('#gerbang-login').attr('style', 'display: none !important;');
-        $('#konten-aplikasi').attr('style', 'display: block !important;');
+        $('#konten-aplikasi').show();
         updateSidebarUserData();
-        loadPage('home'); 
+        loadPage('home'); // Memanggil page_home
       } else {
-        // PAKSA Munculkan Login
-        $('#konten-aplikasi').attr('style', 'display: none !important;');
+        // Jika belum login, pastikan form login tampil
         $('#gerbang-login').attr('style', 'display: flex !important;');
+        $('#konten-aplikasi').hide();
       }
     })
     .withFailureHandler(function(err) {
-      console.error("Eror Koneksi:", err);
-      $('#gerbang-login').attr('style', 'display: flex !important;');
+      console.error("Gagal cek login: " + err);
     })
     .getCurrentUser();
 }
@@ -82,8 +81,10 @@ function handleLogin(event) {
 
 function handleLogout() {
   google.script.run.withSuccessHandler(function() {
-    google.script.host.close(); // Cara aman menutup di GAS
-    window.top.location.href = "<?!= getWebAppUrl(); ?>";
+    // Reset tombol login agar tidak 'MEMPROSES' saat balik ke login
+    $('#tombolLogin').html('LOGIN').prop('disabled', false);
+    $('#gerbang-login').attr('style', 'display: flex !important;');
+    $('#konten-aplikasi').hide();
   }).processLogout();
 }
 
@@ -105,16 +106,14 @@ function showLoginError(message) {
  * ====================================================================
  */
 function loadPage(pageName) {
-  const contentArea = document.getElementById('main-content');
-  if (!contentArea) return;
-  contentArea.style.opacity = '0.3';
+  var area = document.getElementById('main-content');
+  if(!area) return;
+  area.style.opacity = '0.4';
 
   google.script.run
     .withSuccessHandler(function(html) {
-      contentArea.innerHTML = html;
-      contentArea.style.opacity = '1';
-      // Otomatis scroll ke atas setelah ganti halaman
-      window.scrollTo(0,0);
+      area.innerHTML = html;
+      area.style.opacity = '1';
     })
     .getHalaman(pageName);
 }
@@ -154,12 +153,17 @@ function updateSidebarUserData() {
   google.script.run
     .withSuccessHandler(function(user) {
       if (user) {
-        // LOGIKA FOTO DRIVE: Mengubah ID menjadi Link Gambar
-        var fotoUrl = user.photo ? "https://drive.google.com/thumbnail?id=" + user.photo + "&sz=w200" : "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404";
+        // FIX AVATAR: Mengambil ID dari Kolom E
+        var fotoUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404";
+        
+        if (user.photo && user.photo.length > 5) {
+          // Gunakan thumbnail link dari Google Drive
+          fotoUrl = "https://drive.google.com/thumbnail?id=" + user.photo + "&sz=w200";
+        }
         
         $('#nav-user-photo, #dropdown-user-photo').attr('src', fotoUrl);
         $('#nav-user-name, #dropdown-user-name').text(user.fullName);
-        $('#dropdown-user-role').text(user.role); 
+        $('#dropdown-user-role').text(user.role || "User");
       }
     })
     .getUserInfo();
@@ -296,18 +300,29 @@ if (typeof $.fn.IFrame !== 'undefined') {
 }
 
 $(document).ready(function() {
-  console.log("Sistem Memulai...");
+  console.log("Sistem dimulai...");
 
-  // 2. FIX SIDEBAR: Dengarkan klik pada '.nav-sidebar' (AdminLTE 3)
-  $(document).on('click', '.nav-sidebar .nav-link[data-page]', function(e) {
+  // 1. PELINDUNG EROR: Agar IFrame Error tidak membuat JS mati total
+  try {
+    if ($.fn.IFrame) { $.fn.IFrame.defaults.autoIframeMode = false; }
+  } catch(e) { console.log("IFrame Plugin ignored."); }
+
+  // 2. FIX SIDEBAR: Pastikan semua elemen data-page bisa diklik
+  $(document).on('click', '[data-page]', function(e) {
     e.preventDefault();
     var page = $(this).attr('data-page');
     if (page) {
-      console.log("Pindah ke halaman: " + page);
+      console.log("Membuka halaman: " + page);
       loadPage(page);
+      
+      // Tutup sidebar otomatis di tampilan HP
+      if ($('body').hasClass('sidebar-open')) {
+        $('[data-widget="pushmenu"]').PushMenu('collapse');
+      }
     }
   });
 
+  // 3. Jalankan pengecekan login
   checkLoginStatus();
 });
 

@@ -34,7 +34,6 @@ html, body, .wrapper {
   overflow-x: hidden !important;
 }
 
-/* 3. Perbaikan tinggi Content Wrapper agar tidak tertutup Navbar */
 .content-wrapper {
   padding-bottom: 60px !important;
 }
@@ -86,18 +85,15 @@ html, body, .wrapper {
   border-bottom: 1px solid rgba(255,255,255,0.08) !important;
 }
 
-/* Pastikan Wrapper Login menutupi segalanya */
 #gerbang-login {
-  display: flex; /* Langsung tampil tanpa nunggu JS */
+  display: flex !important; /* Langsung tampil tanpa nunggu JS */
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background-color: #4a0404;
   align-items: center;
   justify-content: center;
 }
 
-/* Biarkan Konten Aplikasi tetap sembunyi sampai login berhasil */
 #konten-aplikasi {
   display: none;
 }
@@ -176,11 +172,13 @@ html, body, .wrapper {
   width: 100%;
   z-index: 1032;
   background-color: #ffffff !important;
-  border-top: 1px solid #dee2e6;
-  padding: 10px 20px !important;
 }
 
   #main-content { transition: opacity 0.5s ease-in-out; }
+
+.user-image, .img-circle {
+  object-fit: cover; /* Agar foto tidak lonjong */
+}
 
   /* Gaya Dropdown Profil Navbar */
 .user-menu .dropdown-menu {

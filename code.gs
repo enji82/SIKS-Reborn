@@ -99,6 +99,15 @@ function getPageContent(pageName) {
 // Bantuan URL untuk Script (Opsional)
 function getScriptUrl() { return ScriptApp.getService().getUrl(); }
 
+function getHalaman(namaFile) {
+  try {
+    // Otomatis tambahkan 'page_' jika Bapak hanya menulis 'home' atau 'sk_data'
+    var namaAsli = namaFile.startsWith('page_') ? namaFile : 'page_' + namaFile;
+    return HtmlService.createTemplateFromFile(namaAsli).evaluate().getContent();
+  } catch (err) {
+    return '<div class="p-4"><div class="alert alert-warning">Halaman <b>' + namaFile + '</b> belum dibuat.</div></div>';
+  }
+}
 
 /**
  * ===================================================================
