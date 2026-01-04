@@ -1,74 +1,114 @@
-<div class="main-wrapper" style="animation: fadeIn 0.8s ease-out;">
-  
-  <div class="filter-container" style="margin-bottom: 25px; padding: 40px; text-align: left; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,195,255,0.05) 100%);">
-    <h1 style="margin: 0; font-size: 2.5rem; font-weight: 800; color: #00c3ff; letter-spacing: -1px;">REBORN</h1>
-    <p style="margin: 5px 0 0 0; color: #eee; font-size: 1.1rem; opacity: 0.8;">Ruang Edukasi dan Layanan Berbasis Online Terintegrasi</p>
-    <div style="width: 60px; height: 4px; background: #00c3ff; margin-top: 15px; border-radius: 2px;"></div>
-  </div>
-
-  <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
-    
-    <div style="flex: 2; min-width: 300px;">
-      <div class="filter-container" style="margin-bottom: 20px;">
-        <h3 style="color: #00c3ff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-          <i class="fas fa-info-circle" style="margin-right: 10px;"></i>Tentang REBORN
-        </h3>
-        <p style="line-height: 1.6; color: #ccc; font-size: 14px; text-align: justify;">
-          REBORN merupakan platform digital terpadu yang dirancang untuk memfasilitasi satuan pendidikan <strong>PAUD, TK, dan SD</strong> di wilayah Korwil Disdikbud Kecamatan Secang. 
-          Kami hadir untuk menjawab tantangan era digital dengan menyediakan ekosistem layanan yang kolaboratif, aksesibel, dan efisien bagi seluruh pemangku kepentingan pendidikan.
-        </p>
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h5 class="m-0 text-muted"><span id="greeting-text">Selamat...</span></h5>
+        <h1 class="m-0 text-bold" id="user-fullname-home">Memuat Nama...</h1>
+        <p class="text-primary mt-1 mb-0">Ruang Edukasi dan Layanan Berbasis Online Terintegrasi</p>
       </div>
-
-      <div class="filter-container">
-        <h3 style="color: #00c3ff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-          <i class="fas fa-bullseye" style="margin-right: 10px;"></i>Tujuan Utama
-        </h3>
-        <ul style="color: #ccc; font-size: 14px; line-height: 2; padding-left: 20px;">
-          <li>Akses layanan pendidikan terintegrasi secara online.</li>
-          <li>Mempermudah administrasi sekolah (PAUD, TK, SD).</li>
-          <li>Pusat koordinasi dan pembinaan pendidik tingkat kecamatan.</li>
-          <li>Transformasi digital tata kelola pendidikan yang berkelanjutan.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div style="flex: 1; min-width: 250px;">
-      <div class="filter-container" style="background: rgba(0, 195, 255, 0.1); border: 1px solid rgba(0, 195, 255, 0.2);">
-        <h3 style="color: #fff; margin-bottom: 20px; font-size: 16px;">
-          <i class="fas fa-bolt" style="margin-right: 10px; color: #ffcc00;"></i>Akses Layanan Cepat
-        </h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button class="btn-aksi" onclick="loadPageContent('sk_riwayat')" style="width: 100%; justify-content: flex-start; padding: 12px;">
-            <i class="fas fa-file-signature" style="margin-right: 10px;"></i> Riwayat SK Tugas
-          </button>
-          <button class="btn-aksi" onclick="loadPageContent('lapbul_unggah')" style="width: 100%; justify-content: flex-start; padding: 12px;">
-            <i class="fas fa-upload" style="margin-right: 10px;"></i> Unggah Laporan Bulan
-          </button>
-          <button class="btn-aksi" onclick="loadPageContent('siaba_daftar_presensi')" style="width: 100%; justify-content: flex-start; padding: 12px;">
-            <i class="fas fa-fingerprint" style="margin-right: 10px;"></i> Presensi ASN
-          </button>
+      <div class="col-sm-6">
+        <div class="float-sm-right mt-2 mt-sm-0 bg-dark p-3 rounded shadow-sm border-left border-info" style="min-width: 220px;">
+          <div id="display-hari-tgl" class="text-info font-weight-bold small text-uppercase mb-1">HARI, TANGGAL</div>
+          <div id="display-jam-home" class="h3 m-0 font-weight-bold text-monospace">00:00:00</div>
         </div>
       </div>
-      
-      <div class="filter-container" style="margin-top: 20px; text-align: center; border-style: dashed; opacity: 0.7;">
-        <i class="fas fa-calendar-alt" style="font-size: 24px; color: #00c3ff; margin-bottom: 10px;"></i>
-        <div id="jam-digital" style="font-weight: bold; font-size: 18px; color: #fff;">00:00:00</div>
-        <div style="font-size: 12px; color: #aaa;">Januari 2026</div>
-      </div>
     </div>
-
   </div>
 </div>
 
-<script>
-  // Fungsi jam digital sederhana agar beranda terasa "hidup"
-  function updateTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const jamElement = document.getElementById('jam-digital');
-    if(jamElement) jamElement.innerText = timeStr;
-  }
-  setInterval(updateTime, 1000);
-  updateTime();
-</script>
+<section class="content">
+  <div class="container-fluid">
+    
+    <div class="row">
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-info elevation-2">
+          <div class="inner">
+            <h3>48</h3>
+            <p>Satuan Pendidikan</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-school"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-success elevation-2">
+          <div class="inner">
+            <h3>342</h3>
+            <p>Total GTK ASN</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-12">
+        <div class="small-box bg-warning elevation-2">
+          <div class="inner">
+            <h3 class="text-white">5.120</h3>
+            <p class="text-white">Peserta Didik</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-user-graduate"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card card-primary card-outline shadow-sm">
+          <div class="card-header">
+            <h3 class="card-title text-bold"><i class="fas fa-info-circle mr-2"></i>Tentang REBORN</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-justify">REBORN dirancang sebagai ruang terpadu untuk memfasilitasi satuan pendidikan PAUD, TK, dan SD di wilayah Korwil Disdikbud Kecamatan Secang dalam mengakses informasi dan layanan pendidikan secara terintegrasi.</p>
+          </div>
+        </div>
+
+        <div class="card card-primary card-outline shadow-sm">
+          <div class="card-header">
+            <h3 class="card-title text-bold"><i class="fas fa-bullseye mr-2"></i>Tujuan Utama</h3>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled">
+              <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Pusat edukasi dan layanan pendidikan online terintegrasi.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Mempermudah akses administrasi PAUD, TK, dan SD.</li>
+              <li><i class="fas fa-check-circle text-success mr-2"></i> Optimalisasi teknologi digital dalam tata kelola pendidikan.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card bg-navy shadow-sm">
+          <div class="card-header border-0">
+            <h3 class="card-title text-bold"><i class="fas fa-bullhorn mr-2 text-warning"></i>Pengumuman</h3>
+          </div>
+          <div class="card-body pt-0">
+            <div class="callout callout-info bg-dark mb-2 py-2">
+              <h6 class="mb-0 text-bold">Rapat Koordinasi Korwil</h6>
+              <small class="text-muted">05 Jan 2026 - Ruang Pertemuan</small>
+            </div>
+            <div class="callout border-light bg-dark py-2 mb-0">
+              <h6 class="mb-0 text-bold">Batas Akhir Laporan Bulan</h6>
+              <small class="text-muted">10 Jan 2026 - Melalui Platform</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-outline card-secondary shadow-sm">
+          <div class="card-header">
+            <h3 class="card-title text-bold"><i class="fas fa-calendar-alt mr-2 text-primary"></i>Agenda</h3>
+          </div>
+          <div class="card-body">
+            <p class="small text-muted italic m-0">Tidak ada agenda kedinasan mendesak hari ini.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

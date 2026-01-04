@@ -4,6 +4,8 @@
  * ===================================================================
  */
 const SPREADSHEET_IDS = {
+  DATABASE_USER: "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA",
+  SHEET_USER_NAME: "Data User",
   SK_DATA: "1AmvOJAhOfdx09eT54x62flWzBZ1xNQ8Sy5lzvT9zJA4",
   
   // INI ID DATABASE USER (Yang Bapak Konfirmasi Benar)
@@ -103,6 +105,114 @@ function getScriptUrl() { return ScriptApp.getService().getUrl(); }
  * ===================== 3. FUNGSI LOGIN (SUKSES) ====================
  * ===================================================================
  */
+
+function checkLogin(username, password) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+  const sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+  const data = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0].toString() == username && data[i][1].toString() == password) {
+      const userObj = {
+        fullName: data[i][2],
+        photo: data[i][3] || "https://ui-avatars.com/api/?name=" + data[i][2],
+        isLoggedIn: true
+      };
+      // Simpan sesi ke server
+      PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
+      return userObj;
+    }
+  }
+  return null;
+}
+
+// Fungsi pendukung yang sering dipanggil JavaScript
+function getCurrentUser() {
+  const user = PropertiesService.getUserProperties().getProperty('currentUser');
+  return user ? JSON.parse(user) : null;
+}
+
+function getHalaman(namaFile) {
+  try {
+    return HtmlService.createHtmlOutputFromFile(namaFile).getContent();
+  } catch (err) {
+    // Jika file tidak ada, jangan biarkan blank, tampilkan pesan eror yang manis
+    return '<div class="alert alert-danger">Maaf Pak, file <b>' + namaFile + '.html</b> belum dibuat atau salah nama.</div>';
+  }
+}
+
+function resetSesiLama() {
+  PropertiesService.getUserProperties().deleteProperty('currentUser');
+  Logger.log("Sesi berhasil dihapus. Silakan refresh website.");
+}
+
+function getUserInfo() {
+  try {
+    const userProp = PropertiesService.getUserProperties().getProperty('currentUser');
+    if (!userProp) return null;
+    
+    let user = JSON.parse(userProp);
+    
+    // Jika foto kosong, gunakan avatar inisial sebagai cadangan (Fallback)
+    if (!user.photo || user.photo === "") {
+      user.photo = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404&size=128";
+    }
+    
+    return user;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * FUNGSI 3: Logout
+ */
+function processLogout() {
+  PropertiesService.getUserProperties().deleteProperty('currentUser');
+  return true;
+}
+
+/**
+ * RE-WRITE FUNGSI LOGIN (ANTI-ERROR)
+ */
+function cekLoginServer(user, pass) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    const sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    const data = sheet.getDataRange().getValues();
+
+    // Pastikan input dari user bersih dari spasi
+    const inputUser = String(user).trim();
+    const inputPass = String(pass).trim();
+
+    for (let i = 1; i < data.length; i++) {
+      // Ambil data sheet, ubah ke String, dan buang spasi
+      const userDB = String(data[i][0]).trim(); 
+      const passDB = String(data[i][1]).trim(); 
+      
+      if (inputUser === userDB && inputPass === passDB) {
+        return {
+          status: "success",
+          nama: data[i][2],
+          role: data[i][3],
+          fotoId: data[i][4]
+        };
+      }
+    }
+    
+    return { status: "error", message: "Username atau Password salah." };
+    
+  } catch (err) {
+    return { status: "error", message: "Database Error: " + err.toString() };
+  }
+}
+
+/**
+ * FUNGSI UNTUK MENGAMBIL KONTEN PAGE
+ */
+function getPageContent(pageName) {
+  return HtmlService.createTemplateFromFile(pageName).evaluate().getContent();
+}
 
 function doLogin(form) {
   try {

@@ -8,35 +8,6 @@ function getSkArsipFolderIds() {
   }
 }
 
-function getMasterSkOptions() {
-  // Kunci cache unik
-  const cacheKey = 'master_sk_options_v1';
-  
-  // Gunakan fungsi cache yang sudah ada
-  return getCachedData(cacheKey, function() {
-    try {
-      const ss = SpreadsheetApp.openById(SPREADSHEET_CONFIG.DROPDOWN_DATA.id);
-      const getValuesFromSheet = (sheetName) => {
-        const sheet = ss.getSheetByName(sheetName);
-        if (!sheet) return [];
-        return sheet.getRange('A2:A' + sheet.getLastRow()).getValues()
-                    .flat()
-                    .filter(value => String(value).trim() !== '');
-      };
-
-      return {
-        'Nama SD': getValuesFromSheet('Nama SD').sort(),
-        'Tahun Ajaran': getValuesFromSheet('Tahun Ajaran').sort().reverse(),
-        'Semester': getValuesFromSheet('Semester').sort(),
-        'Kriteria SK': getValuesFromSheet('Kriteria SK').sort()
-      };
-    } catch (e) {
-      // Saat caching, kita lempar error agar tidak menyimpan cache yang rusak
-      throw new Error(`Gagal mengambil SK Options: ${e.message}`);
-    }
-  });
-}
-
 function processManualForm(formData) {
   try {
     Logger.log("--- [DEBUG] MULAI UPLOAD SK ---");
