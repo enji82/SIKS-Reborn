@@ -10,83 +10,38 @@
   
   <?!= include('css'); ?>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-footer-fixed">
 
-  <div id="gerbang-login" style="display: none;">
-    <?!= include('page_login'); ?>
-  </div>
-
-  <div class="wrapper" id="konten-aplikasi" style="display: none;">
-    
-    <nav class="main-header navbar navbar-expand navbar-dark" style="background-color: #800000 !important; border: none;">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-        </li>
-        <li class="nav-item d-none d-sm-inline-block">
-          <span class="nav-link font-weight-bold">Sistem Informasi Korwil Secang</span>
-        </li>
-      </ul>
-
+  <div class="wrapper" id="konten-aplikasi">
+    <nav class="main-header navbar navbar-expand navbar-dark" style="background-color: #800000 !important;">
       <ul class="navbar-nav ml-auto">
         <li class="nav-item dropdown user-menu">
           <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-            <img id="nav-user-photo" src="https://ui-avatars.com/api/?name=User&background=ffc107&color=4a0404" class="user-image img-circle elevation-2" alt="User Image">
-            <span id="nav-user-name" class="d-none d-md-inline ml-2 text-white">Memuat Nama...</span>
+            <img id="nav-user-photo" src="" class="user-image img-circle elevation-2" alt="User">
+            <span id="nav-user-name" class="d-none d-md-inline ml-2 text-white"></span>
           </a>
-          <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow-lg border-0">
+          <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
             <li class="user-header" style="background-color: #721c24 !important;">
-              <img id="dropdown-user-photo" src="https://ui-avatars.com/api/?name=User&background=ffc107&color=4a0404" class="img-circle elevation-2" alt="User Image">
+              <img id="dropdown-user-photo" src="" class="img-circle elevation-2" alt="User">
               <p class="text-white">
-                <span id="dropdown-user-name">Memuat...</span>
-                <small>Administrator</small>
+                <span id="dropdown-user-name" class="font-weight-bold"></span>
+                <small id="dropdown-user-role" class="text-warning text-uppercase"></small>
               </p>
             </li>
             <li class="user-footer">
-              <button type="button" class="btn btn-danger btn-block btn-flat rounded" onclick="handleLogout()">
-                <i class="fas fa-power-off mr-2"></i> KELUAR APLIKASI
+              <button type="button" class="btn btn-danger btn-block rounded" onclick="handleLogout()">
+                <i class="fas fa-power-off mr-2"></i> KELUAR
               </button>
             </li>
           </ul>
         </li>
       </ul>
     </nav>
-
-    <aside class="main-sidebar elevation-4" style="background-color: #721c24 !important;">
-      <a href="#" class="brand-link" style="background-color: #5c0000 !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; display: block; padding: 15px 10px;">
-        <i class="fa-solid fa-paperclip ml-3 mr-2" style="color: #ffc107; font-size: 1.5rem;"></i>
-        <span class="brand-text" style="font-size: 1.3rem; color: #ffffff !important;">
-          <b style="font-weight: 900;">SIKS</b> - REBORN
-        </span>
-      </a>
-
-      <div class="sidebar">
-        <?!= include('sidebar'); ?>
-      </div>
-    </aside>
-
-    <div class="content-wrapper">
-      <div id="main-content" class="p-3">
-        </div>
-    </div>
-
-    <footer class="main-footer">
+    
+    <footer class="main-footer bg-white">
       <div class="float-right d-none d-sm-block"><b>Version</b> 2.0</div>
       <strong>Copyright &copy; 2026 Korwil Secang.</strong>
     </footer>
   </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-
-  <script>
-    if (typeof $.fn.IFrame !== 'undefined') {
-      $.fn.IFrame = undefined; 
-      console.log("IFrame Plugin Disabled.");
-    }
-  </script>
-
-  <?!= include('javascript'); ?>
 </body>
 </html>

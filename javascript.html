@@ -16,42 +16,23 @@ if (typeof $.fn.IFrame !== 'undefined') {
     $.fn.IFrame = undefined; // Hapus total fungsi IFrame
 }
 
-$(document).ready(function() {
-  console.log("Memulai sistem...");
-
-  try {
-    // 1. Matikan Plugin yang bermasalah sebelum mulai
-    if ($.fn.IFrame) {
-      $.fn.IFrame.defaults.autoIframeMode = false;
-    }
-    
-    // 2. Langsung cek status login
-    checkLoginStatus();
-    
-  } catch (err) {
-    // Jika ada eror AdminLTE, tetap jalankan cek login
-    console.warn("AdminLTE Error (Abaikan):", err.message);
-    checkLoginStatus();
-  }
-});
-
 function checkLoginStatus() {
+  console.log("Mengecek status login...");
   google.script.run
     .withSuccessHandler(function(userObj) {
       if (userObj && userObj.isLoggedIn) {
-        // Jika sudah login, sembunyikan login dan nyalakan dashboard
-        $('#gerbang-login').attr('style', 'display: none !important;');
-        $('#konten-aplikasi').show();
+        console.log("User terdeteksi, membuka dashboard");
+        $('#gerbang-login').hide(); // Sembunyikan login
+        $('#konten-aplikasi').show(); // Tampilkan dashboard
         updateSidebarUserData();
-        loadPage('home');
+        loadPage('home'); // Memanggil page_home
       } else {
-        // Jika belum login, pastikan form login tampil
-        $('#gerbang-login').attr('style', 'display: flex !important;');
-        $('#konten-aplikasi').hide();
+        console.log("Tidak ada user, tetap di login");
+        $('#gerbang-login').show();
       }
     })
     .withFailureHandler(function(err) {
-       console.error("Gagal koneksi ke server:", err);
+      alert("FATAL ERROR SERVER: " + err);
     })
     .getCurrentUser();
 }
@@ -98,34 +79,11 @@ function handleLogin(event) {
         .checkLogin(user, pass);
 }
 
-/**
- * FUNGSI 2: Menangani Proses Logout
- */
 function handleLogout() {
-    // 1. Berikan tanda bahwa proses sedang berjalan
-    $('#nav-user-name').text('Keluar...');
-
-    google.script.run
-        .withSuccessHandler(function() {
-            // 2. Bersihkan UI AdminLTE agar tidak meninggalkan jejak (seperti sidebar yang terbuka)
-            $('body').removeClass('sidebar-open').addClass('sidebar-collapse');
-            
-            // 3. PAKSA Tampilkan Form Login
-            $('#gerbang-login')
-                .css('display', 'flex') // Pastikan display flex agar rata tengah
-                .hide()
-                .fadeIn(500);
-
-            // 4. Bersihkan data input agar aman
-            $('#username').val('');
-            $('#password').val('');
-            
-            // 5. Kosongkan konten utama agar tidak terlihat di belakang login
-            $('#main-content').html('');
-            
-            console.log("Logout Berhasil: Form Login Ditampilkan.");
-        })
-        .processLogout(); // Pastikan fungsi ini ada di Code.gs Bapak
+  google.script.run.withSuccessHandler(function() {
+    google.script.host.close(); // Cara aman menutup di GAS
+    window.top.location.href = "<?!= getWebAppUrl(); ?>";
+  }).processLogout();
 }
 
 function showLoginError(message) {
@@ -146,27 +104,20 @@ function showLoginError(message) {
  * ====================================================================
  */
 function loadPage(pageName) {
-    const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
-    
-    mainContent.style.opacity = '0.5';
+  console.log("Memuat halaman: " + pageName);
+  var area = document.getElementById('main-content');
+  area.style.opacity = '0.4';
 
-    google.script.run
-        .withSuccessHandler(function(html) {
-            mainContent.innerHTML = html;
-            mainContent.style.opacity = '1';
-            
-            // Update UI Sidebar
-            updateSidebarUI(pageName);
-            
-            // PERBAIKAN: Inisialisasi Treeview hanya jika plugin tersedia
-            // Ini untuk menghilangkan eror 'Treeview is not a function'
-            var $tree = $('[data-widget="treeview"]');
-            if ($tree.length > 0 && typeof $.fn.Treeview !== 'undefined') {
-                $tree.Treeview('init');
-            }
-        })
-        .getHalaman(pageName);
+  google.script.run
+    .withSuccessHandler(function(html) {
+      area.innerHTML = html;
+      area.style.opacity = '1';
+    })
+    .withFailureHandler(function(err) {
+      area.innerHTML = '<div class="alert alert-danger">Gagal memuat halaman: ' + err + '</div>';
+      area.style.opacity = '1';
+    })
+    .getHalaman(pageName);
 }
 
 function initSidebar() {
@@ -204,17 +155,15 @@ function updateSidebarUserData() {
   google.script.run
     .withSuccessHandler(function(user) {
       if (user) {
-        // Gunakan foto dari database, jika kosong pakai inisial (placeholder)
-        var fotoUrl = user.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404";
+        // Gabungkan Nama & Role agar tidak dobel
+        var fotoUrl = user.photo ? "https://drive.google.com/thumbnail?id=" + user.photo + "&sz=w200" : "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404";
         
-        // Cek dulu apakah elemennya ada sebelum dipasang fotonya
-        if ($('#nav-user-photo').length) $('#nav-user-photo').attr('src', fotoUrl);
-        if ($('#dropdown-user-photo').length) $('#dropdown-user-photo').attr('src', fotoUrl);
-        if ($('#nav-user-name').length) $('#nav-user-name').text(user.fullName);
-        if ($('#dropdown-user-name').length) $('#dropdown-user-name').text(user.fullName);
+        $('#nav-user-photo, #dropdown-user-photo').attr('src', fotoUrl);
+        $('#nav-user-name, #dropdown-user-name').text(user.fullName);
+        $('#dropdown-user-role').text(user.role || "User");
       }
     })
-    .getCurrentUser();
+    .getUserInfo();
 }
 
 function updateSidebarUI(pageName) {
@@ -343,18 +292,23 @@ App.pageInitializers = {
  * ====================================================================
  */
 
-$(document).ready(function() {
-  // 1. Matikan Plugin IFrame AdminLTE secara total
-  if ($.fn.IFrame) {
-    $.fn.IFrame.defaults.autoIframeMode = false;
-    $.fn.IFrame.defaults.autoItemActive = false;
-  }
+console.log("Sistem dimulai...");
 
-  // 2. Jalankan sistem pengecekan login
-  // Kita beri sedikit delay (200ms) agar AdminLTE selesai render dasar
-  setTimeout(function() {
-    checkLoginStatus();
-  }, 200);
+$(document).ready(function() {
+  // Matikan fitur bermasalah
+  try {
+    if ($.fn.IFrame) { $.fn.IFrame.defaults.autoIframeMode = false; }
+  } catch(e) { console.log("IFrame bypass"); }
+
+  // 1. CEK STATUS LOGIN
+  checkLoginStatus();
+
+  // 2. NAVIGASI SIDEBAR
+  $(document).on('click', '.nav-link[data-page]', function(e) {
+    e.preventDefault();
+    var hal = $(this).attr('data-page');
+    if (hal) { loadPage(hal); }
+  });
 });
 
 /**

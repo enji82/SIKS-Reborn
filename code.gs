@@ -112,18 +112,22 @@ function checkLogin(username, password) {
   const data = sheet.getDataRange().getValues();
   
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0].toString() == username && data[i][1].toString() == password) {
+    if (String(data[i][0]) == username && String(data[i][1]) == password) {
       const userObj = {
-        fullName: data[i][2],
-        photo: data[i][3] || "https://ui-avatars.com/api/?name=" + data[i][2],
+        fullName: data[i][2], // Kolom C
+        role: data[i][3],     // Kolom D
+        photo: data[i][4],     // Kolom E (Foto ID)
         isLoggedIn: true
       };
-      // Simpan sesi ke server
       PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
       return userObj;
     }
   }
   return null;
+}
+
+function getWebAppUrl() {
+  return ScriptApp.getService().getUrl();
 }
 
 // Fungsi pendukung yang sering dipanggil JavaScript
@@ -134,10 +138,11 @@ function getCurrentUser() {
 
 function getHalaman(namaFile) {
   try {
-    return HtmlService.createHtmlOutputFromFile(namaFile).getContent();
+    // Jika Bapak klik menu 'home', skrip mencari 'page_home'
+    var realName = namaFile.startsWith('page_') ? namaFile : 'page_' + namaFile;
+    return HtmlService.createTemplateFromFile(realName).evaluate().getContent();
   } catch (err) {
-    // Jika file tidak ada, jangan biarkan blank, tampilkan pesan eror yang manis
-    return '<div class="alert alert-danger">Maaf Pak, file <b>' + namaFile + '.html</b> belum dibuat atau salah nama.</div>';
+    throw "File " + namaFile + " tidak ditemukan di sistem.";
   }
 }
 
@@ -150,26 +155,22 @@ function getUserInfo() {
   try {
     const userProp = PropertiesService.getUserProperties().getProperty('currentUser');
     if (!userProp) return null;
-    
     let user = JSON.parse(userProp);
-    
-    // Jika foto kosong, gunakan avatar inisial sebagai cadangan (Fallback)
-    if (!user.photo || user.photo === "") {
-      user.photo = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=4a0404&size=128";
+
+    // Jika photo berisi ID Google Drive (bukan URL), ubah jadi thumbnail
+    if (user.photo && !user.photo.startsWith('http')) {
+      user.photo = "https://lh3.googleusercontent.com/d/" + user.photo;
+    } 
+    // Jika benar-benar kosong, pakai avatar inisial
+    if (!user.photo) {
+      user.photo = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.fullName) + "&background=ffc107&color=721c24";
     }
-    
     return user;
-  } catch (e) {
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
-/**
- * FUNGSI 3: Logout
- */
 function processLogout() {
   PropertiesService.getUserProperties().deleteProperty('currentUser');
-  return true;
 }
 
 /**

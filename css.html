@@ -36,9 +36,7 @@ html, body, .wrapper {
 
 /* 3. Perbaikan tinggi Content Wrapper agar tidak tertutup Navbar */
 .content-wrapper {
-    min-height: 100vh !important;
-    display: block !important;
-    background-color: #f8f9fa !important;
+  padding-bottom: 60px !important;
 }
 
   .main-header, 
@@ -48,6 +46,11 @@ html, body, .wrapper {
   align-items: center !important; /* Teks & Logo otomatis rata tengah secara vertikal */
   padding: 0 15px !important;
   border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.brand-link .fa-paperclip {
+  width: 33px;
+  text-align: center;
 }
 
 /* Fix AdminLTE autoIframeMode Error */
@@ -85,17 +88,22 @@ html, body, .wrapper {
 
 /* Pastikan Wrapper Login menutupi segalanya */
 #gerbang-login {
-  display: flex !important; /* Gunakan flex agar panel kiri-kanan rapi */
+  display: flex; /* Langsung tampil tanpa nunggu JS */
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
+  inset: 0;
   z-index: 99999;
-  background-color: #4a0404; /* Merah Marun Dasar */
+  background-color: #4a0404;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Biarkan Konten Aplikasi tetap sembunyi sampai login berhasil */
 #konten-aplikasi {
   display: none;
+}
+
+#gerbang-login, #konten-aplikasi {
+  display: none !important;
 }
 
   /* =================================================================== */
@@ -163,12 +171,11 @@ html, body, .wrapper {
   /* 6. MODUL KHUSUS (FOOTER & UTILITY)                                  */
   /* =================================================================== */
   .main-footer {
-    background-color: #ffffff !important;
-    color: var(--text-dark) !important;
-    border-top: 1px solid var(--border-light) !important;
-    text-align: center;
-    font-size: 0.85rem;
-  }
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1032;
+}
 
   #main-content { transition: opacity 0.5s ease-in-out; }
 
