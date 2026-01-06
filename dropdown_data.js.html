@@ -51,7 +51,7 @@ const DROPDOWN_STATIS = {
   
   "NamaSD": ["SDN SECANG 1", "SDN SECANG 2", "SDN SECANG 3", "SDN KRINCING", 
     "SDN KUWALUHAN", "SDN MADUSARI", "SDN NGABEAN", "SDN MADYOCONDRO", 
-    "SDN NGADIROJO", "SDN KALIJOSO", "SD PAYAMAN 1", "SDN JAMBEWANGI", 
+    "SDN NGADIROJO", "SDN KALIJOSO", "SDN PAYAMAN 1", "SDN JAMBEWANGI", 
     "SDN PANCURANMAS", "SDN PUCANG", "SDN PIRIKAN", "SDN SETAN",
     "SDN CANDISARI", "SDN SIDOMULYO", "SDN DONOMULYO", "SDN PURWOSARI", 
     "SDN KARANGKAJEN", "SDN GIRIKULON", "SD MUHAMMADIYAH PAYAMAN", 
@@ -65,4 +65,20 @@ const DROPDOWN_STATIS = {
     "Awal Semester", "Perubahan ke 1", "Perubahan ke 2", "Perubahan ke 3", "Perubahan ke 4", "Perubahan ke 5"
   ],
 };
+
+function renderDropdown(elementId, kategori) {
+    const d = $('#' + elementId);
+    if (!d.length) return;
+    
+    d.empty().append('<option value="">-- Pilih --</option>');
+    
+    // Pastikan memanggil DROPDOWN_STATIS sesuai nama objek di atas
+    if (DROPDOWN_STATIS[kategori]) {
+      DROPDOWN_STATIS[kategori].forEach(item => {
+        d.append('<option value="' + item + '">' + item + '</option>');
+      });
+    } else {
+      console.warn("Kategori dropdown tidak ditemukan: " + kategori);
+    }
+}
 </script>
