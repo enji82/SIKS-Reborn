@@ -1,54 +1,53 @@
-<style>
+<script>
 /* ============================================================
-   BUILDER MENU ADMIN (FIXED STRUCTURE)
+   BUILDER MENU ADMIN – TRASH SK (FINAL & FIXED)
+   Aman untuk sidebar dinamis (GAS SPA)
    ============================================================ */
 
-$(document).ready(function() {
-    bangunMenuAdmin();
-});
-
 function bangunMenuAdmin() {
-    var upaya = 0;
-    
-    // Cek setiap 500ms
-    var intervalBangun = setInterval(function() {
-        
-        var slot = $('#slotMenuAdmin');
-        
-        // Cek apakah elemen <li> sudah ada?
-        if (slot.length > 0) {
-            clearInterval(intervalBangun);
-            
-            // Cek Role
-            var sesi = localStorage.getItem("siksUser");
-            var isAdmin = false;
-            if (sesi) {
-                try {
-                    var role = JSON.parse(sesi).role;
-                    if (role === 'Admin' || role === 'Super Admin') { isAdmin = true; }
-                } catch(e) {}
-            }
 
-            // ISI SLOTNYA
-            if (isAdmin) {
-                // Kita masukkan kode <a> ke dalam <li> yang sudah siap
-                var linkHtml = `
-                    <a href="#" class="nav-link" onclick="loadPage('page_sk_trash')">
-                        <i class="nav-icon fas fa-trash-restore text-danger"></i>
-                        <p>Trash SK</p>
-                    </a>
-                `;
-                slot.html(linkHtml); // Masukkan link ke dalam li
-                slot.show();         // Pastikan li terlihat
-            } else {
-                slot.empty();        // Kosongkan isinya
-                slot.hide();         // Sembunyikan li-nya
-            }
-        } 
-        
-        upaya++;
-        if (upaya > 20) clearInterval(intervalBangun); // Berhenti setelah 10 detik
+    var percobaan = 0;
 
-    }, 500); 
+    var cekSlot = setInterval(function () {
+        percobaan++;
+
+        var slot = document.getElementById("slotMenuAdmin");
+        if (!slot) {
+            if (percobaan > 20) clearInterval(cekSlot);
+            return;
+        }
+
+        clearInterval(cekSlot); // slot sudah ada, hentikan interval
+
+        // Ambil sesi login
+        var sesi = localStorage.getItem("siksUser");
+        var isAdmin = false;
+
+        if (sesi) {
+            try {
+                var user = JSON.parse(sesi);
+                if (user.role === "Admin" || user.role === "Super Admin") {
+                    isAdmin = true;
+                }
+            } catch (e) {
+                console.warn("Role user tidak terbaca");
+            }
+        }
+
+        // TAMPILKAN MENU JIKA ADMIN
+        if (isAdmin) {
+            slot.innerHTML = `
+                <a href="#" class="nav-link" data-page="page_sk_trash">
+                    <i class="nav-icon fas fa-trash-restore text-danger"></i>
+                    <p>Trash SK</p>
+                </a>
+            `;
+            slot.style.display = "block";
+        } else {
+            slot.innerHTML = "";
+            slot.style.display = "none";
+        }
+
+    }, 300);
 }
-</style>
+</script>

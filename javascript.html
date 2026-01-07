@@ -84,19 +84,19 @@ function handleLoginV2(event) {
   google.script.run
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
-          
-          if(typeof NotifSultan !== 'undefined') {
-             NotifSultan.alert('success', 'BERHASIL', "Selamat Datang, " + response.nama);
-          }
-          
-          // 1. SIMPAN SESI
-          localStorage.setItem("siksUser", JSON.stringify(response)); 
-          
-          // 2. >>> MODIFIKASI DISINI <<<
-          if (typeof bangunMenuAdmin === 'function') {
-              bangunMenuAdmin();
-          }
-          inisialisasiAplikasi();
+
+      // SIMPAN SESSION (WAJIB)
+      localStorage.setItem("siksUser", JSON.stringify(response));
+
+      // DEBUG (boleh dihapus nanti)
+      console.log("SESSION DISIMPAN:", response);
+
+      if (typeof bangunMenuAdmin === 'function') {
+          bangunMenuAdmin();
+      }
+
+    inisialisasiAplikasi();
+
       } else {
           localStorage.removeItem("username"); 
 
