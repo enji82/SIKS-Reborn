@@ -1,40 +1,34 @@
 <script>
 /* ============================================================
-   BUILDER MENU ADMIN – TRASH SK (FINAL & FIXED)
-   Aman untuk sidebar dinamis (GAS SPA)
+   BUILDER MENU ADMIN – TRASH SK
    ============================================================ */
 
 function bangunMenuAdmin() {
-
     var percobaan = 0;
 
-    var cekSlot = setInterval(function () {
+    var interval = setInterval(function () {
         percobaan++;
 
         var slot = document.getElementById("slotMenuAdmin");
         if (!slot) {
-            if (percobaan > 20) clearInterval(cekSlot);
+            if (percobaan > 20) clearInterval(interval);
             return;
         }
 
-        clearInterval(cekSlot); // slot sudah ada, hentikan interval
+        clearInterval(interval);
 
-        // Ambil sesi login
-        var sesi = localStorage.getItem("siksUser");
-        var isAdmin = false;
+        var raw = localStorage.getItem("siksUser");
+        if (!raw || raw === "null") return;
 
-        if (sesi) {
-            try {
-                var user = JSON.parse(sesi);
-                if (user.role === "Admin" || user.role === "Super Admin") {
-                    isAdmin = true;
-                }
-            } catch (e) {
-                console.warn("Role user tidak terbaca");
-            }
+        var user;
+        try {
+            user = JSON.parse(raw);
+        } catch (e) {
+            return;
         }
 
-        // TAMPILKAN MENU JIKA ADMIN
+        var isAdmin = (user.role === "Admin" || user.role === "Super Admin");
+
         if (isAdmin) {
             slot.innerHTML = `
                 <a href="#" class="nav-link" data-page="page_sk_trash">

@@ -1,11 +1,12 @@
 <script>
+/* =============================================================
+   CORE APP SCRIPT – SIKS REBORN
+   ============================================================= */
+
 $(document).ready(function() {
   console.log("SIKS-REBORN: Engine Started.");
-  
-  // 1. JALANKAN SATPAM (Pengecekan Utama)
   inisialisasiAplikasi();
 
-  // 2. NAVIGASI SIDEBAR
   $(document).on('click', '.nav-link[data-page]', function(e) {
     e.preventDefault();
     var h = $(this).attr('data-page');
@@ -13,109 +14,78 @@ $(document).ready(function() {
       loadPage(h);
       $('.nav-sidebar .nav-link').removeClass('active');
       $(this).addClass('active');
-      if ($('body').hasClass('sidebar-open')) {
-        $('[data-widget="pushmenu"]').PushMenu('collapse');
-      }
     }
-  }); 
+  });
 });
 
-// --- 1. CARI FUNGSI INI DAN GANTI TOTAL ---
 function handleLogout() {
-  NotifSultan.konfirmasi('KELUAR?', 'Yakin ingin mengakhiri sesi?')
-    .then((result) => {
-      if (result.isConfirmed) {
-        // HAPUS SEMUA JEJAK (INI YANG TADI KURANG)
-        localStorage.removeItem('username'); 
-        localStorage.removeItem('siksUser'); // <--- INI WAJIB DIHAPUS!
-        
-        // Refresh Halaman ke Login
-        google.script.run.withSuccessHandler(function(url){
-           window.open(url, '_top');
-        }).getScriptUrl(); 
-      }
-    });
+  localStorage.removeItem("siksUser");
+
+  google.script.run
+    .withSuccessHandler(function (url) {
+      window.top.location.href = url;
+    })
+    .getScriptUrl();
 }
 
-// --- 2. CARI FUNGSI INI DAN GANTI TOTAL ---
 function inisialisasiAplikasi() {
   var preloader = $('.preloader');
   var sesiUser = localStorage.getItem("siksUser");
 
   if (!sesiUser) {
     console.log("🔒 Status: Belum Login.");
-    if (preloader.length) preloader.fadeOut('fast');
+
     $('#konten-aplikasi').hide();
     $('#gerbang-login').show();
-  } else {
-    console.log("🔓 Status: Sesi Ditemukan.");
-    var user = JSON.parse(sesiUser);
 
-    // --- PERBAIKAN: RESTORE USERNAME ---
-    // Jika username hilang tapi sesi masih ada, kita kembalikan lagi
-    if (user.username) {
-        localStorage.setItem("username", user.username);
-    }
-    // -----------------------------------
-    
-    $('#gerbang-login').remove(); 
-    $('#konten-aplikasi').show();
-    $('body').removeClass('login-page').addClass('sidebar-mini layout-fixed');
-    
-    loadPage('home');
-    updateUI(user);
-    
     if (preloader.length) preloader.fadeOut('fast');
+    return;
   }
+
+  console.log("🔓 Status: Login OK");
+
+  var user = JSON.parse(sesiUser);
+
+  $('#gerbang-login').remove();
+  $('#konten-aplikasi').show();
+
+  updateUI(user);
+  tampilkanMenuAdmin(user);
+
+  loadPage('home');
+
+  if (preloader.length) preloader.fadeOut('fast');
 }
 
 // --- FUNGSI LOGIN ---
 function handleLoginV2(event) {
-  event.preventDefault(); 
+  event.preventDefault();
+
   var btn = document.getElementById("tombolLogin");
   var form = document.getElementById("formLogin");
-  
-  var inputUser = document.getElementById("username").value;
-  localStorage.setItem("username", inputUser); 
-  
+
   btn.innerText = "Memverifikasi...";
   btn.disabled = true;
 
   google.script.run
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
-
-      // SIMPAN SESSION (WAJIB)
-      localStorage.setItem("siksUser", JSON.stringify(response));
-
-      // DEBUG (boleh dihapus nanti)
-      console.log("SESSION DISIMPAN:", response);
-
-      if (typeof bangunMenuAdmin === 'function') {
-          bangunMenuAdmin();
-      }
-
-    inisialisasiAplikasi();
-
+        localStorage.setItem("siksUser", JSON.stringify(response));
+        inisialisasiAplikasi();
       } else {
-          localStorage.removeItem("username"); 
-
-          if(typeof NotifSultan !== 'undefined') {
-             NotifSultan.alert('error', 'GAGAL', response.message);
-          }
-          btn.innerText = "LOGIN";
-          btn.disabled = false;
+        btn.innerText = "LOGIN";
+        btn.disabled = false;
+        alert(response.message || "Login gagal");
       }
     })
-    .withFailureHandler(function(err){
-       if(typeof NotifSultan !== 'undefined') {
-          NotifSultan.alert('error', 'ERROR', "Gagal terhubung ke server!");
-       }
-       btn.innerText = "LOGIN";
-       btn.disabled = false;
+    .withFailureHandler(function() {
+      btn.innerText = "LOGIN";
+      btn.disabled = false;
+      alert("Gagal menghubungi server");
     })
     .processLogin(form);
 }
+
 
 function highlightSidebar(pageName) {
   // 1. RESET TOTAL: Kembalikan semua ke warna dasar (Putih/Transparan)
@@ -174,7 +144,7 @@ function loadPage(page) {
 function updateUI(u) {
   // u.nama berasal dari processLogin, u.fullName berasal dari getCurrentUser
   // Kita buat agar fleksibel menerima keduanya
-  var name = u.nama || u.fullName || "User";
+  var name = u.nama || u.username || u.fullName || "User";
   var photo = u.foto || u.photo || "";
 
   var f = photo ? 'https://drive.google.com/thumbnail?id=' + photo + '&sz=w200' : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name);
@@ -235,7 +205,7 @@ function handleFormSubmit(event) {
   const file = fileInput.files[0];
   
   // Ambil data user dari session kita yang baru
-  const user = JSON.parse(localStorage.getItem("siksUser"));
+  const user = getSesiUser();
 
   if (file && file.size > 1024 * 1024) {
     tampilkanNotif("Ukuran file maksimal 1 MB!", "error");
@@ -382,4 +352,39 @@ const NotifSultan = {
     });
   }
 };
+
+function getSesiUser() {
+    var raw = localStorage.getItem("siksUser");
+    if (!raw || raw === "null") return null;
+    try {
+        return JSON.parse(raw);
+    } catch (e) {
+        return null;
+    }
+}
+
+function tampilkanMenuAdmin(user) {
+  var menu = document.getElementById("menuTrashSK");
+  if (!menu) return;
+
+  if (user.role === "Admin" || user.role === "Super Admin") {
+    menu.style.display = "block";
+  } else {
+    menu.style.display = "none";
+  }
+}
+
+function afterLoginSuccess(user) {
+  // simpan sesi
+  localStorage.setItem("siksUser", JSON.stringify(user));
+
+  // tampilkan menu admin
+  if (user.role === "Admin" || user.role === "Super Admin") {
+    var el = document.getElementById("menuTrashSK");
+    if (el) el.style.display = "block";
+  }
+}
+
+
+
 </script>
