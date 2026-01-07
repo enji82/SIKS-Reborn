@@ -1,0 +1,54 @@
+<style>
+/* ============================================================
+   BUILDER MENU ADMIN (FIXED STRUCTURE)
+   ============================================================ */
+
+$(document).ready(function() {
+    bangunMenuAdmin();
+});
+
+function bangunMenuAdmin() {
+    var upaya = 0;
+    
+    // Cek setiap 500ms
+    var intervalBangun = setInterval(function() {
+        
+        var slot = $('#slotMenuAdmin');
+        
+        // Cek apakah elemen <li> sudah ada?
+        if (slot.length > 0) {
+            clearInterval(intervalBangun);
+            
+            // Cek Role
+            var sesi = localStorage.getItem("siksUser");
+            var isAdmin = false;
+            if (sesi) {
+                try {
+                    var role = JSON.parse(sesi).role;
+                    if (role === 'Admin' || role === 'Super Admin') { isAdmin = true; }
+                } catch(e) {}
+            }
+
+            // ISI SLOTNYA
+            if (isAdmin) {
+                // Kita masukkan kode <a> ke dalam <li> yang sudah siap
+                var linkHtml = `
+                    <a href="#" class="nav-link" onclick="loadPage('page_sk_trash')">
+                        <i class="nav-icon fas fa-trash-restore text-danger"></i>
+                        <p>Trash SK</p>
+                    </a>
+                `;
+                slot.html(linkHtml); // Masukkan link ke dalam li
+                slot.show();         // Pastikan li terlihat
+            } else {
+                slot.empty();        // Kosongkan isinya
+                slot.hide();         // Sembunyikan li-nya
+            }
+        } 
+        
+        upaya++;
+        if (upaya > 20) clearInterval(intervalBangun); // Berhenti setelah 10 detik
+
+    }, 500); 
+}
+</style>

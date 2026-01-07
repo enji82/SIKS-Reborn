@@ -1,0 +1,271 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-trash-restore text-maroon mr-2"></i>Tong Sampah Data SK
+        </h5>
+        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        
+        <div id="alertBukanAdmin" class="alert alert-danger font-weight-bold text-center shadow-sm" style="display:none;">
+          <i class="fas fa-lock mr-2"></i> AKSES DITOLAK. Halaman ini khusus Administrator.
+        </div>
+
+        <div id="trashContent" style="display:none;">
+          
+          <div class="control-bar mb-3 d-flex flex-wrap justify-content-between align-items-center bg-white p-3 shadow-sm rounded">
+            
+            <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+              <button type="button" class="btn border-tegas btn-square-sultan shadow-sm" onclick="refreshTrash()" title="Refresh Data">
+                <i class="fas fa-sync-alt text-maroon"></i>
+              </button>
+              <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
+              
+              <select id="filterSD" class="form-control filter-select border-tegas shadow-sm" style="min-width: 180px;">
+                <option value="">- Semua Sekolah -</option>
+              </select>
+              <select id="filterTahun" class="form-control filter-select border-tegas shadow-sm" style="width: 130px;">
+                <option value="">- Tahun -</option>
+              </select>
+              <select id="filterSemester" class="form-control filter-select border-tegas shadow-sm" style="width: 110px;">
+                <option value="">- Smt -</option>
+              </select>
+            </div>
+
+            <div class="mt-2 mt-xl-0 position-relative" style="flex-grow: 1; max-width: 300px;">
+              <input type="text" id="customSearch" class="form-control border-tegas shadow-sm" placeholder="Cari Data Terhapus..." style="padding-right: 35px;">
+              <i class="fas fa-search position-absolute text-muted" style="right: 12px; top: 11px;"></i>
+            </div>
+          </div>
+
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table id="tabelTrashSK" class="table table-hover table-premium mb-0" style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th>Nama Sekolah</th>
+                      <th>Tahun</th>
+                      <th>Smt</th>
+                      <th>Nomor SK</th>
+                      <th>Tgl SK</th>
+                      <th class="text-center">Dokumen</th>
+                      <th>Dihapus Pada</th>
+                      <th>Oleh</th>
+                      <th>Alasan Penghapusan</th>
+                      <th class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodyTabelTrash">
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div> </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal fade" id="modalPreviewTrash" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document" style="height: 90vh;">
+    <div class="modal-content h-100 border-0">
+      <div class="modal-header py-2 bg-light">
+        <h6 class="modal-title font-weight-bold"><i class="fas fa-file-pdf mr-2 text-maroon"></i> Preview File Arsip</h6>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body p-0 bg-dark">
+        <iframe id="framePreviewTrash" src="" style="width:100%; height:100%; border:none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  // 1. CEK OTORITAS ADMIN
+  var sesi = localStorage.getItem("siksUser");
+  var user = sesi ? JSON.parse(sesi) : { role: 'User' }; 
+  var isAdmin = (user.role === 'Admin' || user.role === 'Super Admin');
+
+  if (!isAdmin) {
+      $('#alertBukanAdmin').show();
+      $('#trashContent').remove(); // Hapus konten agar aman
+      return; 
+  } else {
+      $('#trashContent').show();
+      muatDataTrash(); // Hanya muat data jika admin
+  }
+  
+  // Listeners
+  $('#filterSD').on('change', function() { filterTabel(0, this.value); });
+  $('#filterTahun').on('change', function() { filterTabel(1, this.value); });
+  $('#filterSemester').on('change', function() { filterTabel(2, this.value); });
+  $('#customSearch').on('keyup', function() { $('#tabelTrashSK').DataTable().search(this.value).draw(); });
+});
+
+function refreshTrash() {
+  if ($.fn.DataTable.isDataTable('#tabelTrashSK')) { $('#tabelTrashSK').DataTable().destroy(); }
+  muatDataTrash();
+}
+
+function muatDataTrash() {
+  NotifSultan.loading("Mengaduk Sampah...");
+  google.script.run
+    .withSuccessHandler(function(data) {
+      Swal.close();
+      renderTabelTrash(data);
+    })
+    .withFailureHandler(function(err) {
+      NotifSultan.alert('error', 'ERROR', err.message);
+    })
+    .getTrashSK();
+}
+
+function renderTabelTrash(data) {
+  // Parsing Tanggal
+  const parseTgl = (val) => {
+      if (!val) return 0;
+      var str = String(val).trim(); var parts = str.split(' '); 
+      var dP = parts[0].split('-'); var tP = (parts.length > 1) ? parts[1].split(':') : [0, 0, 0]; 
+      if (dP.length === 3) return new Date(dP[2], dP[1]-1, dP[0], tP[0]||0, tP[1]||0, tP[2]||0).getTime();
+      return 0;
+  };
+
+  data.sort((a, b) => parseTgl(b.tglHapus) - parseTgl(a.tglHapus));
+
+  var tbody = $('#bodyTabelTrash'); tbody.empty();
+  let sSd = new Set(), sTh = new Set(), sSm = new Set();
+
+  if (data.length === 0) {
+      tbody.html('<tr><td colspan="10" class="text-center py-4 text-muted"><i>Tempat sampah bersih.</i></td></tr>');
+  } else {
+      data.forEach(function(row) {
+        if(row.namaSd) sSd.add(row.namaSd); if(row.tahun) sTh.add(row.tahun); if(row.semester) sSm.add(row.semester);
+
+        var btnDoc = row.fileUrl ? 
+          `<button class="btn btn-sm btn-outline-dark" onclick="previewPDF('${row.fileUrl}')" style="border-radius: 20px; font-size: 12px;"><i class="fas fa-eye mr-1"></i> File</button>` : '-';
+        
+        var btnRestore = `
+            <button class="btn btn-sm btn-success shadow-sm" onclick="restoreSK('${row.rowBaris}', '${row.namaSd}')" title="Pulihkan Data">
+                <i class="fas fa-trash-restore-alt mr-1"></i> Pulihkan
+            </button>`;
+
+        // KOLOM 1: Beri class font-weight-bold
+        var tr = `
+          <tr>
+            <td class="font-weight-bold text-dark">${row.namaSd}</td>
+            <td>${row.tahun}</td>
+            <td>${row.semester}</td>
+            <td>${row.noSk}</td>
+            <td>${row.tglSk}</td>
+            <td class="text-center">${btnDoc}</td>
+            <td class="text-danger small font-weight-bold">${row.tglHapus}</td>
+            <td class="small">${row.userHapus}</td>
+            <td class="text-muted small font-italic">"${row.alasanHapus}"</td>
+            <td class="text-center">${btnRestore}</td>
+          </tr>
+        `;
+        tbody.append(tr);
+      });
+  }
+
+  isiOpsi('filterSD', sSd); isiOpsi('filterTahun', sTh); isiOpsi('filterSemester', sSm);
+
+  // Pastikan class sticky ada di tabel sebelum DataTable di-init
+  $('#tabelTrashSK').addClass('table-sticky-first nowrap');
+
+  // Init DataTables
+  $('#tabelTrashSK').DataTable({
+    "scrollX": true, 
+    "responsive": false, 
+    "ordering": false, 
+    "autoWidth": true, // Penting untuk kerapian
+    "pageLength": 10,
+    "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+    "dom": 't<"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
+    
+    "initComplete": function() { 
+        setTimeout(function() { 
+            $('#tabelTrashSK').DataTable().columns.adjust(); 
+            $(window).trigger('resize'); 
+            
+            // AKTIFKAN DRAG SCROLL (GESER MOUSE)
+            if (typeof enableDragScroll === "function") {
+                enableDragScroll('tabelTrashSK'); 
+            }
+        }, 500); 
+    },
+    
+    "drawCallback": function() { 
+        var api = this.api(); 
+        setTimeout(function() { api.columns.adjust(); }, 100);
+        
+        // CSS Cleaning (Membersihkan sisa-sisa border ganda)
+        $('.dataTables_scrollHead').css('border-bottom', 'none'); 
+        $('.dataTables_scrollBody table').css('margin-top', '0');
+    }
+  });
+}
+
+function filterTabel(colIdx, val) { $('#tabelTrashSK').DataTable().column(colIdx).search(val).draw(); }
+
+function previewPDF(url) {
+  $('#framePreviewTrash').attr('src', url.replace('/view', '/preview'));
+  $('#modalPreviewTrash').modal('show');
+}
+
+function isiOpsi(id, set) {
+    const el = document.getElementById(id); const first = el.options[0];
+    el.innerHTML = ''; el.appendChild(first);
+    Array.from(set).sort().forEach(i => { let opt = document.createElement('option'); opt.value = i; opt.text = i; el.appendChild(opt); });
+}
+
+// --- LOGIKA RESTORE (UPDATED) ---
+function restoreSK(rowId, namaSd) {
+  // Ambil nama user yang sedang login untuk dicatat
+  var sesi = localStorage.getItem("siksUser");
+  var user = sesi ? JSON.parse(sesi) : { nama: 'Admin' };
+  var namaAdmin = user.nama || 'Admin';
+
+  NotifSultan.konfirmasi(
+    "PULIHKAN DATA?", 
+    "Data " + namaSd + " dan Filenya akan dikembalikan ke Database Utama.", 
+    "Ya, Pulihkan"
+  ).then((result) => {
+      if (result.isConfirmed) {
+          NotifSultan.loading("Sedang Memulihkan...");
+          
+          // Kirim Data Object
+          var payload = {
+              rowId: rowId,
+              userRestore: namaAdmin
+          };
+          
+          google.script.run
+            .withSuccessHandler(function(response) {
+                if (response.success) {
+                    NotifSultan.alert('success', 'BERHASIL', response.message)
+                        .then(() => refreshTrash()); // Refresh tabel sampah
+                } else {
+                    NotifSultan.alert('error', 'GAGAL', response.message);
+                }
+            })
+            .withFailureHandler(function(err) {
+                NotifSultan.alert('error', 'ERROR', err.message);
+            })
+            .restoreDataSK(payload); // Kirim payload, bukan cuma ID
+      }
+  });
+}
+</script>

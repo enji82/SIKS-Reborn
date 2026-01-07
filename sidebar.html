@@ -14,13 +14,14 @@
         <p>SK Pembagian Tugas <i class="right fas fa-angle-left"></i></p>
       </a>
       <ul class="nav nav-treeview">
+        
         <li class="nav-item"><a href="#" class="nav-link" data-page="sk_dashboard"><i class="far fa-circle nav-icon"></i><p>Dashboard SK</p></a></li>
         <li class="nav-item"><a href="#" class="nav-link" data-page="sk_unggah"><i class="far fa-circle nav-icon"></i><p>Unggah SK</p></a></li>
         <li class="nav-item"><a href="#" class="nav-link" data-page="sk_data"><i class="far fa-circle nav-icon"></i><p>Data SK</p></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-page="sk_kirim"><i class="far fa-circle nav-icon"></i><p>Status Pengiriman</p></a></li>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="sk_status"><i class="far fa-circle nav-icon"></i><p>Status Pengiriman</p></a></li>
         <li class="nav-item"><a href="#" class="nav-link" data-page="sk_arsip"><i class="far fa-circle nav-icon"></i><p>Arsip SK (Drive)</p></a></li>
-        <li class="nav-item id-admin-only"><a href="#" class="nav-link" data-page="sk_trash"><i class="far fa-circle nav-icon"></i><p>Trash SK</p></a></li>
-      </ul>
+        <li class="nav-item" id="slotMenuAdmin"></li>
+        </ul>
     </li>
 
     <li class="nav-item">
@@ -199,3 +200,22 @@
 
   </ul>
 </nav>
+
+<script>
+  (function() {
+      try {
+          var sesi = localStorage.getItem("siksUser");
+          if (sesi) {
+              var user = JSON.parse(sesi);
+              var role = user.role || 'User';
+              
+              // Cek Apakah Admin?
+              if (role === 'Admin' || role === 'Super Admin') {
+                  // MUNCULKAN PAKSA DENGAN JQUERY
+                  $('#menuTrashSK').attr('style', 'display: block !important');
+                  $('#menuTrashSK').show();
+              }
+          }
+      } catch (e) { console.log('Cek menu trash error'); }
+  })();
+</script>

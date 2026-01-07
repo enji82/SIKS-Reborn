@@ -75,10 +75,8 @@ function handleLoginV2(event) {
   var btn = document.getElementById("tombolLogin");
   var form = document.getElementById("formLogin");
   
-  // --- INI BARIS WAJIB AGAR NAMA LENGKAP BISA DIAMBIL NANTI ---
   var inputUser = document.getElementById("username").value;
   localStorage.setItem("username", inputUser); 
-  // -----------------------------------------------------------
   
   btn.innerText = "Memverifikasi...";
   btn.disabled = true;
@@ -86,15 +84,20 @@ function handleLoginV2(event) {
   google.script.run
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
-          // Ganti notif manual dengan NotifSultan agar aman
+          
           if(typeof NotifSultan !== 'undefined') {
              NotifSultan.alert('success', 'BERHASIL', "Selamat Datang, " + response.nama);
           }
           
+          // 1. SIMPAN SESI
           localStorage.setItem("siksUser", JSON.stringify(response)); 
+          
+          // 2. >>> MODIFIKASI DISINI <<<
+          if (typeof bangunMenuAdmin === 'function') {
+              bangunMenuAdmin();
+          }
           inisialisasiAplikasi();
       } else {
-          // Hapus memori jika password salah
           localStorage.removeItem("username"); 
 
           if(typeof NotifSultan !== 'undefined') {
@@ -112,63 +115,6 @@ function handleLoginV2(event) {
        btn.disabled = false;
     })
     .processLogin(form);
-}
-
-function highlightSidebar(pageName) {
-  // 1. SAPU BERSIH: Matikan semua lampu active di seluruh sidebar
-  $('.nav-sidebar .nav-link').removeClass('active').css('background-color', '');
-
-  // 2. CARI TARGET (CUCU)
-  var target = $('.nav-sidebar .nav-link[data-page="' + pageName + '"]');
-
-  if (target.length > 0) {
-    // 3. NYALAKAN LAMPU CUCU
-    target.addClass('active');
-
-    // 4. PENULARAN KE ATAS (BAPAK & ANAK)
-    // Kita cari semua elemen .nav-link yang merupakan orang tua dari Cucu ini
-    // dan kita paksa mereka menjadi 'active' agar Level 1 & 2 ikut menyala
-    target.parents('.nav-item').each(function() {
-      // Ambil tombol (nav-link) milik Bapak atau Anak
-      var parentLink = $(this).children('.nav-link');
-      
-      // Berikan kelas active secara paksa
-      parentLink.addClass('active');
-      
-      // Pastikan laci terbuka agar Cucu terlihat (tanpa urus accordion dulu)
-      $(this).addClass('menu-open');
-      $(this).children('.nav-treeview').show();
-    });
-  }
-}
-
-// --- FUNGSI AMBIL HALAMAN ---
-function loadPage(page) {
-  const area = $('#main-content');
-  area.css('opacity', '0.3');
-
-  google.script.run
-    .withSuccessHandler(function(html) {
-      area.html(html).css('opacity', '1');
-      highlightSidebar(page);
-      console.log("Halaman " + page + " dimuat.");
-    })
-    .getHalaman(page);
-}
-
-// --- FUNGSI UPDATE NAMA & FOTO ---
-function updateUI(u) {
-  // u.nama berasal dari processLogin, u.fullName berasal dari getCurrentUser
-  // Kita buat agar fleksibel menerima keduanya
-  var name = u.nama || u.fullName || "User";
-  var photo = u.foto || u.photo || "";
-
-  var f = photo ? 'https://drive.google.com/thumbnail?id=' + photo + '&sz=w200' : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name);
-  
-  $('#nav-user-photo, #dropdown-user-photo').attr('src', f);
-  $('#nav-user-name').text(name);
-  $('#dropdown-user-name-big').text(name);
-  $('#dropdown-user-role').text(u.role || "User");
 }
 
 function highlightSidebar(pageName) {
@@ -209,6 +155,37 @@ function highlightSidebar(pageName) {
     });
   }
 }
+
+// --- FUNGSI AMBIL HALAMAN ---
+function loadPage(page) {
+  const area = $('#main-content');
+  area.css('opacity', '0.3');
+
+  google.script.run
+    .withSuccessHandler(function(html) {
+      area.html(html).css('opacity', '1');
+      highlightSidebar(page);
+      console.log("Halaman " + page + " dimuat.");
+    })
+    .getHalaman(page);
+}
+
+// --- FUNGSI UPDATE NAMA & FOTO ---
+function updateUI(u) {
+  // u.nama berasal dari processLogin, u.fullName berasal dari getCurrentUser
+  // Kita buat agar fleksibel menerima keduanya
+  var name = u.nama || u.fullName || "User";
+  var photo = u.foto || u.photo || "";
+
+  var f = photo ? 'https://drive.google.com/thumbnail?id=' + photo + '&sz=w200' : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name);
+  
+  $('#nav-user-photo, #dropdown-user-photo').attr('src', f);
+  $('#nav-user-name').text(name);
+  $('#dropdown-user-name-big').text(name);
+  $('#dropdown-user-role').text(u.role || "User");
+}
+
+
 
 // Cara pakai: toast('Berhasil!', 'success'); atau toast('Gagal!', 'error');
 function toast(pesan, tipe) {
@@ -315,16 +292,15 @@ const NotifSultan = {
     warnaGagal: '#dc3545',
   },
 
-  // 1. TIPE TOAST (Untuk Login / Info Ringan) - Muncul di Kanan Atas
+  // 1. TIPE TOAST
   toast: (tipe, pesan) => {
     const Toast = Swal.mixin({
       toast: true,
-      position: 'top-end', // Pojok Kanan Atas
+      position: 'top-end',
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
       background: '#fff',
-      // Style khusus agar Toast pun terlihat Sultan (Ada garis merah kiri)
       customClass: {
         popup: 'sultan-toast' 
       },
@@ -335,14 +311,13 @@ const NotifSultan = {
     });
 
     Toast.fire({
-      icon: tipe, // 'success', 'error', 'info'
+      icon: tipe,
       title: pesan
     });
   },
 
-  // 2. TIPE ALERT (Untuk Upload / Error Fatal) - Muncul di Tengah
+  // 2. TIPE ALERT
   alert: (tipe, judul, pesan) => {
-    // Tentukan warna tombol & ikon
     let btnColor = NotifSultan.config.warnaHitam;
     let btnText = 'Tutup';
     
@@ -352,25 +327,24 @@ const NotifSultan = {
     } else if (tipe === 'error') {
       btnColor = NotifSultan.config.warnaHitam;
       btnText = 'Perbaiki';
-    }
+    } // <--- 2. SEBELUMNYA ADA KOMA SALAH DI SINI (SUDAH DIHAPUS)
 
     return Swal.fire({
       icon: tipe,
       title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`,
       text: pesan,
-      width: '320px', // UKURAN KONSISTEN (MUNGIL)
+      width: '320px',
       confirmButtonColor: btnColor,
       confirmButtonText: btnText,
       padding: '1.5rem',
       allowOutsideClick: false,
-      // Style Sultan (Garis Merah Atas)
       customClass: {
         popup: 'sultan-alert'
       }
     });
   },
 
-  // 3. TIPE LOADING (Proses) - Tengah & Bersih
+  // 3. TIPE LOADING
   loading: (pesan) => {
     Swal.fire({
       width: '300px',
@@ -384,24 +358,26 @@ const NotifSultan = {
       showConfirmButton: false,
       allowOutsideClick: false,
       customClass: {
-        popup: 'sultan-alert' // Sama ratakan style dengan Alert
+        popup: 'sultan-alert'
       }
     });
   },
 
-  konfirmasi: (judul, pesan) => {
+  // 4. KONFIRMASI
+  konfirmasi: (judul, pesan, btnText) => {
     return Swal.fire({
-      icon: 'question', // Ikon tanda tanya
+      icon: 'question',
       title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`,
       text: pesan,
       width: '320px',
       showCancelButton: true,
-      confirmButtonColor: '#dc3545', // Merah (untuk Logout/Hapus)
-      cancelButtonColor: '#343a40',  // Hitam (Batal)
-      confirmButtonText: 'Ya, Keluar',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#343a40',
+      // JIKA ada btnText pakai itu, JIKA TIDAK pakai default 'Ya, Keluar'
+      confirmButtonText: btnText || 'Ya, Keluar', 
       cancelButtonText: 'Batal',
       padding: '1.5rem',
-      reverseButtons: true, // Tombol batal di kiri
+      reverseButtons: true,
       customClass: { popup: 'sultan-alert' }
     });
   }

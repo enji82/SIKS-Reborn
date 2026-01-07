@@ -3,7 +3,7 @@
     <div class="row mb-2">
       <div class="col-sm-12">
         <h5 class="m-0 font-weight-bold">
-          <i class="fas fa-folder-open text-maroon mr-2"></i>Arsip File SK (Google Drive)
+          <i class="fas fa-folder-open text-maroon mr-2"></i>JUDUL HALAMAN ARSIP
         </h5>
         <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
       </div>
@@ -47,15 +47,15 @@
 
         <div class="card shadow-sm border-0">
           <div class="card-body p-0">
-            <div id="arsipLoading" class="text-center py-5">
+            <div id="explorerLoading" class="text-center py-5">
                 <div class="spinner-border text-maroon" role="status">
                     <span class="sr-only">Loading...</span>
                 </div>
                 <p class="mt-2 text-muted small">Mengambil data dari Drive...</p>
             </div>
 
-            <div class="table-responsive" id="arsipTableWrapper" style="display:none;">
-              <table id="tabelArsip" class="table table-hover table-premium mb-0" style="width:100%;">
+            <div class="table-responsive" id="explorerTableWrapper" style="display:none;">
+              <table id="tabelExplorer" class="table table-hover table-premium mb-0" style="width:100%;">
                 <thead>
                   <tr>
                     <th style="width: 50px;" class="text-center">No</th>
@@ -65,7 +65,7 @@
                     <th style="width: 100px;" class="text-center">Aksi</th>
                   </tr>
                 </thead>
-                <tbody id="bodyTabelArsip">
+                <tbody id="bodyTabelExplorer">
                    </tbody>
               </table>
             </div>
@@ -77,7 +77,7 @@
   </div>
 </section>
 
-<div class="modal fade" id="modalPreviewArsip" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="modalPreviewExplorer" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-xl" role="document" style="height: 90vh;">
     <div class="modal-content h-100 border-0">
       <div class="modal-header py-2 bg-light">
@@ -85,13 +85,25 @@
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body p-0 bg-dark">
-        <iframe id="framePreviewArsip" src="" style="width:100%; height:100%; border:none;"></iframe>
+        <iframe id="framePreviewExplorer" src="" style="width:100%; height:100%; border:none;"></iframe>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+  // ============================================================
+  // KONFIGURASI HALAMAN (CUKUP EDIT BAGIAN INI)
+  // ============================================================
+  
+  // 1. Masukkan Nama Fungsi di 'code.gs' yang melayani halaman ini
+  //    Contoh: 'getArsipData' (untuk SK), 'getArsipGuru' (untuk Guru), dll.
+  const BACKEND_FUNCTION_NAME = 'getArsipData'; 
+
+  // ============================================================
+  // LOGIKA SYSTEM (JANGAN DIUBAH KECUALI PAHAM)
+  // ============================================================
+  
   var currentFolderId = null; 
   var parentFolderId = null;
 
@@ -101,20 +113,21 @@
 
   // --- LOGIKA UTAMA ---
   function loadFolder(folderId) {
-      $('#arsipLoading').show(); 
-      $('#arsipTableWrapper').hide();
+      $('#explorerLoading').show(); 
+      $('#explorerTableWrapper').hide();
       $('#folderNameLabel').text('Memuat...');
       
+      // Panggil Backend Secara Dinamis
       google.script.run
-        .withSuccessHandler(renderArsipTable)
+        .withSuccessHandler(renderExplorerTable)
         .withFailureHandler(function(err) {
-           $('#arsipLoading').hide();
+           $('#explorerLoading').hide();
            NotifSultan.alert('error', 'Gagal', err.message);
         })
-        .getArsipData(folderId);
+        [BACKEND_FUNCTION_NAME](folderId); // Memanggil fungsi berdasarkan nama variabel
   }
 
-  function renderArsipTable(data) {
+  function renderExplorerTable(data) {
       currentFolderId = data.currentId;
       parentFolderId = data.parentId;
       
@@ -126,7 +139,7 @@
       else $('#btnBack').show();
 
       var items = data.items || [];
-      var tbody = $('#bodyTabelArsip');
+      var tbody = $('#bodyTabelExplorer');
       tbody.empty();
 
       if (items.length === 0) {
@@ -137,7 +150,6 @@
               
               // Ikon Berdasarkan Tipe
               var iconHtml = '<i class="fas fa-file text-secondary mr-2"></i>';
-              var rowClass = '';
 
               if (item.type === 'folder') {
                   iconHtml = '<i class="fas fa-folder text-warning mr-2 fa-lg"></i>';
@@ -169,8 +181,8 @@
       }
       
       $('#totalItemCount').text(items.length);
-      $('#arsipLoading').hide();
-      $('#arsipTableWrapper').fadeIn(300);
+      $('#explorerLoading').hide();
+      $('#explorerTableWrapper').fadeIn(300);
   }
 
   // --- NAVIGASI ---
@@ -188,25 +200,20 @@
 
   // --- PREVIEW ---
   function openPreview(url, mimeType) {
-    // Jika folder (tapi harusnya sudah dihandle di row click), ignore
     if (mimeType === 'application/vnd.google-apps.folder') return;
 
-    // Ambil ID File
     var idMatch = url.match(/[-\w]{25,}/); 
     if(idMatch) {
         var previewUrl = "https://drive.google.com/file/d/" + idMatch[0] + "/preview";
-        $('#framePreviewArsip').attr('src', previewUrl);
-        $('#modalPreviewArsip').modal('show');
+        $('#framePreviewExplorer').attr('src', previewUrl);
+        $('#modalPreviewExplorer').modal('show');
     } else {
-        // Fallback untuk file native Google Doc/Sheet yang tidak bisa dipreview via iframe biasa
         window.open(url, '_blank'); 
     }
   }
 </script>
 
 <style>
-  #tabelArsip tbody tr:hover {
-      background-color: #f1f2f6; /* Hover effect lembut */
-  }
+  #tabelExplorer tbody tr:hover { background-color: #f1f2f6; }
   .text-purple { color: #9b59b6; }
 </style>

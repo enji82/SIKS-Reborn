@@ -603,96 +603,208 @@
   }
 
   /* ============================================================
-     3. GAYA TABEL PREMIUM (ENTERPRISE LOOK)
+     3. GAYA TABEL PREMIUM (CLEAN GRID)
      ============================================================ */
   
-  /* Reset Border Tebal DataTables (Garis Merah yg Boss tanya tadi) */
-  table.dataTable.no-footer {
-    border-bottom: 1px solid #dee2e6 !important; /* Jadi tipis elegan */
-  }
 
-  /* Font Tabel Proporsional (14px - Standar Aplikasi Modern) */
+  /* 2. Style Sel (Garis Vertikal Diperjelas) */
   .table-premium td, 
   .table-premium th {
-    font-size: 14px !important; /* Lebih besar & terbaca */
-    padding: 10px 12px !important; /* Spasi napas yang pas */
+    font-size: 14px !important;
+    padding: 12px 10px !important; /* Spasi lega */
     vertical-align: middle !important;
     white-space: nowrap;
-    border-color: #f4f6f9 !important; /* Garis pemisah super halus */
+    border-right: 1px solid #dee2e6 !important; /* Garis Vertikal Ada */
+    border-bottom: 1px solid #dee2e6 !important; /* Garis Horizontal Ada */
   }
 
-  /* 1. Header Lebih Berisi (Visible) */
-  .table-premium thead th {
-    background-color: #dfe4ea !important; /* Abu-abu Cool (Jelas tapi Soft) */
-    color: #2f3542 !important;            /* Teks Gelap */
-    font-weight: 700 !important;          /* Tebal */
-    border-bottom: 2px solid #a4b0be !important; /* Garis batas tegas */
-    text-transform: uppercase;
-    font-size: 12px !important;
-    letter-spacing: 0.5px;
-    height: 45px; /* Tinggi Header Tetap */
-    vertical-align: middle !important;
-  }
-
-  /* 2. Fix Masalah Kolom Tidak Lurus */
-  .table-premium {
-    table-layout: auto !important; /* Biarkan browser hitung otomatis */
-    width: 100% !important;
+  /* 4. Background Putih (Hapus Zebra) & Hover Effect */
+  .table-premium tbody tr {
+    background-color: #fff !important; /* Dasar Putih */
+    transition: background-color 0.2s;
   }
   
-  /* 3. Baris Belang (Zebra) yang Halus */
-  .table-premium tbody tr:nth-of-type(odd) {
-    background-color: rgba(0,0,0,.015); /* Belang super tipis */
+  /* Efek Hover: Berlaku untuk sel biasa DAN sel sticky */
+  .table-premium tbody tr:hover td {
+    background-color: #f1f2f6 !important; /* Abu-abu muda saat disorot */
+    cursor: default;
   }
 
-  /* Freeze Column 1 (Kolom Nama SD Nempel) */
+  /* 5. Freeze Column 1 (Kolom Nama SD Nempel) */
   .table-sticky-first th:first-child,
   .table-sticky-first td:first-child {
     position: sticky !important;
     left: 0;
     z-index: 10;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* Bayangan halus */
-    border-right: 1px solid #dee2e6; /* Garis pemisah vertikal */
+    border-right: 2px solid #ced4da !important; /* Pemisah kolom beku lebih tebal sedikit */
   }
 
-  /* WARNA HEADER FREEZE (Disamakan dengan Header Utama) */
+  /* Fix Header Freeze */
   .table-sticky-first thead th:first-child {
-    background-color: #dfe4ea !important; /* SAMA PERSIS dengan header lain */
-    color: #2f3542 !important;
-    z-index: 11; /* Harus lebih tinggi dari body */
+    background-color: #dfe4ea !important;
+    z-index: 11;
   }
 
-  /* WARNA BODY FREEZE (Tetap Putih) */
+  /* Fix Body Freeze (Default Putih) */
   .table-sticky-first tbody td:first-child {
-    background-color: #fff !important;
+    background-color: #fff !important; 
+  }
+  
+  /* Fix Hover pada Freeze Column (PENTING!) */
+  .table-sticky-first tbody tr:hover td:first-child {
+    background-color: #f1f2f6 !important; /* Harus sama dengan hover baris lain */
   }
 
-  /* Kontrol Bar Satu Baris */
-  .control-bar {
-    display: flex;
-    justify-content: space-between; /* Kiri & Kanan mentok */
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    background: #fff;
-    padding: 10px 0;
-  }
-
-  /* Custom Search Box (Biar terlihat mahal) */
-  .search-premium {
-    border: 1px solid #ced4da;
-    border-radius: 20px; /* Bulat lonjong modern */
-    padding: 5px 15px;
+  /* A. CONTROL BAR UNIFORMITY (Semua Kotak Sama Tinggi & Bentuk) */
+  .control-bar .form-control, 
+  .control-bar .btn, 
+  .control-bar input.search-premium {
+    height: 38px !important;       /* Tinggi Seragam */
+    border-radius: 4px !important; /* Sudut sedikit melengkung (standar) */
     font-size: 14px;
-    width: 250px;
-    transition: all 0.3s;
-    background-color: #f8f9fa;
   }
-  .search-premium:focus {
-    background-color: #fff;
-    border-color: #800000; /* Fokus warna Maroon */
+  
+  /* Hapus bentuk bulat pada tombol refresh agar sama dengan filter */
+  .btn-square-sultan {
+    border-radius: 4px !important; 
+    width: 40px; /* Lebar sedikit lebih kotak */
+  }
+
+  /* B. HEADER TABEL LEBIH PADAT */
+  .table-premium thead th {
+    height: 35px !important;       /* Tinggi Header Dikurangi */
+    padding: 8px 10px !important;  /* Spasi dalam dikurangi */
+    vertical-align: middle !important;
+    font-size: 14px !important;    /* Font diperkecil sedikit agar muat */
+    white-space: nowrap;
+    border-bottom: 1px solid #b2bec3 !important; /* Garis bawah tipis saja */
+  }
+
+  /* C. HAPUS GHOST HEADER (RUANG KOSONG DI BAWAH HEADER) */
+  /* DataTables sering membuat header ganda saat scrollX aktif */
+  .dataTables_scrollHeadInner {
+    width: 100% !important;
+  }
+  .dataTables_scrollHead {
+    margin-bottom: -1px !important; /* Tarik ke bawah agar nempel */
+  }
+  table.dataTable.no-footer {
+    border-bottom: 1px solid #dee2e6 !important; /* Garis penutup bawah tabel */
+  }
+
+  /* ============================================================
+     4. PERBAIKAN BORDER FILTER (AGAR KELIHATAN)
+     ============================================================ */
+  
+  /* Kelas khusus untuk Filter & Tombol Refresh */
+  .border-tegas {
+    border: 1px solid #ced4da !important; /* Garis abu-abu terlihat */
+    background-color: #fff !important;    /* Latar putih */
+    color: #495057 !important;
+  }
+
+  /* Efek saat diklik/fokus jadi Maroon */
+  .border-tegas:focus, 
+  .border-tegas:hover {
+    border-color: #800000 !important; 
     box-shadow: 0 0 0 0.2rem rgba(128, 0, 0, 0.1);
     outline: none;
   }
+
+  /* ============================================================
+     10. FIX FINAL: UNIVERSAL TABLE STYLE (AUTO APPLY)
+     Cukup tambah class="table-premium" di HTML, otomatis ganteng.
+     Tidak perlu edit CSS lagi untuk halaman baru.
+     ============================================================ */
+
+  /* A. HILANGKAN HEADER BAYANGAN & GAP (Untuk Semua DataTables) */
+  .dataTables_scrollBody thead { visibility: collapse !important; height: 0 !important; }
+  .dataTables_scrollBody thead th, .dataTables_scrollBody thead tr { height: 0 !important; padding: 0 !important; border: none !important; line-height: 0 !important; }
+  .dataTables_scrollHead { margin-bottom: 0 !important; border-bottom: none !important; }
+  .dataTables_scrollBody { margin-top: 0 !important; border-top: none !important; }
+
+  /* B. STYLE HEADER UNIVERSAL (Target Class .table-premium) */
+  /* Selector ini berlaku untuk SEMUA tabel yang punya class table-premium */
+  table.table-premium thead th,
+  .dataTables_scrollHeadInner table.table-premium thead th {
+      background-color: #dfe6e9 !important;   /* Abu Premium */
+      color: #2d3436 !important;              /* Teks Hitam */
+      text-transform: uppercase !important;   /* HURUF KAPITAL */
+      
+      /* --- FONT COMMANDING --- */
+      font-size: 13px !important;             
+      font-weight: 700 !important;            
+      letter-spacing: 0.3px !important;       
+      
+      /* --- LOGIKA WRAPPING --- */
+      white-space: normal !important;         
+      vertical-align: middle !important;      
+      
+      /* --- PADDING PRESISI --- */
+      padding: 8px 10px !important;            
+      
+      /* Border */
+      border-bottom: 2px solid #b2bec3 !important;
+      border-right: 1px solid #b2bec3 !important; 
+  }
+
+  /* C. STYLE BODY UNIVERSAL */
+  /* Berlaku untuk semua isi tabel di dalam DataTables */
+  .dataTables_scrollBody table tbody td,
+  table.table-premium tbody td {
+      white-space: nowrap !important;         
+      font-size: 13px !important;             
+      vertical-align: middle !important;      
+      padding: 6px 10px !important;           
+      border-right: 1px solid #b2bec3 !important; 
+  }
+
+  /* D. CLEANING (Hapus garis ujung kanan) */
+  .dataTables_scrollHeadInner table thead th:last-child,
+  .dataTables_scrollBody table tbody td:last-child,
+  table.table-premium tbody td:last-child { 
+      border-right: none !important; 
+  }
+  
+  .dataTables_scrollHeadInner { width: 100% !important; }
+
+  /* ============================================================
+     11. FITUR GLOBAL: FREEZE KOLOM PERTAMA (FIXED & STRONG)
+     Mengatasi masalah sticky tidak jalan & layer menghalangi
+     ============================================================ */
+  
+  /* A. FIX "LAYER MENGHALANGI" (Header Bayangan) */
+  .dataTables_scrollBody thead {
+      visibility: collapse !important;
+      height: 0 !important;
+      /* PENTING: Matikan interaksi mouse agar tidak menghalangi klik/drag di bawahnya */
+      pointer-events: none !important; 
+  }
+
+  /* B. LOGIKA STICKY (TARGET SPESIFIK DATATABLES) */
+  /* Target Header (Z-Index Tinggi) */
+  .dataTables_scrollHead .table-sticky-first th:first-child {
+      position: sticky !important;
+      left: 0 !important;
+      z-index: 20 !important; /* Paling atas */
+      background-color: #dfe6e9 !important; /* Warna Abu Header */
+      border-right: 2px solid #b2bec3 !important;
+  }
+
+  /* Target Body (Z-Index Sedang) */
+  .dataTables_scrollBody .table-sticky-first td:first-child {
+      position: sticky !important;
+      left: 0 !important;
+      z-index: 10 !important; /* Di atas sel biasa, di bawah header */
+      background-color: #fff !important; /* Warna Putih Body (Wajib) */
+      border-right: 2px solid #b2bec3 !important;
+      box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); /* Bayangan */
+  }
+
+  /* C. EFEK HOVER (Agar kolom beku juga berubah warna saat dihover) */
+  .dataTables_scrollBody .table-sticky-first tbody tr:hover td:first-child {
+      background-color: #f1f2f6 !important; /* Samakan dengan warna hover baris */
+  }
+
 
 </style>

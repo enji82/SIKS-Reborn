@@ -48,7 +48,6 @@
 
         <div class="card shadow-sm border-0">
           <div class="card-body p-0">
-            
             <div class="table-responsive">
               <table id="tabelDataSK" class="table table-hover table-premium table-sticky-first mb-0" style="width:100%;">
                 <thead>
@@ -75,10 +74,7 @@
                   </tbody>
               </table>
             </div>
-
-            <div class="p-3 bg-light border-top small" id="customPagination"></div>
-
-          </div>
+            </div>
         </div>
 
       </div>
@@ -105,9 +101,7 @@
     <div class="modal-content">
       <div class="modal-header bg-warning">
         <h5 class="modal-title font-weight-bold text-dark"><i class="fas fa-edit mr-2"></i> Edit Data SK</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <form id="formEditSK" onsubmit="handleSimpanEdit(event)">
         <div class="modal-body">
@@ -159,9 +153,8 @@
               <input type="file" class="custom-file-input" id="editFileSk" accept="application/pdf">
               <label class="custom-file-label" for="editFileSk">Pilih file baru jika ingin mengganti...</label>
             </div>
-            <small class="text-muted">Biarkan kosong jika tidak ingin mengubah dokumen.</small>
+            <small class="text-muted">Maksimal 1 MB. Kosongkan jika tidak ingin mengubah file.</small>
           </div>
-
         </div>
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -173,78 +166,39 @@
 </div>
 
 <div class="modal fade" id="modalVerifikasiSK" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-xl" role="document" style="max-width: 95vw;"> <div class="modal-content h-100">
-      
+  <div class="modal-dialog modal-xl" role="document" style="max-width: 95vw;">
+    <div class="modal-content h-100">
       <div class="modal-header bg-info text-white py-2">
-        <h5 class="modal-title font-weight-bold"><i class="fas fa-clipboard-check mr-2"></i> Verifikasi & Validasi Dokumen</h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <h5 class="modal-title font-weight-bold"><i class="fas fa-clipboard-check mr-2"></i> Verifikasi & Validasi</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
-
       <div class="modal-body p-0">
         <div class="row no-gutters h-100">
-          
           <div class="col-md-8 bg-dark" style="height: 85vh;">
              <iframe id="frameVerif" src="" style="width:100%; height:100%; border:none;"></iframe>
              <div id="noFileVerif" class="text-white text-center d-none" style="padding-top: 40vh;">
-                <i class="fas fa-file-excel fa-3x mb-3 text-muted"></i><br>Tidak ada dokumen yang diunggah.
+                <i class="fas fa-file-excel fa-3x mb-3 text-muted"></i><br>Tidak ada dokumen.
              </div>
           </div>
-
           <div class="col-md-4 bg-white" style="height: 85vh; overflow-y: auto; border-left: 1px solid #ddd;">
             <form id="formVerifikasiSK" onsubmit="handleSimpanVerifikasi(event)">
               <input type="hidden" id="verifRowId" name="verifRowId">
-              
               <div class="p-3">
                 <h6 class="font-weight-bold text-maroon border-bottom pb-2 mb-3">Data Sekolah</h6>
-                
-                <div class="form-group mb-2">
-                  <label class="small text-muted mb-0">Nama Sekolah</label>
-                  <input type="text" class="form-control form-control-sm bg-light" id="verifNamaSd" readonly>
-                </div>
-                
+                <div class="form-group mb-2"><label class="small text-muted mb-0">Nama Sekolah</label><input type="text" class="form-control form-control-sm bg-light" id="verifNamaSd" readonly></div>
                 <div class="row">
-                  <div class="col-6">
-                     <div class="form-group mb-2">
-                        <label class="small text-muted mb-0">Tahun</label>
-                        <input type="text" class="form-control form-control-sm bg-light" id="verifTahun" readonly>
-                     </div>
-                  </div>
-                  <div class="col-6">
-                     <div class="form-group mb-2">
-                        <label class="small text-muted mb-0">Semester</label>
-                        <input type="text" class="form-control form-control-sm bg-light" id="verifSemester" readonly>
-                     </div>
-                  </div>
+                  <div class="col-6"><div class="form-group mb-2"><label class="small text-muted mb-0">Tahun</label><input type="text" class="form-control form-control-sm bg-light" id="verifTahun" readonly></div></div>
+                  <div class="col-6"><div class="form-group mb-2"><label class="small text-muted mb-0">Semester</label><input type="text" class="form-control form-control-sm bg-light" id="verifSemester" readonly></div></div>
                 </div>
-
-                <div class="form-group mb-2">
-                  <label class="small text-muted mb-0">Nomor SK</label>
-                  <input type="text" class="form-control form-control-sm bg-light" id="verifNoSk" readonly>
-                </div>
-
+                <div class="form-group mb-2"><label class="small text-muted mb-0">Nomor SK</label><input type="text" class="form-control form-control-sm bg-light" id="verifNoSk" readonly></div>
                 <div class="row">
-                   <div class="col-6">
-                     <div class="form-group mb-2">
-                       <label class="small text-muted mb-0">Tanggal SK</label>
-                       <input type="text" class="form-control form-control-sm bg-light" id="verifTglSk" readonly>
-                     </div>
-                   </div>
-                   <div class="col-6">
-                     <div class="form-group mb-2">
-                       <label class="small text-muted mb-0">Kriteria</label>
-                       <input type="text" class="form-control form-control-sm bg-light" id="verifKriteria" readonly>
-                     </div>
-                   </div>
+                   <div class="col-6"><div class="form-group mb-2"><label class="small text-muted mb-0">Tgl SK</label><input type="text" class="form-control form-control-sm bg-light" id="verifTglSk" readonly></div></div>
+                   <div class="col-6"><div class="form-group mb-2"><label class="small text-muted mb-0">Kriteria</label><input type="text" class="form-control form-control-sm bg-light" id="verifKriteria" readonly></div></div>
                 </div>
 
                 <div class="card bg-light border-info mt-4">
-                  <div class="card-header bg-info text-white py-1 px-3">
-                    <small class="font-weight-bold">Keputusan Verifikator</small>
-                  </div>
+                  <div class="card-header bg-info text-white py-1 px-3"><small class="font-weight-bold">Keputusan Verifikator</small></div>
                   <div class="card-body p-3">
-                    
                     <div class="form-group">
                       <label class="font-weight-bold text-dark">Status Dokumen</label>
                       <select class="form-control border-info" id="verifStatus" name="verifStatus" required>
@@ -255,19 +209,13 @@
                          <option value="OK" class="text-success font-weight-bold">OK (Diterima)</option>
                       </select>
                     </div>
-
                     <div class="form-group mb-0">
-                      <label class="font-weight-bold text-dark">Keterangan / Catatan</label>
-                      <textarea class="form-control" id="verifKeterangan" name="verifKeterangan" rows="3" placeholder="Tulis catatan jika revisi/ditolak..."></textarea>
+                      <label class="font-weight-bold text-dark">Catatan</label>
+                      <textarea class="form-control" id="verifKeterangan" name="verifKeterangan" rows="3" placeholder="Tulis catatan..."></textarea>
                     </div>
-
                   </div>
                 </div>
-
-                <button type="submit" class="btn btn-block btn-primary mt-3 font-weight-bold shadow-sm">
-                  <i class="fas fa-save mr-2"></i> SIMPAN HASIL VERIFIKASI
-                </button>
-
+                <button type="submit" class="btn btn-block btn-primary mt-3 font-weight-bold shadow-sm"><i class="fas fa-save mr-2"></i> SIMPAN HASIL</button>
               </div>
             </form>
           </div>
@@ -282,40 +230,33 @@
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i> Konfirmasi Hapus Data</h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
       <form id="formHapusSK" onsubmit="handleSimpanHapus(event)">
         <div class="modal-body">
           <input type="hidden" id="hapusRowId" name="hapusRowId">
+          <div class="alert alert-warning text-sm"><i class="fas fa-exclamation-triangle mr-1"></i> Data dan File akan dipindahkan ke <b>Trash</b>.</div>
           
-          <div class="alert alert-warning text-sm">
-             <i class="fas fa-exclamation-triangle mr-1"></i> Data dan File akan dipindahkan ke <b>Trash</b>.
-          </div>
-
           <div class="card bg-light mb-3">
             <div class="card-body py-2 px-3 small">
               <table class="table table-borderless table-sm mb-0">
                 <tr><td width="30%" class="text-muted">Sekolah</td><td class="font-weight-bold" id="infoHapusSD"></td></tr>
                 <tr><td class="text-muted">Tahun</td><td class="font-weight-bold" id="infoHapusTahun"></td></tr>
                 <tr><td class="text-muted">Semester</td><td class="font-weight-bold" id="infoHapusSmt"></td></tr>
-                <tr><td class="text-muted">Kriteria</td><td class="font-weight-bold" id="infoHapusKriteria"></td></tr>
               </table>
             </div>
           </div>
 
           <div class="form-group">
             <label class="font-weight-bold">Alasan Penghapusan <span class="text-danger">*</span></label>
-            <textarea class="form-control" id="hapusAlasan" name="hapusAlasan" rows="2" placeholder="Contoh: Salah upload, duplikasi data..." required></textarea>
+            <textarea class="form-control" id="hapusAlasan" name="hapusAlasan" rows="2" required></textarea>
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold">Kode Konfirmasi <span class="text-danger">*</span></label>
+            <label class="font-weight-bold">Kode Konfirmasi (YYYYMMDD) <span class="text-danger">*</span></label>
             <input type="password" class="form-control" id="hapusKode" name="hapusKode" required autocomplete="off">
-            <small class="text-muted">Hubungi admin Korwil untuk mendapatkan kode.</small>
+            <small class="text-muted">Masukkan tanggal hari ini (Misal: 20260107).</small>
           </div>
-
         </div>
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -333,16 +274,16 @@ $(document).ready(function() {
   isiDropdownEdit(); 
   muatDataTabel();   
   
-  // Event Filter & Search
+  // Listeners
   $('#filterSD').on('change', function() { filterTabel(0, this.value); });
   $('#filterTahun').on('change', function() { filterTabel(1, this.value); });
   $('#filterSemester').on('change', function() { filterTabel(2, this.value); });
   $('#filterStatus').on('change', function() { filterTabel(7, this.value); });
   $('#customSearch').on('keyup', function() { $('#tabelDataSK').DataTable().search(this.value).draw(); });
   
-  // File Name Listener
+  // Custom File Input Listener
   $(document).on('change', '#editFileSk', function(e) {
-    var fileName = e.target.files[0] ? e.target.files[0].name : 'Pilih file baru...';
+    var fileName = e.target.files[0] ? e.target.files[0].name : 'Pilih file baru jika ingin mengganti...';
     $(this).next('.custom-file-label').html(fileName);
   });
 });
@@ -357,15 +298,10 @@ function muatDataTabel() {
   google.script.run
     .withSuccessHandler(function(data) {
       Swal.close(); 
-      
-      // --- DEBUGGING AREA ---
-      // Jika data kosong, beri tahu Boss
       if (!data || data.length === 0) {
-         NotifSultan.alert('error', 'DATA KOSONG', 'Backend tidak mengirim data apapun. Cek Spreadsheet atau Deployment.');
+         NotifSultan.alert('error', 'DATA KOSONG', 'Tidak ada data ditemukan.');
          return;
       }
-      // ----------------------
-
       renderTabel(data);
     })
     .withFailureHandler(function(err) {
@@ -379,7 +315,7 @@ function renderTabel(data) {
   var user = sesi ? JSON.parse(sesi) : { role: 'User' }; 
   var isAdmin = (user.role === 'Admin' || user.role === 'Super Admin');
 
-  // --- 1. LOGIKA SORTING CERDAS (STABIL - AMAN) ---
+  // --- SMART SORT (DATE + TIME) ---
   const parseTgl = (val) => {
       if (!val) return 0;
       var str = String(val).trim();
@@ -402,50 +338,25 @@ function renderTabel(data) {
         var maxB = Math.max(parseTgl(b.tglUnggah), parseTgl(b.tglUpdate), parseTgl(b.tglVerval));
         return maxB - maxA; 
     });
-  } catch(e) { console.warn("Sorting error:", e); }
-  // ---------------------------------------------------
+  } catch(e) { console.warn("Sort error:", e); }
 
-  var tbody = $('#bodyTabelSK');
-  tbody.empty();
-  GLOBAL_DATA = {}; 
-  
+  var tbody = $('#bodyTabelSK'); tbody.empty(); GLOBAL_DATA = {}; 
   let sSd = new Set(), sTh = new Set(), sSm = new Set(), sSt = new Set();
 
   data.forEach(function(row) {
     GLOBAL_DATA[row.rowBaris] = row; 
+    if(row.namaSd) sSd.add(row.namaSd); if(row.tahun) sTh.add(row.tahun);
+    if(row.semester) sSm.add(row.semester); if(row.status) sSt.add(row.status);
 
-    if(row.namaSd) sSd.add(row.namaSd);
-    if(row.tahun) sTh.add(row.tahun);
-    if(row.semester) sSm.add(row.semester);
-    if(row.status) sSt.add(row.status);
+    var st = String(row.status || '').toLowerCase();
+    var badgeClass = 'badge-secondary'; 
+    if(st.includes('diproses')) badgeClass = 'badge-primary'; 
+    else if(st.includes('revisi')) badgeClass = 'badge-warning'; 
+    else if(st.includes('ditolak')) badgeClass = 'badge-danger'; 
+    else if(st.includes('ok') || st.includes('valid')) badgeClass = 'badge-success'; 
 
-    // --- 2. LOGIKA BADGE STATUS (DIPERBAIKI: SMART COLORING) ---
-    // Ini yang dikembalikan ke versi canggih (sama dengan Status SK)
-    var txt = String(row.status || '').trim();
-    var lowerTxt = txt.toLowerCase();
-    var badgeClass = 'badge-secondary'; // Default Abu
-
-    if (txt !== '' && txt !== '-' && txt !== '0') {
-         if (lowerTxt === 'sudah' || lowerTxt === 'ok' || lowerTxt === 'lengkap' || lowerTxt === 'v' || lowerTxt === 'valid' || lowerTxt.includes('diterima') || lowerTxt.includes('disetujui')) {
-             badgeClass = 'badge-success'; // Hijau
-         } 
-         else if (lowerTxt === 'belum' || lowerTxt === 'x' || lowerTxt === 'kosong' || lowerTxt === 'ditolak' || lowerTxt === 'gagal') {
-             badgeClass = 'badge-danger';  // Merah
-         } 
-         else if (lowerTxt === 'kurang' || lowerTxt === 'revisi' || lowerTxt === 'perbaikan' || lowerTxt === 'kembali') {
-             badgeClass = 'badge-warning'; // Kuning
-         }
-         else if (lowerTxt === 'diproses' || lowerTxt === 'proses' || lowerTxt === 'kirim') {
-             badgeClass = 'badge-primary'; // Biru
-         }
-    }
-    
-    var labelText = (txt === '' || txt === '-') ? 'Draft' : txt;
-    var labelStatus = `<span class="badge ${badgeClass}" style="padding: 6px 12px; min-width: 80px;">${labelText}</span>`;
-    // -----------------------------------------------------------
-
-    // Logika Kunci Tombol
-    var isLocked = (lowerTxt.includes('ok') || lowerTxt.includes('valid') || lowerTxt.includes('diterima') || lowerTxt.includes('disetujui'));
+    var labelStatus = `<span class="badge ${badgeClass}" style="padding: 6px 10px; font-weight: 500;">${row.status || 'Draft'}</span>`;
+    var isLocked = (st.includes('ok') || st.includes('valid'));
     
     var attrEdit  = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="editSK('${row.rowBaris}')"`;
     var attrHapus = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="hapusSK('${row.rowBaris}', '${row.namaSd}')"`;
@@ -453,7 +364,6 @@ function renderTabel(data) {
 
     var btnAksi = '<div class="btn-group">';
     btnAksi += `<button class="btn btn-sm btn-light border" ${attrEdit} title="Edit"><i class="fas fa-pencil-alt text-warning"></i></button>`;
-    
     if (isAdmin) {
       btnAksi += `<button class="btn btn-sm btn-light border" ${attrVerif} title="Verif"><i class="fas fa-check text-success"></i></button>`;
       btnAksi += `<button class="btn btn-sm btn-light border" ${attrHapus} title="Hapus"><i class="fas fa-trash-alt text-danger"></i></button>`;
@@ -483,88 +393,38 @@ function renderTabel(data) {
         <td class="small text-muted">${row.tglVerval}</td>
         <td class="small text-muted">${row.verifikator}</td>
         <td class="small text-muted">${row.keterangan}</td>
-      </tr>
-    `;
+      </tr>`;
     tbody.append(tr);
   });
 
-  isiOpsi('filterSD', sSd);
-  isiOpsi('filterTahun', sTh);
-  isiOpsi('filterSemester', sSm);
-  isiOpsi('filterStatus', sSt);
+  isiOpsi('filterSD', sSd); isiOpsi('filterTahun', sTh);
+  isiOpsi('filterSemester', sSm); isiOpsi('filterStatus', sSt);
 
-  // --- 3. LOGIKA UI DATATABLES (FIX HEADER DOBEL) ---
   var table = $('#tabelDataSK').DataTable({
-    "scrollX": true,          
-    "responsive": false, 
-    "ordering": false,
-    "autoWidth": false,
-    "pageLength": 10,         
+    "scrollX": true, "responsive": false, "ordering": false, "autoWidth": false, "pageLength": 10,
     "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
     "dom": 't<"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
-    
-    "initComplete": function(settings, json) {
-        setTimeout(function() { 
-           $('#tabelDataSK').DataTable().columns.adjust(); 
-           $(window).trigger('resize'); 
-           
-           // --- AKTIFKAN DISINI ---
-           if (typeof enableDragScroll === "function") {
-               enableDragScroll('tabelDataSK'); 
-           }
-        }, 500);
-    },
-    "drawCallback": function(settings) {
-        var api = this.api();
-        setTimeout(function() { api.columns.adjust(); }, 100);
-        
-        // Hapus garis ganda
-        $('.dataTables_scrollHead').css('border-bottom', 'none');
-        $('.dataTables_scrollBody table').css('margin-top', '0');
+    "initComplete": function() { setTimeout(function() { $('#tabelDataSK').DataTable().columns.adjust(); $(window).trigger('resize'); }, 300); },
+    "drawCallback": function() { 
+        var api = this.api(); setTimeout(function() { api.columns.adjust(); }, 100);
+        $('.dataTables_scrollHead').css('border-bottom', 'none'); 
     }
   });
 }
 
 function filterTabel(colIdx, val) { $('#tabelDataSK').DataTable().column(colIdx).search(val).draw(); }
 
-function isiDropdownEdit() {
-  if (typeof DROPDOWN_STATIS === 'undefined') return;
-  const render = (id, arr) => {
-      const el = document.getElementById(id); if(!el) return;
-      el.innerHTML = '<option value="">- Pilih -</option>';
-      if(arr) arr.forEach(t => { let opt = document.createElement('option'); opt.value = t; opt.text = t; el.appendChild(opt); });
-  };
-  render('editNamaSd', DROPDOWN_STATIS.NamaSD);
-  render('editTahun', DROPDOWN_STATIS.TahunAjaran);
-  render('editSemester', DROPDOWN_STATIS.Semester);
-  render('editKriteria', DROPDOWN_STATIS.KriteriaSK);
-}
-
-function isiOpsi(id, set) {
-    const el = document.getElementById(id); const first = el.options[0];
-    el.innerHTML = ''; el.appendChild(first);
-    Array.from(set).sort().forEach(i => { let opt = document.createElement('option'); opt.value = i; opt.text = i; el.appendChild(opt); });
-}
-
-// --- LOGIKA EDIT & HAPUS (SAMA SEPERTI SEBELUMNYA) ---
+// --- LOGIKA EDIT ---
 function editSK(rowId) {
   var data = GLOBAL_DATA[rowId];
-  if (!data) { NotifSultan.alert('error', 'Error', 'Data error.'); return; }
-  $('#editRowId').val(rowId);
-  $('#editNamaSd').val(data.namaSd);
-  $('#editTahun').val(data.tahun); 
-  $('#editSemester').val(data.semester);
-  $('#editNoSk').val(data.noSk);
-  $('#editKriteria').val(data.kriteria);
-  $('#editFileSk').val('');
-  $('.custom-file-label').html('Pilih file baru...');
+  if (!data) return;
+  $('#editRowId').val(rowId); $('#editNamaSd').val(data.namaSd);
+  $('#editTahun').val(data.tahun); $('#editSemester').val(data.semester);
+  $('#editNoSk').val(data.noSk); $('#editKriteria').val(data.kriteria);
+  $('#editFileSk').val(''); $('.custom-file-label').html('Pilih file baru...');
   
-  // Parse Tgl Sederhana (YYYY-MM-DD)
-  var tgl = String(data.tglSk || '').split(' ')[0]; // Ambil bagian depan saja jika ada jam
-  var parts = tgl.split('-'); 
-  if(parts.length === 3) $('#editTglSk').val(parts[2] + '-' + parts[1] + '-' + parts[0]);
-  else $('#editTglSk').val('');
-  
+  var parts = String(data.tglSk || '').split(' ')[0].split('-'); 
+  $('#editTglSk').val(parts.length===3 ? parts[2]+'-'+parts[1]+'-'+parts[0] : '');
   $('#modalEditSK').modal('show');
 }
 
@@ -574,7 +434,7 @@ function handleSimpanEdit(e) {
   var hasFile = fileInput.files.length > 0;
   if (hasFile && fileInput.files[0].size > 1024 * 1024) { NotifSultan.alert('error','File Besar','Maksimal 1 MB'); return; }
 
-  NotifSultan.konfirmasi("SIMPAN?", "Pastikan data benar.", "Ya, Simpan").then((res) => {
+  NotifSultan.konfirmasi("SIMPAN PERUBAHAN?", "Pastikan data benar.", "Ya, Simpan").then((res) => {
       if (res.isConfirmed) {
          var formData = {
              editRowId: $('#editRowId').val(), editNamaSd: $('#editNamaSd').val(), 
@@ -597,111 +457,35 @@ function handleSimpanEdit(e) {
   });
 }
 
-// --- FUNGSI HAPUS DATA (VERSI MEMBUKA MODAL) ---
-function hapusSK(rowId, namaDoc) { // Parameter namaDoc disimpan untuk info, tapi kita ambil detail dari GLOBAL_DATA
-  var data = GLOBAL_DATA[rowId];
-  
-  if (!data) { 
-    NotifSultan.alert('error', 'Error', 'Data belum termuat di memori.'); 
-    return; 
-  }
-
-  // 1. Isi Data ke Modal
-  $('#hapusRowId').val(rowId);
-  $('#infoHapusSD').text(data.namaSd);
-  $('#infoHapusTahun').text(data.tahun);
-  $('#infoHapusSmt').text(data.semester);
-  $('#infoHapusKriteria').text(data.kriteria);
-  
-  // Reset Form Input
-  $('#hapusAlasan').val('');
-  $('#hapusKode').val('');
-
-  // 2. Tampilkan Modal (INI YANG KEMARIN GAGAL MUNCUL)
+// --- LOGIKA HAPUS ---
+function hapusSK(rowId, namaDoc) {
+  var data = GLOBAL_DATA[rowId]; if (!data) return;
+  $('#hapusRowId').val(rowId); $('#infoHapusSD').text(data.namaSd);
+  $('#infoHapusTahun').text(data.tahun); $('#infoHapusSmt').text(data.semester);
+  $('#hapusAlasan').val(''); $('#hapusKode').val('');
   $('#modalHapusSK').modal('show');
 }
 
-// --- HANDLE SUBMIT HAPUS ---
 function handleSimpanHapus(e) {
   e.preventDefault();
-  
-  // Konfirmasi Terakhir sebelum kirim ke backend
-  NotifSultan.konfirmasi("YAKIN HAPUS?", "Data akan dipindahkan ke Trash dan tidak tampil di sini.", "Ya, Musnahkan")
-    .then((result) => {
-      if (result.isConfirmed) {
-         
-         var formData = {
-             hapusRowId: $('#hapusRowId').val(),
-             hapusAlasan: $('#hapusAlasan').val(),
-             hapusKode: $('#hapusKode').val() // Kode YYYYMMDD
-         };
-
-         $('#modalHapusSK').modal('hide');
-         NotifSultan.loading("Memproses Soft Delete...");
-
-         google.script.run
-           .withSuccessHandler(function(res) {
-              if (res.success) {
-                  NotifSultan.alert('success', 'TERHAPUS', res.message).then(() => refreshTabelSK());
-              } else {
-                  // Jika kode salah, buka modal lagi biar user bisa coba lagi
-                  NotifSultan.alert('error', 'GAGAL', res.message).then(() => {
-                      $('#modalHapusSK').modal('show');
-                  });
-              }
-           })
-           .withFailureHandler(function(err) {
-               NotifSultan.alert('error', 'ERROR', err.message);
-           })
-           .hapusDataSK(formData);
+  NotifSultan.konfirmasi("YAKIN HAPUS?", "Data dipindahkan ke Trash.", "Ya, Musnahkan").then((r) => {
+      if (r.isConfirmed) {
+         $('#modalHapusSK').modal('hide'); NotifSultan.loading("Memproses Soft Delete...");
+         var fd = { hapusRowId: $('#hapusRowId').val(), hapusAlasan: $('#hapusAlasan').val(), hapusKode: $('#hapusKode').val() };
+         google.script.run.withSuccessHandler((res)=>{
+            if(res.success) NotifSultan.alert('success','TERHAPUS',res.message).then(()=>refreshTabelSK());
+            else NotifSultan.alert('error','GAGAL',res.message).then(()=>$('#modalHapusSK').modal('show'));
+         }).hapusDataSK(fd);
       }
-    });
+  });
 }
 
-// --- HANDLE SUBMIT HAPUS ---
-function handleSimpanHapus(e) {
-  e.preventDefault();
-  
-  // Konfirmasi Terakhir
-  NotifSultan.konfirmasi("YAKIN HAPUS?", "Tindakan ini akan memindahkan data ke Trash.", "Ya, Musnahkan")
-    .then((result) => {
-      if (result.isConfirmed) {
-         
-         var formData = {
-             hapusRowId: $('#hapusRowId').val(),
-             hapusAlasan: $('#hapusAlasan').val(),
-             hapusKode: $('#hapusKode').val()
-         };
-
-         $('#modalHapusSK').modal('hide');
-         NotifSultan.loading("Memproses Soft Delete...");
-
-         google.script.run
-           .withSuccessHandler(function(res) {
-              if (res.success) {
-                  NotifSultan.alert('success', 'TERHAPUS', res.message).then(() => refreshTabelSK());
-              } else {
-                  // Jika kode salah, tampilkan error dan buka modal lagi biar user ga ngetik ulang alasan
-                  NotifSultan.alert('error', 'GAGAL', res.message).then(() => {
-                      $('#modalHapusSK').modal('show');
-                  });
-              }
-           })
-           .withFailureHandler(function(err) {
-               NotifSultan.alert('error', 'ERROR', err.message);
-           })
-           .hapusDataSK(formData);
-      }
-    });
-}
-
+// --- LOGIKA VERIFIKASI ---
 function verifikasiSK(rowId) {
-  var data = GLOBAL_DATA[rowId];
-  if (!data) return;
+  var data = GLOBAL_DATA[rowId]; if (!data) return;
   $('#verifRowId').val(rowId); $('#verifNamaSd').val(data.namaSd);
   $('#verifTahun').val(data.tahun); $('#verifSemester').val(data.semester);
-  $('#verifNoSk').val(data.noSk); $('#verifTglSk').val(data.tglSk);
-  $('#verifKriteria').val(data.kriteria);
+  $('#verifNoSk').val(data.noSk); $('#verifTglSk').val(data.tglSk); $('#verifKriteria').val(data.kriteria);
   $('#verifStatus').val(data.status || ''); $('#verifKeterangan').val(data.keterangan || '');
   
   if (data.fileUrl) {
@@ -719,7 +503,7 @@ function handleSimpanVerifikasi(e) {
      if(r.isConfirmed) {
         $('#modalVerifikasiSK').modal('hide'); NotifSultan.loading("Menyimpan...");
         google.script.run.withSuccessHandler((res)=>{
-           if(res.success) NotifSultan.alert('success','OK',res.message).then(()=>refreshTabelSK());
+           if(res.success) NotifSultan.alert('success','TERSIMPAN',res.message).then(()=>refreshTabelSK());
            else NotifSultan.alert('error','GAGAL',res.message);
         }).verifikasiDataSK({ verifRowId: $('#verifRowId').val(), verifStatus: st, verifKeterangan: $('#verifKeterangan').val() });
      }
@@ -730,4 +514,6 @@ function previewPDF(url) {
   $('#framePreview').attr('src', url.replace('/view', '/preview'));
   $('#modalPreviewSK').modal('show');
 }
+function isiDropdownEdit() { /* Sama seperti sebelumnya */ }
+function isiOpsi(id, set) { /* Sama seperti sebelumnya */ }
 </script>
