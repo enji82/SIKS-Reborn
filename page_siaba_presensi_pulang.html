@@ -1,0 +1,284 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-sign-out-alt text-maroon mr-2"></i>Rekap Pulang Awal (PLA)
+        </h5>
+        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        
+        <div class="control-bar mb-3 d-flex flex-wrap align-items-center bg-white p-3 shadow-sm rounded">
+          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <button type="button" class="btn btn-sm border-tegas btn-square-sultan shadow-sm" onclick="loadFilterPulang(true)" title="Reset Filter">
+              <i class="fas fa-sync-alt text-maroon"></i>
+            </button>
+            <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
+            <select id="filterTahun" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 100px;">
+              <option value="">- Tahun -</option>
+            </select>
+            <select id="filterUnit" class="form-control form-control-sm filter-select border-tegas shadow-sm UnitKerjaSiaba" style="min-width: 250px;">
+              <option value="">- Pilih Unit Kerja -</option>
+            </select>
+            <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm" onclick="cariDataPulang()" title="Tampilkan Data">
+               <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+            
+            <table id="tabelPulang" class="table table-bordered table-hover mb-0" style="width:100%;">
+              <thead class="bg-light text-center">
+                <tr id="headerTopRow"></tr>
+                <tr id="headerSubRow"></tr>
+              </thead>
+              <tbody id="bodyRow">
+                  <tr id="msgRow">
+                      <td colspan="100%" class="text-center py-3 text-muted small">
+                          <i class="fas fa-filter fa-2x mb-2 text-light-gray"></i><br>
+                          Pilih Tahun & Unit Kerja, lalu klik tombol <b>Cari</b>.
+                      </td>
+                  </tr>
+              </tbody>
+            </table>
+
+            <div class="p-3 bg-light border-top small">
+                <span class="font-weight-bold text-maroon mr-2">CATATAN:</span>
+                Data diurutkan berdasarkan <b class="text-danger">Total Menit Pulang Awal</b> terbanyak.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+    .btn-maroon { background-color: #800000; color: white; border: 1px solid #600000; }
+    .btn-maroon:hover { background-color: #a00000; color: white; }
+    .btn-pulse { animation: pulse-red 2s infinite; }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(128, 0, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); } }
+    .text-light-gray { color: #ccc; }
+
+    /* HEADER & FONT (13px Table) */
+    table th {
+        font-size: 13px !important; 
+        padding: 6px 4px !important;
+        vertical-align: middle !important;
+        background-color: #e9ecef !important; 
+        white-space: nowrap;
+        border-bottom: 1px solid #dee2e6;
+        height: auto;
+        color: #495057; 
+    }
+    td { 
+        font-size: 13px !important; 
+        padding: 6px 8px !important; 
+        vertical-align: middle; 
+        white-space: nowrap; 
+    }
+
+    /* STICKY COLUMN & Z-INDEX */
+    #tabelPulang thead tr:first-child th:first-child {
+        position: sticky; left: 0; z-index: 100 !important; 
+        background-color: #e9ecef !important; border-right: 2px solid #adb5bd;
+    }
+    #tabelPulang tbody td:first-child {
+        position: sticky; left: 0; z-index: 50 !important; 
+        background-color: #fff; border-right: 2px solid #adb5bd;
+    }
+    .table-hover tbody tr:hover td:first-child { background-color: #f5f5f5 !important; }
+
+    /* SCROLL CONTAINER */
+    .table-scroll { overflow-x: auto; max-height: 600px; border-bottom: 1px solid #dee2e6; }
+    .bg-total { background-color: #fff3cd !important; font-weight: bold; color: #856404; }
+
+    /* PAGINASI & INFO (14px) */
+    .dataTables_wrapper .dataTables_info {
+        font-size: 14px !important; padding-top: 10px !important; color: #6c757d;
+    }
+    .dataTables_wrapper .dataTables_paginate .page-link {
+        font-size: 14px !important; padding: 6px 12px !important; 
+    }
+</style>
+
+<script>
+  $(document).ready(function() {
+    NotifSultan.loading("Menyiapkan Aplikasi...");
+
+    setTimeout(function() {
+        if ($.fn.select2) $('.filter-select').select2({ theme: 'bootstrap4' });
+        
+        $('#filterTahun, #filterUnit').on('change', function() { resetTabelUI(); });
+
+        loadFilterPulang(); 
+        
+        if (typeof renderDropdown === 'function') {
+            renderDropdown("filterUnit", "UnitKerjaSiaba");
+            
+            setTimeout(function() {
+                if ($('#filterUnit option[value="SEMUA"]').length === 0) {
+                    $('#filterUnit').prepend('<option value="SEMUA" class="font-weight-bold">-- SEMUA UNIT KERJA --</option>');
+                }
+                $('#filterUnit').val('').trigger('change.select2'); 
+            }, 1500); 
+        }
+    }, 100);
+  });
+
+  function resetTabelUI() {
+      if ($.fn.DataTable.isDataTable('#tabelPulang')) $('#tabelPulang').DataTable().destroy();
+      
+      $('#bodyRow').html(`<tr><td colspan="100%" class="text-center py-3 text-muted small"><i class="fas fa-filter fa-2x mb-2 text-light-gray"></i><br>Pilih Tahun & Unit Kerja, lalu klik tombol <b>Cari</b>.</td></tr>`);
+      $('#btnCari').addClass('btn-pulse');
+  }
+
+  function loadFilterPulang(isRefresh = false) {
+    if(isRefresh) NotifSultan.loading("Menyegarkan Filter...");
+    google.script.run
+      .withSuccessHandler(function(response) {
+        if(isRefresh) Swal.close();
+        let data;
+        try { data = JSON.parse(response); } catch(e) { return; }
+        if (data.error) { NotifSultan.alert('error', 'Gagal', data.error); return; }
+
+        renderOption('#filterTahun', data.years, 'Tahun');
+        let curYear = new Date().getFullYear();
+        if (!setSelectValue('#filterTahun', curYear) && data.years.length > 0) setSelectValue('#filterTahun', data.years[0]);
+        if(!isRefresh) Swal.close(); 
+      })
+      .getSiabaPulangFilters();
+  }
+
+  function renderOption(el, arr, label) {
+    let html = `<option value="">- ${label} -</option>`;
+    arr.forEach(x => html += `<option value="${x}">${x}</option>`);
+    $(el).html(html);
+  }
+
+  function setSelectValue(el, val) {
+    let found = false;
+    $(el + ' option').each(function() {
+      if ($(this).text().trim().toLowerCase() === String(val).toLowerCase()) {
+          $(this).prop('selected', true); found = true;
+      }
+    });
+    if(found) $(el).val($(el + ' option:selected').val()).trigger('change.select2');
+    return found;
+  }
+
+  function cariDataPulang() {
+    const thn = $('#filterTahun').val();
+    const unit = $('#filterUnit').val();
+
+    if (!thn || !unit) {
+        NotifSultan.alert('warning', 'Filter Kurang', 'Pilih <b>Tahun</b> dan <b>Unit Kerja</b>.');
+        return;
+    }
+
+    $('#btnCari').removeClass('btn-pulse');
+    NotifSultan.loading("Mengambil Data Pulang Awal...");
+    
+    if ($.fn.DataTable.isDataTable('#tabelPulang')) $('#tabelPulang').DataTable().destroy();
+    $('#headerTopRow').empty();
+    $('#headerSubRow').empty();
+    $('#bodyRow').empty();
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        Swal.close();
+        let data;
+        try { data = JSON.parse(response); } 
+        catch(e) { NotifSultan.alert('error', 'Data Corrupt', 'Gagal parsing data.'); return; }
+
+        if (data.error) return NotifSultan.alert('error', 'Backend Error', data.error);
+        
+        if (!data.rows || data.rows.length === 0) {
+            $('#bodyRow').html('<tr><td colspan="100%" class="text-center py-5 text-muted"><i class="far fa-folder-open fa-2x mb-2 text-light-gray"></i><br>Data tidak ditemukan.</td></tr>');
+            return;
+        }
+        renderTabelBertingkat(data);
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        NotifSultan.alert('error', 'Gagal', err.message);
+      })
+      .getSiabaPulangData(thn, unit);
+  }
+
+  function renderTabelBertingkat(data) {
+    const headerTop = data.headerTop; 
+    const headerSub = data.headerSub; 
+    
+    let htmlTop = '';
+    let htmlSub = '';
+
+    // Kolom 1 (Nama) - Sticky
+    htmlTop += `<th rowspan="2" class="text-left pl-3" style="min-width:200px;">${headerTop[0] || 'Nama'}</th>`;
+    // Kolom 2 (Unit/NIP)
+    htmlTop += `<th rowspan="2" class="text-left" style="min-width:150px;">${headerTop[1] || 'Unit/NIP'}</th>`;
+    
+    for (let i = 2; i < headerTop.length; i++) {
+        let titleTop = headerTop[i];
+        let titleSub = headerSub[i];
+
+        if (titleTop !== "" && i < headerTop.length - 1) {
+            htmlTop += `<th colspan="2" class="text-center border-bottom">${titleTop}</th>`;
+            htmlSub += `<th class="text-center text-muted">${titleSub}</th>`;
+        } 
+        else if (titleTop === "" && i > 0) {
+            htmlSub += `<th class="text-center text-muted">${titleSub}</th>`;
+        }
+        else {
+            if (titleSub === "") {
+                 htmlTop += `<th rowspan="2" class="text-center bg-total">${titleTop}</th>`;
+            } else {
+                 htmlTop += `<th class="text-center bg-total">${titleTop}</th>`;
+                 htmlSub += `<th class="text-center bg-total">${titleSub}</th>`;
+            }
+        }
+    }
+
+    $('#headerTopRow').html(htmlTop);
+    $('#headerSubRow').html(htmlSub);
+
+    let tr = '';
+    data.rows.forEach(row => {
+        tr += '<tr>';
+        row.forEach((cell, idx) => {
+            let display = cell;
+            if (cell === "0" || cell === 0) display = "-";
+            
+            let cssClass = "text-center";
+            if (idx === 0) cssClass = "text-left pl-3 font-weight-bold text-dark"; // Nama
+            if (idx === 1) cssClass = "text-left small text-muted"; // Unit
+            if (idx === row.length - 1) cssClass += " bg-total font-weight-bold";
+
+            tr += `<td class="${cssClass}">${display}</td>`;
+        });
+        tr += '</tr>';
+    });
+    $('#bodyRow').html(tr);
+
+    var table = $('#tabelPulang').DataTable({
+      "scrollX": false,
+      "responsive": false, 
+      "ordering": false,
+      "autoWidth": false,
+      "pageLength": 15,         
+      "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+      "dom": '<"table-scroll"t><"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
+    });
+  }
+</script>

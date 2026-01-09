@@ -1,0 +1,287 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-flag text-maroon mr-2"></i>Rekap Apel & Upacara
+        </h5>
+        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        
+        <div class="control-bar mb-3 d-flex flex-wrap align-items-center bg-white p-3 shadow-sm rounded">
+          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <button type="button" class="btn btn-sm border-tegas btn-square-sultan shadow-sm" onclick="loadFilterApel(true)" title="Reset Filter">
+              <i class="fas fa-sync-alt text-maroon"></i>
+            </button>
+            <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
+            <select id="filterTahun" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 100px;">
+              <option value="">- Tahun -</option>
+            </select>
+            <select id="filterBulan" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 130px;">
+              <option value="">- Bulan -</option>
+            </select>
+            <select id="filterUnit" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="min-width: 250px;">
+              <option value="">- Pilih Unit Kerja -</option>
+            </select>
+            <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm" onclick="cariDataApel()" title="Tampilkan Data">
+               <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table id="tabelApel" class="table table-hover table-premium table-sticky-first mb-0" style="width:100%;">
+                <thead class="bg-light">
+                  <tr id="headerRow">
+                    </tr>
+                </thead>
+                <tbody id="bodyRow">
+                    <tr id="msgRow">
+                        <td colspan="10" class="text-center py-5 text-muted small">
+                            <i class="fas fa-filter fa-2x mb-2 text-light-gray"></i><br>
+                            Pilih Unit Kerja & klik tombol <b>Cari</b>.
+                        </td>
+                    </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-3 bg-light border-top small">
+                <span class="font-weight-bold text-maroon mr-2">KETERANGAN:</span>
+                <span class="badge badge-light border">HA</span> Hari Apel &nbsp;
+                <span class="badge badge-success">A</span> Apel &nbsp;
+                <span class="badge badge-danger">TA</span> Tidak Apel &nbsp;
+                <span class="badge badge-light border">HU</span> Hari Upacara &nbsp;
+                <span class="badge badge-success">U</span> Upacara &nbsp;
+                <span class="badge badge-danger">TU</span> Tidak Upacara
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+    .btn-maroon { background-color: #800000; color: white; border: 1px solid #600000; }
+    .btn-maroon:hover { background-color: #a00000; color: white; }
+    .btn-pulse { animation: pulse-red 2s infinite; }
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(128, 0, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
+    }
+    .text-light-gray { color: #ccc; }
+
+    /* BACKGROUND KHUSUS */
+    .bg-green-sultan { background-color: #d1e7dd !important; } 
+    .bg-yellow-sultan { background-color: #fff3cd !important; } 
+    .bg-abu-terang { background-color: #f4f6f9 !important; color: #adb5bd !important; }
+    
+    /* FONT KHUSUS */
+    .text-orange-sultan { color: #fd7e14 !important; font-weight: bold; }
+    .text-purple-sultan { color: #6f42c1 !important; font-weight: bold; }
+    .text-gold-sultan { color: #d4af37 !important; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.1); }
+    .text-green-sultan { color: #28a745 !important; font-weight: bold; }
+    .text-blue-sultan { color: #17a2b8 !important; font-weight: bold; }
+
+    /* STICKY COLUMN */
+    .table-sticky-first thead th:first-child,
+    .table-sticky-first tbody td:first-child {
+        position: sticky; left: 0; background-color: #fff; z-index: 5;
+        border-right: 2px solid #dee2e6; box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+    .table-sticky-first thead th:first-child { z-index: 6; background-color: #f8f9fa; }
+    .table-premium td, .table-premium th { white-space: nowrap; padding: 6px 10px; vertical-align: middle; font-size: 13px; }
+</style>
+
+<script>
+  $(document).ready(function() {
+    NotifSultan.loading("Menyiapkan Aplikasi...");
+
+    setTimeout(function() {
+        if ($.fn.select2) $('.filter-select').select2({ theme: 'bootstrap4' });
+        $('#filterTahun, #filterBulan, #filterUnit').on('change', function() { resetTabelUI(); });
+        loadFilterApel(); 
+        if (typeof renderDropdown === 'function') {
+            renderDropdown("filterUnit", "UnitKerjaSiaba");
+            setTimeout(function() {
+                if ($('#filterUnit option[value="SEMUA"]').length === 0) {
+                    $('#filterUnit').prepend('<option value="SEMUA" class="font-weight-bold">-- SEMUA UNIT KERJA --</option>');
+                    $('#filterUnit').trigger('change.select2');
+                }
+            }, 1500);
+        }
+    }, 100);
+  });
+
+  function resetTabelUI() {
+      if ($.fn.DataTable.isDataTable('#tabelApel')) $('#tabelApel').DataTable().destroy();
+      $('#headerRow').empty();
+      $('#bodyRow').html(`<tr><td colspan="10" class="text-center py-5 text-muted small"><i class="fas fa-search fa-2x mb-2 text-maroon"></i><br>Klik tombol <b>Cari</b>.</td></tr>`);
+      $('#btnCari').addClass('btn-pulse');
+  }
+
+  // --- A. LOAD FILTER (JSON PARSE) ---
+  function loadFilterApel(isRefresh = false) {
+    if(isRefresh) NotifSultan.loading("Menyegarkan Filter...");
+    
+    google.script.run
+      .withSuccessHandler(function(response) {
+        if(isRefresh) Swal.close();
+        let data;
+        try { data = JSON.parse(response); } 
+        catch(e) { NotifSultan.alert('error', 'Parse Error', 'Gagal membaca filter.'); return; }
+        
+        if (data.error) { NotifSultan.alert('error', 'Gagal', data.error); return; }
+
+        renderOption('#filterTahun', data.years, 'Tahun');
+        renderOption('#filterBulan', data.months, 'Bulan');
+
+        let curYear = new Date().getFullYear();
+        let curMonth = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][new Date().getMonth()];
+
+        if (!setSelectValue('#filterTahun', curYear) && data.years.length > 0) setSelectValue('#filterTahun', data.years[0]);
+        if (!setSelectValue('#filterBulan', curMonth) && data.months.length > 0) setSelectValue('#filterBulan', data.months[0]);
+        
+        if(!isRefresh) Swal.close(); 
+      })
+      .withFailureHandler(function(err) {
+        if(isRefresh) Swal.close();
+        NotifSultan.alert('error', 'Koneksi Gagal', err.message);
+      })
+      .getSiabaApelFilters();
+  }
+
+  function renderOption(el, arr, label) {
+    let html = `<option value="">- ${label} -</option>`;
+    arr.forEach(x => html += `<option value="${x}">${x}</option>`);
+    $(el).html(html);
+  }
+
+  function setSelectValue(el, val) {
+    let found = false;
+    $(el + ' option').each(function() {
+      if ($(this).text().trim().toLowerCase() === String(val).toLowerCase()) {
+          $(this).prop('selected', true); found = true;
+      }
+    });
+    if(found) $(el).val($(el + ' option:selected').val()).trigger('change.select2');
+    return found;
+  }
+
+  // --- B. CARI DATA (JSON PARSE) ---
+  function cariDataApel() {
+    const thn = $('#filterTahun').val();
+    const bln = $('#filterBulan').val();
+    const unit = $('#filterUnit').val();
+
+    if (!thn || !bln || !unit) {
+        NotifSultan.alert('warning', 'Filter Kurang', 'Pilih <b>Unit Kerja</b>, Tahun, dan Bulan.');
+        return;
+    }
+
+    $('#btnCari').removeClass('btn-pulse');
+    NotifSultan.loading("Mengambil Data Apel...");
+
+    if ($.fn.DataTable.isDataTable('#tabelApel')) $('#tabelApel').DataTable().destroy();
+    $('#bodyRow').empty();
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        Swal.close();
+        let data;
+        try { data = JSON.parse(response); } 
+        catch(e) { NotifSultan.alert('error', 'Data Corrupt', 'Gagal parsing data.'); return; }
+
+        if (data.error) return NotifSultan.alert('error', 'Backend Error', data.error);
+        
+        if (!data.rows || data.rows.length === 0) {
+            $('#headerRow').empty();
+            $('#bodyRow').html('<tr><td colspan="10" class="text-center py-5 text-muted"><i class="far fa-folder-open fa-2x mb-2 text-light-gray"></i><br>Data tidak ditemukan.</td></tr>');
+            return;
+        }
+        renderTabel(data);
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        NotifSultan.alert('error', 'Gagal', err.message);
+      })
+      .getSiabaDataApel(thn, bln, unit);
+  }
+
+  // --- C. RENDER TABEL (PEWARNAAN KHUSUS) ---
+  function renderTabel(data) {
+    let th = '';
+    data.headers.forEach((h, idx) => {
+        let align = (idx === 0) ? 'text-left pl-3' : 'text-center';
+        th += `<th class="${align}">${h}</th>`;
+    });
+    $('#headerRow').html(th);
+
+    let tr = '';
+    data.rows.forEach((row) => {
+      tr += '<tr>';
+      row.forEach((cell, idx) => {
+        let val = cell;
+        let display = val;
+        let str = String(val).toUpperCase().trim();
+        let cellClass = (idx === 0) ? 'text-left pl-3 font-weight-bold text-dark' : 'text-center';
+        
+        if (val === 0 || val === "0") display = "-";
+
+        // --- LOGIKA KOLOM ---
+        
+        // A. REKAP APEL (IDX 2,3,4)
+        if (idx >= 2 && idx <= 4) {
+             cellClass += " bg-green-sultan"; 
+             if(display !== "-") display = `<b>${display}</b>`;
+        }
+        
+        // B. REKAP UPACARA (IDX 5,6,7)
+        else if (idx >= 5 && idx <= 7) {
+             cellClass += " bg-yellow-sultan";
+             if(display !== "-") display = `<b>${display}</b>`;
+        }
+
+        // C. DATA HARIAN (IDX >= 8)
+        else if (idx >= 8) {
+             // KODE KHUSUS
+             if (str === 'U') display = `<span class="text-gold-sultan">${val}</span>`;
+             else if (str.includes('AL')) display = `<span class="text-green-sultan">${val}</span>`;
+             else if (str.includes('AV')) display = `<span class="text-purple-sultan">${val}</span>`;
+             else if (['DD','DL'].includes(str)) display = `<span class="text-blue-sultan">${val}</span>`;
+             else if (['CT','CS','CM','CAP','CB'].includes(str)) display = `<span class="text-orange-sultan">${val}</span>`;
+
+             // KOSONG
+             else if (display === "-") cellClass += " bg-abu-terang";
+        }
+
+        tr += `<td class="${cellClass}">${display}</td>`;
+      });
+      tr += '</tr>';
+    });
+    $('#bodyRow').html(tr);
+
+    if ($.fn.DataTable.isDataTable('#tabelApel')) $('#tabelApel').DataTable().destroy();
+    var table = $('#tabelApel').DataTable({
+      "scrollX": true, "responsive": false, "ordering": false, "autoWidth": true, "pageLength": 25,
+      "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+      "dom": 't<"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
+      "initComplete": function() { setTimeout(function() { $('#tabelApel').DataTable().columns.adjust(); $(window).trigger('resize'); if (typeof enableDragScroll === "function") enableDragScroll('tabelApel'); }, 500); },
+      "drawCallback": function() { $('.dataTables_scrollHead').css('border-bottom', 'none'); $('.dataTables_scrollBody table').css('margin-top', '0'); }
+    });
+  }
+</script>

@@ -759,3 +759,146 @@ function getColIdx(sheet, name) {
   if (idx < 0 && name == "Link File") idx = headers.indexOf("Dokumen");
   return idx + 1;
 }
+
+/* ======================================================================
+   DASHBOARD SK: DATA REALTIME (REVISI 4 STATUS)
+   ====================================================================== */
+function getSKDashboardData() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    const sheet = ss.getSheetByName("Unggah_SK");
+    
+    // === CONFIG KOLOM (PASTIKAN SESUAI SHEET) ===
+    const IDX_TANGGAL = 0;  // A
+    const IDX_SEKOLAH = 1;  // B
+    const IDX_TA      = 2;  // C
+    const IDX_SMT     = 3;  // D
+    const IDX_USER    = 8;  // H
+    const IDX_STATUS  = 9; // O
+    // ============================================
+
+    var data = sheet.getDataRange().getValues();
+    data.shift(); // Buang header
+    
+    var stats = {
+      total: data.length,
+      statusCounts: { 'OK': 0, 'Diproses': 0, 'Revisi': 0, 'Ditolak': 0 },
+      monthlyCounts: {}, 
+      recent: []
+    };
+
+    var months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+    months.forEach(m => stats.monthlyCounts[m] = 0);
+
+    // 1. LOOP STATISTIK (Hitung Status & Tren)
+    data.forEach(function(row) {
+      // Status Logic
+      var raw = row[IDX_STATUS] ? row[IDX_STATUS].toString().toLowerCase().trim() : "diproses";
+      if (raw === "ok" || raw.includes("setuju") || raw.includes("valid")) {
+        stats.statusCounts['OK']++;
+      } else if (raw === "revisi" || raw.includes("perlu revisi")) {
+        stats.statusCounts['Revisi']++;
+      } else if (raw === "ditolak" || raw.includes("tolak")) {
+        stats.statusCounts['Ditolak']++;
+      } else {
+        stats.statusCounts['Diproses']++;
+      }
+
+      // Tren Logic
+      var tgl = row[IDX_TANGGAL];
+      if (tgl instanceof Date) {
+        var monthName = months[tgl.getMonth()];
+        stats.monthlyCounts[monthName]++;
+      }
+    });
+
+    // 2. AMBIL 5 DATA TERAKHIR (DENGAN SORTING YANG BENAR)
+    // Buat salinan data agar urutan asli tidak terganggu saat looping lain (jika ada)
+    var sortedData = data.slice();
+
+    // Lakukan Sorting: Waktu Terbesar (Terbaru) - Waktu Terkecil (Terlama)
+    sortedData.sort(function(a, b) {
+       var dateA = a[IDX_TANGGAL];
+       var dateB = b[IDX_TANGGAL];
+       
+       // Validasi: Pastikan objek Date. Jika bukan/kosong, anggap waktu 0 (tahun 1970)
+       var timeA = (dateA instanceof Date) ? dateA.getTime() : 0;
+       var timeB = (dateB instanceof Date) ? dateB.getTime() : 0;
+       
+       return timeB - timeA; // Descending
+    });
+
+    // Ambil 5 teratas setelah diurutkan
+    var recentTop5 = sortedData.slice(0, 5);
+    
+    // Format Data untuk Dikirim ke Frontend
+    recentTop5.forEach(function(row) {
+      var tglLengkap = "-";
+      if (row[IDX_TANGGAL] instanceof Date) {
+        tglLengkap = Utilities.formatDate(new Date(row[IDX_TANGGAL]), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
+      }
+
+      stats.recent.push({
+        Tanggal: tglLengkap,
+        NamaSD: row[IDX_SEKOLAH] || "-",
+        TahunAjaran: row[IDX_TA] || "-",
+        Semester: row[IDX_SMT] || "-",
+        User: row[IDX_USER] || "Admin"
+      });
+    });
+
+    return stats;
+
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+/* ======================================================================
+   CEK DUPLIKAT NO SK (REVISI INDEX KOLOM E)
+   ====================================================================== */
+function cekDuplikatSK(nomorSk) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    const sheet = ss.getSheetByName("Unggah_SK");
+    
+    // === CONFIG INDEX KOLOM (CORRECTED) ===
+    // Kolom E = Index 4
+    const IDX_NO_SK = 4; 
+    
+    // Kolom B = Index 1 (Nama Sekolah)
+    const IDX_NAMA_SEKOLAH = 1;
+    // ======================================
+
+    var data = sheet.getDataRange().getValues();
+    
+    // Normalisasi Target: Kecilkan huruf & buang semua simbol aneh
+    // Contoh: "800/123.SK" jadi "800123sk"
+    var target = nomorSk.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Loop dari baris 2 (Index 1)
+    for (var i = 1; i < data.length; i++) {
+      var cellVal = data[i][IDX_NO_SK];
+      
+      if (cellVal) {
+        // Normalisasi Data Database
+        var rowSk = cellVal.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        // Cek Kesamaan
+        if (rowSk === target && rowSk !== "") {
+          return { 
+            exists: true, 
+            sekolah: data[i][IDX_NAMA_SEKOLAH] || "Sekolah Lain"
+          };
+        }
+      }
+    }
+
+    return { exists: false };
+
+  } catch (e) {
+    // Fail-safe: Jika error, biarkan lolos dulu tapi catat log
+    console.log("Error Cek Duplikat: " + e.message);
+    return { exists: false };
+  }
+}
