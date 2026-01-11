@@ -1,0 +1,967 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-user-clock text-maroon mr-2"></i>Data Salah Presensi
+        </h5>
+        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        
+        <div class="control-bar mb-3 d-flex flex-wrap align-items-center bg-white p-3 shadow-sm rounded" style="gap: 10px;">
+            
+            <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshTabelSalahPresensi()" title="Refresh Data Server">
+              <i class="fas fa-sync-alt text-maroon"></i>
+            </button>
+
+            <div style="height: 30px; width: 1px; background: #dee2e6;"></div>
+
+            <select id="filterTahun" class="form-control filter-select border-tegas shadow-sm" style="width: 100px;">
+              <option value="">- Thn -</option>
+            </select>
+
+            <select id="filterBulan" class="form-control filter-select border-tegas shadow-sm" style="width: 130px;">
+              <option value="">- Bulan -</option>
+              <option value="01">Januari</option>
+              <option value="02">Februari</option>
+              <option value="03">Maret</option>
+              <option value="04">April</option>
+              <option value="05">Mei</option>
+              <option value="06">Juni</option>
+              <option value="07">Juli</option>
+              <option value="08">Agustus</option>
+              <option value="09">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November</option>
+              <option value="12">Desember</option>
+            </select>
+
+            <select id="filterUnit" class="form-control filter-select border-tegas shadow-sm" style="min-width: 200px;">
+              <option value="">- Semua Unit Kerja -</option>
+            </select>
+
+            <select id="filterStatus" class="form-control filter-select border-tegas shadow-sm" style="width: 120px;">
+              <option value="">- Status -</option>
+              <option value="Proses">Diproses</option>
+              <option value="Revisi">Revisi</option>
+              <option value="OK">Disetujui</option>
+              <option value="Ditolak">Ditolak</option>
+            </select>
+            
+            <div class="d-flex align-items-center">
+              <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm mr-2" onclick="applyFilterSalahPresensi()" title="Terapkan Filter">
+                <i class="fas fa-search text-white"></i>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm font-weight-bold shadow-sm mr-2" onclick="bukaTongSampah()">
+                <i class="fas fa-trash-restore mr-1"></i> Sampah
+              </button>
+
+              <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="$('#modalTambah').modal('show')">
+                <i class="fas fa-plus mr-1"></i> Tambah
+              </button>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table id="tabelPresensi" class="table table-hover table-premium mb-0" style="width:100%;">
+                <thead>
+                  <tr>
+                    <th class="d-none">Unit</th> 
+                    <th style="min-width: 200px; position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);">Nama ASN</th>
+                    <th>NIP</th>
+                    <th>Tanggal</th>
+                    <th>Jam</th>          
+                    <th>Jenis</th>        
+                    <th>Tgl Pengajuan</th>
+                    <th>User Input</th>
+                    <th class="text-center">Status</th>
+                    <th>Keterangan</th>
+                    <th class="text-center">Aksi</th>
+                    <th class="small text-muted">Tgl Edit</th>
+                    <th class="small text-muted">User Edit</th>
+                    <th class="small text-muted">Tgl Verif</th>
+                    <th class="small text-muted">Admin Verif</th>
+                  </tr>
+                </thead>
+                <tbody id="bodyTabelPresensi">
+                  </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal fade" id="modalTambah" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      
+      <div class="modal-header bg-maroon">
+        <h5 class="modal-title text-white font-weight-bold">
+          <i class="fas fa-file-signature mr-2"></i>Form Salah Absen
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <form id="formSalahAbsen" onsubmit="simpanDataSalahPresensi(event)">
+      <div class="modal-body bg-light">
+        
+        <input type="hidden" name="user_login" id="hideUserLogin">
+        <input type="hidden" id="modeForm" value="tambah"> 
+        <input type="hidden" name="nip_lama" id="hideNipLama">
+        <input type="hidden" name="tgl_lama" id="hideTglLama">
+        <input type="hidden" name="jam_lama" id="hideJamLama">
+
+        <div class="form-group">
+          <label class="form-label-sultan">Unit Kerja</label>
+          <select class="form-control form-control-sultan" id="selUnit" name="unit_kerja" required onchange="filterNamaPegawai()">
+            <option value="">- Memuat Data... -</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label-sultan">Nama ASN</label>
+          <select class="form-control form-control-sultan" id="selNama" name="nama_asn" required disabled onchange="filterNipPegawai()">
+            <option value="">- Pilih Unit Dulu -</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label-sultan">NIP</label>
+          <select class="form-control form-control-sultan" id="selNip" name="nip_asn" required disabled>
+            <option value="">- Otomatis / Pilih Nama Dulu -</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label-sultan">Tanggal</label>
+              <input type="date" name="tanggal" class="form-control form-control-sultan" required>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label-sultan">Waktu (Jam)</label>
+              <input type="time" name="waktu" class="form-control form-control-sultan" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label-sultan">Presensi Tercatat</label>
+          <select name="jenis" class="form-control form-control-sultan" required>
+            <option value="">- Pilih Jenis -</option>
+            <option value="Datang">Datang</option>
+            <option value="Pulang">Pulang</option>
+          </select>
+        </div>
+
+      </div>
+      
+      <div class="modal-footer justify-content-between bg-white">
+          <button type="button" class="btn btn-default shadow-sm" data-dismiss="modal">Batal</button>
+          
+          <button type="submit" id="btnKirim" class="btn btn-maroon shadow-sm px-4 font-weight-bold">
+            <i class="fas fa-paper-plane mr-1"></i> Kirim Pengajuan
+          </button>
+        </div>
+    </form>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white font-weight-bold">
+          <i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <form id="formHapus" onsubmit="submitHapusData(event)">
+        <div class="modal-body bg-light">
+          
+          <input type="hidden" id="hapusNip">
+          <input type="hidden" id="hapusTgl">
+          <input type="hidden" id="hapusJam">
+          <input type="hidden" id="hapusNama">
+
+          <div class="alert alert-warning text-dark border-left-warning shadow-sm">
+            <i class="fas fa-exclamation-triangle mr-1"></i> Data yang dihapus tidak dapat dikembalikan ke tabel utama.
+          </div>
+
+          <div class="card card-body p-2 mb-3 shadow-sm" style="background: #fff3cd;">
+             <table class="table table-sm table-borderless mb-0 small text-muted">
+               <tr><td width="30%">Nama ASN</td><td class="font-weight-bold text-dark">: <span id="infoNama"></span></td></tr>
+               <tr><td>NIP</td><td>: <span id="infoNip"></span></td></tr>
+               <tr><td>Waktu</td><td>: <span id="infoWaktu"></span></td></tr>
+               <tr><td>Jenis</td><td>: <span id="infoJenis"></span></td></tr>
+             </table>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold text-danger">Alasan Penghapusan <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="inputAlasan" rows="2" placeholder="Tuliskan alasan menghapus data ini..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold">Kode Konfirmasi</label>
+            <input type="text" class="form-control" id="inputKode" placeholder="Masukkan Kode Hapus..." autocomplete="off" required>
+            <small class="text-muted">Hubungi admin korwil untuk mendapatkan kode hapus.</small>
+          </div>
+
+        </div>
+        
+        <div class="modal-footer justify-content-between bg-white">
+          <button type="button" class="btn btn-default shadow-sm px-4" data-dismiss="modal">Batal</button>
+          <button type="submit" id="btnEksekusiHapus" class="btn btn-danger shadow-sm px-4 font-weight-bold">
+            <i class="fas fa-trash mr-1"></i> Hapus Data
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      
+      <div class="modal-header bg-success">
+        <h5 class="modal-title text-white font-weight-bold">
+          <i class="fas fa-check-circle mr-2"></i>Verifikasi Pengajuan
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <form id="formVerifikasi" onsubmit="submitVerifikasiData(event)">
+        <div class="modal-body bg-light p-0">
+          
+          <input type="hidden" id="verifNip">
+          <input type="hidden" id="verifTgl">
+          <input type="hidden" id="verifJam">
+
+          <div class="row no-gutters">
+            
+            <div class="col-md-7 border-right bg-white p-4">
+              <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2">
+                Data Pengajuan
+              </h5>
+              
+              <table class="table table-borderless mb-0">
+                <tr>
+                  <td class="text-secondary pt-1" width="30%" style="font-size: 14px; vertical-align: middle;">Nama ASN</td>
+                  <td class="font-weight-bold text-dark pt-1" style="font-size: 18px;">: <span id="vNama"></span></td>
+                </tr>
+                <tr>
+                  <td class="text-secondary" style="font-size: 14px; vertical-align: middle;">NIP</td>
+                  <td class="text-dark" style="font-size: 16px;">: <span id="vNip"></span></td>
+                </tr>
+                <tr>
+                  <td class="text-secondary" style="font-size: 14px; vertical-align: middle;">Tanggal</td>
+                  <td class="text-dark" style="font-size: 16px;">: <span id="vTgl"></span></td>
+                </tr>
+                <tr>
+                  <td class="text-secondary" style="font-size: 14px; vertical-align: middle;">Waktu</td>
+                  <td class="text-maroon font-weight-bold" style="font-size: 18px;">: <span id="vJam"></span></td>
+                </tr>
+                <tr>
+                  <td class="text-secondary" style="font-size: 14px; vertical-align: middle;">Jenis</td>
+                  <td class="text-dark font-weight-bold" style="font-size: 16px;">: <span id="vJenis"></span></td>
+                </tr>
+                <tr>
+                  <td class="text-secondary pb-0" style="font-size: 14px; vertical-align: middle;">Diajukan</td>
+                  <td class="text-muted pb-0" style="font-size: 14px;">: <span id="vTglAjuan"></span></td>
+                </tr>
+              </table>
+              
+              <div class="mt-3 p-2 rounded" style="background-color: #e8f5e9; color: #2e7d32; font-size: 13px;">
+                <i class="fas fa-search mr-1"></i> Periksa data di atas dengan teliti sebelum memutuskan.
+              </div>
+            </div>
+
+            <div class="col-md-5 p-4 bg-light">
+              <h6 class="font-weight-bold text-secondary mb-3">Keputusan Admin</h6>
+
+              <div class="form-group">
+                <label class="small font-weight-bold text-muted text-uppercase mb-1">Status Verifikasi</label>
+                <select class="form-control shadow-sm" id="inputStatusVerif" required style="font-size: 15px; height: 45px;">
+                  <option value="">- Pilih Keputusan -</option>
+                  <option value="OK">✅ OK (Disetujui)</option>
+                  <option value="Revisi">⚠️ Revisi</option>
+                  <option value="Ditolak">❌ Ditolak</option>
+                  <option value="Diproses">⏳ Diproses</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="small font-weight-bold text-muted text-uppercase mb-1">Catatan Admin</label>
+                <textarea class="form-control shadow-sm" id="inputKetVerif" rows="5" placeholder="Tuliskan alasan revisi/tolak atau catatan tambahan..." style="font-size: 14px;"></textarea>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+        
+        <div class="modal-footer justify-content-between bg-white border-top">
+          <button type="button" class="btn btn-default shadow-sm px-4" data-dismiss="modal">Batal</button>
+          <button type="submit" id="btnEksekusiVerif" class="btn btn-success shadow-sm px-4 font-weight-bold">
+            <i class="fas fa-save mr-1"></i> Simpan Verifikasi
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalSampah" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-secondary py-2"> <h6 class="modal-title text-white font-weight-bold">
+            <i class="fas fa-trash-restore mr-2"></i>Data Terhapus (Recycle Bin)
+        </h6>
+        <button type="button" class="close text-white pt-2" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover mb-0" style="width:100%; font-size: 13px;">
+            <thead class="bg-light text-secondary">
+              <tr>
+                <th class="pl-3 py-2">Nama ASN</th>
+                <th class="py-2">Tanggal</th>
+                <th class="py-2">Jam</th>
+                <th class="py-2">Alasan Hapus</th>
+                <th class="py-2">Dihapus Oleh</th>
+                <th class="text-center py-2" style="width: 100px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="bodySampah">
+              </tbody>
+          </table>
+        </div>
+        
+        <div id="loadingSampah" class="text-center p-3" style="display:none">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+            <p class="small text-muted mt-1 mb-0">Memuat...</p>
+        </div>
+        
+        <div id="emptySampah" class="text-center p-4" style="display:none">
+            <i class="fas fa-trash-alt fa-2x text-gray-300 mb-2"></i>
+            <p class="text-muted small mb-0">Tong sampah kosong.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * PAGE SCRIPT: DATA SALAH PRESENSI (REVISI FIX UI & LOGIKA JAM)
+ */
+
+var DATA_SALAH_PRESENSI = {}; 
+var DB_PEGAWAI_LOKAL = [];
+var CACHE_HTML_UNIT = ""; 
+
+$(document).ready(function() {
+  loadDataSalahPresensi(); 
+  loadDropdownPegawai(); 
+});
+
+// --- 1. LOAD DATA PEGAWAI (UNTUK DROPDOWN) ---
+function loadDropdownPegawai() {
+  google.script.run.withSuccessHandler(function(data) {
+     DB_PEGAWAI_LOKAL = data; 
+     var unikUnit = [...new Set(data.map(item => item.unit))].sort();
+     var html = '<option value="">- Pilih Unit Kerja -</option>';
+     unikUnit.forEach(u => { if(u) html += `<option value="${u}">${u}</option>`; });
+     CACHE_HTML_UNIT = html; 
+     $('#selUnit').html(html);
+  }).getDatabasePegawai();
+}
+
+// --- 2. LOGIKA DEPENDENT DROPDOWN ---
+function filterNamaPegawai() {
+  var unitTerpilih = $('#selUnit').val();
+  var selNama = $('#selNama');
+  var selNip = $('#selNip');
+  
+  selNama.empty().append('<option value="">- Pilih Nama ASN -</option>').prop('disabled', true);
+  selNip.empty().append('<option value="">- Menunggu Nama -</option>').prop('disabled', true);
+
+  if (unitTerpilih) {
+     var listNama = DB_PEGAWAI_LOKAL.filter(x => x.unit === unitTerpilih).map(x => x.nama);
+     var unikNama = [...new Set(listNama)].sort();
+     var html = '<option value="">- Pilih Nama ASN -</option>';
+     unikNama.forEach(n => { html += `<option value="${n}">${n}</option>`; });
+     selNama.html(html).prop('disabled', false);
+  }
+}
+
+function filterNipPegawai() {
+  var unitTerpilih = $('#selUnit').val();
+  var namaTerpilih = $('#selNama').val();
+  var selNip = $('#selNip');
+  
+  selNip.empty().prop('disabled', true);
+
+  if (namaTerpilih) {
+     var listNip = DB_PEGAWAI_LOKAL
+        .filter(x => x.unit === unitTerpilih && x.nama === namaTerpilih)
+        .map(x => x.nip);
+     
+     if (listNip.length === 1) {
+        selNip.append(`<option value="${listNip[0]}" selected>${listNip[0]}</option>`);
+        selNip.prop('disabled', false); 
+     } else if (listNip.length > 1) {
+        var html = '<option value="">- Pilih NIP -</option>';
+        listNip.forEach(nip => { html += `<option value="${nip}">${nip}</option>`; });
+        selNip.html(html).prop('disabled', false);
+     } else {
+        selNip.append('<option value="">NIP Tidak Ditemukan</option>');
+     }
+  } else {
+     selNip.append('<option value="">- Menunggu Nama -</option>');
+  }
+}
+
+// --- 3. CRUD: READ (LOAD TABEL) ---
+function refreshTabelSalahPresensi() {
+  if ($.fn.DataTable.isDataTable('#tabelPresensi')) {
+      $('#tabelPresensi').DataTable().destroy();
+  }
+  loadDataSalahPresensi();
+}
+
+function loadDataSalahPresensi() {
+  // Panggil NotifSultan Loading
+  NotifSultan.loading("Sinkronisasi Data...");
+
+  google.script.run
+    .withSuccessHandler(function(data) {
+      Swal.close(); // Tutup loading
+      if (typeof data === 'string') data = JSON.parse(data);
+      
+      if (!Array.isArray(data) || data.length === 0) {
+         NotifSultan.toast('info', 'Data masih kosong.');
+         return;
+      }
+      renderTabelSalahPresensi(data);
+    })
+    .withFailureHandler(function(err) { 
+        NotifSultan.alert('error', 'Gagal Memuat', err.message); 
+    })
+    .getDaftarSalahPresensi();
+}
+
+// --- FUNGSI RENDER TABEL (FIX URUTAN KOLOM) ---
+function renderTabelSalahPresensi(data) {
+  var sesi = localStorage.getItem("siksUser");
+  var user = sesi ? JSON.parse(sesi) : { role: 'User' }; 
+  var isAdmin = (user.role === 'Admin' || user.role === 'Super Admin');
+
+  // Helper Parsing Tanggal untuk Sorting
+  const parseWaktuIndo = (str) => {
+     if (!str || str === "") return 0;
+     var d = new Date(str);
+     if (!isNaN(d.getTime())) return d.getTime();
+     try {
+       var parts = str.split(' ');
+       var datePart = parts[0]; var timePart = parts[1] || "00:00:00";
+       var dSplit = datePart.split(/[-/]/);
+       if (dSplit.length === 3) {
+          return new Date(parseInt(dSplit[2]), parseInt(dSplit[1]) - 1, parseInt(dSplit[0]), 
+                 parseInt(timePart.split(':')[0]||0), parseInt(timePart.split(':')[1]||0)).getTime();
+       }
+     } catch(e) { return 0; }
+     return 0;
+  };
+
+  // Logika Sorting (Last Activity)
+  data.sort((a, b) => {
+      var timeA = Math.max(parseWaktuIndo(a.tglAjuan), parseWaktuIndo(a.tglEdit), parseWaktuIndo(a.tglVerif));
+      var timeB = Math.max(parseWaktuIndo(b.tglAjuan), parseWaktuIndo(b.tglEdit), parseWaktuIndo(b.tglVerif));
+      return timeB - timeA;
+  });
+
+  var tbody = $('#bodyTabelPresensi'); tbody.empty(); GLOBAL_DATA = {}; 
+  let setUnit = new Set(), setTahun = new Set();
+
+  data.forEach(function(row) {
+    DATA_SALAH_PRESENSI[row.rowBaris] = row; 
+    
+    if(row.unitKerja) setUnit.add(row.unitKerja);
+    if(row.tanggal) {
+       let parts = String(row.tanggal).split(/[-/]/);
+       if(parts.length === 3) { let thn = parts.find(p => p.length === 4); if(thn) setTahun.add(thn); }
+    }
+
+    // Styling UI
+    var styleJenis = "";
+    var txtJenis = String(row.jenis || '-').toLowerCase();
+    if(txtJenis.includes('datang')) styleJenis = "color: #fd7e14; font-weight:bold;"; 
+    else if(txtJenis.includes('pulang')) styleJenis = "color: #6f42c1; font-weight:bold;"; 
+
+    var st = String(row.status || '').toLowerCase();
+    var badgeClass = 'badge-secondary';
+    if(st.includes('ok') || st.includes('setuju')) badgeClass = 'badge-success';
+    else if(st.includes('revisi')) badgeClass = 'badge-warning'; 
+    else if(st.includes('tolak')) badgeClass = 'badge-danger';
+    else if(st.includes('proses')) badgeClass = 'badge-primary';
+    
+    var labelStatus = `<span class="badge ${badgeClass}" style="padding:5px 8px;">${row.status || 'Draft'}</span>`;
+    var isLocked = (st.includes('ok') || st.includes('setuju'));
+
+    // Tombol Aksi
+    var btnAksi = `<div class="btn-group btn-group-sm text-nowrap">`;
+    var styleDis = 'disabled style="opacity:0.5; cursor:not-allowed;"';
+    
+    btnAksi += `<button class="btn btn-default border-warning text-warning" ${isLocked?styleDis:`onclick="editDataSalahPresensi(this)" data-id="${row.rowBaris}"`} title="Edit"><i class="fas fa-pencil-alt"></i></button>`;
+    if(isAdmin) {
+       btnAksi += `<button class="btn btn-default border-success text-success" onclick="verifikasiData('${row.rowBaris}')" title="Verifikasi"><i class="fas fa-check"></i></button>`;
+    }
+    btnAksi += `<button class="btn btn-default border-danger text-danger" ${isLocked?styleDis:`onclick="hapusDataSalahPresensi('${row.rowBaris}', '${row.namaAsn}')"`} title="Hapus"><i class="fas fa-trash-alt"></i></button>`;
+    btnAksi += `</div>`;
+
+    var tr = `
+      <tr>
+        <td class="d-none">${row.unitKerja}</td> <td class="font-weight-bold text-dark text-nowrap" style="position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); border-right: 1px solid #dee2e6;">${row.namaAsn}</td> <td>${row.nip}</td> <td>${row.tanggal}</td> <td style="${styleJenis}">${row.jam}</td> <td style="${styleJenis}">${row.jenis}</td> <td>${row.tglAjuan}</td> <td>${row.userInput}</td> <td class="text-center">${labelStatus}</td> <td>${row.ket || ''}</td> <td class="text-center">${btnAksi}</td> <td class="small text-muted text-nowrap">${row.tglEdit || '-'}</td> <td class="small text-muted">${row.userEdit || '-'}</td> <td class="small text-muted text-nowrap">${row.tglVerif || '-'}</td> <td class="small text-muted">${row.adminVerif || '-'}</td> </tr>`;
+    tbody.append(tr);
+  });
+
+  isiDropdownFilter('filterUnit', setUnit);
+  isiDropdownFilter('filterTahun', setTahun);
+  
+  var thIni = new Date().getFullYear().toString();
+  if($('#filterTahun option[value="'+thIni+'"]').length > 0) $('#filterTahun').val(thIni);
+
+  $('#tabelPresensi').DataTable({
+    "destroy": true, "scrollX": true, "ordering": false, "pageLength": 10,
+    "dom": '<"d-flex justify-content-between align-items-center mt-3 px-2 py-2 bg-white border-top"l>rtip',
+    "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+    "initComplete": function() { setTimeout(function(){ $('#tabelPresensi').DataTable().columns.adjust(); }, 300); }
+  });
+  setTimeout(applyFilterSalahPresensi, 200);
+}
+
+// --- 4. CRUD: CREATE & UPDATE (SIMPAN) ---
+function simpanDataSalahPresensi(e) {
+  e.preventDefault();
+  
+  if($('#selNip').val() === "") {
+     NotifSultan.alert('warning', 'Data Belum Lengkap', 'Pastikan NIP sudah terisi.');
+     return;
+  }
+
+  var btn = $('#btnKirim');
+  var textAsli = btn.html();
+  var formEl = document.getElementById('formSalahAbsen');
+  var mode = $('#modeForm').val(); 
+
+  var sesi = localStorage.getItem("siksUser"); 
+  var namaLengkapUser = sesi ? (JSON.parse(sesi).fullName || "Guest") : "Guest";
+  $('#hideUserLogin').val(namaLengkapUser);
+
+  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+
+  var handlerSukses = function(res) {
+       btn.prop('disabled', false).html(textAsli);
+       $('#modalTambah').modal('hide'); 
+       
+       NotifSultan.alert('success', 'Berhasil', 'Data berhasil disimpan.');
+       refreshTabelSalahPresensi(); 
+  };
+
+  var handlerGagal = function(err) {
+       btn.prop('disabled', false).html(textAsli);
+       // GANTI ALERT BIASA DENGAN NOTIF SULTAN
+       NotifSultan.alert('error', 'Gagal Simpan', err.message);
+  };
+
+  if (mode === 'edit') {
+     google.script.run.withSuccessHandler(handlerSukses).withFailureHandler(handlerGagal).updateSalahAbsen(formEl);
+  } else {
+     google.script.run.withSuccessHandler(handlerSukses).withFailureHandler(handlerGagal).simpanSalahAbsen(formEl);
+  }
+}
+
+// --- 5. PREPARE EDIT (SOLUSI FIX: DATA MENTAH VS DATA VISUAL) ---
+function editDataSalahPresensi(btn) {
+  var idBaris = $(btn).attr('data-id');
+  var dataAsli = DATA_SALAH_PRESENSI[idBaris];
+
+  if (!dataAsli) {
+     NotifSultan.alert('error', 'Error', 'Data lokal hilang, silakan refresh tabel.');
+     return;
+  }
+
+  $('#modeForm').val('edit');
+  $('#modalTambah .modal-title').html('<i class="fas fa-edit mr-2"></i>Edit Data');
+  $('#btnKirim').html('<i class="fas fa-save mr-1"></i> Simpan Perubahan');
+
+  // ============================================================
+  // BAGIAN 1: ISI HIDDEN INPUT (KUNCI PENCARIAN SERVER)
+  // PENTING: Isinya harus SAMA PERSIS dengan tampilan di Tabel/Spreadsheet
+  // Jangan diubah formatnya sedikitpun!
+  // ============================================================
+  console.log("Data Asli dari Tabel:", dataAsli); // Cek di Console (F12)
+  
+  $('#hideNipLama').val(dataAsli.nip);
+  
+  // Masukkan data mentah apa adanya. Contoh: "05-01-2026"
+  $('#hideTglLama').val(dataAsli.tanggal); 
+  
+  // Masukkan data mentah apa adanya. Contoh: "07:45"
+  $('#hideJamLama').val(dataAsli.jam);     
+
+  // ============================================================
+  // BAGIAN 2: ISI TAMPILAN FORM (UI / VISUAL)
+  // Di sini kita ubah formatnya HANYA agar browser mau menampilkannya
+  // ============================================================
+  
+  // A. Format Tampilan Jam (Browser butuh HH:mm)
+  // Kita pastikan formatnya 07:45 (pakai titik dua, dan nol di depan jika perlu)
+  var uiJam = String(dataAsli.jam || "").trim().replace('.', ':'); 
+  if (/^\d:\d{2}/.test(uiJam)) uiJam = "0" + uiJam; // Jika 7:45 ubah jadi 07:45
+  uiJam = uiJam.substring(0, 5); // Ambil 5 karakter pertama saja
+
+  // B. Format Tampilan Tanggal (Browser butuh yyyy-mm-dd)
+  var uiTgl = "";
+  if (dataAsli.tanggal) {
+     var tglStr = String(dataAsli.tanggal);
+     
+     // Kita deteksi apakah formatnya dd-mm-yyyy atau yyyy-mm-dd
+     // Pemisahnya bisa strip (-) atau garis miring (/)
+     var parts = tglStr.split(/[-/]/); 
+     
+     if (parts.length === 3) {
+        // Cek tahun ada di depan atau belakang?
+        if (parts[0].length === 4) {
+           // Kasus: 2026-05-01 (Sudah benar yyyy-mm-dd)
+           uiTgl = parts[0] + '-' + parts[1] + '-' + parts[2];
+        } else {
+           // Kasus: 01-05-2026 (dd-mm-yyyy) -> Kita balik jadi yyyy-mm-dd
+           // parts[0]=Tanggal, parts[1]=Bulan, parts[2]=Tahun
+           uiTgl = parts[2] + '-' + parts[1] + '-' + parts[0]; 
+        }
+     }
+  }
+
+  // Masukkan ke Element Input Visual
+  $('input[name="tanggal"]').val(uiTgl);
+  $('input[name="waktu"]').val(uiJam);
+  $('select[name="jenis"]').val(dataAsli.jenis);
+
+  // Kunci Dropdown (Tidak boleh ganti orang saat edit)
+  $('#selUnit').html(`<option selected>${dataAsli.unitKerja || 'Data Terkunci'}</option>`).prop('disabled', true);
+  $('#selNama').html(`<option selected>${dataAsli.namaAsn}</option>`).prop('disabled', true);
+  $('#selNip').html(`<option selected>${dataAsli.nip}</option>`).prop('disabled', true);
+
+  $('#modalTambah').modal('show');
+}
+
+// --- 6. HAPUS DATA ---
+// A. TAMPILKAN MODAL
+function hapusDataSalahPresensi(idBaris, nama) {
+    var data = DATA_SALAH_PRESENSI[idBaris];
+    if(!data) return;
+
+    // Isi Info Data ke UI
+    $('#infoNama').text(data.namaAsn);
+    $('#infoNip').text(data.nip);
+    $('#infoWaktu').text(data.tanggal + ' ' + data.jam); // Tampilkan mentah saja biar user yakin
+    $('#infoJenis').text(data.jenis);
+
+    // Isi Hidden Input (Kunci Pencarian)
+    $('#hapusNip').val(data.nip);
+    $('#hapusTgl').val(data.tanggal); // Data Mentah (dd-mm-yyyy)
+    $('#hapusJam').val(data.jam);     // Data Mentah (HH:mm)
+    $('#hapusNama').val(data.namaAsn);
+
+    // Reset Form
+    $('#inputAlasan').val('');
+    $('#inputKode').val('');
+    
+    // Tampilkan Modal
+    $('#modalHapus').modal('show');
+}
+
+// B. PROSES SUBMIT
+function submitHapusData(e) {
+    e.preventDefault();
+
+    var alasan = $('#inputAlasan').val().trim();
+    var kodeInput = $('#inputKode').val().trim();
+    
+    // 1. VALIDASI KODE (YYYYMMDD)
+    // Sesuai request: "yyyymmhh mengambil angka dari tanggal hari ini"
+    // Saya asumsikan maksudnya YYYYMMDD (TahunBulanTanggal)
+    var today = new Date();
+    var yyyy = today.getFullYear();
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var dd = String(today.getDate()).padStart(2, '0');
+    var kodeValid = yyyy + "" + mm + "" + dd;
+
+    if (kodeInput !== kodeValid) {
+        NotifSultan.alert('error', 'Kode Salah', 'Hubungi admin korwil untuk mendapatkan kode hapus.');
+        return;
+    }
+
+    // 2. PERSIAPAN KIRIM
+    var btn = $('#btnEksekusiHapus');
+    var textAsli = btn.html();
+    
+    var sesi = localStorage.getItem("siksUser"); 
+    var userHapus = sesi ? (JSON.parse(sesi).fullName || "Guest") : "Guest";
+
+    var dataKirim = {
+        nip: $('#hapusNip').val(),
+        tgl: $('#hapusTgl').val(),
+        jam: $('#hapusJam').val(),
+        alasan: alasan,
+        user: userHapus
+    };
+
+    // 3. KIRIM KE SERVER
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+
+    google.script.run
+      .withSuccessHandler(function() {
+          btn.prop('disabled', false).html(textAsli);
+          $('#modalHapus').modal('hide');
+          NotifSultan.alert('success', 'Terhapus', 'Data telah dipindahkan ke sampah.');
+          refreshTabelSalahPresensi();
+      })
+      .withFailureHandler(function(err) {
+          btn.prop('disabled', false).html(textAsli);
+          NotifSultan.alert('error', 'Gagal Hapus', err.message);
+      })
+      .softDeleteSalahAbsen(dataKirim); // Fungsi baru di Code.gs
+}
+
+// --- 7. VERIFIKASI DATA (ADMIN) ---
+// A. BUKA MODAL
+function verifikasiData(idBaris) {
+    // Kita panggil data dari Variabel Global
+    var data = DATA_SALAH_PRESENSI[idBaris];
+    if(!data) {
+        NotifSultan.alert('error', 'Error', 'Data tidak ditemukan.');
+        return;
+    }
+
+    // 1. Isi Bagian Kiri (Display)
+    $('#vNama').text(data.namaAsn);
+    $('#vNip').text(data.nip);
+    $('#vTgl').text(data.tanggal); // Tampil sesuai database (dd-mm-yyyy)
+    $('#vJam').text(data.jam);     // Tampil sesuai database (HH:mm)
+    $('#vJenis').text(data.jenis);
+    $('#vTglAjuan').text(data.tglAjuan);
+
+    // 2. Isi Hidden Input (Kunci Pencarian Server)
+    // Gunakan data mentah agar server bisa menemukannya (Logika Robust)
+    $('#verifNip').val(data.nip);
+    $('#verifTgl').val(data.tanggal); 
+    $('#verifJam').val(data.jam);
+
+    // 3. Reset Form Kanan
+    $('#inputStatusVerif').val(data.status || ''); // Jika sudah ada status, set terpilih
+    $('#inputKetVerif').val(data.ket || '');       // Jika sudah ada ket, tampilkan
+
+    // 4. Tampilkan Modal
+    $('#modalVerifikasi').modal('show');
+}
+
+// B. PROSES SIMPAN VERIFIKASI (REVISI NAMA ADMIN)
+function submitVerifikasiData(e) {
+    e.preventDefault();
+
+    var btn = $('#btnEksekusiVerif');
+    var textAsli = btn.html();
+    
+    // --- PERBAIKAN PENGAMBILAN NAMA ADMIN ---
+    var sesi = localStorage.getItem("siksUser"); 
+    var adminName = "Admin"; // Default jika gagal baca session
+
+    if (sesi) {
+        try {
+            var userObj = JSON.parse(sesi);
+            // Cek berbagai kemungkinan nama property di object user
+            if (userObj.nama) {
+                adminName = userObj.nama;
+            } else if (userObj.fullName) {
+                adminName = userObj.fullName;
+            } else if (userObj.username) {
+                adminName = userObj.username;
+            }
+        } catch(err) {
+            console.error("Gagal parse session user:", err);
+        }
+    }
+
+    var dataKirim = {
+        nip: $('#verifNip').val(),
+        tgl: $('#verifTgl').val(),
+        jam: $('#verifJam').val(),
+        
+        status: $('#inputStatusVerif').val(),
+        ket: $('#inputKetVerif').val(),
+        admin: adminName // Kirim Nama Lengkap
+    };
+
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+    google.script.run
+      .withSuccessHandler(function() {
+          btn.prop('disabled', false).html(textAsli);
+          $('#modalVerifikasi').modal('hide');
+          NotifSultan.alert('success', 'Berhasil', 'Verifikasi berhasil disimpan.');
+          refreshTabelSalahPresensi();
+      })
+      .withFailureHandler(function(err) {
+          btn.prop('disabled', false).html(textAsli);
+          NotifSultan.alert('error', 'Gagal', err.message);
+      })
+      .processVerifikasiSalahAbsen(dataKirim);
+}
+
+// --- 8. RESET MODAL ---
+function bukaTongSampah() {
+    $('#modalSampah').modal('show');
+    loadDataSampah();
+}
+
+function loadDataSampah() {
+    $('#bodySampah').empty();
+    $('#loadingSampah').show();
+    $('#emptySampah').hide();
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+          $('#loadingSampah').hide();
+          if(!data || data.length === 0) {
+              $('#emptySampah').show();
+              return;
+          }
+          
+          var html = '';
+          data.forEach(function(row) {
+              // Row ID dibikin unik kombinasi NIP+Tgl+Jam agar aman saat restore
+              // row[2]=NIP, row[3]=Tgl, row[4]=Jam
+              var dataKey = encodeURIComponent(row[2]) + '|' + encodeURIComponent(row[3]) + '|' + encodeURIComponent(row[4]);
+              
+              html += `<tr>
+                <td class="font-weight-bold">${row[1]}</td>
+                <td>${row[3]}</td>
+                <td>${row[4]}</td>
+                <td class="text-danger small"><em>${row[16] || '-'}</em></td> <td class="small">${row[15] || '-'}</td> <td class="text-center">
+                    <button class="btn btn-sm btn-info shadow-sm" onclick="restoreData('${dataKey}')" title="Kembalikan Data">
+                        <i class="fas fa-undo-alt mr-1"></i> Restore
+                    </button>
+                </td>
+              </tr>`;
+          });
+          $('#bodySampah').html(html);
+      })
+      .withFailureHandler(function(err){
+          $('#loadingSampah').hide();
+          NotifSultan.alert('error', 'Gagal', err.message);
+      })
+      .getDaftarSampah(); // Fungsi baru di Code.gs
+}
+
+function restoreData(key) {
+    NotifSultan.konfirmasi('Restore Data?', 'Data akan dikembalikan ke tabel utama.', 'Ya, Kembalikan')
+    .then((result) => {
+        if (result.isConfirmed) {
+            NotifSultan.loading('Mengembalikan Data...');
+            
+            // Decode Key
+            var parts = key.split('|');
+            var nip = decodeURIComponent(parts[0]);
+            var tgl = decodeURIComponent(parts[1]);
+            var jam = decodeURIComponent(parts[2]);
+
+            google.script.run
+              .withSuccessHandler(function() {
+                  NotifSultan.alert('success', 'Berhasil', 'Data dikembalikan ke tabel utama.');
+                  loadDataSampah(); // Refresh Modal Sampah
+                  refreshTabelSalahPresensi(); // Refresh Tabel Utama di background
+              })
+              .withFailureHandler(function(err) {
+                  NotifSultan.alert('error', 'Gagal', err.message);
+              })
+              .prosesRestoreSalahAbsen(nip, tgl, jam); // Fungsi baru di Code.gs
+        }
+    });
+}
+
+// --- 9. FILTER ---
+function applyFilterSalahPresensi() {
+    if (!$.fn.DataTable.isDataTable('#tabelPresensi')) return;
+    var table = $('#tabelPresensi').DataTable();
+    var valTahun = $('#filterTahun').val();
+    var valBulan = $('#filterBulan').val();
+    var valUnit = $('#filterUnit').val();
+    var valStatus = $('#filterStatus').val();
+    
+    table.column(0).search(valUnit);
+    table.column(7).search(valStatus); 
+
+    $.fn.dataTable.ext.search.pop();
+    if (valTahun || valBulan) {
+        $.fn.dataTable.ext.search.push(function(s, data, i) {
+              var tgl = data[3]; if (!tgl) return false;
+              var th = "", bl = "";
+              if (tgl.includes('-')) {
+                  var p = tgl.split('-');
+                  if (p[0].length === 4) { th = p[0]; bl = p[1]; } 
+                  else { th = p[2]; bl = p[1]; }
+              } else if (tgl.includes('/')) {
+                  var p = tgl.split('/'); th = p[2]; bl = p[1];
+              }
+              var cekTahun = (valTahun === "") || (th === valTahun);
+              var cekBulan = (valBulan === "") || (bl === valBulan);
+              return cekTahun && cekBulan;
+        });
+    }
+    table.draw();
+}
+
+function isiDropdownFilter(id, set) {
+  var $el = $('#'+id); var first = $el.find('option:first');
+  $el.empty().append(first);
+  Array.from(set).sort().forEach(v => $el.append(`<option value="${v}">${v}</option>`));
+}
+
+
+</script>

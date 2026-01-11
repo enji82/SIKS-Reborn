@@ -1,12 +1,128 @@
 <script>
 /* =============================================================
-   CORE APP SCRIPT – SIKS REBORN
+   1. GLOBAL HELPER: NOTIFIKASI SULTAN (Unified Engine)
+   Letakkan paling atas agar bisa dipanggil siapa saja.
+   ============================================================= */
+
+const NotifSultan = {
+  // CONFIG WARNA
+  config: {
+    warnaMaroon: '#800000',
+    warnaHitam: '#343a40',
+    warnaSukses: '#28a745',
+    warnaGagal: '#dc3545',
+    warnaWarning: '#ffc107'
+  },
+
+  // A. TOAST (Notifikasi Kecil di Pojok Kanan Atas)
+  toast: (tipe, pesan) => {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: '#fff',
+      color: '#343a40',
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    Toast.fire({
+      icon: tipe, // success, error, warning, info
+      title: `<span style="font-weight:600">${pesan}</span>`
+    });
+  },
+
+  // B. ALERT (Popup Tengah dengan Tombol)
+  alert: (tipe, judul, pesan) => {
+    let btnColor = NotifSultan.config.warnaHitam;
+    let btnText = 'Tutup';
+    
+    if (tipe === 'success') {
+      btnColor = NotifSultan.config.warnaMaroon;
+      btnText = 'Lanjutkan';
+    } else if (tipe === 'error') {
+      btnColor = NotifSultan.config.warnaHitam;
+      btnText = 'Perbaiki';
+    }
+
+    return Swal.fire({
+      icon: tipe,
+      title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`,
+      html: `<div class="text-muted">${pesan}</div>`, // Pakai HTML biar rapi
+      width: '350px',
+      confirmButtonColor: btnColor,
+      confirmButtonText: btnText,
+      padding: '1.2rem',
+      allowOutsideClick: false,
+      buttonsStyling: true,
+      customClass: {
+        popup: 'card-outline card-' + (tipe === 'error' ? 'danger' : 'success') // Gaya AdminLTE
+      }
+    });
+  },
+
+  // C. LOADING (Spinner Putar)
+  loading: (pesan) => {
+    Swal.fire({
+      width: '300px',
+      title: '',
+      html: `
+        <div class="text-center p-3">
+          <div class="spinner-border text-maroon" role="status" style="width: 3rem; height: 3rem; color: #800000;"></div>
+          <p class="mt-3 mb-0 font-weight-bold text-secondary">${pesan || 'Sedang Memproses...'}</p>
+        </div>
+      `,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    });
+  },
+
+  // D. KONFIRMASI (Ya/Tidak)
+  konfirmasi: (judul, pesan, btnText) => {
+    return Swal.fire({
+      icon: 'question',
+      title: `<h5 class="font-weight-bold">${judul}</h5>`,
+      text: pesan,
+      width: '350px',
+      showCancelButton: true,
+      confirmButtonColor: '#d33', // Merah untuk aksi berbahaya
+      cancelButtonColor: '#3085d6', // Biru untuk batal
+      confirmButtonText: btnText || 'Ya, Lanjutkan', 
+      cancelButtonText: 'Batal',
+      reverseButtons: true
+    });
+  }
+};
+
+/* --- JEMBATAN KODE LAMA (Agar kode lama tidak error) --- */
+// Jika ada kode lama panggil toast(), kita alihkan ke NotifSultan.toast
+function toast(pesan, tipe) { NotifSultan.toast(tipe, pesan); }
+function tampilkanNotif(pesan, tipe) { NotifSultan.toast(tipe, pesan); }
+
+// Jika ada kode lama panggil Notif.sukses(), alihkan ke NotifSultan.alert
+const Notif = {
+  sukses: (p) => NotifSultan.alert('success', 'Berhasil', p),
+  gagal: (p) => NotifSultan.alert('error', 'Gagal', p),
+  konfirmasi: (p, cb) => {
+      NotifSultan.konfirmasi('Konfirmasi', p).then((res) => { if(res.isConfirmed) cb(); });
+  }
+};
+
+
+/* =============================================================
+   2. CORE APP SCRIPT – SIKS REBORN (Logic Utama)
    ============================================================= */
 
 $(document).ready(function() {
   console.log("SIKS-REBORN: Engine Started.");
   inisialisasiAplikasi();
 
+  // Handler Klik Menu Sidebar
   $(document).on('click', '.nav-link[data-page]', function(e) {
     e.preventDefault();
     var h = $(this).attr('data-page');
@@ -18,32 +134,19 @@ $(document).ready(function() {
   });
 });
 
-function handleLogout() {
-  localStorage.removeItem("siksUser");
-
-  google.script.run
-    .withSuccessHandler(function (url) {
-      window.top.location.href = url;
-    })
-    .getScriptUrl();
-}
-
 function inisialisasiAplikasi() {
   var preloader = $('.preloader');
   var sesiUser = localStorage.getItem("siksUser");
 
   if (!sesiUser) {
     console.log("🔒 Status: Belum Login.");
-
     $('#konten-aplikasi').hide();
     $('#gerbang-login').show();
-
     if (preloader.length) preloader.fadeOut('fast');
     return;
   }
 
   console.log("🔓 Status: Login OK");
-
   var user = JSON.parse(sesiUser);
 
   $('#gerbang-login').remove();
@@ -51,8 +154,7 @@ function inisialisasiAplikasi() {
 
   updateUI(user);
   tampilkanMenuAdmin(user);
-
-  loadPage('home');
+  loadPage('home'); // Load halaman default
 
   if (preloader.length) preloader.fadeOut('fast');
 }
@@ -71,79 +173,100 @@ function handleLoginV2(event) {
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
         localStorage.setItem("siksUser", JSON.stringify(response));
-        inisialisasiAplikasi();
+        NotifSultan.toast('success', 'Login Berhasil!'); // Pakai Notif Baru
+        setTimeout(inisialisasiAplikasi, 500); // Jeda sedikit biar smooth
       } else {
         btn.innerText = "LOGIN";
         btn.disabled = false;
-        alert(response.message || "Login gagal");
+        NotifSultan.alert('error', 'Login Gagal', response.message || "Username/Password salah.");
       }
     })
     .withFailureHandler(function() {
       btn.innerText = "LOGIN";
       btn.disabled = false;
-      alert("Gagal menghubungi server");
+      NotifSultan.alert('error', 'Koneksi Gagal', "Gagal menghubungi server.");
     })
     .processLogin(form);
 }
 
+// --- FUNGSI LOGOUT ---
+function handleLogout() {
+  NotifSultan.konfirmasi('Logout?', 'Anda akan keluar dari aplikasi.', 'Ya, Keluar')
+  .then((result) => {
+    if (result.isConfirmed) {
+        localStorage.removeItem("siksUser");
+        google.script.run
+            .withSuccessHandler(function (url) {
+            window.top.location.href = url;
+            })
+            .getScriptUrl();
+    }
+  });
+}
 
+// --- FUNGSI SIDEBAR HIGHLIGHT ---
 function highlightSidebar(pageName) {
-  // 1. RESET TOTAL: Kembalikan semua ke warna dasar (Putih/Transparan)
+  // 1. Reset Semua
   $('.nav-sidebar .nav-link').removeClass('active').css({
     'background-color': 'transparent',
-    'color': '#fff' // Memastikan teks dan icon kembali putih
+    'color': '#fff'
   });
-  $('.nav-sidebar .nav-link i').css('color', '#fff'); // Paksa icon jadi putih
+  $('.nav-sidebar .nav-link i').css('color', '#fff');
 
-  // 2. CARI TARGET (CUCU)
+  // 2. Cari Target
   var target = $('.nav-sidebar .nav-link[data-page="' + pageName + '"]');
 
   if (target.length > 0) {
-    // 3. WARNAI CUCU (HIJAU SULTAN)
+    // 3. Warnai Anak
     target.addClass('active').css({
-      'background-color': '#28a745', // Hijau sesuai screenshot Anda
+      'background-color': '#28a745', 
       'color': '#fff'
     });
 
-    // 4. WARNAI BAPAK & ANAK (MAROON / DARK ACTIVE)
-    // Kita manjat ke atas dan memaksa Bapak/Anak ikut berwarna
+    // 4. Warnai Bapak/Induk
     target.parents('.nav-item').each(function() {
       var parentLink = $(this).children('.nav-link');
-      
-      // Berikan warna latar belakang yang berbeda agar silsilah terlihat aktif
       parentLink.addClass('active').css({
-        'background-color': 'rgba(255,255,255,0.1)', // Warna highlight transparan agar tetap elegan
+        'background-color': 'rgba(255,255,255,0.1)', 
         'color': '#fff'
       });
-      
-      // Pastikan icon Bapak/Anak tetap putih, bukan merah
       parentLink.find('i').css('color', '#fff');
-      
-      // Buka laci agar Cucu terlihat
       $(this).addClass('menu-open');
       $(this).children('.nav-treeview').show();
     });
   }
 }
 
-// --- FUNGSI AMBIL HALAMAN ---
+// --- FUNGSI LOAD PAGE ---
 function loadPage(page) {
   const area = $('#main-content');
-  area.css('opacity', '0.3');
+  // Efek Loading Transparan
+  area.css('opacity', '0.3'); 
+  
+  // Tampilkan Loading Spinner jika loading lama (>500ms)
+  let loadTimeout = setTimeout(() => {
+     NotifSultan.loading("Memuat Halaman...");
+  }, 500);
 
   google.script.run
     .withSuccessHandler(function(html) {
+      clearTimeout(loadTimeout); // Batalkan loading spinner jika cepat
+      Swal.close(); // Tutup spinner jika terlanjur muncul
+      
       area.html(html).css('opacity', '1');
       highlightSidebar(page);
-      console.log("Halaman " + page + " dimuat.");
+    })
+    .withFailureHandler(function(err){
+      clearTimeout(loadTimeout);
+      Swal.close();
+      area.css('opacity', '1');
+      NotifSultan.alert('error', 'Gagal Memuat', 'Halaman tidak dapat dibuka.');
     })
     .getHalaman(page);
 }
 
-// --- FUNGSI UPDATE NAMA & FOTO ---
+// --- FUNGSI UPDATE UI USER ---
 function updateUI(u) {
-  // u.nama berasal dari processLogin, u.fullName berasal dari getCurrentUser
-  // Kita buat agar fleksibel menerima keduanya
   var name = u.nama || u.username || u.fullName || "User";
   var photo = u.foto || u.photo || "";
 
@@ -155,60 +278,41 @@ function updateUI(u) {
   $('#dropdown-user-role').text(u.role || "User");
 }
 
-
-
-// Cara pakai: toast('Berhasil!', 'success'); atau toast('Gagal!', 'error');
-function toast(pesan, tipe) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top-end',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true
-  });
-
-  Toast.fire({
-    icon: tipe,
-    title: pesan
-  });
+function getSesiUser() {
+    var raw = localStorage.getItem("siksUser");
+    if (!raw || raw === "null") return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
 }
 
-/**
- * Fungsi Notifikasi Global (Toast)
- * @param {string} pesan - Tulisan yang ingin ditampilkan
- * @param {string} tipe - Pilihan: 'success', 'error', 'warning', 'info'
- */
-function tampilkanNotif(pesan, tipe) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top-end',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.addEventListener('mouseenter', Swal.stopTimer)
-      toast.addEventListener('mouseleave', Swal.resumeTimer)
-    }
-  });
-
-  Toast.fire({
-    icon: tipe,
-    title: pesan
-  });
+function tampilkanMenuAdmin(user) {
+  var menu = document.getElementById("menuTrashSK");
+  if (!menu) return;
+  if (user.role === "Admin" || user.role === "Super Admin") {
+    menu.style.display = "block";
+  } else {
+    menu.style.display = "none";
+  }
 }
 
+// --- UTILS DROPDOWN ---
+function isiDropdownSK() {
+    // Fungsi ini dipanggil dari page SK jika diperlukan
+    renderDropdown("namaSD", "NamaSD");
+    renderDropdown("tahunAjaran", "TahunAjaran");
+    renderDropdown("semester", "Semester");
+    renderDropdown("kriteriaSK", "KriteriaSK");
+}
+
+// Helper untuk manual upload form (jika masih dipakai)
 function handleFormSubmit(event) {
   event.preventDefault();
-  
   const btn = $('#submitBtn');
   const fileInput = document.getElementById('fileUpload');
   const file = fileInput.files[0];
-  
-  // Ambil data user dari session kita yang baru
   const user = getSesiUser();
 
   if (file && file.size > 1024 * 1024) {
-    tampilkanNotif("Ukuran file maksimal 1 MB!", "error");
+    NotifSultan.toast('error', "Ukuran file maksimal 1 MB!");
     return;
   }
 
@@ -223,7 +327,7 @@ function handleFormSubmit(event) {
       nomorSK: $('#nomorSK').val(),
       tanggalSK: $('#tanggalSK').val(),
       kriteriaSK: $('#kriteriaSK').val(),
-      userInput: user.nama, // Diambil otomatis dari login
+      userInput: user.nama,
       fileData: {
         data: e.target.result.split(',')[1],
         mimeType: file.type,
@@ -233,7 +337,7 @@ function handleFormSubmit(event) {
 
     google.script.run
       .withSuccessHandler(function(res) {
-        tampilkanNotif(res, "success");
+        NotifSultan.alert('success', 'Terkirim', res);
         $('#manualUploadForm')[0].reset();
         $('.custom-file-label').html("Pilih file PDF...");
         btn.html('<i class="fas fa-paper-plane mr-2"></i> Kirim Dokumen').attr('disabled', false);
@@ -242,149 +346,4 @@ function handleFormSubmit(event) {
   };
   reader.readAsDataURL(file);
 }
-
-function isiDropdownSK() {
-    // Panggil fungsi renderDropdown(ID_ELEMEN, KATEGORI_DI_KULKAS)
-    renderDropdown("namaSD", "NamaSD");
-    renderDropdown("tahunAjaran", "TahunAjaran");
-    renderDropdown("semester", "Semester");
-    renderDropdown("kriteriaSK", "KriteriaSK");
-    
-    console.log("Dropdown SK berhasil dimuat dari data statis.");
-}
-
-const NotifSultan = {
-  // --- KONFIGURASI PUSAT ---
-  config: {
-    warnaMaroon: '#800000',
-    warnaHitam: '#343a40',
-    warnaSukses: '#28a745',
-    warnaGagal: '#dc3545',
-  },
-
-  // 1. TIPE TOAST
-  toast: (tipe, pesan) => {
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      background: '#fff',
-      customClass: {
-        popup: 'sultan-toast' 
-      },
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    });
-
-    Toast.fire({
-      icon: tipe,
-      title: pesan
-    });
-  },
-
-  // 2. TIPE ALERT
-  alert: (tipe, judul, pesan) => {
-    let btnColor = NotifSultan.config.warnaHitam;
-    let btnText = 'Tutup';
-    
-    if (tipe === 'success') {
-      btnColor = NotifSultan.config.warnaMaroon;
-      btnText = 'Lanjutkan';
-    } else if (tipe === 'error') {
-      btnColor = NotifSultan.config.warnaHitam;
-      btnText = 'Perbaiki';
-    } // <--- 2. SEBELUMNYA ADA KOMA SALAH DI SINI (SUDAH DIHAPUS)
-
-    return Swal.fire({
-      icon: tipe,
-      title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`,
-      text: pesan,
-      width: '320px',
-      confirmButtonColor: btnColor,
-      confirmButtonText: btnText,
-      padding: '1.5rem',
-      allowOutsideClick: false,
-      customClass: {
-        popup: 'sultan-alert'
-      }
-    });
-  },
-
-  // 3. TIPE LOADING
-  loading: (pesan) => {
-    Swal.fire({
-      width: '300px',
-      title: '',
-      html: `
-        <div class="text-center p-2">
-          <div class="spinner-border" role="status" style="color: ${NotifSultan.config.warnaMaroon}; width: 3rem; height: 3rem;"></div>
-          <p class="mt-3 mb-0 font-weight-bold text-muted">${pesan || 'Memproses Data...'}</p>
-        </div>
-      `,
-      showConfirmButton: false,
-      allowOutsideClick: false,
-      customClass: {
-        popup: 'sultan-alert'
-      }
-    });
-  },
-
-  // 4. KONFIRMASI
-  konfirmasi: (judul, pesan, btnText) => {
-    return Swal.fire({
-      icon: 'question',
-      title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`,
-      text: pesan,
-      width: '320px',
-      showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#343a40',
-      // JIKA ada btnText pakai itu, JIKA TIDAK pakai default 'Ya, Keluar'
-      confirmButtonText: btnText || 'Ya, Keluar', 
-      cancelButtonText: 'Batal',
-      padding: '1.5rem',
-      reverseButtons: true,
-      customClass: { popup: 'sultan-alert' }
-    });
-  }
-};
-
-function getSesiUser() {
-    var raw = localStorage.getItem("siksUser");
-    if (!raw || raw === "null") return null;
-    try {
-        return JSON.parse(raw);
-    } catch (e) {
-        return null;
-    }
-}
-
-function tampilkanMenuAdmin(user) {
-  var menu = document.getElementById("menuTrashSK");
-  if (!menu) return;
-
-  if (user.role === "Admin" || user.role === "Super Admin") {
-    menu.style.display = "block";
-  } else {
-    menu.style.display = "none";
-  }
-}
-
-function afterLoginSuccess(user) {
-  // simpan sesi
-  localStorage.setItem("siksUser", JSON.stringify(user));
-
-  // tampilkan menu admin
-  if (user.role === "Admin" || user.role === "Super Admin") {
-    var el = document.getElementById("menuTrashSK");
-    if (el) el.style.display = "block";
-  }
-}
-
-
-
 </script>
