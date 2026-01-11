@@ -60,11 +60,11 @@
               <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm mr-2" onclick="applyFilterSalahPresensi()" title="Terapkan Filter">
                 <i class="fas fa-search text-white"></i>
               </button>
-              <button type="button" class="btn btn-secondary btn-sm font-weight-bold shadow-sm mr-2" onclick="bukaTongSampah()">
+              <button type="button" id="btnSampah" class="btn btn-secondary btn-sm font-weight-bold shadow-sm mr-2" onclick="bukaTongSampah()" style="display: none;">
                 <i class="fas fa-trash-restore mr-1"></i> Sampah
               </button>
 
-              <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="$('#modalTambah').modal('show')">
+              <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="tambahDataSalahPresensi()">
                 <i class="fas fa-plus mr-1"></i> Tambah
               </button>
             </div>
@@ -85,12 +85,12 @@
                     <th>Tgl Pengajuan</th>
                     <th>User Input</th>
                     <th class="text-center">Status</th>
-                    <th>Keterangan</th>
                     <th class="text-center">Aksi</th>
                     <th class="small text-muted">Tgl Edit</th>
                     <th class="small text-muted">User Edit</th>
                     <th class="small text-muted">Tgl Verif</th>
                     <th class="small text-muted">Admin Verif</th>
+                    <th>Keterangan</th>
                   </tr>
                 </thead>
                 <tbody id="bodyTabelPresensi">
@@ -394,6 +394,17 @@ var DB_PEGAWAI_LOKAL = [];
 var CACHE_HTML_UNIT = ""; 
 
 $(document).ready(function() {
+  try {
+      var sesi = localStorage.getItem("siksUser");
+      var user = sesi ? JSON.parse(sesi) : { role: 'User' };
+      
+      // Jika role mengandung kata 'Admin' (Admin/Super Admin), tampilkan tombol
+      if (user.role && (user.role.includes('Admin') || user.role === 'Super Admin')) {
+          $('#btnSampah').show();
+      }
+  } catch (e) {
+      console.log("Gagal cek akses admin: " + e.message);
+  }
   loadDataSalahPresensi(); 
   loadDropdownPegawai(); 
 });
@@ -484,17 +495,18 @@ function loadDataSalahPresensi() {
     .getDaftarSalahPresensi();
 }
 
-// --- FUNGSI RENDER TABEL (FIX URUTAN KOLOM) ---
+// --- FUNGSI RENDER TABEL (CUSTOM FORMAT VIEW) ---
 function renderTabelSalahPresensi(data) {
   var sesi = localStorage.getItem("siksUser");
   var user = sesi ? JSON.parse(sesi) : { role: 'User' }; 
   var isAdmin = (user.role === 'Admin' || user.role === 'Super Admin');
 
-  // Helper Parsing Tanggal untuk Sorting
+  // Helper Parsing untuk Sorting & View
   const parseWaktuIndo = (str) => {
      if (!str || str === "") return 0;
      var d = new Date(str);
      if (!isNaN(d.getTime())) return d.getTime();
+     // Fallback parsing manual jika format tidak standar
      try {
        var parts = str.split(' ');
        var datePart = parts[0]; var timePart = parts[1] || "00:00:00";
@@ -507,6 +519,29 @@ function renderTabelSalahPresensi(data) {
      return 0;
   };
 
+  // Helper Formatter View
+  const formatTglOnly = (str) => {
+      // Memaksa tampilan dd-mm-yyyy
+      if(!str) return "-";
+      var s = String(str).replace(/\//g, '-'); // Ubah / jadi -
+      return s.split(' ')[0]; // Buang jam jika ada
+  };
+
+  const formatJamOnly = (str) => {
+      // Memaksa tampilan HH:mm
+      if(!str) return "-";
+      var s = String(str).trim();
+      if(s.length > 5) return s.substr(0, 5); // Potong detik
+      return s;
+  };
+
+  const formatFullTime = (str) => {
+      // Tampilan History: dd-mm-yyyy HH:mm:ss
+      if(!str) return "-";
+      // Kalau dari server sudah benar, return aja. Kalau mau dipastikan:
+      return String(str).replace(/\//g, '-'); 
+  };
+
   // Logika Sorting (Last Activity)
   data.sort((a, b) => {
       var timeA = Math.max(parseWaktuIndo(a.tglAjuan), parseWaktuIndo(a.tglEdit), parseWaktuIndo(a.tglVerif));
@@ -514,7 +549,7 @@ function renderTabelSalahPresensi(data) {
       return timeB - timeA;
   });
 
-  var tbody = $('#bodyTabelPresensi'); tbody.empty(); GLOBAL_DATA = {}; 
+  var tbody = $('#bodyTabelPresensi'); tbody.empty(); 
   let setUnit = new Set(), setTahun = new Set();
 
   data.forEach(function(row) {
@@ -553,9 +588,31 @@ function renderTabelSalahPresensi(data) {
     btnAksi += `<button class="btn btn-default border-danger text-danger" ${isLocked?styleDis:`onclick="hapusDataSalahPresensi('${row.rowBaris}', '${row.namaAsn}')"`} title="Hapus"><i class="fas fa-trash-alt"></i></button>`;
     btnAksi += `</div>`;
 
+    // --- APPLY FORMATTING VIEW ---
+    var viewTgl = formatTglOnly(row.tanggal);
+    var viewJam = formatJamOnly(row.jam);
+    var viewAjuan = formatFullTime(row.tglAjuan);
+    var viewEdit = formatFullTime(row.tglEdit);
+    var viewVerif = formatFullTime(row.tglVerif);
+
     var tr = `
       <tr>
-        <td class="d-none">${row.unitKerja}</td> <td class="font-weight-bold text-dark text-nowrap" style="position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); border-right: 1px solid #dee2e6;">${row.namaAsn}</td> <td>${row.nip}</td> <td>${row.tanggal}</td> <td style="${styleJenis}">${row.jam}</td> <td style="${styleJenis}">${row.jenis}</td> <td>${row.tglAjuan}</td> <td>${row.userInput}</td> <td class="text-center">${labelStatus}</td> <td>${row.ket || ''}</td> <td class="text-center">${btnAksi}</td> <td class="small text-muted text-nowrap">${row.tglEdit || '-'}</td> <td class="small text-muted">${row.userEdit || '-'}</td> <td class="small text-muted text-nowrap">${row.tglVerif || '-'}</td> <td class="small text-muted">${row.adminVerif || '-'}</td> </tr>`;
+        <td class="d-none">${row.unitKerja}</td> 
+        <td class="font-weight-bold text-dark text-nowrap" style="position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); border-right: 1px solid #dee2e6;">${row.namaAsn}</td> 
+        <td>${row.nip}</td> 
+        <td>${viewTgl}</td> 
+        <td style="${styleJenis}">${viewJam}</td> 
+        <td style="${styleJenis}">${row.jenis}</td> 
+        <td>${viewAjuan}</td> 
+        <td>${row.userInput}</td> 
+        <td class="text-center">${labelStatus}</td> 
+        <td class="text-center">${btnAksi}</td> 
+        <td class="small text-muted text-nowrap">${viewEdit}</td> 
+        <td class="small text-muted">${row.userEdit || '-'}</td> 
+        <td class="small text-muted text-nowrap">${viewVerif}</td> 
+        <td class="small text-muted">${row.adminVerif || '-'}</td> 
+        <td>${row.ket || ''}</td> 
+      </tr>`;
     tbody.append(tr);
   });
 
@@ -963,5 +1020,32 @@ function isiDropdownFilter(id, set) {
   Array.from(set).sort().forEach(v => $el.append(`<option value="${v}">${v}</option>`));
 }
 
+// --- FUNGSI RESET & TAMBAH DATA (FIX BUG UI TERTINGGAL) ---
+function tambahDataSalahPresensi() {
+  // 1. Reset Mode & UI Header
+  $('#modeForm').val('tambah');
+  $('#modalTambah .modal-title').html('<i class="fas fa-file-signature mr-2"></i>Form Salah Absen');
+  $('#btnKirim').html('<i class="fas fa-paper-plane mr-1"></i> Kirim Pengajuan');
+
+  // 2. Reset Form Input (Kosongkan isian text/date/time)
+  document.getElementById('formSalahAbsen').reset();
+
+  // 3. Reset Dropdown Unit (Kembalikan ke daftar lengkap dari Cache)
+  // Kita pakai variabel global CACHE_HTML_UNIT yang sudah kita simpan saat load awal
+  if (CACHE_HTML_UNIT) {
+      $('#selUnit').html(CACHE_HTML_UNIT).prop('disabled', false).val('');
+  } else {
+      // Jaga-jaga jika cache kosong (jarang terjadi)
+      $('#selUnit').html('<option value="">- Memuat Data... -</option>').prop('disabled', false);
+      loadDropdownPegawai();
+  }
+
+  // 4. Reset Dropdown Nama & NIP (Kunci kembali)
+  $('#selNama').empty().append('<option value="">- Pilih Unit Dulu -</option>').prop('disabled', true);
+  $('#selNip').empty().append('<option value="">- Otomatis / Pilih Nama Dulu -</option>').prop('disabled', true);
+
+  // 5. Tampilkan Modal
+  $('#modalTambah').modal('show');
+}
 
 </script>

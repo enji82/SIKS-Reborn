@@ -773,6 +773,7 @@ function getDatabasePegawai() {
   }
 }
 
+/* --- FUNGSI SIMPAN DATA BARU (FORMAT TEXT MANUAL) --- */
 function simpanSalahAbsen(form) {
   const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
 
@@ -782,18 +783,24 @@ function simpanSalahAbsen(form) {
     
     if (!sheet) throw new Error("Sheet 'Salah_Absen' tidak ditemukan!");
     
-    var tglIndo = "";
+    // 1. FORMAT TANGGAL (dd-mm-yyyy)
+    // Kita ubah input yyyy-mm-dd menjadi dd-mm-yyyy secara manual
+    // agar tersimpan sebagai string yang konsisten.
+    var tglSimpan = "";
     if (form.tanggal) {
-       var parts = form.tanggal.split('-'); 
-       tglIndo = parts[2] + '-' + parts[1] + '-' + parts[0]; 
+       var parts = form.tanggal.split('-'); // input: 2026-01-11
+       tglSimpan = parts[2] + '-' + parts[1] + '-' + parts[0]; // hasil: 11-01-2026
     }
     
-    // Paksa menjadi string agar 09:30 tidak jadi 9:30
-    var jam = "'" + form.waktu; 
+    // 2. FORMAT JAM (HH:mm)
+    // Kita pastikan tersimpan sebagai string "14:00"
+    // Tanpa tanda kutip, tapi format terjaga.
+    var jamSimpan = String(form.waktu); 
 
+    // 3. GET USER
     var namaUser = "Guest";
     try {
-       var currentUser = getCurrentUser(); 
+       var currentUser = getCurrentUser();
        if (currentUser && currentUser.fullName) {
           namaUser = currentUser.fullName;
        }
@@ -801,21 +808,23 @@ function simpanSalahAbsen(form) {
        namaUser = "Guest (Error User)";
     }
     
-    var tglKirim = new Date();
+    // 4. HISTORY (Lengkap dengan Detik)
+    // Untuk history, kita pakai format lengkap dd-mm-yyyy HH:mm:ss
+    var tglKirim = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
     var status = "Diproses";
-
+    
     var barisBaru = [
       form.unit_kerja, 
       form.nama_asn,   
-      "'"+form.nip_asn,
-      tglIndo,         
-      jam,             
+      "'"+form.nip_asn, // NIP wajib kutip agar 0 depan aman
+      tglSimpan,        // Kolom D: String "11-01-2026"
+      jamSimpan,        // Kolom E: String "14:00"
       form.jenis,      
-      tglKirim,        
+      tglKirim,         // Kolom G: String "11-01-2026 14:05:00"
       namaUser,        
       status           
     ];
-    
+
     sheet.appendRow(barisBaru);
     return "SUKSES";
     
@@ -824,220 +833,153 @@ function simpanSalahAbsen(form) {
   }
 }
 
-/* --- FUNGSI UPDATE DATA (VERSI FINAL: AUTO UPDATE STATUS) --- */
+/* --- FUNGSI UPDATE DATA (VERSI ROBUST / TAHAN BANTING) --- */
 function updateSalahAbsen(form) {
-  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY"; 
-
+  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
   try {
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheet = ss.getSheetByName("Salah_Absen");
     if (!sheet) throw new Error("Sheet Salah_Absen tidak ditemukan");
 
-    // 1. DATA TARGET (DARI CLIENT)
+    // 1. DATA TARGET (KEY PENCARIAN DARI CLIENT)
     var targetNip = String(form.nip_lama).trim();
-    var targetTgl = String(form.tgl_lama).trim();
-    var targetJam = String(form.jam_lama).trim();
+    var targetTgl = String(form.tgl_lama).trim(); // dd-mm-yyyy
+    var targetJam = String(form.jam_lama).trim(); // HH:mm
 
-    // 2. DATA BARU (UNTUK DISIMPAN)
-    var parts = form.tanggal.split('-'); 
-    var tglBaruIndo = parts[2] + '-' + parts[1] + '-' + parts[0]; 
-    
-    var userEdit = "Guest";
-    try {
-       var currentUser = getCurrentUser(); 
-       if (currentUser && currentUser.fullName) userEdit = currentUser.fullName;
-    } catch (e) {}
-    var tglEdit = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss"); 
-
-    // 3. LOOPING PENCARIAN
-    var data = sheet.getDataRange().getValues();
+    // 2. CARI BARIS (GUNAKAN DISPLAY VALUES AGAR AKURAT)
+    var data = sheet.getDataRange().getDisplayValues();
     var barisKetemu = -1;
-    var statusSaatIni = ""; // Variabel untuk menyimpan status lama
+    var statusSaatIni = "";
 
     for (var i = 1; i < data.length; i++) {
-       var sheetNip = String(data[i][2]).replace(/'/g, "").trim(); 
+       var sheetNip = String(data[i][2]).trim();
        
-       var sheetTglRaw = data[i][3];
-       var sheetTglStr = (sheetTglRaw instanceof Date) ? 
-           Utilities.formatDate(sheetTglRaw, Session.getScriptTimeZone(), "dd-MM-yyyy") : String(sheetTglRaw).trim();
+       // Normalisasi Tanggal Sheet (jaga-jaga format miring /)
+       var sheetTgl = String(data[i][3]).trim().replace(/\//g, '-');
        
-       var sheetJamRaw = data[i][4];
-       var sheetJamStr = "";
-       if (sheetJamRaw instanceof Date) {
-         sheetJamStr = Utilities.formatDate(sheetJamRaw, Session.getScriptTimeZone(), "HH:mm");
-       } else {
-         sheetJamStr = String(sheetJamRaw).trim();
-         if (/^\d:\d{2}/.test(sheetJamStr)) sheetJamStr = "0" + sheetJamStr;
-       }
+       // Normalisasi Jam Sheet (Handle 7:15 -> 07:15 dan buang kutip/detik)
+       var sheetJam = String(data[i][4]).trim().replace(/'/g, "").substring(0, 5);
+       if (/^\d:\d{2}/.test(sheetJam)) sheetJam = "0" + sheetJam;
 
-       if (sheetNip === targetNip && sheetTglStr === targetTgl && sheetJamStr === targetJam) {
-          barisKetemu = i + 1; 
+       if (sheetNip === targetNip && sheetTgl === targetTgl && sheetJam === targetJam) {
+          barisKetemu = i + 1; // Index array + 1 = Nomor Baris Excel
           statusSaatIni = String(data[i][8]).trim(); // Ambil Status (Kolom I / Index 8)
           break;
        }
     }
 
     if (barisKetemu === -1) {
-      throw new Error(`Data tidak ditemukan. Mungkin data telah berubah.`);
+      throw new Error(`Data tidak ditemukan. Format Jam/Tanggal mungkin berbeda.`);
     }
 
-    // 4. LOGIKA PERUBAHAN STATUS OTOMATIS
-    // Ditolak -> Revisi
-    // Revisi -> Diproses
-    // Diproses -> Tetap Diproses
-    
-    var statusBaru = statusSaatIni; // Default sama
+    // 3. LOGIKA STATUS OTOMATIS
+    var statusBaru = statusSaatIni;
+    if (statusSaatIni === "Ditolak") statusBaru = "Revisi";
+    else if (statusSaatIni === "Revisi") statusBaru = "Diproses";
+    else if (statusSaatIni === "Diproses") statusBaru = "Diproses";
 
-    if (statusSaatIni === "Ditolak") {
-        statusBaru = "Revisi";
-    } else if (statusSaatIni === "Revisi") {
-        statusBaru = "Diproses";
-    } else if (statusSaatIni === "Diproses") {
-        statusBaru = "Diproses";
+    // 4. PERSIAPAN DATA BARU (SANITASI FORMAT)
+    // Pastikan Tanggal Baru tersimpan sebagai dd-mm-yyyy
+    var tglBaruIndo = "";
+    if (form.tanggal) {
+       var parts = form.tanggal.split('-'); // input: yyyy-mm-dd
+       tglBaruIndo = parts[2] + '-' + parts[1] + '-' + parts[0]; 
     }
-
-    // 5. EKSEKUSI UPDATE
-    // Update Tanggal (Kolom D / 4)
-    sheet.getRange(barisKetemu, 4).setValue(tglBaruIndo);
-    // Update Jam (Kolom E / 5)
-    sheet.getRange(barisKetemu, 5).setValue("'" + form.waktu);
-    // Update Jenis (Kolom F / 6)
-    sheet.getRange(barisKetemu, 6).setValue(form.jenis);
     
-    // Update Status (Kolom I / 9) - HASIL LOGIKA BARU
-    sheet.getRange(barisKetemu, 9).setValue(statusBaru);
+    // Pastikan Jam Baru tersimpan sebagai HH:mm (07:15)
+    var jamBaru = String(form.waktu).trim();
+    if (/^\d:\d{2}/.test(jamBaru)) jamBaru = "0" + jamBaru;
 
-    // Log Edit
-    sheet.getRange(barisKetemu, 11).setValue(tglEdit);
-    sheet.getRange(barisKetemu, 12).setValue(userEdit);
+    // 5. GET USER EDIT
+    var userEdit = "Guest";
+    try {
+       var currentUser = getCurrentUser(); 
+       if (currentUser && currentUser.fullName) userEdit = currentUser.fullName;
+    } catch (e) {}
+    var tglEdit = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+
+    // 6. EKSEKUSI UPDATE KE SEL
+    // Gunakan setValue string agar format terjaga
+    sheet.getRange(barisKetemu, 4).setValue(tglBaruIndo); // Kolom D
+    sheet.getRange(barisKetemu, 5).setValue(jamBaru);     // Kolom E
+    sheet.getRange(barisKetemu, 6).setValue(form.jenis);  // Kolom F
+    sheet.getRange(barisKetemu, 9).setValue(statusBaru);  // Kolom I
+    sheet.getRange(barisKetemu, 11).setValue(tglEdit);    // Kolom K
+    sheet.getRange(barisKetemu, 12).setValue(userEdit);   // Kolom L
 
     return "Data Berhasil Diperbarui!";
-
   } catch (e) {
     throw new Error(e.message);
   }
 }
 
-function simpanSalahAbsen(form) {
-  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
-
-  try {
-    var ss = SpreadsheetApp.openById(ID_DB);
-    var sheet = ss.getSheetByName("Salah_Absen");
-    
-    if (!sheet) throw new Error("Sheet 'Salah_Absen' tidak ditemukan!");
-    
-    var tglIndo = "";
-    if (form.tanggal) {
-       var parts = form.tanggal.split('-'); 
-       tglIndo = parts[2] + '-' + parts[1] + '-' + parts[0]; 
-    }
-    
-    // Paksa menjadi string agar 09:30 tidak jadi 9:30
-    var jam = "'" + form.waktu; 
-
-    var namaUser = "Guest";
-    try {
-       var currentUser = getCurrentUser(); 
-       if (currentUser && currentUser.fullName) {
-          namaUser = currentUser.fullName;
-       }
-    } catch (err) {
-       namaUser = "Guest (Error User)";
-    }
-    
-    var tglKirim = new Date();
-    var status = "Diproses";
-
-    var barisBaru = [
-      form.unit_kerja, 
-      form.nama_asn,   
-      "'"+form.nip_asn,
-      tglIndo,         
-      jam,             
-      form.jenis,      
-      tglKirim,        
-      namaUser,        
-      status           
-    ];
-    
-    sheet.appendRow(barisBaru);
-    return "SUKSES";
-    
-  } catch (e) {
-    throw new Error("Gagal simpan: " + e.message);
-  }
-}
-
-/* --- FUNGSI SOFT DELETE (PINDAH KE TRASH) --- */
+/* --- FUNGSI SOFT DELETE (FIX JAM 0 DIGIT) --- */
 function softDeleteSalahAbsen(dataKirim) {
-  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY"; // ID Database Salah Absen
+  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
 
   try {
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheetSource = ss.getSheetByName("Salah_Absen");
     var sheetTrash = ss.getSheetByName("Trash");
 
-    // Jika sheet Trash belum ada, buat baru
-    if (!sheetTrash) {
-      sheetTrash = ss.insertSheet("Trash");
-      // Opsional: Buat Header Trash jika baru dibuat
-      // sheetTrash.appendRow(["Unit", "Nama", "NIP", "Tanggal", "Jam", "Jenis", "Tgl Ajuan", "User Input", "Status", "Ket", "Tgl Edit", "User Edit", "Tgl Verif", "Admin Verif", "TGL HAPUS", "USER HAPUS", "ALASAN"]);
-    }
-
+    if (!sheetTrash) sheetTrash = ss.insertSheet("Trash");
     if (!sheetSource) throw new Error("Sheet Salah_Absen tidak ditemukan");
 
-    // 1. DATA TARGET
+    // 1. DATA TARGET (String Bersih dari Client)
     var targetNip = String(dataKirim.nip).trim();
-    var targetTgl = String(dataKirim.tgl).trim();
-    var targetJam = String(dataKirim.jam).trim();
+    var targetTgl = String(dataKirim.tgl).trim(); // "dd-mm-yyyy"
+    var targetJam = String(dataKirim.jam).trim(); // "07:15" (Pasti 2 digit depan)
 
-    // 2. CARI BARIS (LOGIKA SAMA DENGAN UPDATE AGAR AKURAT)
-    var data = sheetSource.getDataRange().getValues();
+    // 2. CARI BARIS (Pakai Display Values agar akurat)
+    var data = sheetSource.getDataRange().getDisplayValues(); 
     var barisKetemu = -1;
 
     for (var i = 1; i < data.length; i++) {
-       var sheetNip = String(data[i][2]).replace(/'/g, "").trim(); 
+       var sheetNip = String(data[i][2]).trim();
+       var sheetTgl = String(data[i][3]).trim().replace(/\//g, '-');
        
-       var sheetTglRaw = data[i][3];
-       var sheetTglStr = (sheetTglRaw instanceof Date) ? 
-           Utilities.formatDate(sheetTglRaw, Session.getScriptTimeZone(), "dd-MM-yyyy") : String(sheetTglRaw).trim();
-       
-       var sheetJamRaw = data[i][4];
-       var sheetJamStr = "";
-       if (sheetJamRaw instanceof Date) {
-         sheetJamStr = Utilities.formatDate(sheetJamRaw, Session.getScriptTimeZone(), "HH:mm");
-       } else {
-         sheetJamStr = String(sheetJamRaw).trim();
-         if (/^\d:\d{2}/.test(sheetJamStr)) sheetJamStr = "0" + sheetJamStr;
-       }
+       // Normalisasi Jam Sheet (misal 7:15 -> 07:15)
+       var sheetJam = String(data[i][4]).trim().replace(/'/g, "").substring(0, 5);
+       if (/^\d:\d{2}/.test(sheetJam)) sheetJam = "0" + sheetJam;
 
-       if (sheetNip === targetNip && sheetTglStr === targetTgl && sheetJamStr === targetJam) {
-          barisKetemu = i + 1; 
+       if (sheetNip === targetNip && sheetTgl === targetTgl && sheetJam === targetJam) {
+          barisKetemu = i + 1;
           break;
        }
     }
 
     if (barisKetemu === -1) {
-      throw new Error("Data yang akan dihapus tidak ditemukan/sudah berubah.");
+      throw new Error("Data tidak ditemukan (Cek kecocokan Jam/Tanggal).");
     }
 
-    // 3. AMBIL DATA BARIS TERSEBUT
-    // Kita ambil range sesuai lebar kolom (misal kolom A sampai N = 14 kolom)
+    // 3. AMBIL DATA SUMBER
     var rowRange = sheetSource.getRange(barisKetemu, 1, 1, 14);
-    var rowValues = rowRange.getValues()[0]; // Array 1D
+    var rowValues = rowRange.getValues()[0]; 
 
-    // 4. SIAPKAN DATA TRASH
-    var tglHapus = new Date();
-    var userHapus = dataKirim.user;
+    // --- BAGIAN PENTING: SANITASI SEBELUM MASUK TRASH ---
+    // Jangan pakai nilai rowValues[4] mentah, karena bisa jadi isinya Date Object atau 7:15.
+    // Kita TIMPA dengan targetJam (07:15) yang sudah pasti benar formatnya.
+    
+    rowValues[3] = targetTgl; // Paksa format dd-mm-yyyy
+    rowValues[4] = targetJam; // Paksa format HH:mm (07:15)
+    
+    // ----------------------------------------------------
+
+    var tglHapus = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    var userHapus = "Guest";
+    try {
+        var cu = getCurrentUser(); 
+        if (cu && cu.fullName) userHapus = cu.fullName;
+        else if (dataKirim.user) userHapus = dataKirim.user;
+    } catch(e) { userHapus = dataKirim.user || "Guest"; }
+
     var alasan = dataKirim.alasan;
-
-    // Gabungkan: Data Asli + Tgl Hapus (Kolom O) + User (Kolom P) + Alasan (Kolom Q)
     var trashRow = rowValues.concat([tglHapus, userHapus, alasan]);
 
-    // 5. PINDAHKAN
-    sheetTrash.appendRow(trashRow); // Tulis ke Trash
-    sheetSource.deleteRow(barisKetemu); // Hapus dari Sumber
+    // Simpan ke Trash
+    sheetTrash.appendRow(trashRow); 
+    // Hapus dari Sumber
+    sheetSource.deleteRow(barisKetemu);
 
     return "Sukses";
 
@@ -1046,10 +988,9 @@ function softDeleteSalahAbsen(dataKirim) {
   }
 }
 
-/* --- FUNGSI PROSES VERIFIKASI (ADMIN) --- */
+/* --- FUNGSI VERIFIKASI (VERSI ROBUST / TAHAN BANTING) --- */
 function processVerifikasiSalahAbsen(dataKirim) {
-  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY"; 
-
+  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
   try {
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheet = ss.getSheetByName("Salah_Absen");
@@ -1060,52 +1001,39 @@ function processVerifikasiSalahAbsen(dataKirim) {
     var targetTgl = String(dataKirim.tgl).trim();
     var targetJam = String(dataKirim.jam).trim();
 
-    // 2. CARI BARIS (LOGIKA ROBUST)
-    var data = sheet.getDataRange().getValues();
+    // 2. CARI BARIS (GUNAKAN DISPLAY VALUES)
+    var data = sheet.getDataRange().getDisplayValues();
     var barisKetemu = -1;
 
     for (var i = 1; i < data.length; i++) {
-       var sheetNip = String(data[i][2]).replace(/'/g, "").trim(); 
+       var sheetNip = String(data[i][2]).trim();
        
-       var sheetTglRaw = data[i][3];
-       var sheetTglStr = (sheetTglRaw instanceof Date) ? 
-           Utilities.formatDate(sheetTglRaw, Session.getScriptTimeZone(), "dd-MM-yyyy") : String(sheetTglRaw).trim();
+       // Normalisasi Tgl
+       var sheetTgl = String(data[i][3]).trim().replace(/\//g, '-');
        
-       var sheetJamRaw = data[i][4];
-       var sheetJamStr = "";
-       if (sheetJamRaw instanceof Date) {
-         sheetJamStr = Utilities.formatDate(sheetJamRaw, Session.getScriptTimeZone(), "HH:mm");
-       } else {
-         sheetJamStr = String(sheetJamRaw).trim();
-         if (/^\d:\d{2}/.test(sheetJamStr)) sheetJamStr = "0" + sheetJamStr;
-       }
+       // Normalisasi Jam (KUNCI UTAMA: Handle 7:15 -> 07:15)
+       var sheetJam = String(data[i][4]).trim().replace(/'/g, "").substring(0, 5);
+       if (/^\d:\d{2}/.test(sheetJam)) sheetJam = "0" + sheetJam;
 
-       if (sheetNip === targetNip && sheetTglStr === targetTgl && sheetJamStr === targetJam) {
-          barisKetemu = i + 1; 
+       if (sheetNip === targetNip && sheetTgl === targetTgl && sheetJam === targetJam) {
+          barisKetemu = i + 1;
           break;
        }
     }
 
     if (barisKetemu === -1) {
-      throw new Error("Data tidak ditemukan saat verifikasi. Mungkin data telah berubah.");
+      throw new Error("Data tidak ditemukan saat verifikasi. Coba refresh tabel.");
     }
 
-    // 3. UPDATE DATA
+    // 3. UPDATE DATA VERIFIKASI
     var tglVerif = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
     
-    // --- KOREKSI MAPPING KOLOM ---
-    // Kolom I (Status) -> Kolom ke-9 (Index 9)
-    // Kolom J (Keterangan) -> Kolom ke-10 (Index 10)
-    // Kolom M (Tgl Verif) -> Kolom ke-13 (Index 13)
-    // Kolom N (Admin Verif) -> Kolom ke-14 (Index 14)
-    
-    sheet.getRange(barisKetemu, 9).setValue(dataKirim.status);  // FIX: Masuk Kolom I
-    sheet.getRange(barisKetemu, 10).setValue(dataKirim.ket);    // Masuk Kolom J
-    sheet.getRange(barisKetemu, 13).setValue(tglVerif);         // Masuk Kolom M
-    sheet.getRange(barisKetemu, 14).setValue(dataKirim.admin);  // Masuk Kolom N
+    sheet.getRange(barisKetemu, 9).setValue(dataKirim.status);  // Status (Kolom I)
+    sheet.getRange(barisKetemu, 10).setValue(dataKirim.ket);    // Ket (Kolom J)
+    sheet.getRange(barisKetemu, 13).setValue(tglVerif);         // Tgl Verif (Kolom M)
+    sheet.getRange(barisKetemu, 14).setValue(dataKirim.admin);  // Admin (Kolom N)
 
     return "Sukses";
-
   } catch (e) {
     throw new Error(e.message);
   }
@@ -1128,98 +1056,71 @@ function getDaftarSampah() {
   }
 }
 
-/* --- FUNGSI RESTORE DATA (VERSI FINAL: ANTI-GAGAL FORMAT) --- */
+/* --- FUNGSI RESTORE (AUTO REPAIR JAM 7:15 -> 07:15) --- */
 function prosesRestoreSalahAbsen(nip, tgl, jam) {
-  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY"; 
+  const ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
   try {
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheetTrash = ss.getSheetByName("Trash");
     var sheetSource = ss.getSheetByName("Salah_Absen");
-
     if (!sheetTrash || !sheetSource) throw new Error("Database error.");
 
-    var data = sheetTrash.getDataRange().getValues();
+    // Pakai DisplayValues agar pencarian mudah
+    var dataDisplay = sheetTrash.getDataRange().getDisplayValues();
     var barisKetemu = -1;
 
-    // --- 1. NORMALISASI TARGET (DARI CLIENT) ---
+    // 1. NORMALISASI TARGET
     var targetNip = String(nip).trim();
-    
-    // Normalisasi Tanggal: Ganti semua garis miring (/) jadi strip (-)
-    // Contoh: "07/01/2026" -> "07-01-2026"
-    var targetTgl = String(tgl).trim().replace(/\//g, '-');
-    
-    // Normalisasi Jam: "7:47:00" -> "07:47"
-    var rawJamTarget = String(jam).trim();
-    var targetJam = "";
-    var matchJam = rawJamTarget.match(/(\d{1,2}):(\d{2})/);
-    if (matchJam) {
-       var h = matchJam[1].length === 1 ? "0" + matchJam[1] : matchJam[1]; // Tambah nol depan
-       var m = matchJam[2];
-       targetJam = h + ":" + m;
-    } else {
-       targetJam = rawJamTarget;
-    }
+    var targetTgl = String(tgl).trim();
+    var targetJam = String(jam).trim(); // "07:15"
 
-    // --- 2. LOOPING PENCARIAN ---
-    for (var i = 1; i < data.length; i++) {
-       // A. NIP
-       var sheetNip = String(data[i][2]).replace(/'/g, "").trim(); 
+    // 2. CARI DI TRASH
+    for (var i = 1; i < dataDisplay.length; i++) {
+       var sheetNip = String(dataDisplay[i][2]).trim();
+       var sheetTgl = String(dataDisplay[i][3]).trim().replace(/\//g, '-');
        
-       // B. TANGGAL (SHEET)
-       var sheetTglRaw = data[i][3];
-       var sheetTglStr = "";
-       
-       if (sheetTglRaw instanceof Date) {
-           // Jika format Date Object, ubah ke dd-MM-yyyy
-           sheetTglStr = Utilities.formatDate(sheetTglRaw, Session.getScriptTimeZone(), "dd-MM-yyyy");
-       } else {
-           // Jika String, ganti / jadi - juga biar ADIL
-           sheetTglStr = String(sheetTglRaw).trim().replace(/\//g, '-');
-       }
-       
-       // C. JAM (SHEET)
-       var sheetJamRaw = data[i][4];
-       var sheetJamStr = "";
-       if (sheetJamRaw instanceof Date) {
-         sheetJamStr = Utilities.formatDate(sheetJamRaw, Session.getScriptTimeZone(), "HH:mm");
-       } else {
-         var txtJam = String(sheetJamRaw).trim();
-         var matchSheet = txtJam.match(/(\d{1,2}):(\d{2})/);
-         if (matchSheet) {
-            var hS = matchSheet[1].length === 1 ? "0" + matchSheet[1] : matchSheet[1];
-            var mS = matchSheet[2];
-            sheetJamStr = hS + ":" + mS;
-         } else {
-            sheetJamStr = txtJam;
-         }
-       }
+       // Normalisasi Jam Trash (Jaga-jaga di trash tersimpan 7:15)
+       var sheetJam = String(dataDisplay[i][4]).trim().replace(/'/g, "").substring(0, 5);
+       if (/^\d:\d{2}/.test(sheetJam)) sheetJam = "0" + sheetJam;
 
-       // --- DEBUG (Opsional: Nyalakan jika masih gagal) ---
-       // if (sheetNip === targetNip) {
-       //    console.log(`Cek: Tgl[${sheetTglStr}] vs [${targetTgl}] | Jam[${sheetJamStr}] vs [${targetJam}]`);
-       // }
-
-       // D. BANDINGKAN
-       if (sheetNip === targetNip && sheetTglStr === targetTgl && sheetJamStr === targetJam) {
-          barisKetemu = i + 1; 
+       if (sheetNip === targetNip && sheetTgl === targetTgl && sheetJam === targetJam) {
+          barisKetemu = i + 1;
           break;
        }
     }
 
-    if (barisKetemu === -1) {
-        // Pesan error lebih detail
-        throw new Error(`Data tidak ditemukan. Format Sheet: [${sheetTglStr || '?'}], Dicari: [${targetTgl}]`);
+    if (barisKetemu === -1) throw new Error(`Data Trash tidak ditemukan.`);
+
+    // 3. AMBIL DATA ASLI (GetValues untuk ambil object aslinya)
+    var fullRow = sheetTrash.getRange(barisKetemu, 1, 1, 14).getValues()[0];
+    
+    // --- SANITASI / REPAIR DATA SEBELUM KEMBALI KE UTAMA ---
+    
+    // Repair Tanggal -> Paksa string "dd-mm-yyyy"
+    if (fullRow[3] instanceof Date) {
+        fullRow[3] = Utilities.formatDate(fullRow[3], Session.getScriptTimeZone(), "dd-MM-yyyy");
+    } else {
+        fullRow[3] = String(fullRow[3]).trim().replace(/\//g, '-');
     }
 
-    // 3. AMBIL & PINDAHKAN
-    var fullRow = sheetTrash.getRange(barisKetemu, 1, 1, 17).getValues()[0];
-    var restoreRow = fullRow.slice(0, 14); // Ambil 14 kolom pertama (buang data sampah)
+    // Repair Jam -> Paksa string "HH:mm" (Menangani kasus 7:15 -> 07:15)
+    var rawJam = fullRow[4];
+    if (rawJam instanceof Date) {
+        fullRow[4] = Utilities.formatDate(rawJam, Session.getScriptTimeZone(), "HH:mm");
+    } else {
+        var strJam = String(rawJam).replace(/'/g, "").trim().substring(0, 5);
+        // INI KUNCINYA: Jika depannya cuma 1 digit angka lalu titik dua, tambah 0
+        if (/^\d:\d{2}/.test(strJam)) {
+            strJam = "0" + strJam;
+        }
+        fullRow[4] = strJam;
+    }
+    // -------------------------------------------------------
 
-    sheetSource.appendRow(restoreRow);
+    sheetSource.appendRow(fullRow);
     sheetTrash.deleteRow(barisKetemu);
 
     return "Sukses";
-
   } catch (e) {
     throw new Error(e.message);
   }
