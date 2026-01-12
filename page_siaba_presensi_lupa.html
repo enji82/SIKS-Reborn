@@ -1,0 +1,558 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-question-circle text-maroon mr-2"></i>Data Lupa Presensi
+        </h5>
+        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        
+        <div class="control-bar mb-3 d-flex flex-wrap align-items-center bg-white p-3 shadow-sm rounded" style="gap: 10px;">
+            
+            <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshTabelLupa()" title="Refresh Data">
+              <i class="fas fa-sync-alt text-maroon"></i>
+            </button>
+
+            <div style="height: 30px; width: 1px; background: #dee2e6;"></div>
+
+            <select id="filterTahun" class="form-control filter-select border-tegas shadow-sm" style="width: 100px;">
+              <option value="">- Thn -</option>
+            </select>
+
+            <select id="filterBulan" class="form-control filter-select border-tegas shadow-sm" style="width: 130px;">
+              <option value="">- Bulan -</option>
+              <option value="Januari">Januari</option>
+              <option value="Februari">Februari</option>
+              <option value="Maret">Maret</option>
+              <option value="April">April</option>
+              <option value="Mei">Mei</option>
+              <option value="Juni">Juni</option>
+              <option value="Juli">Juli</option>
+              <option value="Agustus">Agustus</option>
+              <option value="September">September</option>
+              <option value="Oktober">Oktober</option>
+              <option value="November">November</option>
+              <option value="Desember">Desember</option>
+            </select>
+
+            <select id="filterUnit" class="form-control filter-select border-tegas shadow-sm" style="min-width: 200px;">
+              <option value="">- Semua Unit Kerja -</option>
+            </select>
+
+            <select id="filterStatus" class="form-control filter-select border-tegas shadow-sm" style="width: 120px;">
+              <option value="">- Status -</option>
+              <option value="Diproses">Diproses</option>
+              <option value="Revisi">Revisi</option>
+              <option value="OK">Disetujui</option>
+              <option value="Ditolak">Ditolak</option>
+            </select>
+            
+            <div class="d-flex align-items-center">
+              <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm mr-2" onclick="applyFilterLupaPresensi()" title="Cari Data">
+                <i class="fas fa-search text-white"></i>
+              </button>
+              
+              <button type="button" id="btnSampah" class="btn btn-secondary btn-sm font-weight-bold shadow-sm mr-2" onclick="bukaTongSampahLupa()" style="display: none;">
+                <i class="fas fa-trash-restore mr-1"></i> Sampah
+              </button>
+
+              <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="tambahDataLupa()">
+                <i class="fas fa-plus mr-1"></i> Tambah
+              </button>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+                <table id="tabelLupa" class="table table-hover table-premium mb-0" style="width:100%;">
+                  <thead class="bg-light">
+                  <tr>
+                    <th style="min-width: 200px; position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);">Nama ASN</th>
+                    <th>NIP</th>
+                    <th>Tanggal</th>
+                    <th>Jam</th>          
+                    <th>Jenis</th>        
+                    <th class="text-center">Ke</th>
+                    <th>Tgl Pengajuan</th>
+                    <th>User Input</th>
+                    <th class="text-center">File</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
+                    <th class="small text-muted">Tgl Edit</th>
+                    <th class="small text-muted">User Edit</th>
+                    <th class="small text-muted">Tgl Verif</th>
+                    <th class="small text-muted">Admin Verif</th>
+                    <th>Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody id="bodyTabelLupa">
+                    <tr id="msgRow">
+                        <td colspan="16" class="text-center py-5 text-muted small">
+                            <i class="fas fa-filter fa-2x mb-2 text-gray-300"></i><br>
+                            Pilih Filter & klik tombol <b>Cari</b>.
+                        </td>
+                    </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal fade" id="modalTambah" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-maroon">
+        <h5 class="modal-title text-white font-weight-bold"><i class="fas fa-file-signature mr-2"></i>Form Lupa Presensi</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <form id="formLupaAbsen" onsubmit="simpanDataLupa(event)">
+      <div class="modal-body bg-light">
+        <input type="hidden" id="recId" name="recId">
+        <input type="hidden" name="user_login" id="hideUserLogin">
+        <input type="hidden" id="modeForm" value="tambah"> 
+        <input type="hidden" name="nip_lama" id="hideNipLama">
+        <input type="hidden" name="tgl_lama" id="hideTglLama">
+        <input type="hidden" name="jam_lama" id="hideJamLama">
+        <input type="hidden" name="file_lama" id="hideFileLama">
+
+        <div class="form-group">
+          <label class="form-label-sultan">Unit Kerja</label>
+          <select class="form-control form-control-sultan" id="selUnit" name="unit_kerja" required onchange="filterNamaPegawai()"><option value="">- Memuat Data... -</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label-sultan">Nama ASN</label>
+          <select class="form-control form-control-sultan" id="selNama" name="nama_asn" required disabled onchange="filterNipPegawai()"><option value="">- Pilih Unit Dulu -</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label-sultan">NIP</label>
+          <select class="form-control form-control-sultan" id="selNip" name="nip_asn" required disabled><option value="">- Otomatis -</option></select>
+        </div>
+        <div class="row">
+          <div class="col-6"><div class="form-group"><label class="form-label-sultan">Tanggal</label><input type="date" name="tanggal" class="form-control form-control-sultan" required></div></div>
+          <div class="col-6"><div class="form-group"><label class="form-label-sultan">Waktu (Jam)</label><input type="time" name="waktu" class="form-control form-control-sultan" required></div></div>
+        </div>
+        <div class="row">
+            <div class="col-6"><div class="form-group"><label class="form-label-sultan">Jenis</label><select name="jenis" class="form-control form-control-sultan" required><option value="">- Pilih -</option><option value="Datang">Datang</option><option value="Pulang">Pulang</option></select></div></div>
+            <div class="col-6">
+                <div class="form-group">
+                    <label class="form-label-sultan">Komulatif Ke</label>
+                    <select name="komulatif" id="inputKomulatif" class="form-control form-control-sultan" required>
+                        <option value="">- Pilih -</option>
+                        <option value="I">I</option>
+                        <option value="II">II</option>
+                        <option value="III">III</option>
+                        <option value="IV">IV</option>
+                        <option value="V">V</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label-sultan">Unggah File</label>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="inputFile" accept="application/pdf, image/jpeg, image/png" onchange="bacaFile(this)">
+                <label class="custom-file-label" for="inputFile" id="labelFile">Pilih file...</label>
+            </div>
+            <small class="text-danger" id="pesanFile">Scan dokumen asli yang sudah ditandatangani dalam format PDF ukuran maksimal 100 KB.</small>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between bg-white">
+          <button type="button" class="btn btn-default shadow-sm" data-dismiss="modal">Batal</button>
+          <button type="submit" id="btnKirim" class="btn btn-maroon shadow-sm px-4 font-weight-bold"><i class="fas fa-paper-plane mr-1"></i> Kirim</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalPreview" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document" style="height: 90vh; max-width: 90%;">
+    <div class="modal-content h-100 border-0 shadow-lg">
+      <div class="modal-header py-2 bg-light align-items-center">
+        <h6 class="modal-title font-weight-bold text-dark">
+            <i class="fas fa-file-pdf mr-2 text-maroon"></i> Preview: <span id="judulPreview" class="text-muted small"></span>
+        </h6>
+        <a id="btnOpenNewTab" href="#" target="_blank" class="btn btn-sm btn-outline-danger font-weight-bold ml-auto mr-2"><i class="fas fa-external-link-alt mr-1"></i> Buka Tab Baru</a>
+        <button type="button" class="close text-dark p-2 m-0" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body p-0 bg-light d-flex align-items-center justify-content-center position-relative">
+        <iframe id="framePreview" src="" style="width:100%; height:100%; border:none;" allow="autoplay"></iframe>
+        <div id="loaderPreview" class="position-absolute text-center" style="z-index: 5;">
+            <div class="spinner-border text-maroon mb-2" role="status"></div>
+            <p class="text-muted small font-weight-bold mb-0">Sedang Memuat...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog"><div class="modal-dialog"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-danger"><h5 class="modal-title text-white">Konfirmasi Hapus</h5></div><form id="formHapus" onsubmit="submitHapusDataLupa(event)"><div class="modal-body bg-light"><input type="hidden" id="hapusNip"><input type="hidden" id="hapusTgl"><input type="hidden" id="hapusJam"><div class="alert alert-warning">Data akan dipindahkan ke Trash.</div><div class="form-group"><label>Alasan</label><textarea id="inputAlasan" class="form-control" required></textarea></div><div class="form-group"><label>Kode</label><input type="text" id="inputKode" class="form-control" required></div></div><div class="modal-footer"><button type="submit" id="btnEksekusiHapus" class="btn btn-danger">Hapus</button></div></form></div></div></div>
+
+<div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-success"><h5 class="modal-title text-white">Verifikasi Pengajuan</h5></div><form id="formVerifikasi" onsubmit="submitVerifikasiDataLupa(event)"><div class="modal-body bg-light"><input type="hidden" id="verifNip"><input type="hidden" id="verifTgl"><input type="hidden" id="verifJam"><div class="row"><div class="col-12 p-4"><p>Nama: <span id="vNama"></span></p><select id="inputStatusVerif" class="form-control mb-2" required><option value="">- Pilih Status -</option><option value="OK">OK</option><option value="Revisi">Revisi</option><option value="Ditolak">Ditolak</option></select><textarea id="inputKetVerif" class="form-control" placeholder="Catatan..."></textarea></div></div></div><div class="modal-footer"><button type="submit" id="btnEksekusiVerif" class="btn btn-success">Simpan</button></div></form></div></div></div>
+
+<div class="modal fade" id="modalSampah" tabindex="-1" role="dialog"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-body"><table class="table"><tbody id="bodySampah"></tbody></table></div></div></div></div>
+
+<script>
+/**
+ * SCRIPT FRONTEND LUPA PRESENSI (REVISI FINAL)
+ * Fitur: CRUD, Edit Lock, Dependent Dropdown, Notif Sultan
+ */
+
+// 1. Variabel Global
+var DATA_LUPA = {}; 
+var DB_PEGAWAI_LOKAL = [];
+var FILE_UPLOAD_DATA = null;
+
+$(document).ready(function() {
+    console.log("Halaman Siap.");
+
+    // --- A. LOAD USER INFO ---
+    try {
+        var sesi = localStorage.getItem("siksUser");
+        if (sesi) {
+            var user = JSON.parse(sesi);
+            var namaLengkap = user.nama || user.nama_lengkap || user.email || "User Web";
+            $('#hideUserLogin').val(namaLengkap);
+            if ((user.role || "").toLowerCase().includes('admin')) $('#btnSampah').show();
+        }
+    } catch (e) { console.error(e); }
+
+    // --- B. INITIAL LOAD ---
+    if(typeof loadDropdownPegawai === 'function') loadDropdownPegawai();
+    if(typeof loadFilterTahun === 'function') {
+        loadFilterTahun(); 
+        var arrBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+        $('#filterBulan').val(arrBulan[new Date().getMonth()]);
+    }
+    $('#filterStatus').val('');
+
+    // --- C. PESAN AWAL ---
+    $('#bodyTabelLupa').html(`<tr id="msgRow"><td colspan="17" class="text-center py-5 text-muted small"><i class="fas fa-filter fa-2x mb-2 text-gray-300"></i><br>Pilih Filter & klik tombol <b>Cari</b>.</td></tr>`);
+});
+
+// --- 2. LOGIKA UTAMA: TAMBAH & EDIT ---
+
+// Fungsi Reset Form & Buka Modal Tambah
+function tambahDataLupa() {
+    // 1. Reset Form & ID
+    document.getElementById('formLupaAbsen').reset();
+    $('#recId').val(''); // Kosongkan ID agar dianggap Data Baru
+    
+    // 2. Unlock Field Dropdown
+    $('#selUnit').prop('disabled', false).val('').trigger('change');
+    $('#selNama').prop('disabled', true).empty().append('<option>- Pilih Unit -</option>');
+    $('#selNip').prop('disabled', true).empty().append('<option>-</option>');
+    
+    // 3. Reset UI File
+    $('#labelFile').text("Pilih file PDF...").removeClass("text-primary");
+    FILE_UPLOAD_DATA = null;
+
+    // 4. Ubah UI Modal
+    $('.modal-title').text("Form Lupa Presensi");
+    $('#btnKirim').html('<i class="fas fa-paper-plane"></i> Kirim');
+    $('#modalTambah').modal('show');
+}
+
+// Fungsi Buka Modal Edit
+function editDataLupa(id) {
+    // Tampilkan Loading
+    if(typeof NotifSultan !== 'undefined') NotifSultan.loading("Mengambil data...");
+    
+    google.script.run
+        .withSuccessHandler(function(data) {
+            Swal.close();
+            if(!data) return alert("Data tidak ditemukan");
+
+            // 1. Isi Hidden ID & Form
+            $('#recId').val(data.id);
+            // Simpan data lama untuk jaga-jaga (sesuai field hidden Anda)
+            $('#hideNipLama').val(data.nip);
+            $('#hideTglLama').val(data.tanggal);
+            $('#hideJamLama').val(data.waktu);
+
+            // 2. Isi Value Form
+            $('input[name="tanggal"]').val(data.tanggal);
+            $('input[name="waktu"]').val(data.waktu);
+            $('select[name="jenis"]').val(data.jenis);
+            $('#inputKomulatif').val(data.komulatif);
+            
+            // 3. Handle Dropdown Unit/Nama/NIP (LOCKED)
+            // Kita inject langsung option-nya dan disable agar user tidak bisa ubah
+            $('#selUnit').empty().append('<option value="'+data.unit+'" selected>'+data.unit+'</option>').prop('disabled', true);
+            $('#selNama').empty().append('<option value="'+data.nama+'" selected>'+data.nama+'</option>').prop('disabled', true);
+            $('#selNip').empty().append('<option value="'+data.nip+'" selected>'+data.nip+'</option>').prop('disabled', true);
+
+            // 4. Reset File Input
+            $('#labelFile').text("Biarkan kosong jika tidak ganti file").addClass("text-primary");
+            FILE_UPLOAD_DATA = null;
+
+            // 5. Ubah UI Modal
+            $('.modal-title').text("Edit Data Lupa Presensi");
+            $('#btnKirim').html('<i class="fas fa-save"></i> Update');
+            $('#modalTambah').modal('show');
+        })
+        .withFailureHandler(function(e){ Swal.close(); alert(e.message); })
+        .getLupaById(id);
+}
+
+// Fungsi Submit (Handle Tambah & Edit)
+function simpanDataLupa(e) {
+    e.preventDefault(); 
+    
+    var recId = $('#recId').val();
+    var isEdit = (recId && recId !== ""); // Cek apakah sedang Edit
+    
+    // Validasi Wajib File HANYA jika Tambah Baru
+    if (!isEdit && !FILE_UPLOAD_DATA) {
+        if(typeof NotifSultan !== 'undefined') NotifSultan.alert('warning', 'File', 'Wajib upload PDF');
+        else alert("Wajib upload file PDF");
+        return;
+    }
+
+    var btn = $('#btnKirim');
+    var txt = btn.html();
+    btn.prop('disabled', true).text('Memproses...');
+
+    // Ambil Data
+    var dataForm = {
+        recId: recId,
+        unit_kerja: $('#selUnit').val(),
+        nama_asn: $('#selNama').val(),
+        nip_asn: $('#selNip').val(),
+        tanggal: $('input[name="tanggal"]').val(),
+        waktu: $('input[name="waktu"]').val(),
+        jenis: $('select[name="jenis"]').val(),
+        komulatif: $('#inputKomulatif').val(),
+        user_login: $('#hideUserLogin').val() || "User Web",
+        
+        // Data Lama (untuk fallback)
+        nip_lama: $('#hideNipLama').val(),
+        tgl_lama: $('#hideTglLama').val()
+    };
+
+    // Callback Sukses
+    var onSuccess = function(res) {
+        btn.prop('disabled', false).html(txt);
+        $('#modalTambah').modal('hide');
+        if(typeof NotifSultan !== 'undefined') NotifSultan.alert('success', 'Sukses', res);
+        else alert(res);
+        
+        // Refresh Tabel HANYA jika fungsi filter ada
+        if(typeof applyFilterLupaPresensi === 'function') applyFilterLupaPresensi();
+    };
+
+    // Callback Gagal
+    var onFail = function(err) {
+        btn.prop('disabled', false).html(txt);
+        alert("Gagal: " + err.message);
+    };
+
+    // Panggil Backend
+    if (isEdit) {
+        // Edit
+        google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFail)
+             .updateLupaPresensi(dataForm, FILE_UPLOAD_DATA);
+    } else {
+        // Tambah Baru
+        // Asumsi fungsi tambah lama Anda menerima (form) dan file disisipkan
+        dataForm.file = FILE_UPLOAD_DATA;
+        google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFail)
+             .simpanLupaPresensi(dataForm);
+    }
+}
+
+// --- 3. HELPER FILE & DROPDOWN ---
+
+function bacaFile(input) {
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        if(file.size > 100 * 1024) { 
+            NotifSultan.alert('warning', 'File Besar', 'Maksimal 100 KB.');
+            input.value = ""; FILE_UPLOAD_DATA = null;
+            return; 
+        }
+        if(file.type !== "application/pdf") {
+            NotifSultan.alert('warning', 'Format Salah', 'Wajib PDF.');
+            input.value = ""; return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            FILE_UPLOAD_DATA = { data: e.target.result.split(',')[1], mimeType: file.type, name: file.name };
+            $('#labelFile').text(file.name).removeClass("text-primary font-weight-bold");
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function loadDropdownPegawai() {
+  $('#selUnit').empty().append('<option>Memuat...</option>');
+  google.script.run.withSuccessHandler(function(data) {
+       DB_PEGAWAI_LOKAL = data; 
+       var unikUnit = [...new Set(data.map(item => item.unit))].sort();
+       
+       var $selUnit = $('#selUnit').empty().append('<option value="">- Pilih Unit Kerja -</option>');
+       var $filterUnit = $('#filterUnit').empty().append('<option value="">- Semua Unit Kerja -</option>');
+       
+       unikUnit.forEach(function(u) { if(u) {
+           $selUnit.append(`<option value="${u}">${u}</option>`);
+           $filterUnit.append(`<option value="${u}">${u}</option>`);
+       }});
+  }).getDatabasePegawai();
+}
+
+function loadFilterTahun() {
+    var thn = new Date().getFullYear();
+    var $sel = $('#filterTahun').empty().append('<option value="">- Thn -</option>');
+    for(var i = thn - 2; i <= thn + 1; i++){ $sel.append(`<option value="${i}">${i}</option>`); }
+    $sel.val(thn);
+}
+
+function filterNamaPegawai() {
+    var unit = $('#selUnit').val(); 
+    var $selNama = $('#selNama').empty().prop('disabled', true).append('<option>- Pilih -</option>');
+    $('#selNip').empty().prop('disabled', true).append('<option>-</option>');
+
+    if(unit && DB_PEGAWAI_LOKAL.length > 0){
+        var list = DB_PEGAWAI_LOKAL.filter(x => x.unit === unit).map(x => x.nama);
+        var unik = [...new Set(list)].sort();
+        $selNama.empty().append('<option value="">- Pilih Nama -</option>');
+        unik.forEach(n => $selNama.append(`<option value="${n}">${n}</option>`));
+        $selNama.prop('disabled', false);
+    }
+}
+
+function filterNipPegawai() {
+    var u = $('#selUnit').val(); var n = $('#selNama').val(); 
+    var $selNip = $('#selNip').empty().prop('disabled', true);
+    if(n && DB_PEGAWAI_LOKAL.length > 0){
+        var list = DB_PEGAWAI_LOKAL.filter(x => x.unit === u && x.nama === n).map(x => x.nip);
+        if(list.length > 0) { 
+            $selNip.append(`<option value="${list[0]}">${list[0]}</option>`).val(list[0]).prop('disabled', false); 
+        }
+    }
+}
+
+// --- 4. RENDER TABEL & BUTTON LOGIC ---
+
+function applyFilterLupaPresensi() {
+    var th = $('#filterTahun').val(); var bl = $('#filterBulan').val();
+    if (!th) { NotifSultan.alert('warning', 'Filter Tahun', 'Pilih Tahun dulu.'); return; }
+
+    $('#bodyTabelLupa').html('<tr><td colspan="17" class="text-center p-4"><div class="spinner-border text-maroon mb-2"></div><br><small>Memuat data...</small></td></tr>');
+
+    google.script.run
+        .withSuccessHandler(renderTabelLupa)
+        .withFailureHandler(function(e){
+            $('#bodyTabelLupa').html(`<tr><td colspan="17" class="text-center text-danger p-4">Gagal: ${e.message}</td></tr>`);
+        })
+        .getDaftarLupaPresensi(th, bl, $('#filterUnit').val(), $('#filterStatus').val());
+}
+
+function refreshTabelLupa() { applyFilterLupaPresensi(); }
+
+function renderTabelLupa(jsonString) {
+    if(typeof Swal !== 'undefined') Swal.close();
+    
+    // 1. Reset Tabel Dulu (Hancurkan DataTable lama sebelum isi body)
+    // Ini PENTING agar tabel kosong benar-benar bersih sebelum diisi
+    if ($.fn.DataTable.isDataTable('#tabelLupa')) {
+        $('#tabelLupa').DataTable().destroy();
+    }
+
+    var data = JSON.parse(jsonString);
+    var tbody = $('#bodyTabelLupa'); 
+    tbody.empty(); // Kosongkan isi HTML
+
+    if(data.length === 0) { 
+        tbody.html('<tr><td colspan="16" class="text-center py-5 text-muted small"><i class="fas fa-search fa-2x mb-2 text-gray-300"></i><br>Data tidak ditemukan.</td></tr>');
+        return; 
+    }
+
+    var html = '';
+    
+    for (var i = 0; i < data.length; i++) {
+        var row = data[i];
+
+        // --- Logic Tombol & Badge ---
+        var st = (row.status || "").toLowerCase();
+        var isLocked = (st === 'ok' || st === 'disetujui' || st === 'acc');
+        var btnAttr = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+        
+        var badgeStatus = renderBadgeSultan(row.status);
+        var badgeJenis  = renderBadgeSultan(row.jenis);
+
+        var btnFile = (row.fileUrl && row.fileUrl.length > 5) 
+             ? `<a href="${row.fileUrl}" target="_blank" class="btn btn-sm btn-outline-danger border-0 shadow-sm"><i class="fas fa-file-pdf fa-lg"></i></a>` 
+             : '<span class="text-muted small">-</span>';
+
+        var btnEdit = `<button class="btn btn-sm btn-default border-warning text-warning shadow-sm mx-1" onclick="editDataLupa('${row.rowBaris}')" title="Edit" ${btnAttr}><i class="fas fa-pencil-alt"></i></button>`;
+        var btnHapus = `<button class="btn btn-sm btn-default border-danger text-danger shadow-sm mx-1" onclick="hapusDataLupa('${row.rowBaris}')" title="Hapus" ${btnAttr}><i class="fas fa-trash-alt"></i></button>`;
+
+        // --- ANIMASI DI SINI ---
+        var delay = (i * 0.05); // Delay bertingkat
+        html += `<tr class="tr-animasi" style="animation-delay: ${delay}s">`;
+        
+        // --- ISI KOLOM ---
+        html += '<td class="font-weight-bold text-dark text-nowrap" style="position: sticky; left: 0; background: #fff; border-right: 1px solid #dee2e6; z-index:1;">' + (row.nama || '') + '</td>';
+        html += '<td class="align-middle text-nowrap">' + (row.nip || '') + '</td>';
+        html += '<td class="align-middle text-nowrap">' + (row.tanggal || '') + '</td>';
+        html += '<td class="align-middle font-weight-bold">' + (row.jam || '') + '</td>';
+        html += '<td class="text-center align-middle">' + badgeJenis + '</td>';
+        html += '<td class="text-center align-middle">' + (row.komulatif || '-') + '</td>';
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglKirim || '-') + '</td>';
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.userInput || '-') + '</td>';
+        html += '<td class="text-center align-middle">' + btnFile + '</td>';
+        html += '<td class="text-center align-middle">' + badgeStatus + '</td>';
+        html += '<td class="text-center align-middle text-nowrap"><div class="d-flex justify-content-center">' + btnEdit + btnHapus + '</div></td>';
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglEdit || '-') + '</td>';    
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.userEdit || '-') + '</td>';   
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglVerif || '-') + '</td>';   
+        html += '<td class="small text-muted align-middle">' + (row.adminVerif || '-') + '</td>'; 
+        html += '<td class="align-middle text-info small">' + (row.ket || '') + '</td>'; 
+        html += '</tr>';
+    }
+
+    tbody.html(html);
+
+    // 4. PANGGIL FUNGSI GLOBAL (Beri delay sedikit agar DOM stabil)
+    setTimeout(function() {
+        initTabelSultan('#tabelLupa');
+        
+        // Init Tooltip
+        if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
+    }, 100);
+}
+
+// Helper Badge (Sama seperti sebelumnya)
+function renderBadgeSultan(text) {
+    if (!text) return '-';
+    var str = text.toString().toLowerCase();
+    var color = 'secondary'; var icon = '';
+
+    if (str === 'ok' || str === 'disetujui' || str === 'setuju') { color = 'success'; icon = '<i class="fas fa-check mr-1"></i>'; } 
+    else if (str === 'diproses' || str === 'menunggu') { color = 'warning text-white'; icon = '<i class="fas fa-clock mr-1"></i>'; } 
+    else if (str === 'revisi') { color = 'info'; icon = '<i class="fas fa-sync mr-1"></i>'; } 
+    else if (str === 'ditolak' || str === 'tolak') { color = 'danger'; icon = '<i class="fas fa-times mr-1"></i>'; }
+    else if (str.includes('datang')) { color = 'primary'; icon = '<i class="fas fa-sign-in-alt mr-1"></i>'; } 
+    else if (str.includes('pulang')) { color = 'dark'; icon = '<i class="fas fa-sign-out-alt mr-1"></i>'; }
+    
+    return `<span class="badge badge-pill badge-${color} shadow-sm px-3 py-1">${icon}${text}</span>`;
+}
+
+// 5. Placeholder Fungsi Lain (Jika belum ada)
+function hapusDataLupa(id) { alert("Fitur Hapus ID: " + id + " belum dipasang."); }
+</script>

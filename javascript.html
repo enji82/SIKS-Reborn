@@ -346,4 +346,101 @@ function handleFormSubmit(event) {
   };
   reader.readAsDataURL(file);
 }
+
+/**
+ * GLOBAL HELPER: UI SULTAN UNTUK SEMUA STATUS
+ * Otomatis mendeteksi warna & ikon berdasarkan teks input.
+ */
+function renderBadgeSultan(text) {
+    if (!text) return '-';
+    
+    var str = text.toString().toLowerCase();
+    var color = 'secondary'; // Default warna abu-abu
+    var icon = '';
+
+    // --- KELOMPOK 1: STATUS VERIFIKASI (OK, Ditolak, dll) ---
+    if (str === 'ok' || str === 'disetujui' || str === 'aktif') {
+        color = 'success'; // Hijau
+        icon = '<i class="fas fa-check mr-1"></i>';
+    } 
+    else if (str === 'diproses' || str === 'menunggu') {
+        color = 'warning text-white'; // Kuning (teks putih biar terbaca)
+        icon = '<i class="fas fa-clock mr-1"></i>';
+    } 
+    else if (str === 'revisi') {
+        color = 'info'; // Biru Langit
+        icon = '<i class="fas fa-sync mr-1"></i>';
+    } 
+    else if (str === 'ditolak' || str === 'nonaktif') {
+        color = 'danger'; // Merah
+        icon = '<i class="fas fa-times mr-1"></i>';
+    }
+
+    // --- KELOMPOK 2: JENIS KEHADIRAN (Datang, Pulang) ---
+    else if (str.includes('datang')) {
+        color = 'primary'; // Biru Tua
+        icon = '<i class="fas fa-sign-in-alt mr-1"></i>';
+    } 
+    else if (str.includes('pulang')) {
+        color = 'dark'; // Hitam/Abu Gelap (biar beda dengan Ditolak/Merah)
+        // Atau ganti 'danger' jika ingin merah
+        icon = '<i class="fas fa-sign-out-alt mr-1"></i>';
+    }
+    
+    // Kembalikan HTML Badge
+    return `<span class="badge badge-pill badge-${color} shadow-sm px-3 py-1">${icon}${text}</span>`;
+}
+
+/**
+ * FUNGSI GLOBAL: Inisialisasi DataTable Sultan
+ * Cukup panggil: initTabelSultan('#idTabelnya');
+ */
+/**
+ * FUNGSI GLOBAL: Inisialisasi DataTable Sultan (FIX LAYOUT)
+ * Search & Pagination Tetap, Tabel Scroll Sendiri.
+ */
+function initTabelSultan(selectorId) {
+    // 1. Cek keberadaan tabel
+    var $tbl = $(selectorId);
+    if ($tbl.length === 0) return;
+
+    // 2. Hancurkan jika ada (Reset)
+    if ($.fn.DataTable.isDataTable(selectorId)) {
+        $tbl.DataTable().destroy();
+    }
+
+    // 3. Inisialisasi DataTable
+    var table = $tbl.DataTable({
+        "responsive": false, 
+        "autoWidth": false,
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": false, 
+        "info": true,
+        "stateSave": false,
+        "pageLength": 10,
+        // DOM Layout: Mengatur posisi Search (f), Length (l), Table (t), Info (i), Pagination (p)
+        // Kita bungkus tabel (t) dengan div scroll khusus
+        "dom":  "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                "<'row'<'col-sm-12'tr>>" + // tr = table row
+                "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "language": {
+            "emptyTable": "Tidak ada data yang tersedia",
+            "info": "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
+            "infoEmpty": "0 data",
+            "infoFiltered": "(difilter dari _MAX_ total)",
+            "lengthMenu": "_MENU_ data per hal",
+            "loadingRecords": "Sedang memuat...",
+            "processing": "Memproses...",
+            "search": "Cari:",
+            "zeroRecords": "Tidak ditemukan",
+            "paginate": { "first": "<<", "last": ">>", "next": ">", "previous": "<" }
+        }
+    });
+
+    // 4. TRIK JITU: Bungkus Tabelnya saja dengan Scroll (Manual Wrapper)
+    // Ini membuat Search Bar diluar scroll, tapi tabel bisa digeser
+    $(selectorId).wrap('<div style="overflow-x: auto; width: 100%; border-top: 1px solid #dee2e6;"></div>');
+}
 </script>
