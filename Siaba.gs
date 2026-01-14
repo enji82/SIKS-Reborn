@@ -698,29 +698,63 @@ function getSiabaSalahData(filterTahun, filterBulan, filterUnit, filterStatus) {
   }
 }
 
-// --- BAGIAN SERVER CRUD SALAH ABSEN ---
+/* --- FUNGSI GET DATA SALAH PRESENSI (VERSI FILTER SERVER-SIDE) --- */
+function getDaftarSalahPresensi(tahun, bulan, unit, status) {
+  var ID_DB = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
+  var SHEET_NAME = "Salah_Absen";
 
-function getDaftarSalahPresensi() {
   try {
-    var ss = SpreadsheetApp.openById("1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY");
-    var sheet = ss.getSheetByName("Salah_Absen"); 
-    
-    if (!sheet) return JSON.stringify([]); 
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) return JSON.stringify([]);
 
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return JSON.stringify([]);
-
-    var dataRange = sheet.getRange(2, 1, lastRow - 1, 14); 
-    var displayValues = dataRange.getDisplayValues(); 
-
+    // Ambil Data
+    var data = sheet.getDataRange().getDisplayValues();
     var output = [];
 
-    for (var i = 0; i < displayValues.length; i++) {
-      var row = displayValues[i];
-      if (row[1] === "") continue;
+    // Sanitasi Filter
+    var fTahun  = (tahun && String(tahun).trim() !== "") ? String(tahun).trim() : null;
+    var fBulan  = (bulan && String(bulan).trim() !== "") ? String(bulan).trim() : null;
+    var fUnit   = (unit && String(unit).trim() !== "" && unit !== "SEMUA") ? String(unit).trim() : null;
+    var fStatus = (status && String(status).trim() !== "" && status !== "SEMUA") ? String(status).trim() : null;
+    var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
+    // Loop (Mulai baris 2, index 1)
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row[1]) continue; // Skip jika Nama kosong
+
+      // --- LOGIKA FILTER ---
+      
+      // 1. Filter Tanggal (Kolom Index 3: dd-mm-yyyy atau dd/mm/yyyy)
+      if (fTahun || fBulan) {
+          var tglStr = String(row[3]).replace(/\//g, '-'); // Ubah / jadi -
+          var tglParts = tglStr.split('-');
+          if (tglParts.length === 3) {
+             // Asumsi format: 12-05-2026 (dd-mm-yyyy) -> part[2] = tahun
+             // Jika format sheet yyyy-mm-dd, sesuaikan indexnya.
+             // Default Apps Script biasanya dd-mm-yyyy jika locale Indonesia.
+             var thnData = (tglParts[0].length === 4) ? tglParts[0] : tglParts[2]; // Cek mana yg tahun
+             var blnData = parseInt((tglParts[0].length === 4) ? tglParts[1] : tglParts[1]);
+
+             if (fTahun && thnData !== fTahun) continue;
+             if (fBulan) {
+                 if (!isNaN(blnData) && blnData >= 1 && blnData <= 12) {
+                     if (arrBulan[blnData-1] !== fBulan) continue;
+                 } else { continue; }
+             }
+          }
+      }
+
+      // 2. Filter Unit (Kolom Index 0)
+      if (fUnit && String(row[0]) !== fUnit) continue;
+
+      // 3. Filter Status (Kolom Index 8)
+      if (fStatus && String(row[8]) !== fStatus) continue;
+
+      // --- MAPPING DATA ---
       var rowData = {
-        rowBaris: i + 2,     
+        rowBaris: i + 1,     
         unitKerja: row[0],   
         namaAsn: row[1],     
         nip: row[2],         
@@ -736,14 +770,13 @@ function getDaftarSalahPresensi() {
         tglVerif: row[12],   
         adminVerif: row[13]  
       };
-      
       output.push(rowData);
     }
     
     return JSON.stringify(output);
 
   } catch (e) {
-    return JSON.stringify([{ error: true, message: e.toString() }]);
+    return JSON.stringify([{ status: 'Error', nama: e.toString() }]);
   }
 }
 

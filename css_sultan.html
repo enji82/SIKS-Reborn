@@ -1,0 +1,151 @@
+<style>
+  /* =========================================
+     1. VARIABEL & FONTS (SULTAN PALETTE)
+     ========================================= */
+  :root {
+    --warna-maroon: #800000;       /* Warna Utama */
+    --warna-maroon-dark: #600000;  /* Hover State */
+    --warna-emas: #C5A059;         /* Aksen Mewah (Gold Matte) */
+    --warna-tegas: #343a40;        /* Text Gelap */
+    --warna-abu-bg: #f4f6f9;       /* Background Halaman */
+    --shadow-sultan: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --radius-sultan: 8px;          /* Sudut tumpul modern */
+  }
+
+  /* Font Family: Memaksa font sistem yang bersih */
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--warna-abu-bg);
+  }
+
+  /* =========================================
+     2. OVERRIDE ADMINLTE (WARNA)
+     ========================================= */
+  .bg-maroon, .btn-maroon {
+    background-color: var(--warna-maroon) !important;
+    border-color: var(--warna-maroon) !important;
+    color: #fff !important;
+  }
+  .btn-maroon:hover {
+    background-color: var(--warna-maroon-dark) !important;
+    border-color: var(--warna-maroon-dark) !important;
+  }
+  .text-maroon { color: var(--warna-maroon) !important; }
+  
+  /* Garis Mewah */
+  hr.style-sultan {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(128, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    margin: 1.5rem 0;
+  }
+
+  /* =========================================
+     3. FORMULIR (MOBILE FRIENDLY)
+     ========================================= */
+  .form-control-sultan {
+    border-radius: var(--radius-sultan) !important;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 0.75rem; /* Padding lebih lega untuk jari */
+    height: calc(2.5rem + 2px) !important; /* Lebih tinggi sedikit */
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  .form-control-sultan:focus {
+    border-color: var(--warna-maroon) !important;
+    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1) !important; /* Glow halus */
+  }
+  
+  /* Label Form yang Rapi */
+  .form-label-sultan {
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+
+  /* Custom Switch Toggle (Pengganti Checkbox Kuno) */
+  .custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--warna-maroon) !important;
+    border-color: var(--warna-maroon) !important;
+  }
+
+  /* =========================================
+     4. TABEL SUPER (BANYAK KOLOM)
+     ========================================= */
+  .table-premium {
+    width: 100%;
+    border-collapse: separate; /* Penting untuk sticky */
+    border-spacing: 0;
+  }
+  
+  .table-premium thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    border-top: 1px solid #dee2e6;
+    color: #495057;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    white-space: nowrap; /* Header jangan patah baris */
+    padding: 12px 10px;
+  }
+
+  .table-premium tbody td {
+    vertical-align: middle !important;
+    font-size: 14px;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  /* Sticky Column Kiri (Nama/Identitas) */
+  .col-sticky-left {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background-color: #fff; /* Wajib ada background */
+    box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); /* Bayangan pemisah */
+    border-right: 1px solid #dee2e6;
+  }
+  /* Sticky Header butuh z-index lebih tinggi */
+  thead th.col-sticky-left { z-index: 10; background-color: #f8f9fa; }
+
+  /* Efek Baris Zebra Halus */
+  .table-premium tbody tr:hover td {
+    background-color: #fff8f8 !important; /* Merah sangat muda saat hover */
+  }
+
+  /* =========================================
+     5. CARD & MODAL (CONTAINER)
+     ========================================= */
+  .card-sultan {
+    border: none;
+    border-radius: var(--radius-sultan);
+    box-shadow: var(--shadow-sultan);
+    background: #fff;
+    margin-bottom: 1.5rem;
+    transition: transform 0.2s;
+  }
+  
+  .modal-content-sultan {
+    border: none;
+    border-radius: var(--radius-sultan);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  }
+
+  /* =========================================
+     6. SKELETON LOADING (ANIMASI MAHAL)
+     ========================================= */
+  .skeleton {
+    background: #eee;
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    border-radius: 4px;
+    background-size: 200% 100%;
+    animation: 1.5s shine linear infinite;
+  }
+  @keyframes shine {
+    to { background-position-x: -200%; }
+  }
+</style>
