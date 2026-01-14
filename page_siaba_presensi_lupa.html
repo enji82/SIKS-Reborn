@@ -61,8 +61,8 @@
                 <i class="fas fa-search text-white"></i>
               </button>
               
-              <button type="button" id="btnSampah" class="btn btn-secondary btn-sm font-weight-bold shadow-sm mr-2" onclick="bukaTongSampahLupa()" style="display: none;">
-                <i class="fas fa-trash-restore mr-1"></i> Sampah
+              <button type="button" id="btnSampah" class="btn btn-secondary btn-sm font-weight-bold shadow-sm mr-2" onclick="bukaTongSampah()" style="display: none;">
+                  <i class="fas fa-trash-restore mr-1"></i> Sampah
               </button>
 
               <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="tambahDataLupa()">
@@ -72,40 +72,36 @@
         </div>
 
         <div class="card shadow-sm border-0">
-          <div class="card-body p-0">
-                <table id="tabelLupa" class="table table-hover table-premium mb-0" style="width:100%;">
-                  <thead class="bg-light">
+            <div class="card-body p-0">
+              
+              <table id="tabelLupa" class="table table-hover table-premium mb-0" style="width:100%;">
+                <thead>
                   <tr>
-                    <th style="min-width: 200px; position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);">Nama ASN</th>
-                    <th>NIP</th>
-                    <th>Tanggal</th>
-                    <th>Jam</th>          
-                    <th>Jenis</th>        
-                    <th class="text-center">Ke</th>
-                    <th>Tgl Pengajuan</th>
-                    <th>User Input</th>
-                    <th class="text-center">File</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-center">Aksi</th>
-                    <th class="small text-muted">Tgl Edit</th>
-                    <th class="small text-muted">User Edit</th>
-                    <th class="small text-muted">Tgl Verif</th>
-                    <th class="small text-muted">Admin Verif</th>
-                    <th>Keterangan</th>
+                    <th style="min-width: 250px; position: sticky; left: 0; z-index: 10; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.2); border-right: 1px solid #dee2e6;">
+                        Nama ASN
+                    </th>
+                    
+                    <th style="white-space: nowrap;">NIP</th>
+                    <th style="white-space: nowrap;">Tanggal</th>
+                    <th style="white-space: nowrap;">Jam</th>
+                    <th class="text-center" style="white-space: nowrap;">Jenis</th>
+                    <th class="text-center" style="white-space: nowrap;">Ke</th>
+                    <th class="small text-muted" style="white-space: nowrap;">Tgl Kirim</th>
+                    <th class="small text-muted" style="white-space: nowrap;">User Input</th>
+                    <th class="text-center" style="white-space: nowrap;">File</th>
+                    <th class="text-center" style="white-space: nowrap;">Status</th>
+                    <th class="text-center" style="white-space: nowrap;">Aksi</th>
+                    <th class="small text-muted" style="white-space: nowrap;">Tgl Edit</th>
+                    <th class="small text-muted" style="white-space: nowrap;">User Edit</th>
+                    <th class="small text-muted" style="white-space: nowrap;">Tgl Verif</th>
+                    <th class="small text-muted" style="white-space: nowrap;">Admin Verif</th>
                   </tr>
                 </thead>
-                <tbody id="bodyTabelLupa">
-                    <tr id="msgRow">
-                        <td colspan="16" class="text-center py-5 text-muted small">
-                            <i class="fas fa-filter fa-2x mb-2 text-gray-300"></i><br>
-                            Pilih Filter & klik tombol <b>Cari</b>.
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="bodyTabelLupa"></tbody>
               </table>
+
             </div>
           </div>
-        </div>
 
       </div>
     </div>
@@ -200,11 +196,235 @@
   </div>
 </div>
 
-<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog"><div class="modal-dialog"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-danger"><h5 class="modal-title text-white">Konfirmasi Hapus</h5></div><form id="formHapus" onsubmit="submitHapusDataLupa(event)"><div class="modal-body bg-light"><input type="hidden" id="hapusNip"><input type="hidden" id="hapusTgl"><input type="hidden" id="hapusJam"><div class="alert alert-warning">Data akan dipindahkan ke Trash.</div><div class="form-group"><label>Alasan</label><textarea id="inputAlasan" class="form-control" required></textarea></div><div class="form-group"><label>Kode</label><input type="text" id="inputKode" class="form-control" required></div></div><div class="modal-footer"><button type="submit" id="btnEksekusiHapus" class="btn btn-danger">Hapus</button></div></form></div></div></div>
+<div class="modal fade" id="modalPreviewTabel" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document" style="max-width: 90%;">
+    <div class="modal-content" style="height: 90vh;">
+      
+      <div class="modal-header bg-info text-white py-2">
+        <h5 class="modal-title"><i class="fas fa-file-alt mr-2"></i>Pratinjau Dokumen</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
 
-<div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-success"><h5 class="modal-title text-white">Verifikasi Pengajuan</h5></div><form id="formVerifikasi" onsubmit="submitVerifikasiDataLupa(event)"><div class="modal-body bg-light"><input type="hidden" id="verifNip"><input type="hidden" id="verifTgl"><input type="hidden" id="verifJam"><div class="row"><div class="col-12 p-4"><p>Nama: <span id="vNama"></span></p><select id="inputStatusVerif" class="form-control mb-2" required><option value="">- Pilih Status -</option><option value="OK">OK</option><option value="Revisi">Revisi</option><option value="Ditolak">Ditolak</option></select><textarea id="inputKetVerif" class="form-control" placeholder="Catatan..."></textarea></div></div></div><div class="modal-footer"><button type="submit" id="btnEksekusiVerif" class="btn btn-success">Simpan</button></div></form></div></div></div>
+      <div class="modal-body p-0 bg-dark position-relative">
+         <div class="position-absolute" style="top: 10px; right: 20px; z-index: 10;">
+             <a id="btnUnduhTabel" href="#" class="btn btn-sm btn-light shadow" download>
+                <i class="fas fa-download"></i> Unduh
+             </a>
+         </div>
 
-<div class="modal fade" id="modalSampah" tabindex="-1" role="dialog"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-body"><table class="table"><tbody id="bodySampah"></tbody></table></div></div></div></div>
+         <iframe id="framePreviewTabel" src="" style="width:100%; height:100%; border:none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white font-weight-bold">
+            <i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      
+      <form id="formHapusLupa" onsubmit="submitHapusDataLupa(event)">
+        <div class="modal-body bg-white">
+          <input type="hidden" id="hapusRecId" name="recId">
+          <input type="hidden" id="hapusUserLogin" name="user_login">
+
+          <div class="alert alert-light border-danger text-dark mb-3">
+             <table class="table table-sm table-borderless mb-0 small">
+                <tr><td width="30%" class="font-weight-bold text-muted">Nama ASN</td><td>: <span id="viewNama" class="font-weight-bold"></span></td></tr>
+                <tr><td class="font-weight-bold text-muted">NIP</td><td>: <span id="viewNip"></span></td></tr>
+                <tr><td class="font-weight-bold text-muted">Tanggal</td><td>: <span id="viewTgl"></span></td></tr>
+                <tr><td class="font-weight-bold text-muted">Jam</td><td>: <span id="viewJam"></span></td></tr>
+                <tr><td class="font-weight-bold text-muted">Jenis</td><td>: <span id="viewJenis"></span></td></tr>
+                <tr><td class="font-weight-bold text-muted">Ke</td><td>: <span id="viewKe"></span></td></tr>
+             </table>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold small text-danger">Kode Konfirmasi Hapus</label>
+            <input type="text" id="inputKode" class="form-control text-center font-weight-bold letter-spacing-1" placeholder="Masukkan Kode" required autocomplete="off">
+            <small class="text-muted font-italic"><i class="fas fa-info-circle mr-1"></i>Hubungi admin untuk mendapatkan kode hapus.</small>
+          </div>
+          
+          <div class="form-group">
+            <label class="font-weight-bold small">Alasan / Keterangan</label>
+            <textarea id="inputAlasan" class="form-control" rows="2" placeholder="Wajib diisi..." required></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-footer justify-content-between bg-light">
+           <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">Batal</button>
+           <button type="submit" id="btnEksekusiHapus" class="btn btn-danger shadow-sm font-weight-bold">
+              <i class="fas fa-trash mr-1"></i> Hapus Data
+           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+    <div class="modal-content border-0 shadow-lg" style="height: 90vh;">
+      
+      <div class="modal-header bg-success text-white py-2">
+        <h5 class="modal-title font-weight-bold">
+            <i class="fas fa-check-double mr-2"></i>Verifikasi Data Lupa Presensi
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body p-0 bg-light">
+        <div class="row h-100 no-gutters">
+            
+            <div class="col-lg-8 border-right d-flex flex-column bg-dark">
+                <div class="p-2 bg-secondary text-white d-flex justify-content-between align-items-center small">
+                    <span><i class="fas fa-eye mr-1"></i> Pratinjau Dokumen</span>
+                    <div>
+                        <a id="btnUnduhFile" href="#" class="btn btn-xs btn-light text-dark font-weight-bold mr-2" download>
+                            <i class="fas fa-download mr-1"></i> Unduh File
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="flex-grow-1 position-relative" style="background: #525659; overflow: hidden;">
+                    <iframe id="frameVerif" src="" style="width:100%; height:100%; border:none;"></iframe>
+                    
+                    <div id="noFileVerif" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center text-white flex-column" style="top:0; left:0; display:none; background: #333;">
+                        <i class="fas fa-file-excel fa-3x mb-3 text-muted"></i>
+                        <h6 class="text-muted">Tidak ada lampiran file</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 d-flex flex-column h-100 bg-white" style="overflow-y: auto;">
+                <form id="formVerifikasi" onsubmit="submitVerifikasiDataLupa(event)" class="d-flex flex-column h-100">
+                    <input type="hidden" id="verifRecId">
+                    <input type="hidden" id="verifAdmin">
+
+                    <div class="p-4 flex-grow-1">
+                        <div class="mb-4 pb-3 border-bottom">
+                            <h6 class="text-uppercase text-muted small font-weight-bold mb-3 ls-1">Data Pegawai</h6>
+                            
+                            <div class="mb-3">
+                                <label class="d-block text-muted small mb-0 text-uppercase">Nama ASN</label>
+                                <div id="vNama" class="text-dark font-weight-bold" style="font-size: 1.2rem;">-</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="d-block text-muted small mb-0 text-uppercase">NIP</label>
+                                <div id="vNip" class="text-dark font-weight-bold" style="font-size: 1.1rem; letter-spacing: 0.5px;">-</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="d-block text-muted small mb-0 text-uppercase">Unit Kerja</label>
+                                <div id="vUnit" class="text-dark font-weight-bold" style="font-size: 1rem;">-</div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-6">
+                                    <label class="d-block text-muted small mb-0 text-uppercase">Tanggal & Jam</label>
+                                    <div class="text-dark font-weight-bold" style="font-size: 1.1rem;">
+                                        <span id="vTgl">-</span> <br> <span id="vJam" class="text-primary">-</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="d-block text-muted small mb-0 text-uppercase">Jenis & Ke</label>
+                                    <div class="text-dark font-weight-bold" style="font-size: 1rem;">
+                                        <span id="vJenis">-</span> <span class="badge badge-light border ml-1" id="vKe">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-light p-3 rounded border">
+                            <h6 class="text-success font-weight-bold mb-3"><i class="fas fa-user-shield mr-1"></i> Keputusan Admin</h6>
+                            
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-uppercase text-secondary">Status Verifikasi</label>
+                                <select id="inputStatusVerif" class="form-control form-control-lg border-success font-weight-bold text-dark" style="height: 45px;" required>
+                                    <option value="">- Pilih Keputusan -</option>
+                                    <option value="OK">OK (Disetujui)</option>
+                                    <option value="Revisi">Revisi</option>
+                                    <option value="Diproses">Diproses</option>
+                                    <option value="Ditolak">Ditolak</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-0">
+                                <label class="small font-weight-bold text-uppercase text-secondary">Catatan / Keterangan</label>
+                                <textarea id="inputKetVerif" class="form-control" rows="3" placeholder="Catatan..." style="font-size: 14px;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white border-top text-right">
+                        <button type="button" class="btn btn-secondary mr-2 px-4" data-dismiss="modal">Batal</button>
+                        <button type="submit" id="btnSimpanVerif" class="btn btn-success shadow-sm px-4 font-weight-bold">
+                            <i class="fas fa-save mr-1"></i> Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalSampah" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-secondary py-2"> 
+        <h6 class="modal-title text-white font-weight-bold">
+            <i class="fas fa-trash-restore mr-2"></i>Data Terhapus (Lupa Presensi)
+        </h6>
+        <button type="button" class="close text-white pt-2" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover mb-0" style="width:100%; font-size: 13px;">
+            <thead class="bg-light text-secondary">
+              <tr>
+                <th class="pl-3 py-2">Nama ASN</th>
+                <th class="py-2">Tanggal</th>
+                <th class="py-2">Jam</th>
+                <th class="py-2">Jenis</th>
+                <th class="py-2">Alasan Hapus</th>
+                <th class="py-2">Dihapus Oleh</th>
+                <th class="text-center py-2" style="width: 100px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="bodySampah">
+              </tbody>
+          </table>
+        </div>
+        
+        <div id="loadingSampah" class="text-center p-3" style="display:none">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+            <p class="small text-muted mt-1 mb-0">Memuat...</p>
+        </div>
+        
+        <div id="emptySampah" class="text-center p-4" style="display:none">
+            <i class="fas fa-trash-alt fa-2x text-gray-300 mb-2"></i>
+            <p class="text-muted small mb-0">Tong sampah kosong.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 /**
@@ -218,52 +438,83 @@ var DB_PEGAWAI_LOKAL = [];
 var FILE_UPLOAD_DATA = null;
 
 $(document).ready(function() {
-    console.log("Halaman Siap.");
+    console.log("Halaman Siap: Lupa Presensi");
 
-    // --- A. LOAD USER INFO ---
+    // --- A. LOAD USER INFO & HAK AKSES ---
     try {
         var sesi = localStorage.getItem("siksUser");
         if (sesi) {
             var user = JSON.parse(sesi);
-            var namaLengkap = user.nama || user.nama_lengkap || user.email || "User Web";
+            
+            // 1. Set Nama User (Log)
+            var namaLengkap = user.nama || user.nama_lengkap || user.fullName || "User Web";
             $('#hideUserLogin').val(namaLengkap);
-            if ((user.role || "").toLowerCase().includes('admin')) $('#btnSampah').show();
-        }
-    } catch (e) { console.error(e); }
 
-    // --- B. INITIAL LOAD ---
-    if(typeof loadDropdownPegawai === 'function') loadDropdownPegawai();
-    if(typeof loadFilterTahun === 'function') {
-        loadFilterTahun(); 
-        var arrBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-        $('#filterBulan').val(arrBulan[new Date().getMonth()]);
+            // 2. Tombol Sampah (Hanya Admin)
+            if (user.role && (user.role.toLowerCase().includes('admin') || user.role === 'Super Admin')) {
+                $('#btnSampah').show();
+            }
+        }
+    } catch (e) { console.error("Gagal load session:", e); }
+
+    // --- B. INITIAL LOAD (DROPDOWN & FILTER) ---
+    
+    // 1. Load Unit Kerja (Jika fungsi tersedia)
+    if(typeof loadDropdownPegawai === 'function') {
+        loadDropdownPegawai();
     }
+
+    // 2. Load Filter Tahun (VERSI STABIL CLIENT-SIDE)
+    loadFilterTahun(); 
+
+    // 3. Set Default Bulan ke Bulan Saat Ini
+    var arrBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    var bulanIni = arrBulan[new Date().getMonth()];
+    $('#filterBulan').val(bulanIni);
+
+    // 4. Reset Filter Status
     $('#filterStatus').val('');
 
     // --- C. PESAN AWAL ---
-    $('#bodyTabelLupa').html(`<tr id="msgRow"><td colspan="17" class="text-center py-5 text-muted small"><i class="fas fa-filter fa-2x mb-2 text-gray-300"></i><br>Pilih Filter & klik tombol <b>Cari</b>.</td></tr>`);
+    $('#bodyTabelLupa').html(`<tr id="msgRow"><td colspan="15" class="text-center py-5 text-muted small"><i class="fas fa-filter fa-2x mb-2 text-gray-300"></i><br>Pilih Filter & klik tombol <b>Cari</b>.</td></tr>`);
 });
 
-// --- 2. LOGIKA UTAMA: TAMBAH & EDIT ---
-
-// Fungsi Reset Form & Buka Modal Tambah
 function tambahDataLupa() {
     // 1. Reset Form & ID
     document.getElementById('formLupaAbsen').reset();
-    $('#recId').val(''); // Kosongkan ID agar dianggap Data Baru
+    $('#recId').val(''); // Kosongkan ID (Tandanya Input Baru)
     
-    // 2. Unlock Field Dropdown
-    $('#selUnit').prop('disabled', false).val('').trigger('change');
-    $('#selNama').prop('disabled', true).empty().append('<option>- Pilih Unit -</option>');
+    // 2. PERBAIKAN: ISI ULANG DROPDOWN UNIT KERJA
+    // Kita ambil lagi dari variabel global DB_PEGAWAI_LOKAL agar opsi muncul semua
+    var $selUnit = $('#selUnit').empty().append('<option value="">- Pilih Unit Kerja -</option>');
+    
+    if (DB_PEGAWAI_LOKAL && DB_PEGAWAI_LOKAL.length > 0) {
+       // Ambil daftar unit unik
+       var unikUnit = [...new Set(DB_PEGAWAI_LOKAL.map(item => item.unit))].sort();
+       
+       // Masukkan kembali ke dropdown
+       unikUnit.forEach(function(u) {
+           if(u) $selUnit.append(`<option value="${u}">${u}</option>`);
+       });
+    } else {
+       // Jaga-jaga jika variabel global kosong (misal baru refresh), panggil server
+       loadDropdownPegawai();
+    }
+
+    // 3. Buka Kunci & Reset Anak Dropdown
+    $selUnit.prop('disabled', false);
+    $('#selNama').prop('disabled', true).empty().append('<option value="">- Pilih Unit -</option>');
     $('#selNip').prop('disabled', true).empty().append('<option>-</option>');
     
-    // 3. Reset UI File
+    // 4. Reset UI File
     $('#labelFile').text("Pilih file PDF...").removeClass("text-primary");
     FILE_UPLOAD_DATA = null;
 
-    // 4. Ubah UI Modal
+    // 5. Ubah Judul & Tombol Modal
     $('.modal-title').text("Form Lupa Presensi");
     $('#btnKirim').html('<i class="fas fa-paper-plane"></i> Kirim');
+    
+    // 6. Tampilkan Modal
     $('#modalTambah').modal('show');
 }
 
@@ -450,7 +701,7 @@ function filterNipPegawai() {
 
 function applyFilterLupaPresensi() {
     var th = $('#filterTahun').val(); var bl = $('#filterBulan').val();
-    if (!th) { NotifSultan.alert('warning', 'Filter Tahun', 'Pilih Tahun dulu.'); return; }
+    /*if (!th) { NotifSultan.alert('warning', 'Filter Tahun', 'Pilih Tahun dulu.'); return; } */
 
     $('#bodyTabelLupa').html('<tr><td colspan="17" class="text-center p-4"><div class="spinner-border text-maroon mb-2"></div><br><small>Memuat data...</small></td></tr>');
 
@@ -464,21 +715,43 @@ function applyFilterLupaPresensi() {
 
 function refreshTabelLupa() { applyFilterLupaPresensi(); }
 
+// --- RENDER TABEL (FIX SEMPURNA: FREEZE COLUMN + STATIC DATATABLE) ---
 function renderTabelLupa(jsonString) {
     if(typeof Swal !== 'undefined') Swal.close();
     
-    // 1. Reset Tabel Dulu (Hancurkan DataTable lama sebelum isi body)
-    // Ini PENTING agar tabel kosong benar-benar bersih sebelum diisi
-    if ($.fn.DataTable.isDataTable('#tabelLupa')) {
-        $('#tabelLupa').DataTable().destroy();
+    var data = [];
+    try { data = JSON.parse(jsonString); } catch(e) { console.error(e); return; }
+
+    if (data.length === 1 && data[0].status === 'Error') {
+        alert("ERROR SERVER: " + data[0].nama); return;
     }
 
-    var data = JSON.parse(jsonString);
-    var tbody = $('#bodyTabelLupa'); 
-    tbody.empty(); // Kosongkan isi HTML
+    // --- SORTING (Terbaru di Atas) ---
+    const parseWaktu = (str) => {
+        if (!str || str === "" || str === "-") return 0;
+        try {
+            var parts = str.split(' '); var dSplit = parts[0].split(/[-/]/); 
+            var timePart = parts[1] || "00:00:00";
+            if (dSplit.length === 3) {
+                return new Date(dSplit[2], dSplit[1] - 1, dSplit[0], 
+                                parseInt(timePart.split(':')[0]||0), parseInt(timePart.split(':')[1]||0), parseInt(timePart.split(':')[2]||0)).getTime();
+            }
+        } catch(e) { return 0; }
+        return 0;
+    };
+    data.sort((a, b) => {
+        var maxA = Math.max(parseWaktu(a.tglKirim), parseWaktu(a.tglEdit), parseWaktu(a.tglVerif));
+        var maxB = Math.max(parseWaktu(b.tglKirim), parseWaktu(b.tglEdit), parseWaktu(b.tglVerif));
+        return maxB - maxA; 
+    });
+
+    // Reset DataTable
+    if ($.fn.DataTable.isDataTable('#tabelLupa')) { $('#tabelLupa').DataTable().destroy(); }
+    
+    var tbody = $('#bodyTabelLupa'); tbody.empty(); 
 
     if(data.length === 0) { 
-        tbody.html('<tr><td colspan="16" class="text-center py-5 text-muted small"><i class="fas fa-search fa-2x mb-2 text-gray-300"></i><br>Data tidak ditemukan.</td></tr>');
+        tbody.html('<tr><td colspan="15" class="text-center py-5 text-muted small">Data tidak ditemukan.</td></tr>');
         return; 
     }
 
@@ -487,52 +760,71 @@ function renderTabelLupa(jsonString) {
     for (var i = 0; i < data.length; i++) {
         var row = data[i];
 
-        // --- Logic Tombol & Badge ---
+        // --- Helper Logic ---
+        var badgeStatus = renderBadgeSultan(row.status);
+        if (row.ket && row.ket.length > 2) {
+             var safeKet = row.ket.replace(/"/g, '&quot;');
+             badgeStatus += `<i class="fas fa-info-circle text-info ml-2" data-toggle="tooltip" title="${safeKet}" style="cursor:help;"></i>`;
+        }
+
         var st = (row.status || "").toLowerCase();
         var isLocked = (st === 'ok' || st === 'disetujui' || st === 'acc');
         var btnAttr = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
         
-        var badgeStatus = renderBadgeSultan(row.status);
-        var badgeJenis  = renderBadgeSultan(row.jenis);
-
-        var btnFile = (row.fileUrl && row.fileUrl.length > 5) 
-             ? `<a href="${row.fileUrl}" target="_blank" class="btn btn-sm btn-outline-danger border-0 shadow-sm"><i class="fas fa-file-pdf fa-lg"></i></a>` 
-             : '<span class="text-muted small">-</span>';
-
+        var btnFile = '-';
+        if (row.fileUrl && row.fileUrl.length > 5) {
+             btnFile = `<button class="btn btn-sm btn-info shadow-sm" onclick="lihatFileLupa('${row.fileUrl}')" title="Lihat Dokumen"><i class="fas fa-eye"></i></button>`;
+        }
+        var btnVerif = `<button class="btn btn-sm btn-success shadow-sm mx-1" onclick="verifikasiDataLupa('${row.rowBaris}')" title="Verifikasi Admin"><i class="fas fa-check-double"></i></button>`;
         var btnEdit = `<button class="btn btn-sm btn-default border-warning text-warning shadow-sm mx-1" onclick="editDataLupa('${row.rowBaris}')" title="Edit" ${btnAttr}><i class="fas fa-pencil-alt"></i></button>`;
         var btnHapus = `<button class="btn btn-sm btn-default border-danger text-danger shadow-sm mx-1" onclick="hapusDataLupa('${row.rowBaris}')" title="Hapus" ${btnAttr}><i class="fas fa-trash-alt"></i></button>`;
 
-        // --- ANIMASI DI SINI ---
-        var delay = (i * 0.05); // Delay bertingkat
-        html += `<tr class="tr-animasi" style="animation-delay: ${delay}s">`;
+        // --- RENDER HTML ---
+        html += '<tr class="tr-animasi">';
         
-        // --- ISI KOLOM ---
-        html += '<td class="font-weight-bold text-dark text-nowrap" style="position: sticky; left: 0; background: #fff; border-right: 1px solid #dee2e6; z-index:1;">' + (row.nama || '') + '</td>';
-        html += '<td class="align-middle text-nowrap">' + (row.nip || '') + '</td>';
-        html += '<td class="align-middle text-nowrap">' + (row.tanggal || '') + '</td>';
-        html += '<td class="align-middle font-weight-bold">' + (row.jam || '') + '</td>';
-        html += '<td class="text-center align-middle">' + badgeJenis + '</td>';
-        html += '<td class="text-center align-middle">' + (row.komulatif || '-') + '</td>';
-        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglKirim || '-') + '</td>';
-        html += '<td class="small text-muted align-middle text-nowrap">' + (row.userInput || '-') + '</td>';
-        html += '<td class="text-center align-middle">' + btnFile + '</td>';
-        html += '<td class="text-center align-middle">' + badgeStatus + '</td>';
-        html += '<td class="text-center align-middle text-nowrap"><div class="d-flex justify-content-center">' + btnEdit + btnHapus + '</div></td>';
-        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglEdit || '-') + '</td>';    
-        html += '<td class="small text-muted align-middle text-nowrap">' + (row.userEdit || '-') + '</td>';   
-        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglVerif || '-') + '</td>';   
-        html += '<td class="small text-muted align-middle">' + (row.adminVerif || '-') + '</td>'; 
-        html += '<td class="align-middle text-info small">' + (row.ket || '') + '</td>'; 
+        // KOLOM 1: NAMA (STICKY)
+        html += `<td class="font-weight-bold text-dark text-nowrap" 
+                     style="position: sticky; left: 0; background-color: #fff; z-index: 5; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); border-right: 1px solid #dee2e6;">
+                     ${row.nama || ''}
+                 </td>`;
+        
+        // KOLOM LAINNYA (Wajib text-nowrap)
+        html += '<td class="align-middle text-nowrap">' + (row.nip || '') + '</td>'; 
+        html += '<td class="align-middle text-nowrap">' + (row.tanggal || '') + '</td>'; 
+        html += '<td class="align-middle font-weight-bold text-nowrap">' + (row.jam || '') + '</td>'; 
+        html += '<td class="text-center align-middle text-nowrap">' + renderBadgeSultan(row.jenis) + '</td>'; 
+        html += '<td class="text-center align-middle text-nowrap">' + (row.komulatif || '-') + '</td>'; 
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglKirim || '-') + '</td>'; 
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.userInput || '-') + '</td>'; 
+        html += '<td class="text-center align-middle text-nowrap">' + btnFile + '</td>'; 
+        html += '<td class="text-center align-middle text-nowrap">' + badgeStatus + '</td>'; 
+        html += '<td class="text-center align-middle text-nowrap"><div class="d-flex justify-content-center">' + btnVerif + btnEdit + btnHapus + '</div></td>'; 
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglEdit || '-') + '</td>';   
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.userEdit || '-') + '</td>';  
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.tglVerif || '-') + '</td>';  
+        html += '<td class="small text-muted align-middle text-nowrap">' + (row.adminVerif || '-') + '</td>'; 
         html += '</tr>';
     }
 
     tbody.html(html);
 
-    // 4. PANGGIL FUNGSI GLOBAL (Beri delay sedikit agar DOM stabil)
     setTimeout(function() {
-        initTabelSultan('#tabelLupa');
-        
-        // Init Tooltip
+        if(typeof initTabelSultan === 'function') { 
+            $('#tabelLupa').DataTable({
+                "destroy": true, 
+                "ordering": false, 
+                "pageLength": 10,
+                "autoWidth": false, // Matikan autoWidth agar CSS nowrap bekerja
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+                
+                // --- INI KUNCINYA: BUNGKUS TABEL SETELAH INIT ---
+                // Kita membungkus HANYA tabelnya saja dengan div scroll
+                // Sehingga Search Bar (di atas) dan Paging (di bawah) tetap diam
+                "initComplete": function(settings, json) {
+                    $(this).wrap('<div style="overflow-x: auto; width: 100%;"></div>');
+                }
+            });
+        }
         if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
     }, 100);
 }
@@ -553,6 +845,319 @@ function renderBadgeSultan(text) {
     return `<span class="badge badge-pill badge-${color} shadow-sm px-3 py-1">${icon}${text}</span>`;
 }
 
-// 5. Placeholder Fungsi Lain (Jika belum ada)
-function hapusDataLupa(id) { alert("Fitur Hapus ID: " + id + " belum dipasang."); }
+// 1. FUNGSI BUKA MODAL HAPUS
+function hapusDataLupa(id) {
+    // Tampilkan Loading
+    if(typeof NotifSultan !== 'undefined') NotifSultan.loading("Mengambil data...");
+
+    google.script.run
+        .withSuccessHandler(function(data) {
+            Swal.close();
+            if(!data) return NotifSultan.alert('error', 'Gagal', "Data tidak ditemukan");
+
+            // Isi Hidden Input
+            $('#hapusRecId').val(data.id);
+            // Ambil nama user dari session (hidden field di halaman utama)
+            $('#hapusUserLogin').val($('#hideUserLogin').val() || "User Web");
+            
+            // Tampilkan Detail Data (Read Only)
+            $('#viewNama').text(data.nama);
+            $('#viewNip').text(data.nip);
+            $('#viewTgl').text(data.tanggal); // Format yyyy-mm-dd
+            $('#viewJam').text(data.waktu);
+            $('#viewJenis').text(data.jenis);
+            $('#viewKe').text(data.komulatif);
+            
+            // Reset Inputan
+            $('#inputKode').val('');
+            $('#inputAlasan').val('');
+
+            // Buka Modal
+            $('#modalHapus').modal('show');
+        })
+        .withFailureHandler(function(e){
+             Swal.close();
+             NotifSultan.alert('error', 'Error', e.message);
+        })
+        .getLupaById(id); // Kita gunakan fungsi get yang sama dengan Edit
+}
+
+// 2. FUNGSI EKSEKUSI HAPUS
+function submitHapusDataLupa(e) {
+    e.preventDefault();
+    
+    var dataKirim = {
+        recId: $('#hapusRecId').val(),
+        kode:  $('#inputKode').val(),
+        alasan: $('#inputAlasan').val(),
+        user_login: $('#hapusUserLogin').val()
+    };
+
+    var btn = $('#btnEksekusiHapus');
+    var txtAwal = btn.html();
+    
+    // UI Loading
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+
+    google.script.run
+        .withSuccessHandler(function(res) {
+            btn.prop('disabled', false).html(txtAwal);
+            $('#modalHapus').modal('hide');
+            
+            // Notifikasi Sukses
+            if(typeof NotifSultan !== 'undefined') NotifSultan.alert('success', 'Berhasil', res);
+            else alert(res);
+
+            // Refresh Tabel Otomatis
+            if(typeof refreshTabelLupa === 'function') refreshTabelLupa();
+        })
+        .withFailureHandler(function(err) {
+            btn.prop('disabled', false).html(txtAwal);
+            if(typeof NotifSultan !== 'undefined') NotifSultan.alert('error', 'Gagal', err.message);
+            else alert(err.message);
+        })
+        .softDeleteLupaPresensi(dataKirim);
+}
+
+// --- 1. BUKA MODAL VERIFIKASI (FIX V5 - SOLUSI CSS) ---
+function verifikasiDataLupa(id) {
+    if(typeof NotifSultan !== 'undefined') NotifSultan.loading("Mengambil data...");
+    
+    google.script.run
+        .withSuccessHandler(function(data) {
+            Swal.close(); 
+            
+            if(!data) { alert("Data tidak ditemukan."); return; }
+
+            // A. ISI DATA TEKS
+            $('#verifRecId').val(data.id);
+            $('#verifAdmin').val($('#hideUserLogin').val() || "Admin"); 
+            $('#vNama').text(data.nama || '-');
+            $('#vNip').text(data.nip || '-');
+            $('#vUnit').text(data.unit || '-');
+            $('#vTgl').text(data.tanggal || '-');
+            $('#vJam').text(data.waktu || '-');
+            $('#vJenis').text(data.jenis || '-');
+            $('#vKe').text(data.komulatif || '-');
+            $('#inputStatusVerif').val(data.status || ""); 
+            $('#inputKetVerif').val(data.ket || ""); 
+
+            // B. LOGIKA FILE & PREVIEW
+            var url = data.fileUrl;
+            var frame = $('#frameVerif');
+            var noFile = $('#noFileVerif'); // Div Placeholder
+            var btnUnduh = $('#btnUnduhFile');
+            
+            frame.attr('src', 'about:blank'); 
+
+            // Cek URL (Jika ada dan bukan kosong)
+            if (url && url.length > 5) {
+                // FILE ADA!
+                // Perbaikan CSS: Hapus class d-flex agar elemen benar-benar sembunyi
+                noFile.removeClass('d-flex').hide();
+                
+                frame.show(); 
+                btnUnduh.removeClass('disabled').show();
+
+                // 1. Link Download
+                var fileId = "";
+                try { var match = url.match(/[-\w]{25,}/); if (match) fileId = match[0]; } catch(e){}
+
+                if (fileId) {
+                    btnUnduh.attr('href', "https://drive.google.com/uc?export=download&id=" + fileId);
+                    // 2. Link Preview
+                    frame.attr('src', "https://drive.google.com/file/d/" + fileId + "/preview");
+                } else {
+                    btnUnduh.attr('href', url);
+                    
+                    var manualPreview = url;
+                    if(url.includes('drive.google.com')) {
+                         manualPreview = url.replace(/\/view.*/, '/preview').replace(/\/edit.*/, '/preview');
+                         if(!manualPreview.includes('/preview')) manualPreview += '/preview';
+                    }
+                    frame.attr('src', manualPreview);
+                }
+            } else {
+                // FILE KOSONG
+                frame.hide(); 
+                // Tampilkan kembali dengan d-flex agar rata tengah
+                noFile.addClass('d-flex').show();
+                btnUnduh.attr('href', '#').addClass('disabled').hide();
+            }
+
+            $('#modalVerifikasi').modal('show');
+        })
+        .withFailureHandler(function(e){
+            Swal.close();
+            alert("Gagal: " + e.message);
+        })
+        .getLupaById(id);
+}
+
+// --- 2. SUBMIT VERIFIKASI ---
+function submitVerifikasiDataLupa(e) {
+    e.preventDefault();
+
+    var status = $('#inputStatusVerif').val();
+    if(!status) {
+        alert("Harap pilih Status Verifikasi (OK/Revisi/Ditolak)!");
+        return;
+    }
+
+    var btn = $('#btnSimpanVerif');
+    var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+    var dataKirim = {
+        recId:  $('#verifRecId').val(),
+        admin:  $('#verifAdmin').val(),
+        status: status,
+        ket:    $('#inputKetVerif').val()
+    };
+
+    google.script.run
+        .withSuccessHandler(function(res) {
+            btn.prop('disabled', false).html(txt);
+            $('#modalVerifikasi').modal('hide');
+            
+            // Pesan Sukses
+            if(typeof NotifSultan !== 'undefined') NotifSultan.alert('success', 'Berhasil', res);
+            else alert(res);
+
+            // Refresh Tabel
+            refreshTabelLupa();
+        })
+        .withFailureHandler(function(err) {
+            btn.prop('disabled', false).html(txt);
+            alert("Error Verifikasi: " + err.message);
+        })
+        .processVerifikasiLupaPresensi(dataKirim);
+}
+
+// --- FUNGSI LIHAT FILE DARI TABEL (PREVIEW MODAL) ---
+function lihatFileLupa(urlRaw) {
+    if (!urlRaw || urlRaw.length < 5) {
+        alert("Link file tidak valid.");
+        return;
+    }
+
+    var frame = $('#framePreviewTabel');
+    var btnUnduh = $('#btnUnduhTabel');
+
+    // Reset dulu biar bersih
+    frame.attr('src', 'about:blank');
+
+    // EKSTRAK ID FILE (Logika 'Sakti' kita)
+    var fileId = "";
+    try {
+        var match = urlRaw.match(/[-\w]{25,}/);
+        if (match) fileId = match[0];
+    } catch(e){}
+
+    if (fileId) {
+        // 1. Link Preview Stabil
+        var previewLink = "https://drive.google.com/file/d/" + fileId + "/preview";
+        frame.attr('src', previewLink);
+
+        // 2. Link Unduh
+        btnUnduh.attr('href', "https://drive.google.com/uc?export=download&id=" + fileId);
+    } else {
+        // Fallback jika bukan link Google Drive standar
+        frame.attr('src', urlRaw);
+        btnUnduh.attr('href', urlRaw);
+    }
+
+    // Tampilkan Modal
+    $('#modalPreviewTabel').modal('show');
+}
+
+// --- FITUR SAMPAH & RESTORE ---
+
+function bukaTongSampah() {
+    $('#modalSampah').modal('show');
+    loadDataSampah();
+}
+
+function loadDataSampah() {
+    $('#bodySampah').empty();
+    $('#loadingSampah').show();
+    $('#emptySampah').hide();
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+          $('#loadingSampah').hide();
+          
+          if(!data || data.length === 0) {
+              $('#emptySampah').show();
+              return;
+          }
+          
+          var html = '';
+          data.forEach(function(row) {
+              // KUNCI UNIK RESTORE: NIP + Tgl + Jam
+              // Encode agar aman dari karakter aneh
+              var dataKey = encodeURIComponent(row.nip) + '|' + encodeURIComponent(row.tgl) + '|' + encodeURIComponent(row.jam);
+              
+              html += `<tr>
+                <td class="font-weight-bold pl-3">${row.nama}</td>
+                <td>${row.tgl}</td>
+                <td>${row.jam}</td>
+                <td><span class="badge badge-light border">${row.jenis}</span></td>
+                <td class="text-danger small"><em>${row.alasan}</em></td> 
+                <td class="small text-muted">${row.userDel}</td> 
+                <td class="text-center">
+                    <button class="btn btn-sm btn-info shadow-sm" onclick="restoreData('${dataKey}')" title="Kembalikan Data">
+                        <i class="fas fa-undo-alt mr-1"></i> Restore
+                    </button>
+                </td>
+              </tr>`;
+          });
+          $('#bodySampah').html(html);
+      })
+      .withFailureHandler(function(err){
+          $('#loadingSampah').hide();
+          alert('Gagal memuat sampah: ' + err.message);
+      })
+      .getDaftarSampahLupa(); // Panggil Backend Siaba.gs
+}
+
+function restoreData(key) {
+    // Konfirmasi pakai NotifSultan jika ada, atau confirm bawaan
+    if(typeof NotifSultan !== 'undefined') {
+        NotifSultan.konfirmasi('Restore Data?', 'Data akan dikembalikan ke tabel utama.', 'Ya, Kembalikan')
+        .then((result) => {
+            if (result.isConfirmed) eksekusiRestore(key);
+        });
+    } else {
+        if(confirm("Kembalikan data ini ke tabel utama?")) eksekusiRestore(key);
+    }
+}
+
+function eksekusiRestore(key) {
+    if(typeof NotifSultan !== 'undefined') NotifSultan.loading('Mengembalikan Data...');
+    
+    // Decode Key
+    var parts = key.split('|');
+    var nip = decodeURIComponent(parts[0]);
+    var tgl = decodeURIComponent(parts[1]);
+    var jam = decodeURIComponent(parts[2]);
+
+    google.script.run
+      .withSuccessHandler(function() {
+          if(typeof NotifSultan !== 'undefined') {
+              NotifSultan.alert('success', 'Berhasil', 'Data dikembalikan ke tabel utama.');
+          } else {
+              alert("Berhasil dikembalikan.");
+          }
+          loadDataSampah(); // Refresh Modal Sampah
+          // Otomatis klik tombol cari untuk refresh tabel utama di belakang
+          $('#btnCari').click(); 
+      })
+      .withFailureHandler(function(err) {
+          if(typeof NotifSultan !== 'undefined') Swal.close();
+          alert("Gagal Restore: " + err.message);
+      })
+      .restoreLupaPresensi(nip, tgl, jam); // Panggil Backend Siaba.gs
+}
+
 </script>

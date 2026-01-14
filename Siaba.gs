@@ -1143,245 +1143,317 @@ function prosesRestoreSalahAbsen(nip, tgl, jam) {
 }
 
 /* ======================================================================
-   SIABA LUPA PRESENSI (UPLOAD FILE + ROBUST DATE/TIME)
+   MODUL LUPA PRESENSI (VERSI LOKAL - LEBIH STABIL)
+   Semua ID didefinisikan di dalam fungsi agar tidak ada konflik global.
    ====================================================================== */
 
-const CONF_LUPA = {
-  DB_ID: "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU",
-  DRIVE_ID: "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa",
-  SHEET_MAIN: "Lupa_Presensi",
-  SHEET_TRASH: "Trash"
-};
-
-// --- 1. GET FILTER (TAHUN & BULAN DARI DB) ---
+// 1. FILTER TAHUN
 function getLupaFilters() {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU"; // ID Spreadsheet
+  var SHEET_NAME = "Lupa_Presensi";
+
   try {
-    const ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    const sheet = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
     if (!sheet || sheet.getLastRow() < 2) return JSON.stringify({ years: [] });
     
-    // Ambil kolom Tanggal (Kolom D / Index 4)
-    const data = sheet.getRange(2, 4, sheet.getLastRow() - 1, 1).getDisplayValues();
-    let years = new Set();
+    var data = sheet.getRange(2, 4, sheet.getLastRow() - 1, 1).getDisplayValues();
+    var years = new Set();
     
-    data.forEach(r => {
-      let tgl = r[0]; // dd-mm-yyyy
-      if (tgl.length >= 10) {
-         let parts = tgl.split('-');
-         if(parts.length===3) years.add(parts[2]); // Ambil Tahun
-      }
+    data.forEach(function(r) {
+      var match = String(r[0]).match(/\d{4}/);
+      if(match) years.add(match[0]);
     });
     
     return JSON.stringify({ years: Array.from(years).sort().reverse() });
   } catch (e) { return JSON.stringify({ error: e.message }); }
 }
 
-/* --- 1. FUNGSI PENCARIAN (SESUAI URUTAN KOLOM BARU) --- */
+/* --- FUNGSI PENCARIAN SEDERHANA (DEBUGGING) --- */
 function getDaftarLupaPresensi(tahun, bulan, unit, status) {
-  var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-  var sheet = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
-  var data = sheet.getDataRange().getValues();
-  var result = [];
-  
-  // Array Helper Bulan Indonesia (Untuk mencocokkan input Filter)
-  var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-                  "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  // 1. Definisikan ID & Sheet secara LOKAL
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU"; 
+  var SHEET_NAME = "Lupa_Presensi";
 
-  // Loop dari baris 2 (Index 1)
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
+  try {
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
     
-    // 1. SKIP jika Nama (Col B / Index 1) kosong
-    if (!row[1]) continue; 
+    // Validasi Sheet
+    if (!sheet) throw new Error("Sheet '" + SHEET_NAME + "' tidak ditemukan! Cek nama tab.");
 
-    // --- LOGIKA FILTER (STRICT) ---
-    
-    // A. Filter UNIT KERJA (Col A / Index 0)
-    // Jika filter unit dipilih (tidak kosong) DAN tidak sama dengan data, LEWATI.
-    if (unit && unit !== "" && String(row[0]) !== String(unit)) continue;
+    // Ambil Semua Data (Teks)
+    var data = sheet.getDataRange().getDisplayValues(); 
+    var result = [];
 
-    // B. Filter STATUS (Col K / Index 10)
-    if (status && status !== "" && String(row[10]) !== String(status)) continue;
+    // Sanitasi Filter (Jika kosong, set null)
+    var fTahun  = (tahun && String(tahun).trim() !== "") ? String(tahun).trim() : null;
+    var fBulan  = (bulan && String(bulan).trim() !== "") ? String(bulan).trim() : null;
 
-    // C. Filter TANGGAL (TAHUN & BULAN) (Col D / Index 3)
-    var tglObj = row[3];
-    var dataTahun = "";
-    var dataBulanStr = "";
+    // Array Bulan (Untuk konversi angka ke nama)
+    var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-    if (tglObj instanceof Date) {
-      // Jika format Date Object (Normal)
-      dataTahun = Utilities.formatDate(tglObj, Session.getScriptTimeZone(), "yyyy");
-      var bulanIdx = parseInt(Utilities.formatDate(tglObj, Session.getScriptTimeZone(), "M")) - 1; // 0-11
-      if (bulanIdx >= 0 && bulanIdx < 12) dataBulanStr = arrBulan[bulanIdx];
-    } else {
-      // Jika format String (Misal: '2025-01-20' atau '20/01/2025')
-      // Kita coba parsing sederhana agar tidak lolos filter sembarangan
-      var str = String(tglObj).trim(); 
-      // Ambil 4 digit angka sebagai tahun
-      var matchTahun = str.match(/\d{4}/); 
-      if (matchTahun) dataTahun = matchTahun[0];
-      // Bulan agak sulit diparsing dari string acak, jadi kita skip filter bulan jika datanya string kacau
-      // Tapi biasanya sheet menyimpan sebagai Date Object.
+    // Loop data (Mulai Baris 2)
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row[1]) continue; // Skip jika Nama kosong
+
+      // --- LOGIKA FILTER TANGGAL (dd-mm-yyyy) ---
+      // Kita hanya filter tanggal jika user MEMINTA filter.
+      // Jika filter kosong, tampilkan semua.
+      if (fTahun || fBulan) {
+          var tglParts = String(row[3]).split('-'); // Pecah: 14 | 01 | 2026
+          
+          if (tglParts.length === 3) {
+             var thnData = tglParts[2].trim(); // 2026
+             var blnData = parseInt(tglParts[1].trim()); // 1
+
+             // Cek Tahun
+             if (fTahun && thnData !== fTahun) continue;
+
+             // Cek Bulan
+             if (fBulan) {
+                 if (!isNaN(blnData) && blnData >= 1 && blnData <= 12) {
+                     // Cocokkan nama bulan (Januari vs Januari)
+                     if (arrBulan[blnData-1] !== fBulan) continue;
+                 } else {
+                     continue; // Bulan tidak valid, skip
+                 }
+             }
+          } 
+          // Jika format tanggal di sheet bukan dd-mm-yyyy, tapi user minta filter -> skip
+          else if (fTahun || fBulan) {
+             continue;
+          }
+      }
+
+      // Masukkan Data
+      result.push({
+        rowBaris: i + 1,       
+        unit: row[0], nama: row[1], nip: row[2],           
+        tanggal: row[3], jam: row[4], jenis: row[5], komulatif: row[6],     
+        tglKirim: row[7], userInput: row[8], fileUrl: row[9], status: row[10],       
+        tglEdit: row[11], userEdit: row[12], tglVerif: row[13], adminVerif: row[14], ket: row[15]           
+      });
     }
-
-    // Cek Tahun
-    if (tahun && tahun !== "" && dataTahun !== String(tahun)) continue;
     
-    // Cek Bulan
-    if (bulan && bulan !== "" && dataBulanStr !== String(bulan)) continue;
+    return JSON.stringify(result);
 
-    // --- JIKA LOLOS SEMUA FILTER DI ATAS, BARU MASUKKAN KE RESULT ---
-    
-    result.push({
-      rowBaris: i + 1,       
-      unit: row[0],          
-      nama: row[1],          
-      nip: row[2],           
-      tanggal: formatTglStr(row[3]), 
-      jam: formatJamStr(row[4]),     
-      jenis: row[5],         
-      komulatif: row[6],     
-      tglKirim: formatTglStr(row[7]), 
-      userInput: row[8],     
-      fileUrl: row[9],       
-      status: row[10],       
-      tglEdit: row[11],      
-      userEdit: row[12],     
-      tglVerif: row[13],     
-      adminVerif: row[14],   
-      ket: row[15]           
-    });
+  } catch (e) {
+    // KEMBALIKAN PESAN ERROR AGAR MUNCUL DI ALERT
+    return JSON.stringify(["ERROR SYSTEM: " + e.message]);
   }
-  
-  return JSON.stringify(result);
 }
 
-/* --- 2. FUNGSI GET BY ID (UNTUK POPULATE FORM EDIT) --- */
+// 3. GET DATA BY ID (VERSI FINAL BERSIH)
 function getLupaById(rowIndex) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_NAME = "Lupa_Presensi";
+
   if (!rowIndex) return null;
   try {
-    var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    var sheet = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
     var idx = parseInt(rowIndex);
     
-    // Ambil baris spesifik
-    var range = sheet.getRange(idx, 1, 1, sheet.getLastColumn());
-    var row = range.getValues()[0];
+    // 1. AMBIL DATA BARIS (A-P) SEBAGAI TEKS
+    var range = sheet.getRange(idx, 1, 1, 16);
+    var row = range.getDisplayValues()[0]; 
 
-    // Mapping Data ke Form HTML
+    // 2. EKSTRAKSI LINK FILE (KOLOM J)
+    // Teknik ini membaca Smart Chip, Hyperlink Formula, dan Teks Biasa
+    var cellJ = sheet.getRange(idx, 10); 
+    
+    // a. Cek Link Tersembunyi (Smart Chip / Insert Link)
+    var richText = cellJ.getRichTextValue();
+    var linkRich = richText ? richText.getLinkUrl() : "";
+    
+    // b. Cek Formula (=HYPERLINK)
+    var formula = cellJ.getFormula();
+    var linkFormula = "";
+    if (formula && formula.includes("http")) {
+       var match = formula.match(/"(https?:\/\/[^"]+)"/);
+       if (match) linkFormula = match[1];
+    }
+    
+    // c. Cek Teks Biasa (Paste URL mentah)
+    var linkText = row[9];
+
+    // Prioritas: Link Rich -> Link Formula -> Link Teks
+    var finalUrl = linkRich || linkFormula || linkText;
+
     return {
       id: idx,
-      unit: row[0],  // Col A
-      nama: row[1],  // Col B
-      nip: row[2],   // Col C
-      tanggal: parseDateForInput(row[3]), // Col D -> Format yyyy-MM-dd
-      waktu: parseTimeForInput(row[4]),   // Col E -> Format HH:mm
-      jenis: row[5],        // Col F
-      komulatif: row[6],    // Col G
-      fileUrl: row[9],      // Col J
-      status: row[10]       // Col K
+      unit: row[0],  
+      nama: row[1],  
+      nip: row[2],   
+      tanggal: row[3], 
+      waktu: row[4],   
+      jenis: row[5],   
+      komulatif: row[6], 
+      fileUrl: finalUrl, // URL bersih
+      status: row[10], 
+      ket: row[15]     
     };
-  } catch (e) {
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
-/* --- 3. FUNGSI UPDATE DATA (RENAME FILE & PINDAH TANGGAL) --- */
-function updateLupaPresensi(form, fileData) {
+// 4. VERIFIKASI ADMIN
+function processVerifikasiLupaPresensi(dataKirim) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_NAME = "Lupa_Presensi";
+
   try {
-    var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    var sheet = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    var id = parseInt(dataKirim.recId);
+    
+    if (isNaN(id)) throw new Error("ID tidak valid.");
+    var tglVerif = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    
+    sheet.getRange(id, 11).setValue(dataKirim.status); // Col K
+    sheet.getRange(id, 14).setValue(tglVerif);         // Col N
+    sheet.getRange(id, 15).setValue(dataKirim.admin);  // Col O
+    sheet.getRange(id, 16).setValue(dataKirim.ket);    // Col P
+
+    return "Verifikasi Berhasil!";
+  } catch(e) { throw new Error(e.message); }
+}
+
+// 5. UPDATE DATA (EDIT)
+function updateLupaPresensi(form, fileData) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_NAME = "Lupa_Presensi";
+  var DRIVE_ID = "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa";
+
+  try {
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
     var baris = parseInt(form.recId);
     
-    // Validasi Baris
     if (isNaN(baris)) throw new Error("ID Data tidak valid");
     
-    // Cek Data Lama untuk Logika File & Status
-    var rangeLama = sheet.getRange(baris, 1, 1, 16); // A s/d P
+    var rangeLama = sheet.getRange(baris, 1, 1, 16); 
     var valLama = rangeLama.getValues()[0];
     
-    // --- A. LOGIKA STATUS ---
-    var stLama = valLama[10]; // Col K
-    // Jika Status OK/Disetujui, tolak edit
+    var stLama = valLama[10]; 
     if(stLama === "OK" || stLama === "Disetujui") throw new Error("Data sudah disetujui, tidak bisa diedit.");
-    
     var stBaru = (stLama === "Ditolak") ? "Revisi" : (stLama === "Revisi" ? "Diproses" : "Diproses");
 
-    // --- B. LOGIKA FILE & TANGGAL ---
-    var tglInput = form.tanggal; // String yyyy-MM-dd dari form
-    var tglSheetLama = parseDateForInput(valLama[3]); // Ambil tgl lama format yyyy-MM-dd
-    var isDateChanged = (tglInput !== tglSheetLama);
-    
-    var finalUrl = valLama[9]; // Default URL lama
-    var fileId = "";
-    try { fileId = finalUrl.match(/[-\w]{25,}/)[0]; } catch(e){}
-
-    // Nama File Baru: NAMA_JENIS_TANGGAL
+    var finalUrl = valLama[9]; 
+    var tglInput = form.tanggal; 
+    var tglSheetLama = parseDateForInput(valLama[3]); 
     var safeNama = form.nama_asn.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 20);
     var namaFileBaru = safeNama + "_" + form.jenis + "_" + tglInput;
 
-    // Skenario 1: Upload File Baru
     if (fileData && fileData.data) {
-       var folder = DriveApp.getFolderById(CONF_LUPA.DRIVE_ID);
+       var folder = DriveApp.getFolderById(DRIVE_ID);
        var blob = Utilities.newBlob(Utilities.base64Decode(fileData.data), fileData.mimeType, namaFileBaru);
-       var newFile = folder.createFile(blob);
-       newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-       finalUrl = newFile.getUrl();
-       
-       // Hapus file lama jika ada
-       if(fileId) { try{ DriveApp.getFileById(fileId).setTrashed(true); }catch(e){} }
-    }
-    // Skenario 2: Tidak Upload, TAPI Tanggal Berubah -> Rename File Lama
-    else if (fileId && isDateChanged) {
-       try {
-         var f = DriveApp.getFileById(fileId);
-         f.setName(namaFileBaru);
-         // Jika mau pindah folder berdasarkan tanggal, tambahkan logika moveTo disini
+       finalUrl = folder.createFile(blob).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getUrl();
+    } else if (tglInput !== tglSheetLama) {
+       try { 
+         var idFile = finalUrl.match(/[-\w]{25,}/);
+         if(idFile) DriveApp.getFileById(idFile[0]).setName(namaFileBaru); 
        } catch(e){}
     }
 
-    // --- C. UPDATE SHEET ---
-    // Format Tanggal & Jam untuk Sheet
-    var parts = tglInput.split('-'); // yyyy-mm-dd
-    var tglSave = parts[2]+'-'+parts[1]+'-'+parts[0]; // dd-mm-yyyy
-    var jamSave = ("0" + form.waktu).slice(-5); // HH:mm
+    var parts = tglInput.split('-'); 
+    var tglSave = parts[2]+'-'+parts[1]+'-'+parts[0]; 
+    var jamSave = ("0" + form.waktu).slice(-5); 
 
-    sheet.getRange(baris, 4).setValue(tglSave);      // Col D: Tanggal
-    sheet.getRange(baris, 5).setValue(jamSave);      // Col E: Jam
-    sheet.getRange(baris, 6).setValue(form.jenis);   // Col F: Jenis
-    sheet.getRange(baris, 7).setValue("'"+form.komulatif); // Col G: Komulatif
-    sheet.getRange(baris, 10).setValue(finalUrl);    // Col J: File
-    sheet.getRange(baris, 11).setValue(stBaru);      // Col K: Status
-    
-    // Audit Trail
-    var tglEdit = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
-    sheet.getRange(baris, 12).setValue(tglEdit);        // Col L: Tgl Edit
-    sheet.getRange(baris, 13).setValue(form.user_login);// Col M: User Edit
+    sheet.getRange(baris, 4).setValue(tglSave);      
+    sheet.getRange(baris, 5).setValue(jamSave);      
+    sheet.getRange(baris, 6).setValue(form.jenis);   
+    sheet.getRange(baris, 7).setValue("'"+form.komulatif); 
+    sheet.getRange(baris, 10).setValue(finalUrl);    
+    sheet.getRange(baris, 11).setValue(stBaru);      
+    sheet.getRange(baris, 12).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss"));        
+    sheet.getRange(baris, 13).setValue(form.user_login);
 
     return "Data Berhasil Diupdate";
   } catch(e) { throw e; }
 }
 
-/* --- HELPER FORMATTING (Backend) --- */
-function formatTglStr(val) {
-  if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), "dd-MM-yyyy");
-  return val ? String(val) : "";
+// 6. SOFT DELETE (HAPUS KE TRASH)
+function softDeleteLupaPresensi(form) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_NAME = "Lupa_Presensi";
+  var SHEET_TRASH = "Trash";
+  var TRASH_FOLDER_ID = "1Hop5S8iFazx3I3pX9SJILNLBkn-eBNfP";
+
+  try {
+    var KODE_RAHASIA = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd");
+    if (String(form.kode).trim() !== KODE_RAHASIA) throw new Error("Kode Salah.");
+
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheetSource = ss.getSheetByName(SHEET_NAME);
+    var sheetTrash = ss.getSheetByName(SHEET_TRASH);
+    if (!sheetTrash) sheetTrash = ss.insertSheet(SHEET_TRASH);
+
+    var id = parseInt(form.recId);
+    var values = sheetSource.getRange(id, 1, 1, 16).getValues()[0]; 
+    if (!values[2]) throw new Error("Data kosong.");
+
+    // Pindah File
+    var fileUrl = values[9];
+    if (fileUrl && String(fileUrl).includes("drive")) {
+       try {
+         var fid = fileUrl.match(/[-\w]{25,}/);
+         if(fid) DriveApp.getFileById(fid[0]).moveTo(DriveApp.getFolderById(TRASH_FOLDER_ID));
+       } catch(e){}
+    }
+
+    // Pindah Data
+    var trashRow = values.concat([
+        Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss"),
+        form.user_login || "Guest",
+        form.alasan || "-"
+    ]);
+    sheetTrash.appendRow(trashRow); 
+    sheetSource.deleteRow(id);      
+
+    return "Data berhasil dihapus.";
+  } catch (e) { throw new Error(e.message); }
 }
 
-function formatJamStr(val) {
-  if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), "HH:mm");
-  return val ? String(val).substring(0,5) : "";
+// 7. SIMPAN DATA BARU
+function simpanLupaPresensi(dataKirim) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_NAME = "Lupa_Presensi";
+  var DRIVE_ID = "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa";
+
+  try {
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    
+    var tglInput = dataKirim.tanggal; 
+    var dateObj = new Date(tglInput);
+    var tglSimpan = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "dd-MM-yyyy");
+
+    var folder = DriveApp.getFolderById(DRIVE_ID);
+    var fileBlob = Utilities.newBlob(Utilities.base64Decode(dataKirim.file.data), dataKirim.file.mimeType, dataKirim.file.name);
+    var fileExt = dataKirim.file.name.split('.').pop();
+    var fileNameBaru = dataKirim.nip_asn + "_" + tglSimpan + "_" + dataKirim.jenis + "." + fileExt;
+    var fileUrl = folder.createFile(fileBlob).setName(fileNameBaru).getUrl();
+
+    var timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    var rowData = [
+      dataKirim.unit_kerja, dataKirim.nama_asn, dataKirim.nip_asn,
+      "'" + tglSimpan, "'" + dataKirim.waktu, dataKirim.jenis, dataKirim.komulatif,
+      timestamp, dataKirim.user_login, fileUrl, "Diproses",
+      "", "", "", "", ""
+    ];
+    sheet.appendRow(rowData);
+    return "Sukses";
+  } catch (e) { throw new Error(e.message); }
 }
 
-// Helper parsing untuk Form HTML (yyyy-MM-dd)
+// HELPER (Tetap sama, tidak perlu ID DB)
 function parseDateForInput(val) {
     if(!val) return "";
     if(val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd");
     var str = String(val).trim();
-    // Deteksi jika dd-mm-yyyy -> ubah ke yyyy-mm-dd
-    if(str.match(/^\d{2}-\d{2}-\d{4}/)) {
-        var p = str.split('-'); return p[2]+"-"+p[1]+"-"+p[0];
-    }
+    if(str.match(/^\d{2}-\d{2}-\d{4}/)) { var p = str.split('-'); return p[2]+"-"+p[1]+"-"+p[0]; }
     return str.substring(0,10);
 }
 function parseTimeForInput(val) {
@@ -1390,334 +1462,91 @@ function parseTimeForInput(val) {
     return String(val).substring(0,5);
 }
 
-// 2. Proses Update Lupa Presensi
-function updateLupaPresensi(form, fileData) {
-  try {
-    var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    var sheet = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
+/* ======================================================================
+   FITUR SAMPAH & RESTORE (KHUSUS LUPA PRESENSI)
+   ====================================================================== */
 
-    // --- 1. PENCARIAN BARIS (MENGGUNAKAN LOGIKA ANDA) ---
-    // Kita prioritaskan cari pakai ID (recId) jika ada, karena lebih aman.
-    // Jika tidak ada, baru pakai logika NIP+Tgl+Jam lama Anda.
-    
-    var barisKetemu = -1;
-    
-    // Cek apakah form mengirim recId (Row Index)
-    if (form.recId && form.recId != "") {
-       var idx = parseInt(form.recId);
-       // Validasi double check: apakah NIP di baris itu sama dengan NIP form?
-       var cekNip = sheet.getRange(idx, 3).getValue(); // Kolom C = NIP
-       if (String(cekNip) == String(form.nip_asn)) {
-          barisKetemu = idx;
-       }
-    }
-
-    // Jika recId tidak valid/kosong, gunakan metode pencarian manual (Fallback)
-    if (barisKetemu === -1) {
-      var data = sheet.getDataRange().getDisplayValues();
-      var targetNip = String(form.nip_lama).trim();
-      var targetTgl = String(form.tgl_lama).trim(); 
-      var targetJam = String(form.jam_lama).trim(); 
-      
-      for (var i = 1; i < data.length; i++) {
-         var sheetNip = String(data[i][2]).trim();
-         var sheetTgl = String(data[i][3]).trim().replace(/\//g, '-');
-         var sheetJam = String(data[i][4]).trim().replace(/'/g, "").substring(0, 5);
-         if (/^\d:\d{2}/.test(sheetJam)) sheetJam = "0" + sheetJam;
-
-         if (sheetNip === targetNip && sheetTgl === targetTgl && sheetJam === targetJam) {
-            barisKetemu = i + 1;
-            break;
-         }
-      }
-    }
-
-    if (barisKetemu === -1) throw new Error("Data tidak ditemukan. Mungkin sudah diedit orang lain.");
-
-    // --- 2. PERSIAPAN DATA BARU ---
-    // Format Tanggal Baru: yyyy-MM-dd (untuk nama file)
-    // Asumsi input form.tanggal formatnya yyyy-MM-dd
-    var tglInput = form.tanggal; 
-    var parts = tglInput.split('-'); 
-    var tglSheet = parts[2] + '-' + parts[1] + '-' + parts[0]; // dd-MM-yyyy (untuk Sheet)
-    
-    var jamBaru = String(form.waktu).trim();
-    if (/^\d:\d{2}/.test(jamBaru)) jamBaru = "0" + jamBaru;
-
-    // --- 3. LOGIKA FILE (COMPLEX) ---
-    var oldFileUrl = sheet.getRange(barisKetemu, 10).getValue(); // Ambil URL lama
-    var oldFileId = "";
-    try { oldFileId = oldFileUrl.match(/[-\w]{25,}/)[0]; } catch(e){} // Ekstrak ID dari URL
-
-    var finalUrl = oldFileUrl;
-    
-    // Cek apakah tanggal berubah?
-    var isDateChanged = (String(form.tgl_lama) !== String(tglSheet));
-    
-    // Siapkan Nama File Baru: NAMA_JENIS_TANGGAL
-    // Kita bersihkan nama ASN dari karakter aneh untuk nama file
-    var safeNama = form.nama_asn.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 20);
-    var namaFileBaru = safeNama + "_" + form.jenis + "_" + tglInput; // Gunakan format yyyy-mm-dd biar rapi di drive
-
-    // Helper: Cari/Buat Folder berdasarkan Tanggal (misal: Lupa_Absen/2023/10)
-    // Jika tidak mau ribet folder per bulan, pakai default ID saja.
-    // Di sini saya pakai default ID dari config Anda agar tidak error.
-    var targetFolderId = CONF_LUPA.DRIVE_ID; 
-    
-    // SKENARIO A: User Upload File Baru
-    if (fileData && fileData.data) {
-       var folder = DriveApp.getFolderById(targetFolderId);
-       var blob = Utilities.newBlob(Utilities.base64Decode(fileData.data), fileData.mimeType, namaFileBaru);
-       var newFile = folder.createFile(blob);
-       newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-       
-       finalUrl = newFile.getUrl();
-       
-       // Hapus file lama (Opsional - aktifkan jika ingin hemat storage)
-       if(oldFileId) { try { DriveApp.getFileById(oldFileId).setTrashed(true); } catch(e){} }
-    }
-    // SKENARIO B: Tidak Upload, TAPI Tanggal/Jenis Berubah (Rename & Move)
-    else if (oldFileId && (isDateChanged || form.jenis !== sheet.getRange(barisKetemu, 6).getValue())) {
-       try {
-         var fileLama = DriveApp.getFileById(oldFileId);
-         fileLama.setName(namaFileBaru); // Rename File
-         
-         // Jika Anda punya logika folder dinamis, uncomment baris bawah:
-         // var folderBaru = DriveApp.getFolderById(targetFolderId);
-         // fileLama.moveTo(folderBaru); 
-       } catch(e) {
-         // Abaikan error jika file lama sudah hilang/terhapus manual
-       }
-    }
-
-    // --- 4. LOGIKA STATUS ---
-    var stLama = String(sheet.getRange(barisKetemu, 11).getValue()).trim(); 
-    var stBaru = stLama;
-    
-    // Aturan Perubahan Status
-    if (stLama === "Ditolak") stBaru = "Revisi";
-    else if (stLama === "Revisi") stBaru = "Diproses";
-    // Jika "Diproses" atau "OK" biasanya tetap, kecuali admin yang ubah.
-    
-    // --- 5. LOGIKA AUDIT TRAIL ---
-    var tglEdit = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
-    var userEdit = form.user_login || "User Web"; // Diambil dari frontend
-
-    // --- 6. EKSEKUSI UPDATE KE SHEET ---
-    sheet.getRange(barisKetemu, 4).setValue(tglSheet);     // Kolom D (Tgl)
-    sheet.getRange(barisKetemu, 5).setValue(jamBaru);      // Kolom E (Jam)
-    sheet.getRange(barisKetemu, 6).setValue(form.jenis);   // Kolom F (Jenis)
-    sheet.getRange(barisKetemu, 7).setValue("'"+form.komulatif); // Kolom G (Komulatif)
-    
-    sheet.getRange(barisKetemu, 10).setValue(finalUrl);    // Kolom J (File)
-    sheet.getRange(barisKetemu, 11).setValue(stBaru);      // Kolom K (Status)
-    
-    sheet.getRange(barisKetemu, 12).setValue(tglEdit);     // Kolom L (Tgl Edit)
-    sheet.getRange(barisKetemu, 13).setValue(userEdit);    // Kolom M (User Edit)
-
-    return "Data Berhasil Diupdate!";
-    
-  } catch(e) { 
-    throw new Error("Gagal Update: " + e.message); 
-  }
-}
-
-// --- 5. SOFT DELETE LUPA (ROBUST) ---
-function softDeleteLupaPresensi(dataKirim) {
-  try {
-    var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    var sheetSource = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
-    var sheetTrash = ss.getSheetByName(CONF_LUPA.SHEET_TRASH);
-    if (!sheetTrash) sheetTrash = ss.insertSheet(CONF_LUPA.SHEET_TRASH);
-
-    var data = sheetSource.getDataRange().getDisplayValues();
-    var barisKetemu = -1;
-    var targetNip=String(dataKirim.nip).trim(), targetTgl=String(dataKirim.tgl).trim(), targetJam=String(dataKirim.jam).trim();
-
-    for (var i = 1; i < data.length; i++) {
-       var sNip = String(data[i][2]).trim();
-       var sTgl = String(data[i][3]).trim().replace(/\//g, '-');
-       var sJam = String(data[i][4]).trim().replace(/'/g, "").substring(0, 5);
-       if (/^\d:\d{2}/.test(sJam)) sJam = "0" + sJam;
-
-       if (sNip === targetNip && sTgl === targetTgl && sJam === targetJam) {
-          barisKetemu = i + 1; break;
-       }
-    }
-    if (barisKetemu === -1) throw new Error("Data tidak ditemukan.");
-
-    // Ambil & Pindah
-    var rowRange = sheetSource.getRange(barisKetemu, 1, 1, 16); // 16 Kolom
-    var rowValues = rowRange.getValues()[0];
-    
-    // Sanitasi Tgl/Jam sebelum masuk Trash
-    rowValues[3] = targetTgl; rowValues[4] = targetJam;
-
-    var tglHapus = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
-    var userHapus = dataKirim.user || "Guest";
-    
-    var trashRow = rowValues.concat([tglHapus, userHapus, dataKirim.alasan]);
-    sheetTrash.appendRow(trashRow);
-    sheetSource.deleteRow(barisKetemu);
-
-    return "Sukses";
-  } catch(e) { throw new Error(e.message); }
-}
-
-// --- 6. VERIFIKASI LUPA ---
-function processVerifikasiLupaPresensi(dataKirim) {
-  try {
-    var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    var sheet = ss.getSheetByName(CONF_LUPA.SHEET_MAIN);
-    var data = sheet.getDataRange().getDisplayValues();
-    var barisKetemu = -1;
-    
-    var targetNip=String(dataKirim.nip).trim(), targetTgl=String(dataKirim.tgl).trim(), targetJam=String(dataKirim.jam).trim();
-
-    for (var i = 1; i < data.length; i++) {
-       var sNip = String(data[i][2]).trim();
-       var sTgl = String(data[i][3]).trim().replace(/\//g, '-');
-       var sJam = String(data[i][4]).trim().replace(/'/g, "").substring(0, 5);
-       if (/^\d:\d{2}/.test(sJam)) sJam = "0" + sJam;
-
-       if (sNip === targetNip && sTgl === targetTgl && sJam === targetJam) {
-          barisKetemu = i + 1; break;
-       }
-    }
-    if (barisKetemu === -1) throw new Error("Data tidak ditemukan.");
-
-    var tglVerif = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
-    
-    sheet.getRange(barisKetemu, 11).setValue(dataKirim.status); // Status (Kolom K)
-    sheet.getRange(barisKetemu, 14).setValue(tglVerif);         // Tgl Verif (Kolom N)
-    sheet.getRange(barisKetemu, 15).setValue(dataKirim.admin);  // Admin (Kolom O)
-    sheet.getRange(barisKetemu, 16).setValue(dataKirim.ket);    // Ket (Kolom P)
-
-    return "Sukses";
-  } catch(e) { throw new Error(e.message); }
-}
-
-// --- 7. LOAD SAMPAH LUPA ---
+// 1. LIHAT DAFTAR SAMPAH
 function getDaftarSampahLupa() {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU"; // ID DB Lupa Presensi
+  var SHEET_TRASH = "Trash";
+
   try {
-    var ss = SpreadsheetApp.openById(CONF_LUPA.DB_ID);
-    var sheet = ss.getSheetByName(CONF_LUPA.SHEET_TRASH);
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_TRASH);
     if (!sheet || sheet.getLastRow() < 2) return [];
-    var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 19).getDisplayValues(); // +3 kolom log hapus
-    return data.reverse();
+
+    // Ambil semua data (DisplayValues agar format tanggal terjaga)
+    var data = sheet.getDataRange().getDisplayValues();
+    var result = [];
+
+    // Loop data (Mulai baris 2)
+    // Struktur Kolom Trash Lupa Presensi:
+    // 0:Unit, 1:Nama, 2:NIP, 3:Tgl, 4:Jam ... 16:TglHapus, 17:UserHapus, 18:Alasan
+    for (var i = 1; i < data.length; i++) {
+        // Validasi: Pastikan ini data Lupa Presensi (bukan data lain yg nyasar)
+        // Ciri khas: Punya kolom "File" di index 9, atau kita ambil semua saja.
+        if (data[i][1]) {
+            result.push({
+                nama: data[i][1],
+                nip:  data[i][2],
+                tgl:  data[i][3],
+                jam:  data[i][4],
+                jenis: data[i][5],
+                alasan: data[i][18] || "-", // Kolom S (Alasan)
+                userDel: data[i][17] || "-" // Kolom R (User Hapus)
+            });
+        }
+    }
+    
+    // Tampilkan data terbaru di atas (Reverse)
+    return result.reverse(); 
   } catch (e) { return []; }
 }
 
-// --- 8. RESTORE LUPA (ROBUST) ---
-function prosesRestoreLupaPresensi(nip, tgl, jam) {
-    // Logika Restore Sama persis dengan Salah Presensi, hanya ganti ID DB & Sheet Name
-    // Gunakan fungsi repair jam 7:15 -> 07:15
-    // ... (Implementasi logika restore yang sama, sesuaikan nama Sheet) ...
-    // Karena keterbatasan karakter, silakan copy logika restoreSalahAbsen 
-    // tapi ganti ID_DB dan Sheet Name jadi "Lupa_Presensi" & "Trash"
-    
-    // VERSI SINGKAT:
-    const ID_DB = CONF_LUPA.DB_ID;
-    try {
-        var ss = SpreadsheetApp.openById(ID_DB);
-        var sheetTrash = ss.getSheetByName("Trash");
-        var sheetSource = ss.getSheetByName("Lupa_Presensi");
-        var dataDisplay = sheetTrash.getDataRange().getDisplayValues();
-        var barisKetemu = -1;
-        
-        var targetNip=String(nip).trim(), targetTgl=String(tgl).trim(), targetJam=String(jam).trim();
-        if (/^\d:\d{2}/.test(targetJam)) targetJam = "0" + targetJam; // Sanitasi input restore
+// 2. RESTORE DATA (KEMBALIKAN KE UTAMA)
+function restoreLupaPresensi(nip, tgl, jam) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_MAIN = "Lupa_Presensi";
+  var SHEET_TRASH = "Trash";
 
-        for(var i=1; i<dataDisplay.length; i++){
-            var sNip = String(dataDisplay[i][2]).trim();
-            var sTgl = String(dataDisplay[i][3]).trim().replace(/\//g,'-');
-            var sJam = String(dataDisplay[i][4]).trim().replace(/'/g,'').substring(0,5);
-            if(/^\d:\d{2}/.test(sJam)) sJam = "0"+sJam;
-            if(sNip===targetNip && sTgl===targetTgl && sJam===targetJam){ barisKetemu=i+1; break; }
-        }
-        if(barisKetemu===-1) throw new Error("Data Trash tidak ditemukan");
-
-        var fullRow = sheetTrash.getRange(barisKetemu, 1, 1, 16).getValues()[0];
-        // Sanitasi sebelum insert
-        if (fullRow[3] instanceof Date) fullRow[3] = Utilities.formatDate(fullRow[3], Session.getScriptTimeZone(), "dd-MM-yyyy");
-        else fullRow[3] = String(fullRow[3]).trim().replace(/\//g, '-');
-        
-        var rawJam = fullRow[4];
-        var strJam = (rawJam instanceof Date) ? Utilities.formatDate(rawJam, Session.getScriptTimeZone(), "HH:mm") : String(rawJam).replace(/'/g,"").trim().substring(0,5);
-        if(/^\d:\d{2}/.test(strJam)) strJam="0"+strJam;
-        fullRow[4] = strJam;
-
-        sheetSource.appendRow(fullRow);
-        sheetTrash.deleteRow(barisKetemu);
-        return "Sukses";
-    } catch(e) { throw new Error(e.message); }
-}
-
-/* =================================================================
-   FUNGSI SERVER: SIMPAN DATA LUPA PRESENSI (FIX MAPPING)
-   Spreadsheet: 160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU
-   Sheet: Lupa_Presensi
-   ================================================================= */
-
-function simpanLupaPresensi(dataKirim) {
   try {
-    var ssId = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
-    var sheet = SpreadsheetApp.openById(ssId).getSheetByName("Lupa_Presensi");
-    if (!sheet) throw new Error("Sheet 'Lupa_Presensi' tidak ditemukan!");
-
-    // 1. SIAPKAN DATA FOLDER & FILE
-    var tglInput = dataKirim.tanggal; 
-    var dateObj = new Date(tglInput);
-    var tahun = dateObj.getFullYear().toString();
-    var namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    var bulan = namaBulan[dateObj.getMonth()];
-    var tglSimpan = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "dd-MM-yyyy");
-
-    // Upload File
-    var rootFolderId = "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa";
-    var folderBulan = getOrCreateSubFolder(rootFolderId, tahun, bulan);
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheetTrash = ss.getSheetByName(SHEET_TRASH);
+    var sheetSource = ss.getSheetByName(SHEET_MAIN);
     
-    var fileBlob = Utilities.newBlob(Utilities.base64Decode(dataKirim.file.data), dataKirim.file.mimeType, dataKirim.file.name);
-    // Nama File: NIP_Tgl_Jenis.pdf
-    var fileExt = dataKirim.file.name.split('.').pop();
-    var fileNameBaru = dataKirim.nip_asn + "_" + tglSimpan + "_" + dataKirim.jenis + "." + fileExt;
+    var dataDisplay = sheetTrash.getDataRange().getDisplayValues();
+    var barisKetemu = -1;
+
+    // Normalisasi Kunci Pencarian
+    var fNip = String(nip).trim();
+    var fTgl = String(tgl).trim();
+    var fJam = String(jam).trim();
+
+    // Cari Baris di Trash
+    for (var i = 1; i < dataDisplay.length; i++) {
+       var rNip = String(dataDisplay[i][2]).trim();
+       var rTgl = String(dataDisplay[i][3]).trim();
+       var rJam = String(dataDisplay[i][4]).trim();
+
+       if (rNip === fNip && rTgl === fTgl && rJam === fJam) {
+          barisKetemu = i + 1;
+          break;
+       }
+    }
+
+    if (barisKetemu === -1) throw new Error("Data tidak ditemukan di sampah.");
+
+    // Ambil Data Asli (16 Kolom A-P)
+    // Kita abaikan kolom Tgl Hapus, User Hapus, Alasan
+    var fullRow = sheetTrash.getRange(barisKetemu, 1, 1, 16).getValues()[0];
     
-    var fileUrl = folderBulan.createFile(fileBlob).setName(fileNameBaru).getUrl();
+    // Kembalikan ke Sheet Utama
+    sheetSource.appendRow(fullRow);
+    
+    // Hapus dari Trash
+    sheetTrash.deleteRow(barisKetemu);
 
-    // 2. SUSUN DATA ROW (MAPPING BARU)
-    var timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
-    var userPelapor = dataKirim.user_login; 
-
-    var rowData = [
-      dataKirim.unit_kerja,   // A: Unit Kerja
-      dataKirim.nama_asn,     // B: Nama ASN
-      dataKirim.nip_asn,      // C: NIP
-      "'" + tglSimpan,        // D: Tanggal
-      "'" + dataKirim.waktu,  // E: Jam
-      dataKirim.jenis,        // F: Presensi
-      dataKirim.komulatif,    // G: Komulatif
-      
-      timestamp,              // H: TANGGAL KIRIM (Sesuai Revisi)
-      userPelapor,            // I: NAMA USER (Sesuai Revisi)
-      fileUrl,                // J: LINK FILE (Sesuai Revisi)
-      
-      "Diproses",             // K: Status (Otomatis)
-      "", "", "", "", ""      // L-P: Kosong
-    ];
-
-    // 3. EKSEKUSI SIMPAN
-    sheet.appendRow(rowData);
     return "Sukses";
-
-  } catch (e) {
-    throw new Error("Gagal Simpan: " + e.message);
-  }
-}
-
-// Helper Folder (Tetap sama)
-function getOrCreateSubFolder(rootId, tahun, bulan) {
-  var root = DriveApp.getFolderById(rootId);
-  var fTahun = root.getFoldersByName(tahun).hasNext() ? root.getFoldersByName(tahun).next() : root.createFolder(tahun);
-  var fBulan = fTahun.getFoldersByName(bulan).hasNext() ? fTahun.getFoldersByName(bulan).next() : fTahun.createFolder(bulan);
-  return fBulan;
+  } catch (e) { throw new Error(e.message); }
 }
