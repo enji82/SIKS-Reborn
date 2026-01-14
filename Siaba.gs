@@ -1169,63 +1169,55 @@ function getLupaFilters() {
   } catch (e) { return JSON.stringify({ error: e.message }); }
 }
 
-/* --- FUNGSI PENCARIAN SEDERHANA (DEBUGGING) --- */
+/* --- FUNGSI PENCARIAN (FIX: FILTER UNIT & STATUS DIAKTIFKAN) --- */
 function getDaftarLupaPresensi(tahun, bulan, unit, status) {
-  // 1. Definisikan ID & Sheet secara LOKAL
   var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU"; 
   var SHEET_NAME = "Lupa_Presensi";
 
   try {
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheet = ss.getSheetByName(SHEET_NAME);
-    
-    // Validasi Sheet
-    if (!sheet) throw new Error("Sheet '" + SHEET_NAME + "' tidak ditemukan! Cek nama tab.");
+    if (!sheet) throw new Error("Sheet tidak ditemukan.");
 
-    // Ambil Semua Data (Teks)
     var data = sheet.getDataRange().getDisplayValues(); 
     var result = [];
 
-    // Sanitasi Filter (Jika kosong, set null)
+    // Sanitasi Filter
     var fTahun  = (tahun && String(tahun).trim() !== "") ? String(tahun).trim() : null;
     var fBulan  = (bulan && String(bulan).trim() !== "") ? String(bulan).trim() : null;
+    var fUnit   = (unit && String(unit).trim() !== "" && unit !== "SEMUA") ? String(unit).trim() : null;
+    var fStatus = (status && String(status).trim() !== "" && status !== "SEMUA") ? String(status).trim() : null;
 
-    // Array Bulan (Untuk konversi angka ke nama)
     var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-    // Loop data (Mulai Baris 2)
+    // Loop data
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      if (!row[1]) continue; // Skip jika Nama kosong
+      if (!row[1]) continue; 
 
-      // --- LOGIKA FILTER TANGGAL (dd-mm-yyyy) ---
-      // Kita hanya filter tanggal jika user MEMINTA filter.
-      // Jika filter kosong, tampilkan semua.
+      // 1. FILTER TAHUN & BULAN
       if (fTahun || fBulan) {
-          var tglParts = String(row[3]).split('-'); // Pecah: 14 | 01 | 2026
-          
+          var tglParts = String(row[3]).split('-'); 
           if (tglParts.length === 3) {
-             var thnData = tglParts[2].trim(); // 2026
-             var blnData = parseInt(tglParts[1].trim()); // 1
+             var thnData = tglParts[2].trim();
+             var blnData = parseInt(tglParts[1].trim());
 
-             // Cek Tahun
              if (fTahun && thnData !== fTahun) continue;
-
-             // Cek Bulan
              if (fBulan) {
                  if (!isNaN(blnData) && blnData >= 1 && blnData <= 12) {
-                     // Cocokkan nama bulan (Januari vs Januari)
                      if (arrBulan[blnData-1] !== fBulan) continue;
-                 } else {
-                     continue; // Bulan tidak valid, skip
-                 }
+                 } else { continue; }
              }
-          } 
-          // Jika format tanggal di sheet bukan dd-mm-yyyy, tapi user minta filter -> skip
-          else if (fTahun || fBulan) {
-             continue;
-          }
+          } else if (fTahun || fBulan) { continue; }
       }
+
+      // 2. FILTER UNIT (FIX: SEKARANG BERFUNGSI)
+      // Kolom 0 = Unit Kerja
+      if (fUnit && String(row[0]) !== fUnit) continue;
+
+      // 3. FILTER STATUS (FIX: SEKARANG BERFUNGSI)
+      // Kolom 10 = Status
+      if (fStatus && String(row[10]) !== fStatus) continue;
 
       // Masukkan Data
       result.push({
@@ -1240,8 +1232,7 @@ function getDaftarLupaPresensi(tahun, bulan, unit, status) {
     return JSON.stringify(result);
 
   } catch (e) {
-    // KEMBALIKAN PESAN ERROR AGAR MUNCUL DI ALERT
-    return JSON.stringify(["ERROR SYSTEM: " + e.message]);
+    return JSON.stringify([{ status: 'Error', nama: e.message }]);
   }
 }
 
