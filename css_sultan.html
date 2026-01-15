@@ -1,177 +1,161 @@
 <style>
-  /* =========================================
-     1. VARIABEL & FONTS (SULTAN PALETTE)
-     ========================================= */
+  /* ===================================================================
+     1. PALET WARNA SULTAN
+     =================================================================== */
   :root {
-    --warna-maroon: #800000;       /* Warna Utama */
-    --warna-maroon-dark: #600000;  /* Hover State */
-    --warna-emas: #C5A059;         /* Aksen Mewah (Gold Matte) */
-    --warna-tegas: #343a40;        /* Text Gelap */
-    --warna-abu-bg: #f4f6f9;       /* Background Halaman */
-    --shadow-sultan: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    --radius-sultan: 8px;          /* Sudut tumpul modern */
+    --warna-maroon: #800000;       /* Utama */
+    --warna-maroon-dark: #4a0404;  /* Sidebar Gelap */
+    --warna-emas: #FFD700;         /* Aksen Emas (Level 1) */
+    --warna-emas-soft: #ffc107;
+    --warna-cyan: #00ffff;         /* Biru Neon (Level 2) */
+    --warna-hijau: #00ff00;        /* Hijau Neon (Level 3) */
+    --warna-tegas: #343a40;
+    --warna-abu-bg: #f4f6f9;
+    --shadow-sultan: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --radius-sultan: 8px;
   }
 
-  /* Font Family: Memaksa font sistem yang bersih */
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--warna-abu-bg);
   }
 
-  /* =========================================
-     2. OVERRIDE ADMINLTE (WARNA)
-     ========================================= */
-  .bg-maroon, .btn-maroon {
+  /* ===================================================================
+     2. SIDEBAR SULTAN (FIX ICON LEVEL 1)
+     =================================================================== */
+  
+  /* A. DASAR SIDEBAR */
+  .main-sidebar, .brand-link, .sidebar-custom { 
+    background-color: var(--warna-maroon-dark) !important; 
+    border-right: none !important;
+  }
+  .brand-link { border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+
+  /* B. LEVEL 1 (BAPAK) - FIX ICON PUTIH */
+  
+  /* 1. Aturan Umum Link */
+  .nav-sidebar > .nav-item > .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-bottom: 2px;
+  }
+
+  /* 2. PAKSA ICON & TEKS JADI PUTIH (Saat Tidak Aktif) */
+  .nav-sidebar > .nav-item > .nav-link > i,
+  .nav-sidebar > .nav-item > .nav-link > p {
+    color: #ffffff !important; /* Wajib Putih */
+  }
+  
+  /* 3. Level 1 AKTIF: Background Maroon + Teks/Icon Emas */
+  .nav-sidebar > .nav-item > .nav-link.active {
     background-color: var(--warna-maroon) !important;
-    border-color: var(--warna-maroon) !important;
-    color: #fff !important;
-  }
-  .btn-maroon:hover {
-    background-color: var(--warna-maroon-dark) !important;
-    border-color: var(--warna-maroon-dark) !important;
-  }
-  .text-maroon { color: var(--warna-maroon) !important; }
-  
-  /* Garis Mewah */
-  hr.style-sultan {
-    border: 0;
-    height: 1px;
-    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(128, 0, 0, 0.75), rgba(0, 0, 0, 0));
-    margin: 1.5rem 0;
-  }
-
-  /* =========================================
-     3. FORMULIR (MOBILE FRIENDLY)
-     ========================================= */
-  .form-control-sultan {
-    border-radius: var(--radius-sultan) !important;
-    border: 1px solid #ced4da;
-    padding: 0.5rem 0.75rem; /* Padding lebih lega untuk jari */
-    height: calc(2.5rem + 2px) !important; /* Lebih tinggi sedikit */
-    font-size: 14px;
-    transition: all 0.3s ease;
-  }
-  .form-control-sultan:focus {
-    border-color: var(--warna-maroon) !important;
-    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1) !important; /* Glow halus */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    border-left: 4px solid var(--warna-emas);
   }
   
-  /* Label Form yang Rapi */
-  .form-label-sultan {
-    font-weight: 600 !important;
-    font-size: 12px !important;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 5px;
+  /* 4. PAKSA ICON & TEKS JADI EMAS (Saat Aktif) */
+  .nav-sidebar > .nav-item > .nav-link.active > i,
+  .nav-sidebar > .nav-item > .nav-link.active > p {
+    color: var(--warna-emas) !important; /* Wajib Emas */
+    font-weight: bold !important;
   }
 
-  /* Custom Switch Toggle (Pengganti Checkbox Kuno) */
-  .custom-switch .custom-control-input:checked ~ .custom-control-label::before {
-    background-color: var(--warna-maroon) !important;
-    border-color: var(--warna-maroon) !important;
+  /* C. LEVEL 2 (ANAK) */
+  .nav-treeview {
+    background-color: rgba(0, 0, 0, 0.25) !important; /* Gelap */
+  }
+  .nav-treeview > .nav-item > .nav-link {
+    color: #d1d1d1 !important;
+    padding-left: 30px !important;
+  }
+  .nav-treeview .nav-icon { display: none !important; }
+
+  /* Dot Kecil */
+  .nav-treeview > .nav-item > .nav-link::before {
+    content: "•"; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+    font-size: 1.2em; color: rgba(255,255,255,0.4);
   }
 
-  /* =========================================
-     4. TABEL SUPER (BANYAK KOLOM)
-     ========================================= */
-  .table-premium {
-    width: 100%;
-    border-collapse: separate; /* Penting untuk sticky */
-    border-spacing: 0;
-  }
-  
-  .table-premium thead th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    border-top: 1px solid #dee2e6;
-    color: #495057;
-    font-weight: 700;
-    font-size: 12px;
-    text-transform: uppercase;
-    white-space: nowrap; /* Header jangan patah baris */
-    padding: 12px 10px;
-  }
-
-  .table-premium tbody td {
-    vertical-align: middle !important;
-    font-size: 14px;
-    padding: 10px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-
-  /* Sticky Column Kiri (Nama/Identitas) */
-  .col-sticky-left {
-    position: sticky;
-    left: 0;
-    z-index: 5;
-    background-color: #fff; /* Wajib ada background */
-    box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); /* Bayangan pemisah */
-    border-right: 1px solid #dee2e6;
-  }
-  /* Sticky Header butuh z-index lebih tinggi */
-  thead th.col-sticky-left { z-index: 10; background-color: #f8f9fa; }
-
-  /* Efek Baris Zebra Halus */
-  .table-premium tbody tr:hover td {
-    background-color: #fff8f8 !important; /* Merah sangat muda saat hover */
-  }
-
-  /* =========================================
-     5. CARD & MODAL (CONTAINER)
-     ========================================= */
-  .card-sultan {
-    border: none;
-    border-radius: var(--radius-sultan);
-    box-shadow: var(--shadow-sultan);
-    background: #fff;
-    margin-bottom: 1.5rem;
-    transition: transform 0.2s;
-  }
-  
-  .modal-content-sultan {
-    border: none;
-    border-radius: var(--radius-sultan);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  }
-
-  /* =========================================
-     6. SKELETON LOADING (ANIMASI MAHAL)
-     ========================================= */
-  .skeleton {
-    background: #eee;
-    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
-    border-radius: 4px;
-    background-size: 200% 100%;
-    animation: 1.5s shine linear infinite;
-  }
-  @keyframes shine {
-    to { background-position-x: -200%; }
-  }
-
-  /* =========================================
-     7. BADGE STATUS SULTAN (RAMPING & ELEGAN)
-     ========================================= */
-  .badge-sultan-status {
-    font-size: 11px !important;      /* Huruf lebih kecil biar muat banyak */
-    font-weight: 600 !important;     /* Tebal tapi tidak bold banget */
-    padding: 5px 10px !important;    /* Padding proporsional */
-    border-radius: 50px !important;  /* Bulat lonjong (Pill) */
-    letter-spacing: 0.5px;           /* Jarak antar huruf biar lega */
-    text-transform: uppercase;       /* Huruf besar semua biar tegas */
-    white-space: nowrap;             /* ANTI PATAH BARIS DI HP */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08); /* Bayangan halus */
-    border: 1px solid rgba(0,0,0,0.05); /* Garis tepi tipis transparan */
-  }
-
-  /* Badge Jenis (Datang/Pulang) - Kotak tapi tumpul */
-  .badge-sultan-jenis {
-    font-size: 11px !important;
+  /* Level 2 AKTIF: Teks Cyan + Border Cyan */
+  .nav-treeview > .nav-item > .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--warna-cyan) !important; /* TEKS JADI CYAN */
+    border-left: 3px solid var(--warna-cyan) !important;
     font-weight: 700 !important;
-    padding: 4px 8px !important;
-    border-radius: 6px !important;   /* Kotak tumpul (Soft Square) */
-    white-space: nowrap;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
+  .nav-treeview > .nav-item > .nav-link.active::before { color: var(--warna-cyan) !important; }
+
+  /* D. LEVEL 3 (CUCU) */
+  .nav-treeview .nav-treeview > .nav-item > .nav-link {
+    background-color: rgba(0, 0, 0, 0.45) !important; /* Lebih gelap lagi */
+    padding-left: 45px !important;
+    color: #aaa !important;
+  }
+  .nav-treeview .nav-treeview > .nav-item > .nav-link::before { left: 30px; }
+
+  /* Level 3 AKTIF: Teks Hijau + Border Hijau */
+  .nav-treeview .nav-treeview > .nav-item > .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--warna-hijau) !important; /* TEKS JADI HIJAU */
+    border-left: 3px solid var(--warna-hijau) !important;
+    font-weight: 700 !important;
+  }
+  .nav-treeview .nav-treeview > .nav-item > .nav-link.active::before { color: var(--warna-hijau) !important; }
+
+  /* ===================================================================
+     3. STYLE UMUM (NAVBAR, FOOTER, DLL)
+     =================================================================== */
+  .main-header { 
+    background-color: var(--warna-maroon) !important; border-bottom: none !important; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .main-header .nav-link { color: rgba(255,255,255,0.9) !important; }
+
+  .user-capsule {
+    display: flex; align-items: center; background: rgba(255, 255, 255, 0.1);
+    padding: 3px 12px 3px 3px; border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.3s ease;
+  }
+  .user-capsule:hover { background: rgba(255, 255, 255, 0.2); border-color: var(--warna-emas); }
+  .user-capsule img { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; margin-right: 8px; }
+  .user-capsule span { color: #fff; font-size: 0.9rem; font-weight: 500; }
+
+  .main-footer { 
+    position: fixed; bottom: 0; width: 100%; z-index: 1032; background: #fff; 
+    border-top: 3px solid var(--warna-emas-soft) !important; padding: 10px 20px; 
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+  }
+  .content-wrapper { padding-bottom: 70px !important; }
+  #gerbang-login { width: 100vw; height: 100vh; background: #7a0c0c; display: flex; align-items: center; justify-content: center; }
+
+  /* STYLE KONTEN (Tabel, Form, dll) */
+  .bg-maroon, .btn-maroon { background-color: var(--warna-maroon) !important; border-color: var(--warna-maroon) !important; color: #fff !important; }
+  .btn-maroon:hover { background-color: #600000 !important; border-color: #600000 !important; }
+  .text-maroon { color: var(--warna-maroon) !important; font-weight: 700; }
   
+  .border-tegas { border: 1px solid #ced4da !important; background-color: #fff; color: #495057; }
+  .border-tegas:hover { border-color: var(--warna-maroon) !important; color: var(--warna-maroon) !important; }
+  
+  .form-control-sultan { border-radius: 4px !important; border: 1px solid #ced4da; height: calc(2.25rem + 2px) !important; font-size: 14px; }
+  .form-control-sultan:focus { border-color: var(--warna-maroon) !important; box-shadow: 0 0 0 0.2rem rgba(128, 0, 0, 0.25) !important; }
+  .form-label-sultan { font-weight: 700 !important; font-size: 12px !important; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  .table-premium { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .table-premium thead th { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; color: #495057; font-weight: 700; font-size: 12px; text-transform: uppercase; white-space: nowrap; padding: 10px; vertical-align: middle !important; }
+  .table-premium tbody td { vertical-align: middle !important; font-size: 14px; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  .col-sticky-left { position: sticky; left: 0; z-index: 5; background-color: #fff; box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); border-right: 1px solid #dee2e6; }
+  thead th.col-sticky-left { z-index: 10; background-color: #f8f9fa; }
+  .table-premium tbody tr:hover td { background-color: #fff8f8 !important; }
+  
+  .card-sultan { border: none; border-radius: var(--radius-sultan); box-shadow: var(--shadow-sultan); background: #fff; margin-bottom: 1.5rem; }
+  .tr-animasi { animation: slideInRow 0.3s ease-out forwards; opacity: 0; }
+  @keyframes slideInRow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .badge-sultan-status { font-size: 11px !important; font-weight: 600 !important; padding: 5px 12px !important; border-radius: 50px !important; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; border: 1px solid rgba(0,0,0,0.05); }
+  .badge-sultan-jenis { font-size: 11px !important; font-weight: 700 !important; padding: 4px 8px !important; border-radius: 6px !important; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  table .badge { white-space: nowrap !important; line-height: 1.2; }
+  hr.style-sultan { border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0,0,0,0), rgba(128,0,0,0.75), rgba(0,0,0,0)); margin: 1rem 0; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f1f1; }
+  ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--warna-maroon); }
 </style>

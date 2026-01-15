@@ -382,7 +382,7 @@ function loadDropdownPegawaiLupa() {
        DB_PEGAWAI_LUPA = data; 
        var unikUnit = [...new Set(data.map(item => item.unit))].sort();
        var opts = '<option value="">- Pilih Unit -</option>';
-       var filterOpts = '<option value="">- Semua Unit -</option>';
+       var filterOpts = '<option value="">- Semua Unit Kerja -</option>';
        unikUnit.forEach(function(u) { if(u) {
            opts += '<option value="'+u+'">'+u+'</option>';
            filterOpts += '<option value="'+u+'">'+u+'</option>';

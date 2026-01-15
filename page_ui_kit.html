@@ -1,240 +1,143 @@
-<div class="content-wrapper" style="min-height: 1400px; background-color: #f4f6f9;">
-  
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-12">
-          <h1 class="m-0 font-weight-bold text-dark" style="font-size: 1.5rem;">
-            UI Kit Sultan
-          </h1>
-          <p class="text-muted small">Katalog elemen desain profesional untuk Aplikasi SIKS.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <section class="content">
-    <div class="container-fluid">
-      
-      <h6 class="text-maroon font-weight-bold text-uppercase mt-2">1. Info & Pemberitahuan</h6>
-      
-      <div class="card-sultan">
-        <div class="card-body py-2 px-3 border-left-dark" style="border-left: 4px solid #343a40;">
-          <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#info1" style="cursor:pointer">
-             <div style="font-size: 13px;">
-                <i class="fas fa-info-circle text-maroon mr-2"></i>
-                <b>Pemberitahuan:</b> Data absensi wajib diisi sebelum tanggal 5.
-             </div>
-             <i class="fas fa-chevron-down text-muted small"></i>
-          </div>
-          <div id="info1" class="collapse">
-             <hr class="my-2">
-             <small class="text-muted">
-                <i class="fas fa-circle text-primary mx-1" style="font-size:6px;"></i> Tombol <b>Tambah</b> untuk input baru.<br>
-                <i class="fas fa-circle text-warning mx-1" style="font-size:6px;"></i> Tombol <b>Edit</b> untuk revisi.
-             </small>
-          </div>
-        </div>
-      </div>
-
-      <div class="alert alert-success shadow-sm border-0 d-flex align-items-center" role="alert" style="border-radius: 8px;">
-        <i class="fas fa-check-circle fa-lg mr-2"></i>
-        <div>
-           <strong>Berhasil!</strong> Data pegawai telah disimpan.
-        </div>
-      </div>
-
-
-      <h6 class="text-maroon font-weight-bold text-uppercase mt-4">2. Formulir (Mobile Friendly)</h6>
-      
-      <div class="card-sultan p-3">
-        <form>
-          <div class="row">
-            
-            <div class="col-md-6 col-12">
-              <div class="form-group">
-                <label class="form-label-sultan">Username</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-user text-muted"></i></span>
-                  </div>
-                  <input type="text" class="form-control form-control-sultan border-left-0" placeholder="Masukkan User" style="border-radius: 0 8px 8px 0 !important;">
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-6 col-12">
-              <div class="form-group">
-                <label class="form-label-sultan">Unit Kerja</label>
-                <select class="form-control form-control-sultan">
-                  <option>- Pilih Unit -</option>
-                  <option>SDN 1 Secang</option>
-                  <option>Korwil Bidang Pendidikan</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="form-group">
-                <label class="form-label-sultan">Tanggal</label>
-                <input type="date" class="form-control form-control-sultan">
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="form-group">
-                <label class="form-label-sultan">Jam</label>
-                <input type="time" class="form-control form-control-sultan">
-              </div>
-            </div>
-
-            <div class="col-12">
-              <div class="form-group">
-                <label class="form-label-sultan mb-2 d-block">Opsi Tambahan</label>
-                <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input" id="customSwitch1">
-                  <label class="custom-control-label font-weight-normal" for="customSwitch1">Kirim notifikasi ke Email</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-12">
-              <div class="form-group">
-                <label class="form-label-sultan">Lampiran Bukti</label>
-                <div class="custom-file">
-                  <input type="file" class="custom-file-input" id="customFile">
-                  <label class="custom-file-label" for="customFile" style="border-radius: 8px;">Pilih PDF/JPG...</label>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </form>
-      </div>
-
-
-      <h6 class="text-maroon font-weight-bold text-uppercase mt-4">3. Tombol Aksi</h6>
-      
-      <div class="card-sultan p-3">
-        <p class="small text-muted mb-2">Tombol Utama & Sekunder</p>
-        <div class="d-flex flex-wrap" style="gap:10px;">
-           <button class="btn btn-maroon font-weight-bold shadow-sm" style="border-radius: 50px; padding: 6px 20px;">
-             <i class="fas fa-paper-plane mr-2"></i> Kirim Data
-           </button>
-           
-           <button class="btn btn-outline-secondary font-weight-bold" style="border-radius: 50px; padding: 6px 20px;">
-             Batal
-           </button>
-
-           <button class="btn btn-maroon shadow-sm" style="border-radius: 8px; width: 40px; height: 40px; display:flex; align-items:center; justify-content:center;">
-             <i class="fas fa-search"></i>
-           </button>
-        </div>
-
-        <hr>
-        <p class="small text-muted mb-2">Tombol Aksi Tabel (Kecil)</p>
-        <div>
-           <button class="btn btn-warning btn-sm shadow-sm text-white" title="Edit" style="border-radius: 4px;"><i class="fas fa-pencil-alt"></i></button>
-           <button class="btn btn-danger btn-sm shadow-sm" title="Hapus" style="border-radius: 4px;"><i class="fas fa-trash-alt"></i></button>
-           <button class="btn btn-success btn-sm shadow-sm" title="Verif" style="border-radius: 4px;"><i class="fas fa-check"></i></button>
-           <button class="btn btn-info btn-sm shadow-sm" title="Info" style="border-radius: 4px;"><i class="fas fa-eye"></i></button>
-        </div>
-      </div>
-
-
-      <h6 class="text-maroon font-weight-bold text-uppercase mt-4">4. Tabel Banyak Kolom (Mobile Safe)</h6>
-      
-      <div class="card-sultan">
-        <div class="card-header bg-white border-bottom-0 d-flex justify-content-between">
-           <h3 class="card-title font-weight-bold text-dark">Data Presensi</h3>
-           <span class="badge badge-light border text-muted"><i class="fas fa-arrows-alt-h mr-1"></i> Geser Tabel</span>
-        </div>
-        
-        <div class="card-body p-0">
-          <div class="table-responsive" style="max-height: 400px;">
-            <table class="table table-premium mb-0">
-              <thead>
-                <tr>
-                  <th class="col-sticky-left" style="min-width: 160px;">Nama ASN</th>
-                  <th style="min-width: 120px;">NIP</th>
-                  <th style="min-width: 100px;">Tanggal</th>
-                  <th style="min-width: 80px;">Jam</th>
-                  <th class="text-center" style="min-width: 100px;">Status</th>
-                  <th style="min-width: 150px;">Unit Kerja</th>
-                  <th style="min-width: 150px;">User Input</th>
-                  <th style="min-width: 150px;">Waktu Input</th>
-                  <th class="text-center" style="min-width: 120px;">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="col-sticky-left font-weight-bold text-dark">Budi Santoso</td>
-                  <td>19901010202...</td>
-                  <td>14-01-2026</td>
-                  <td>07:15</td>
-                  <td class="text-center"><span class="badge badge-success px-2 py-1" style="border-radius: 4px;">Disetujui</span></td>
-                  <td>SDN 1 Contoh</td>
-                  <td>Admin</td>
-                  <td>14-01-2026 08:00</td>
-                  <td class="text-center">
-                    <button class="btn btn-light btn-sm border shadow-sm"><i class="fas fa-ellipsis-h"></i></button>
-                  </td>
-                </tr>
-                 <tr>
-                  <td class="col-sticky-left font-weight-bold text-dark">Siti Aminah</td>
-                  <td>19850505200...</td>
-                  <td>14-01-2026</td>
-                  <td>07:30</td>
-                  <td class="text-center"><span class="badge badge-warning text-white px-2 py-1" style="border-radius: 4px;">Diproses</span></td>
-                  <td>Korwil Secang</td>
-                  <td>Siti Aminah</td>
-                  <td>14-01-2026 07:35</td>
-                  <td class="text-center">
-                    <button class="btn btn-light btn-sm border shadow-sm"><i class="fas fa-ellipsis-h"></i></button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card-footer bg-white py-3">
-          <ul class="pagination pagination-sm m-0 justify-content-end">
-             <li class="page-item disabled"><a class="page-link" href="#">«</a></li>
-             <li class="page-item active"><a class="page-link bg-maroon border-maroon" href="#">1</a></li>
-             <li class="page-item"><a class="page-link text-maroon" href="#">2</a></li>
-             <li class="page-item"><a class="page-link text-maroon" href="#">»</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <h6 class="text-maroon font-weight-bold text-uppercase mt-4">5. Loading Animation (Skeleton)</h6>
-      
-      <div class="card-sultan p-3">
-         <div class="d-flex align-items-center mb-3">
-            <div class="skeleton" style="width: 50px; height: 50px; border-radius: 50%;"></div> <div class="ml-3 w-100">
-               <div class="skeleton mb-2" style="width: 60%; height: 15px;"></div> <div class="skeleton" style="width: 40%; height: 10px;"></div> </div>
-         </div>
-         <div class="skeleton mb-2" style="width: 100%; height: 10px;"></div>
-         <div class="skeleton mb-2" style="width: 100%; height: 10px;"></div>
-         <div class="skeleton" style="width: 80%; height: 10px;"></div>
-      </div>
-
-    </div></section>
-</div>
-
-<div class="modal fade" id="modalSultanExample" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content modal-content-sultan">
-      <div class="modal-header bg-maroon text-white">
-        <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i>Edit Data</h5>
-        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-      </div>
-      <div class="modal-body">
-         <p>Konten formulir di sini...</p>
-      </div>
-      <div class="modal-footer bg-light border-0" style="border-radius: 0 0 8px 8px;">
-        <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal" style="border-radius: 50px;">Batal</button>
-        <button type="button" class="btn btn-maroon shadow-sm font-weight-bold" style="border-radius: 50px;">Simpan Perubahan</button>
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-swatchbook text-maroon mr-2"></i>UI Kit & Design System
+        </h5>
+        <hr class="style-sultan">
+        <p class="text-muted small">Gunakan halaman ini sebagai referensi (Copy-Paste) untuk menjaga konsistensi desain.</p>
       </div>
     </div>
   </div>
 </div>
+
+<section class="content">
+  <div class="container-fluid">
+    
+    <div class="card-sultan p-4 mb-4">
+      <h6 class="font-weight-bold text-maroon mb-3">1. Palet Warna (Variables)</h6>
+      <div class="d-flex flex-wrap" style="gap: 15px;">
+        <div class="text-center"><div style="width:60px; height:60px; background:#800000; border-radius:8px;"></div><small>Maroon</small></div>
+        <div class="text-center"><div style="width:60px; height:60px; background:#4a0404; border-radius:8px;"></div><small>Dark</small></div>
+        <div class="text-center"><div style="width:60px; height:60px; background:#FFD700; border-radius:8px;"></div><small>Gold</small></div>
+        <div class="text-center"><div style="width:60px; height:60px; background:#343a40; border-radius:8px;"></div><small>Tegas</small></div>
+        <div class="text-center"><div style="width:60px; height:60px; background:#f4f6f9; border:1px solid #ddd; border-radius:8px;"></div><small>Bg</small></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card-sultan p-4 h-100">
+          <h6 class="font-weight-bold text-maroon mb-3">2. Tombol Aksi</h6>
+          <div class="d-flex flex-wrap align-items-center" style="gap:10px;">
+            <button class="btn btn-maroon btn-sm font-weight-bold shadow-sm"><i class="fas fa-save mr-1"></i> Simpan</button>
+            <button class="btn btn-primary btn-sm font-weight-bold shadow-sm"><i class="fas fa-plus mr-1"></i> Tambah</button>
+            <button class="btn border-tegas bg-white shadow-sm" title="Refresh"><i class="fas fa-sync-alt text-maroon"></i></button>
+            <button class="btn btn-maroon btn-square-sultan shadow-sm"><i class="fas fa-search text-white"></i></button>
+          </div>
+          <hr>
+          <p class="small text-muted">Tombol Tabel (Kecil)</p>
+          <div>
+            <button class="btn btn-sm btn-default border-success text-success mx-1"><i class="fas fa-check-double"></i></button>
+            <button class="btn btn-sm btn-default border-warning text-warning mx-1"><i class="fas fa-pencil-alt"></i></button>
+            <button class="btn btn-sm btn-default border-danger text-danger mx-1"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card-sultan p-4 h-100">
+          <h6 class="font-weight-bold text-maroon mb-3">3. Badge Status (Premium)</h6>
+          <p class="small text-muted mb-1">Status (Bulat Lonjong):</p>
+          <div class="mb-3">
+            <span class="badge badge-success badge-sultan-status"><i class="fas fa-check mr-1"></i>Disetujui</span>
+            <span class="badge badge-warning text-white badge-sultan-status"><i class="fas fa-clock mr-1"></i>Diproses</span>
+            <span class="badge badge-danger badge-sultan-status"><i class="fas fa-times mr-1"></i>Ditolak</span>
+          </div>
+          <p class="small text-muted mb-1">Jenis (Kotak Tumpul):</p>
+          <div>
+            <span class="badge badge-primary badge-sultan-jenis"><i class="fas fa-sign-in-alt mr-1"></i>DATANG</span>
+            <span class="badge badge-dark badge-sultan-jenis"><i class="fas fa-sign-out-alt mr-1"></i>PULANG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-sultan p-4 mt-4">
+      <h6 class="font-weight-bold text-maroon mb-3">4. Elemen Formulir (Form Control Sultan)</h6>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label-sultan">Input Teks</label>
+            <input type="text" class="form-control form-control-sultan" placeholder="Ketik sesuatu...">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label-sultan">Pilihan (Select)</label>
+            <select class="form-control form-control-sultan">
+              <option>- Pilih Opsi -</option>
+              <option>Pilihan A</option>
+              <option>Pilihan B</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label class="form-label-sultan">Tanggal</label>
+            <input type="date" class="form-control form-control-sultan">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label class="form-label-sultan">Jam</label>
+            <input type="time" class="form-control form-control-sultan">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-sultan mt-4">
+      <div class="card-header bg-white border-bottom-0">
+        <h6 class="font-weight-bold text-maroon mb-0">5. Tabel Premium (Sticky Column)</h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-premium mb-0">
+            <thead>
+              <tr>
+                <th class="col-sticky-left" style="min-width: 200px;">Nama ASN (Sticky)</th>
+                <th>NIP</th>
+                <th>Tanggal</th>
+                <th>Status</th>
+                <th class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-sticky-left font-weight-bold text-dark">Budi Santoso</td>
+                <td>19800101...</td>
+                <td>15-01-2026</td>
+                <td><span class="badge badge-success badge-sultan-status"><i class="fas fa-check mr-1"></i>OK</span></td>
+                <td class="text-center">
+                   <button class="btn btn-sm btn-default border-warning text-warning"><i class="fas fa-pencil-alt"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td class="col-sticky-left font-weight-bold text-dark">Siti Aminah</td>
+                <td>19850505...</td>
+                <td>15-01-2026</td>
+                <td><span class="badge badge-primary badge-sultan-jenis">DATANG</span></td>
+                <td class="text-center">
+                   <button class="btn btn-sm btn-default border-warning text-warning"><i class="fas fa-pencil-alt"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
