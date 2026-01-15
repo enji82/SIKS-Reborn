@@ -158,4 +158,24 @@
   ::-webkit-scrollbar-track { background: #f1f1f1; }
   ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--warna-maroon); }
+
+  /* =========================================
+     4. ANIMASI TABEL (FIXED) - JATUH PERLAHAN
+     ========================================= */
+  .tr-animasi {
+    opacity: 0;
+    /* Animasi: Nama | Durasi | Tipe | Mode */
+    animation: slideDownFade 0.5s ease forwards;
+  }
+
+  @keyframes slideDownFade {
+    from {
+      opacity: 0;
+      transform: translateY(-20px); /* Mulai dari atas (Jatuh) */
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);     /* Ke posisi normal */
+    }
+  }
 </style>

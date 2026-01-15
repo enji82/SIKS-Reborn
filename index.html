@@ -109,40 +109,6 @@
   <?!= include('dropdown_data'); ?>
   <?!= include('javascript'); ?>
 
-  function setBreadcrumb(text) {
-    // Contoh Input: "SIABA / Presensi / Lupa Presensi"
-    // Kita ganti garis miring dengan icon panah biar keren
-    var html = text.replace(/\//g, '<i class="fas fa-chevron-right mx-2 text-white-50" style="font-size:10px;"></i>');
-    $('#page-breadcrumb').html(html);
-  }
-
-  // CONTOH PENGGUNAAN OTOMATIS:
-  // Pasang event listener di semua link sidebar
-  $(document).ready(function() {
-    $('.nav-sidebar .nav-link').on('click', function() {
-      // Ambil teks menu yang diklik
-      var menuText = $(this).find('p').text().trim();
-      
-      // Cek apakah dia punya bapak (Level 2)?
-      var parent = $(this).closest('.nav-treeview').prev('.nav-link').find('p').text().trim();
-      
-      // Cek apakah dia punya kakek (Level 3)?
-      var grandParent = $(this).closest('.nav-treeview').parent().closest('.nav-treeview').prev('.nav-link').find('p').text().trim();
-
-      var fullPath = "Beranda";
-      
-      if (grandParent) {
-        fullPath += " / " + grandParent + " / " + parent + " / " + menuText;
-      } else if (parent) {
-        fullPath += " / " + parent + " / " + menuText;
-      } else {
-        fullPath += " / " + menuText;
-      }
-
-      setBreadcrumb(fullPath);
-    });
-  });
-
   <script>
   $(document).ready(function() {
     
