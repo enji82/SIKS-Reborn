@@ -154,6 +154,13 @@
   .badge-sultan-jenis { font-size: 11px !important; font-weight: 700 !important; padding: 4px 8px !important; border-radius: 6px !important; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
   table .badge { white-space: nowrap !important; line-height: 1.2; }
   hr.style-sultan { border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0,0,0,0), rgba(128,0,0,0.75), rgba(0,0,0,0)); margin: 1rem 0; }
+  hr.style-sultan-solid {
+  border: 0;
+  height: 2px; /* Ketebalan garis */
+  background-color: var(--warna-maroon); /* Warna Maroon Solid */
+  opacity: 1;
+  margin: 1rem 0;
+}
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: #f1f1f1; }
   ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
@@ -178,4 +185,197 @@
       transform: translateY(0);     /* Ke posisi normal */
     }
   }
+
+  /* ===================================================================
+     5. TAMBAHAN KHUSUS MASTER TEMPLATE (PENGGANTI INLINE STYLE)
+     =================================================================== */
+  
+  /* A. Card Info & Border Aksen */
+  .border-left-dark {
+    border-left: 4px solid #343a40 !important;
+  }
+  .border-left-maroon {
+    border-left: 4px solid var(--warna-maroon) !important;
+  }
+  
+  /* B. Flexbox Gap (Pengganti style="gap: 8px") */
+  .d-flex-gap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px; /* Modern browser support */
+  }
+  
+  /* C. Modal Fullscreen / Tinggi 90% */
+  .modal-dialog-full {
+    max-width: 95% !important;
+    margin: 1.75rem auto;
+  }
+  .modal-content-h90 {
+    height: 90vh !important;
+    border: none;
+    border-radius: var(--radius-sultan);
+    overflow: hidden; /* Agar radius tetap terlihat */
+  }
+  
+  /* D. Iframe Viewer (Untuk Preview/Verifikasi) */
+  .iframe-viewer-container {
+    position: relative;
+    background: #525659; /* Warna abu gelap khas PDF viewer */
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+  .iframe-viewer {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  /* E. Utility Text & Icons */
+  .text-xs-custom {
+    font-size: 12px !important;
+  }
+  .icon-sm {
+    font-size: 14px;
+  }
+  
+  /* F. Tombol Aksi Tabel (Biar seragam ukurannya) */
+  .btn-aksi-group .btn {
+    margin: 0 2px;
+  }
+  
+  /* G. Form Control Auto Width */
+  .form-control-auto {
+    width: auto !important;
+    display: inline-block;
+  }
+
+  /* ===================================================================
+   6. TABEL SULTAN COMPACT (UNIVERSAL TEMPLATE)
+   Gunakan class="table-sultan-compact" pada tabel manapun.
+   =================================================================== */
+
+/* A. Header Tabel: Font 14px & Satu Baris */
+.table-sultan-compact thead th {
+    font-size: 14px !important;     /* Ukuran font standar */
+    white-space: nowrap !important; /* Paksa 1 baris */
+    vertical-align: middle !important;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* B. Body Tabel: Font 14px, Satu Baris, & Ellipsis (...) */
+.table-sultan-compact tbody td {
+    font-size: 14px !important;
+    white-space: nowrap !important; /* Jangan turun baris */
+    vertical-align: middle !important;
+    padding-top: 6px;               /* Padding rapat */
+    padding-bottom: 6px;
+    max-width: 250px;               /* Batas lebar kolom */
+    overflow: hidden;               /* Sembunyikan teks berlebih */
+    text-overflow: ellipsis;        /* Ganti sisa teks dengan '...' */
+}
+
+/* ===================================================================
+   7. TOMBOL IKON SULTAN (ACTION BUTTONS)
+   =================================================================== */
+
+/* Base Style: Tombol Bulat Minimalis */
+.btn-icon-sultan {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin: 0 2px;
+}
+
+/* Varian: Info (Lihat/Mata) - Warna Cyan */
+.btn-icon-sultan-info {
+    color: #17a2b8;
+    border-color: #e3e6f0;
+}
+.btn-icon-sultan-info:hover {
+    background-color: #17a2b8;
+    color: #fff;
+    border-color: #17a2b8;
+    box-shadow: 0 0 10px rgba(23, 162, 184, 0.4);
+    transform: translateY(-2px); /* Efek naik sedikit */
+}
+
+/* Varian: Hapus (Sampah) - Warna Merah */
+.btn-icon-sultan-danger {
+    color: #e74a3b;
+    border-color: #e3e6f0;
+}
+.btn-icon-sultan-danger:hover {
+    background-color: #e74a3b;
+    color: #fff;
+    border-color: #e74a3b;
+    box-shadow: 0 0 10px rgba(231, 74, 59, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Varian: Edit (Pensil) - Warna Kuning/Emas */
+.btn-icon-sultan-warning {
+    color: #f6c23e;
+    border-color: #e3e6f0;
+}
+.btn-icon-sultan-warning:hover {
+    background-color: #f6c23e;
+    color: #fff;
+    border-color: #f6c23e;
+    box-shadow: 0 0 10px rgba(246, 194, 62, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Varian: Verifikasi (Ceklis) - Warna Hijau */
+.btn-icon-sultan-success {
+    color: #1cc88a;
+    border-color: #e3e6f0;
+}
+.btn-icon-sultan-success:hover {
+    background-color: #1cc88a;
+    color: #fff;
+    border-color: #1cc88a;
+    box-shadow: 0 0 10px rgba(28, 200, 138, 0.4);
+    transform: translateY(-2px);
+}
+/* --- WARNA BADGE KHUSUS SULTAN --- */
+
+/* Badge Maroon (Untuk DATANG) */
+.badge-maroon {
+    background-color: var(--warna-maroon);
+    color: #fff;
+    border: 1px solid var(--warna-maroon);
+}
+
+/* Badge Emas (Untuk PULANG atau PERINGATAN) */
+.badge-gold {
+    background-color: var(--warna-emas);
+    color: #800000; /* Teks Maroon di atas Emas */
+    border: 1px solid #e6c200;
+}
+/* --- WARNA BADGE KHUSUS (NON-TEMA) --- */
+
+/* Badge Orange (Untuk Jenis: DATANG) */
+.badge-orange {
+    background-color: #fd7e14; /* Oranye Terang */
+    color: #fff;
+    border: 1px solid #fd7e14;
+}
+
+/* Badge Hitam (Untuk Jenis: PULANG) */
+.badge-black {
+    background-color: #000000; /* Hitam Pekat */
+    color: #fff;
+    border: 1px solid #333;
+}
 </style>
