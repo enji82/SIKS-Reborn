@@ -380,24 +380,50 @@ function escapeHtml(text) {
   return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
+// Konfigurasi DataTable Sultan (Terpusat)
+function initDataTableSultan(isLoading = false) {
+    if ($.fn.DataTable.isDataTable('#tabelLupa')) {
+        $('#tabelLupa').DataTable().destroy();
+    }
+
+    var msgEmpty = isLoading 
+        ? '<div class="text-center p-4"><div class="spinner-border text-maroon" role="status"></div><h6 class="mt-2 text-muted small">Memuat data...</h6></div>'
+        : '<div class="text-center p-4"><i class="fas fa-search fa-3x text-gray-300 mb-3"></i><p class="text-muted">Data tidak ditemukan.</p></div>';
+
+    $('#tabelLupa').DataTable({
+        "ordering": false,
+        "pageLength": 10,
+        "autoWidth": false, // Penting agar tidak mepet
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json",
+            "emptyTable": msgEmpty,
+            "zeroRecords": msgEmpty
+        },
+        "initComplete": function() {
+            var table = $(this);
+            // REVISI DISINI: Ganti 'hidden' menjadi 'auto'
+            if (!table.parent().hasClass('table-responsive')) {
+                table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
+            }
+        }
+    });
+}
+
 $(document).ready(function() {
     console.log("Halaman Siap: Master Template Mode");
 
-    // 1. Cek Sesi Login & Role
     try {
         var sesi = localStorage.getItem("siksUser");
         if (sesi) {
             var user = JSON.parse(sesi);
             $('#hideUserLogin').val(user.nama || user.fullName || "User Web");
             var role = String(user.role || "").toLowerCase();
-            // Tampilkan tombol tong sampah hanya untuk Admin/Super
             if (role.includes('admin') || role.includes('super') || role === 'administrator') {
                 $('#btnSampahLupa').show();
             }
         }
     } catch (e) { console.error(e); }
 
-    // 2. Setup Filter Tanggal
     var thn = new Date().getFullYear();
     var $sel = $('#filterTahunLupa').empty().append('<option value="">- Thn -</option>');
     for(var i = thn - 2; i <= thn + 1; i++){ $sel.append('<option value="'+i+'">'+i+'</option>'); }
@@ -406,32 +432,27 @@ $(document).ready(function() {
     var arrBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
     $('#filterBulanLupa').val(arrBulan[new Date().getMonth()]);
     
-    // 3. Load Awal Data
-    $('#bodyTabelLupa').html('<tr><td colspan="15" class="text-center p-5"><div class="spinner-border text-maroon"></div></td></tr>');
+    // --- PERUBAHAN UTAMA DISINI ---
+    // Jangan inject HTML manual. Panggil DataTable dengan mode Loading=True.
+    // Ini akan memunculkan Search Bar & Pagination + Spinner di tengah SEJAK AWAL.
+    $('#bodyTabelLupa').empty(); // Kosongkan body
+    initDataTableSultan(true);   // Tampilkan DataTable isi Spinner
+    // ------------------------------
+
     loadDropdownPegawaiLupa();
     setTimeout(applyFilterLupaPresensi, 300);
 
-    // 4. Event Handler Tombol Tabel (Delegasi)
-    $('#bodyTabelLupa').on('click', '.btn-aksi-lihat', function() { lihatFileLupa($(this).data('url')); });
-    $(document).on('click', '.btn-aksi-verif', function(e) { 
-        e.preventDefault(); // Mencegah perilaku default tombol
-        var id = $(this).data('id');
-        console.log("Tombol Verif Diklik. ID:", id); // Cek Console jika tidak muncul
-        verifikasiDataLupa(id); 
-    });
-    $('#bodyTabelLupa').on('click', '.btn-aksi-edit', function() { editDataLupa($(this).data('id')); });
-    $('#bodyTabelLupa').on('click', '.btn-aksi-hapus', function() { hapusDataLupa($(this).data('id')); });
+    // Event Delegations (Tetap Sama)
+    $(document).on('click', '.btn-aksi-lihat', function(e) { e.preventDefault(); lihatFileLupa($(this).data('url')); });
+    $(document).on('click', '.btn-aksi-verif', function(e) { e.preventDefault(); verifikasiDataLupa($(this).data('id')); });
+    $(document).on('click', '.btn-aksi-edit', function(e) { e.preventDefault(); editDataLupa($(this).data('id')); });
+    $(document).on('click', '.btn-aksi-hapus', function(e) { e.preventDefault(); hapusDataLupa($(this).data('id')); });
 
-    // 5. [TAMBAHAN PENTING] Reset Iframe saat Modal Ditutup
-    // Agar saat buka modal lain, preview file sebelumnya tidak nyangkut/loading
+    // Reset Iframe Modal
     $('#modalVerif').on('hidden.bs.modal', function () {
         $('#frameVerif').attr('src', '');
         $('#frameVerif').hide();
-        $('#noFileVerif').removeClass('d-none'); // Kembalikan ikon kosong
-    });
-    
-    $('#modalPreviewTabel').on('hidden.bs.modal', function () {
-        $('#framePreviewTabel').attr('src', '');
+        $('#noFileVerif').removeClass('d-none');
     });
 });
 
@@ -455,22 +476,20 @@ function applyFilterLupaPresensi() {
 function refreshTabelLupa() { applyFilterLupaPresensi(); }
 
 function renderTabelLupa(jsonString) {
-    // 1. CEK ROLE USER (Hanya sekali di awal fungsi)
+    // 1. CEK ROLE USER
     var isAdmin = false;
     try {
         var sesi = localStorage.getItem("siksUser");
         if (sesi) {
             var user = JSON.parse(sesi);
             var role = String(user.role || "").toLowerCase();
-            // Cek apakah role mengandung kata 'admin' (Admin/Super Admin/Administrator)
             if (role.includes('admin') || role.includes('super')) {
                 isAdmin = true;
             }
         }
     } catch (e) { isAdmin = false; }
 
-    // --- SETUP DATATABLES ---
-    if ($.fn.DataTable) { $.fn.dataTable.ext.search = []; }
+    // --- SETUP DATA ---
     var data = [];
     try { data = JSON.parse(jsonString); } catch(e) { $('#bodyTabelLupa').html('<tr><td colspan="15" class="text-center text-danger">Data Corrupt</td></tr>'); return; }
     
@@ -478,13 +497,13 @@ function renderTabelLupa(jsonString) {
         $('#bodyTabelLupa').html('<tr><td colspan="15" class="text-center text-danger">'+data[0].nama+'</td></tr>'); 
         return; 
     }
-
     if(data.length === 0) { 
-        $('#bodyTabelLupa').html('<tr><td colspan="15" class="text-center py-5 text-muted small">Data tidak ditemukan.</td></tr>'); 
+        $('#bodyTabelLupa').empty();
+        initDataTableSultan(false);
         return; 
     }
 
-    // --- LOGIKA SORTING (Tetap Sama) ---
+    // --- LOGIKA SORTING ---
     const getTimestamp = (str) => {
         if (!str || str === '-' || str.length < 10) return 0;
         try {
@@ -500,78 +519,88 @@ function renderTabelLupa(jsonString) {
         return lastActivityB - lastActivityA;
     });
 
-    // --- RENDERING TABEL ---
-    if ($.fn.DataTable.isDataTable('#tabelLupa')) { $('#tabelLupa').DataTable().destroy(); }
-    var tbody = $('#bodyTabelLupa'); tbody.empty(); 
+    // --- HELPER: TITLE CASE (SARAN 2) ---
+    // Mengubah "BUDI SANTOSO, S.PD" menjadi "Budi Santoso, S.Pd"
+    const toTitleCase = (str) => {
+        if(!str) return "";
+        return str.toLowerCase().replace(/\b\w/g, function(l){ return l.toUpperCase() });
+    };
 
+    // --- RENDERING HTML ---
     var htmlBuilder = "";
     
     for (var i = 0; i < data.length; i++) {
         var row = data[i]; DATA_LUPA[row.rowBaris] = row;
-        var safeNama = escapeHtml(row.nama); var safeKet = escapeHtml(row.ket); var safeUrl = (row.fileUrl||"").replace(/'/g, "%27").replace(/"/g, "%22");
+        
+        // IMPLEMENTASI SARAN 2: Gunakan toTitleCase pada nama
+        var rawNama = row.nama || "";
+        var safeNama = escapeHtml(toTitleCase(rawNama)); 
+        
+        var safeKet = escapeHtml(row.ket); 
+        var safeUrl = (row.fileUrl||"").replace(/'/g, "%27").replace(/"/g, "%22");
         
         var badge = renderBadgeSultan(row.status); 
         if (safeKet.length > 2) badge += '<i class="fas fa-info-circle text-info ml-2" title="'+safeKet+'"></i>';
         
-        // Cek apakah data terkunci (sudah disetujui)
         var isLocked = (String(row.status).toLowerCase().includes('ok') || String(row.status).toLowerCase().includes('setuju')); 
         var attrDis = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
 
-        // Clean Tanggal & Jam
         var cleanTgl = (row.tanggal || "").replace(/'/g, ""); 
         var cleanJam = (row.jam || "").replace(/'/g, "");
         if (cleanJam.length > 5) cleanJam = cleanJam.substring(0, 5);
 
-        // --- TOMBOL AKSII ---
-        
-        // 1. Tombol Lihat (Muncul untuk semua orang)
+        // Tombol Aksi
         var btnFile = '-';
         if (safeUrl.length > 5) {
              btnFile = '<button class="btn-icon-sultan btn-icon-sultan-info btn-aksi-lihat" data-url="'+safeUrl+'" title="Lihat File"><i class="fas fa-eye" style="font-size: 12px;"></i></button>';
         }
 
-        // 2. Tombol Verifikasi (HANYA UNTUK ADMIN)
         var btnVerif = ''; 
         if (isAdmin) {
-            // HAPUS onclick, GUNAKAN class dan data-id
-            // Tambahkan type="button" agar tidak dianggap submit form
             btnVerif = '<button type="button" class="btn-icon-sultan btn-icon-sultan-success btn-aksi-verif" data-id="'+row.rowBaris+'" title="Verifikasi"><i class="fas fa-check" style="font-size: 12px;"></i></button>';
         }
         
-        // 3. Tombol Edit & Hapus (Logika: Admin boleh semua, User hanya boleh datanya sendiri jika belum dilock)
-        // (Di kode sebelumnya tombol ini muncul terus tapi didisable status. Jika mau strict bisa ditambah logika isAdmin disini juga)
         var btnEdit = '<button class="btn-icon-sultan btn-icon-sultan-warning btn-aksi-edit" data-id="'+row.rowBaris+'" '+attrDis+' title="Edit"><i class="fas fa-pencil-alt" style="font-size: 12px;"></i></button>';
         var btnHapus = '<button class="btn-icon-sultan btn-icon-sultan-danger btn-aksi-hapus" data-id="'+row.rowBaris+'" '+attrDis+' title="Hapus"><i class="fas fa-trash" style="font-size: 12px;"></i></button>';
 
         var delay = i * 0.03; 
-        
         htmlBuilder += '<tr class="tr-animasi text-nowrap" style="animation-delay: ' + delay + 's;">';
+        
+        // Data Utama (Dengan Nama Title Case)
         htmlBuilder += '<td class="col-sticky-left font-weight-bold text-dark">' + safeNama + '</td>';
-        htmlBuilder += '<td>' + (row.nip||'') + '</td><td>' + cleanTgl + '</td><td class="font-weight-bold">' + cleanJam + '</td><td class="text-center">' + renderBadgeSultan(row.jenis) + '</td><td class="text-center">' + (row.komulatif||'-') + '</td><td class="small text-muted">' + (row.tglKirim||'-') + '</td><td class="small text-muted">' + (row.userInput||'-') + '</td><td class="text-center">' + btnFile + '</td><td class="text-center">' + badge + '</td>';
         
-        // Bagian Aksi Group
-        htmlBuilder += '<td class="text-center"><div class="d-flex justify-content-center btn-aksi-group">';
-        htmlBuilder += btnVerif; // Hanya muncul jika isAdmin = true
-        htmlBuilder += btnEdit + btnHapus + '</div></td>';
+        htmlBuilder += '<td>' + (row.nip||'') + '</td>';
+        htmlBuilder += '<td>' + cleanTgl + '</td>';
+        htmlBuilder += '<td class="font-weight-bold">' + cleanJam + '</td>';
+        htmlBuilder += '<td class="text-center">' + renderBadgeSultan(row.jenis) + '</td>';
+        htmlBuilder += '<td class="text-center">' + (row.komulatif||'-') + '</td>';
         
-        htmlBuilder += '<td class="small text-muted">' + (row.tglEdit||'-') + '</td><td class="small text-muted">' + (row.userEdit||'-') + '</td><td class="small text-muted">' + (row.tglVerif||'-') + '</td><td class="small text-muted">' + (row.adminVerif||'-') + '</td></tr>';
+        // Metadata (Font Kecil - Saran 1)
+        htmlBuilder += '<td class="text-muted" style="font-size: 11px;">' + (row.tglKirim||'-') + '</td>';
+        htmlBuilder += '<td class="text-muted" style="font-size: 11px;">' + (row.userInput||'-') + '</td>';
+        
+        htmlBuilder += '<td class="text-center">' + btnFile + '</td>';
+        htmlBuilder += '<td class="text-center">' + badge + '</td>';
+        htmlBuilder += '<td class="text-center"><div class="d-flex justify-content-center btn-aksi-group">' + btnVerif + btnEdit + btnHapus + '</div></td>';
+        
+        // Metadata (Font Kecil - Saran 1)
+        htmlBuilder += '<td class="text-muted" style="font-size: 11px;">' + (row.tglEdit||'-') + '</td>';
+        htmlBuilder += '<td class="text-muted" style="font-size: 11px;">' + (row.userEdit||'-') + '</td>';
+        htmlBuilder += '<td class="text-muted" style="font-size: 11px;">' + (row.tglVerif||'-') + '</td>';
+        htmlBuilder += '<td class="text-muted" style="font-size: 11px;">' + (row.adminVerif||'-') + '</td></tr>';
     }
 
-    tbody.html(htmlBuilder);
+    // --- RENDER KE DOM ---
+    if ($.fn.DataTable.isDataTable('#tabelLupa')) { 
+        $('#tabelLupa').DataTable().destroy(); 
+    }
+
+    $('#bodyTabelLupa').html(htmlBuilder);
 
     setTimeout(function() {
-        $('#tabelLupa').DataTable({
-            "destroy": true, "ordering": false, "pageLength": 10, "autoWidth": false, "stateSave": false,
-            "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
-            "initComplete": function() { 
-                var table = $(this);
-                if (!table.parent().hasClass('table-responsive')) {
-                    table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
-                }
-            }
-        });
+        initDataTableSultan(false);
         if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
-    }, 100);
+    }, 0);
 }
 
 function renderBadgeSultan(text) {

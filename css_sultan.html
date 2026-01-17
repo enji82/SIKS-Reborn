@@ -150,7 +150,46 @@
   .tr-animasi { animation: slideInRow 0.3s ease-out forwards; opacity: 0; }
   @keyframes slideInRow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   
-  .badge-sultan-status { font-size: 11px !important; font-weight: 600 !important; padding: 5px 12px !important; border-radius: 50px !important; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; border: 1px solid rgba(0,0,0,0.05); }
+  /* 1. Aturan Umum Badge Sultan */
+  .badge-sultan-status {
+      padding: 8px 15px !important;    /* Padding lebih lega */
+      border-radius: 50rem !important; /* WAJIB: Membuat bentuk Pill (Bulat Lonjong) */
+      text-transform: uppercase !important; /* Teks Kapital Semua (DIPROSES, OK) */
+      font-weight: 700 !important;     /* Font Tebal */
+      font-size: 10px !important;      /* Ukuran font disesuaikan */
+      letter-spacing: 0.8px;           /* Jarak antar huruf biar lega */
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15); /* Efek timbul (3D) */
+      border: 1px solid rgba(255,255,255,0.2); /* List putih tipis */
+      vertical-align: middle;
+  }
+
+  /* 2. Warna Kuning Emas (Diproses) */
+  .badge-warning {
+      background: linear-gradient(45deg, #f6c23e, #fdfd96); /* Gradasi Emas */
+      background-color: #f6c23e !important; 
+      color: #856404 !important; /* Teks Coklat agar kontras dengan emas */
+  }
+
+  /* 3. Warna Merah (Ditolak) */
+  .badge-danger {
+      background: linear-gradient(45deg, #e74a3b, #ff8a80); /* Gradasi Merah */
+      background-color: #e74a3b !important;
+      color: white !important;
+  }
+
+  /* 4. Warna Hijau (Disetujui/OK) */
+  .badge-success {
+      background: linear-gradient(45deg, #1cc88a, #69f0ae); /* Gradasi Hijau */
+      background-color: #1cc88a !important;
+      color: #856404 !important;
+  }
+
+  /* 5. Warna Biru (Revisi) */
+  .badge-info {
+      background: linear-gradient(45deg, #36b9cc, #4dd0e1); /* Gradasi Biru */
+      background-color: #36b9cc !important;
+      color: white !important;
+  }
   .badge-sultan-jenis { font-size: 11px !important; font-weight: 700 !important; padding: 4px 8px !important; border-radius: 6px !important; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
   table .badge { white-space: nowrap !important; line-height: 1.2; }
   hr.style-sultan { border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0,0,0,0), rgba(128,0,0,0.75), rgba(0,0,0,0)); margin: 1rem 0; }
@@ -377,5 +416,68 @@
     background-color: #000000; /* Hitam Pekat */
     color: #fff;
     border: 1px solid #333;
+}
+
+/* 1. Memberi jarak (Padding) Kiri-Kanan pada kontrol Atas & Bawah */
+.dataTables_wrapper > .row:first-child,
+.dataTables_wrapper > .row:last-child {
+    padding-left: 15px !important;  /* Menjorok ke dalam (kiri) */
+    padding-right: 15px !important; /* Menjorok ke dalam (kanan) */
+    padding-top: 15px;              /* Jarak atas agar tidak sumpek */
+}
+
+/* 2. Mempercantik Input Search & Dropdown Length (Global) */
+div.dataTables_wrapper div.dataTables_filter input {
+    border-radius: 20px !important; /* Membulat */
+    padding-left: 15px !important;
+    border: 1px solid #d1d3e2 !important;
+    margin-left: 0.5em;
+}
+
+div.dataTables_wrapper div.dataTables_length select {
+    border-radius: 20px !important; /* Membulat */
+    border: 1px solid #d1d3e2 !important;
+    padding-left: 10px;
+    padding-right: 20px;
+}
+
+/* 3. Menyelaraskan teks Info (Showing 1 to 10...) */
+div.dataTables_wrapper div.dataTables_info {
+    padding-top: 0.85em;
+    color: #858796; /* Abu-abu soft */
+    font-weight: 500;
+}
+
+/* ============================================================
+   GLOBAL TABLE HEADER (ELEGANT DARK GRAY)
+   ============================================================ */
+.table thead th,            /* <-- TAMBAHAN: Agar header gelap SEJAK AWAL (Loading) */
+table.dataTable thead th {
+    /* Background: Abu-abu Gelap (Charcoal) */
+    background-color: #343a40 !important; 
+    
+    /* Teks: Putih */
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    
+    /* Border Bawah: Aksen Maroon */
+    border-bottom: 3px solid #800000 !important;
+    
+    /* Reset border lain */
+    border-top: none !important;
+    vertical-align: middle !important;
+}
+
+/* Efek Hover pada Header */
+.table thead th:hover,
+table.dataTable thead th:hover {
+    background-color: #23272b !important; 
+}
+
+/* Membuat baris tabel lebih 'bernafas' */
+table.dataTable tbody td {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    vertical-align: middle !important; /* Pastikan teks di tengah vertikal */
 }
 </style>

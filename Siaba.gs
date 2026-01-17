@@ -1363,97 +1363,76 @@ function updateLupaPresensi(form, fileData) {
     var baris = parseInt(form.recId);
     
     if (isNaN(baris)) throw new Error("ID Data tidak valid");
-    
-    // Ambil Data Lama (untuk cek status & URL file)
     var rangeLama = sheet.getRange(baris, 1, 1, 16); 
     var valLama = rangeLama.getValues()[0];
     
-    // 1. CEK STATUS (Locking)
     var stLama = valLama[10]; 
-    if(stLama === "OK" || stLama === "Disetujui") {
-        throw new Error("Data sudah disetujui, tidak bisa diedit.");
-    }
+    if(stLama === "OK" || stLama === "Disetujui") throw new Error("Data sudah disetujui, tidak bisa diedit.");
     
-    // Logic Status: Jika sebelumnya Ditolak/Revisi -> Ubah jadi "Diproses" agar admin cek ulang
-    // Jika masih Diproses -> Tetap Diproses
     var stBaru = (stLama === "Ditolak" || stLama === "Revisi") ? "Diproses" : "Diproses";
 
-    // 2. NORMALISASI TANGGAL (HTML yyyy-mm-dd -> Sheet dd-mm-yyyy)
+    // Format Tanggal Baru
     var tglSimpan = "";
     if (form.tanggal && form.tanggal.includes("-")) {
        var parts = form.tanggal.split("-"); 
        tglSimpan = parts[2] + "-" + parts[1] + "-" + parts[0];
-    } else {
-       tglSimpan = form.tanggal;
-    }
+    } else { tglSimpan = form.tanggal; }
 
-    // 3. NORMALISASI JAM (HH:mm)
     var jamSimpan = "";
     if (form.waktu) {
         var jamParts = form.waktu.split(":");
-        var hh = String(jamParts[0]).padStart(2, '0');
-        var mm = String(jamParts[1] || "00").padStart(2, '0');
-        jamSimpan = hh + ":" + mm;
+        jamSimpan = String(jamParts[0]).padStart(2, '0') + ":" + String(jamParts[1]).padStart(2, '0');
     }
 
-    // 4. MANAGEMENT FILE (Upload Baru atau Rename Lama)
-    var finalUrl = valLama[9]; // Default: URL Lama
-    var namaFileBaru = form.nip_asn + "_" + tglSimpan + "_" + form.jenis + ".pdf";
+    // --- LOGIKA FILE UPDATE (FORMAT NIP) ---
+    var finalUrl = valLama[9]; 
+    var nipUser = valLama[2]; // Ambil NIP dari database (Kolom C / Index 2)
+    
+    // FORMAT BARU: <NIP> - <Tanggal> - <Jenis>.pdf
+    var namaFileBaru = nipUser + " - " + tglSimpan + " - " + form.jenis + ".pdf";
+
+    var targetFolder = getFolderTahunBulan(DRIVE_ID, tglSimpan);
 
     if (fileData && fileData.data) {
-       // A. USER UPLOAD FILE BARU
-       var folder = DriveApp.getFolderById(DRIVE_ID);
+       // A. UPLOAD FILE BARU
        var blob = Utilities.newBlob(Utilities.base64Decode(fileData.data), fileData.mimeType, namaFileBaru);
-       finalUrl = folder.createFile(blob).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getUrl();
+       var newFile = targetFolder.createFile(blob);
+       newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+       finalUrl = newFile.getUrl();
        
-       // Opsional: Hapus file lama jika mau, tapi biarkan saja history-nya
     } else {
-       // B. TIDAK UPLOAD (Cuma ganti data teks)
-       // Cek apakah Tanggal/Jenis berubah? Jika ya, Rename file di Drive agar rapi
-       var tglLamaSheet = String(valLama[3]).replace(/'/g, ""); // Bersihkan petik
+       // B. RENAME FILE LAMA (Jika tanggal/jenis berubah)
+       var tglLamaSheet = String(valLama[3]).replace(/'/g, "");
+       
+       // Cek perubahan (Tanggal, Jenis, atau Nama File belum sesuai NIP)
        if (tglSimpan !== tglLamaSheet || form.jenis !== valLama[5]) {
            try { 
              var idFile = finalUrl.match(/[-\w]{25,}/);
              if(idFile) {
                  var fileDrive = DriveApp.getFileById(idFile[0]);
-                 fileDrive.setName(namaFileBaru); // Rename fisik file
+                 fileDrive.setName(namaFileBaru); // Rename jadi format NIP
+                 
+                 // Pindah folder jika tanggal berubah
+                 if (tglSimpan !== tglLamaSheet) {
+                     fileDrive.moveTo(targetFolder);
+                 }
              }
-           } catch(e) {
-             // Abaikan error rename (misal file lama sudah terhapus)
-           }
+           } catch(e) {}
        }
     }
 
-    // 5. SIMPAN KE SHEET (Force String dengan ')
-    // Kolom 4: Tanggal (D)
+    // Simpan ke Sheet
     sheet.getRange(baris, 4).setValue("'" + tglSimpan);      
-    
-    // Kolom 5: Jam (E)
     sheet.getRange(baris, 5).setValue("'" + jamSimpan);      
-    
-    // Kolom 6: Jenis (F)
     sheet.getRange(baris, 6).setValue(form.jenis);   
-    
-    // Kolom 7: Komulatif (G)
     sheet.getRange(baris, 7).setValue("'" + form.komulatif); 
-    
-    // Kolom 10: File URL (J)
     sheet.getRange(baris, 10).setValue(finalUrl);    
-    
-    // Kolom 11: Status (K)
     sheet.getRange(baris, 11).setValue(stBaru);      
-    
-    // Kolom 12: Tgl Edit (L)
     sheet.getRange(baris, 12).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss"));        
-    
-    // Kolom 13: User Edit (M)
     sheet.getRange(baris, 13).setValue(form.user_login);
 
     return "Sukses Data Berhasil Diupdate";
-    
-  } catch(e) { 
-    throw new Error("Gagal Update: " + e.message); 
-  }
+  } catch(e) { throw new Error("Gagal Update: " + e.message); }
 }
 
 // 6. SOFT DELETE (HAPUS KE TRASH)
@@ -1461,10 +1440,9 @@ function softDeleteLupaPresensi(form) {
   var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
   var SHEET_NAME = "Lupa_Presensi";
   var SHEET_TRASH = "Trash";
-  var TRASH_FOLDER_ID = "1Hop5S8iFazx3I3pX9SJILNLBkn-eBNfP"; 
+  var TRASH_ROOT_ID = "1Hop5S8iFazx3I3pX9SJILNLBkn-eBNfP"; 
 
   try {
-    // Validasi Kode
     var KODE_RAHASIA = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd");
     if (String(form.kode).trim() !== KODE_RAHASIA) throw new Error("Kode Salah.");
 
@@ -1474,37 +1452,37 @@ function softDeleteLupaPresensi(form) {
     if (!sheetTrash) sheetTrash = ss.insertSheet(SHEET_TRASH);
 
     var baris = parseInt(form.recId);
-    
-    // 1. AMBIL 16 KOLOM DATA ASLI (DisplayValues agar format Tgl aman)
     var range = sheetSource.getRange(baris, 1, 1, 16);
     var values = range.getDisplayValues()[0]; 
 
     if (!values[2]) throw new Error("Data kosong.");
 
-    // 2. PINDAHKAN FILE KE FOLDER SAMPAH
+    // --- PINDAHKAN FILE KE TRASH (STRUKTUR TAHUN > BULAN) ---
     var fileUrl = values[9];
+    var tglData = String(values[3]).replace(/'/g, ""); // "dd-mm-yyyy"
+    
     if (fileUrl && String(fileUrl).includes("drive")) {
        try {
          var fid = fileUrl.match(/[-\w]{25,}/);
-         if(fid) DriveApp.getFileById(fid[0]).moveTo(DriveApp.getFolderById(TRASH_FOLDER_ID));
+         if(fid) {
+            var file = DriveApp.getFileById(fid[0]);
+            
+            // Cari/Buat Folder Tahun > Bulan di dalam TRASH
+            var targetTrashFolder = getFolderTahunBulan(TRASH_ROOT_ID, tglData);
+            
+            file.moveTo(targetTrashFolder); // Pindah
+         }
        } catch(e){}
     }
 
-    // 3. PERSIAPAN DATA (FORCE STRING)
-    // Beri tanda petik pada data rawan (Tgl, Jam, Komulatif) agar tidak berubah format
-    values[3] = "'" + values[3]; 
-    values[4] = "'" + values[4]; 
-    values[6] = "'" + values[6];
-
-    // 4. BUAT DATA TAMBAHAN (KOLOM Q, R, S)
+    // Persiapan Data Trash
+    values[3] = "'" + values[3]; values[4] = "'" + values[4]; values[6] = "'" + values[6];
     var tglHapus = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
     var userHapus = form.user_login || "Guest";
     var alasanHapus = form.alasan || "-";
-
-    // Gabungkan: 16 Data Asli + 3 Data Baru = 19 Kolom
+    
     var trashRow = values.concat([tglHapus, userHapus, alasanHapus]);
 
-    // 5. EKSEKUSI
     sheetTrash.appendRow(trashRow); 
     sheetSource.deleteRow(baris);      
 
@@ -1514,7 +1492,7 @@ function softDeleteLupaPresensi(form) {
 
 // 7. SIMPAN DATA BARU
 function simpanLupaPresensi(dataKirim) {
-  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU"; 
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
   var SHEET_NAME = "Lupa_Presensi";
   var DRIVE_ID = "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa"; 
 
@@ -1522,31 +1500,35 @@ function simpanLupaPresensi(dataKirim) {
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheet = ss.getSheetByName(SHEET_NAME);
     
-    // ... (Bagian Normalisasi Tanggal & Jam biarkan seperti sebelumnya) ...
+    // Normalisasi Tanggal
     var tglSimpan = "";
     if (dataKirim.tanggal && dataKirim.tanggal.includes("-")) {
-       var parts = dataKirim.tanggal.split("-"); 
+       var parts = dataKirim.tanggal.split("-");
        tglSimpan = parts[2] + "-" + parts[1] + "-" + parts[0];
     } else { tglSimpan = dataKirim.tanggal; }
 
-    var jamSimpan = dataKirim.waktu; // ... (Biarkan kode jam yang lama) ...
+    // Normalisasi Jam
+    var jamSimpan = dataKirim.waktu;
+    if (jamSimpan && jamSimpan.includes(":")) {
+       var jamParts = jamSimpan.split(":");
+       jamSimpan = String(jamParts[0]).padStart(2, '0') + ":" + String(jamParts[1]).padStart(2, '0');
+    }
 
-    // --- PERBAIKAN UTAMA (METODE SK.GS) ---
-    var folder = DriveApp.getFolderById(DRIVE_ID);
-    var fileBlob = Utilities.newBlob(Utilities.base64Decode(dataKirim.file.data), dataKirim.file.mimeType, dataKirim.file.name);
+    // --- LOGIKA FILE (UPDATE NIP) ---
+    var targetFolder = getFolderTahunBulan(DRIVE_ID, tglSimpan);
     
+    // FORMAT BARU: <NIP> - <Tanggal> - <Jenis>.pdf
     var fileExt = dataKirim.file.name.split('.').pop();
-    var fileNameBaru = dataKirim.nip_asn + "_" + tglSimpan + "_" + dataKirim.jenis + "." + fileExt;
+    var fileNameBaru = dataKirim.nip_asn + " - " + tglSimpan + " - " + dataKirim.jenis + "." + fileExt;
+
+    // Simpan File
+    var fileBlob = Utilities.newBlob(Utilities.base64Decode(dataKirim.file.data), dataKirim.file.mimeType, dataKirim.file.name);
+    var newFile = targetFolder.createFile(fileBlob).setName(fileNameBaru);
     
-    // Create File
-    var newFile = folder.createFile(fileBlob).setName(fileNameBaru);
-    
-    // [PENTING] SET PUBLIC AGAR BISA DIPREVIEW DI IFRAME
-    // (Mengadopsi metode dari SK.gs baris 135)
+    // Set Public
     newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    
     var fileUrl = newFile.getUrl();
-    // ----------------------------------------
+    // --------------------------------
 
     var timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
     var rowData = [
@@ -1555,7 +1537,6 @@ function simpanLupaPresensi(dataKirim) {
       timestamp, dataKirim.user_login, fileUrl, "Diproses",
       "", "", "", "", ""
     ];
-    
     sheet.appendRow(rowData);
     return "Sukses Data Berhasil Disimpan";
     
@@ -1778,4 +1759,36 @@ function bukaKunciSemuaFile() {
     console.error("Gagal: " + e.message);
     return "Error: " + e.message;
   }
+}
+
+function getFolderTahunBulan(parentId, strTgl) {
+  // strTgl format: "dd-mm-yyyy" (Misal: 17-01-2026)
+  var parts = strTgl.split("-");
+  var year = parts[2];
+  var monthIdx = parseInt(parts[1], 10) - 1; // 0-11
+  
+  var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                  "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  var monthName = arrBulan[monthIdx];
+  
+  // 1. Cek Folder Tahun
+  var parentFolder = DriveApp.getFolderById(parentId);
+  var yearFolder;
+  var yearIter = parentFolder.getFoldersByName(year);
+  if (yearIter.hasNext()) {
+    yearFolder = yearIter.next();
+  } else {
+    yearFolder = parentFolder.createFolder(year);
+  }
+  
+  // 2. Cek Folder Bulan (di dalam folder Tahun)
+  var targetFolder;
+  var monthIter = yearFolder.getFoldersByName(monthName);
+  if (monthIter.hasNext()) {
+    targetFolder = monthIter.next();
+  } else {
+    targetFolder = yearFolder.createFolder(monthName);
+  }
+  
+  return targetFolder;
 }
