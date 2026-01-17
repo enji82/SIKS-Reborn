@@ -480,4 +480,40 @@ table.dataTable tbody td {
     padding-bottom: 12px !important;
     vertical-align: middle !important; /* Pastikan teks di tengah vertikal */
 }
+
+/* ============================================================
+   WARNA CUSTOM & LOADING (UNTUK BADGE IDENTIK)
+   ============================================================ */
+
+/* 1. Warna Khusus Badge (Sesuai Kode Anda) */
+.badge-orange {
+    background-color: #ffc107 !important; /* Kuning Emas/Jeruk */
+    color: #212529 !important;
+}
+.badge-black {
+    background-color: #343a40 !important; /* Hitam Arang */
+    color: #ffffff !important;
+}
+
+/* 2. Styling Badge Sultan (Bentuk Pill & Shadow) */
+.badge-sultan-jenis, 
+.badge-sultan-status {
+    padding: 6px 12px;
+    border-radius: 50rem; /* Pill */
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    display: inline-block;
+    min-width: 90px; /* Lebar seragam */
+}
+
+/* 3. Spinner Container (Agar muncul di tengah) */
+.sultan-loading-container {
+    padding: 40px 0;
+    text-align: center;
+}
+.sultan-spinner {
+    width: 3rem; height: 3rem; color: #800000; margin-bottom: 10px;
+}
 </style>
