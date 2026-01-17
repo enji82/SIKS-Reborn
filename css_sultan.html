@@ -481,39 +481,102 @@ table.dataTable tbody td {
     vertical-align: middle !important; /* Pastikan teks di tengah vertikal */
 }
 
-/* ============================================================
-   WARNA CUSTOM & LOADING (UNTUK BADGE IDENTIK)
-   ============================================================ */
+/* ========================================================================== */
+/* SULTAN UI: BADGE LIGHT vs TOMBOL 3D                                        */
+/* ========================================================================== */
 
-/* 1. Warna Khusus Badge (Sesuai Kode Anda) */
-.badge-orange {
-    background-color: #ffc107 !important; /* Kuning Emas/Jeruk */
-    color: #212529 !important;
+/* 1. LOADING AREA (Tetap Konsisten) */
+.sultan-loading-container {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 250px; width: 100%;
 }
-.badge-black {
-    background-color: #343a40 !important; /* Hitam Arang */
-    color: #ffffff !important;
-}
+.sultan-spinner { width: 3rem; height: 3rem; color: #800000; margin-bottom: 15px; }
 
-/* 2. Styling Badge Sultan (Bentuk Pill & Shadow) */
-.badge-sultan-jenis, 
-.badge-sultan-status {
+
+/* 2. BADGE STYLE: "LIGHT / SOFT" (Agar terlihat sebagai Label Info) */
+.badge-sultan {
     padding: 6px 12px;
-    border-radius: 50rem; /* Pill */
+    border-radius: 50rem !important; /* Pill Shape */
     font-size: 11px;
     font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     text-transform: uppercase;
     display: inline-block;
-    min-width: 90px; /* Lebar seragam */
+    min-width: 90px;
+    letter-spacing: 0.5px;
+    box-shadow: none !important; /* Flat (Tidak Timbul) */
+    cursor: default;             /* Kursor Panah Biasa */
+    border: 1px solid transparent;
 }
 
-/* 3. Spinner Container (Agar muncul di tengah) */
-.sultan-loading-container {
-    padding: 40px 0;
-    text-align: center;
+/* -- Warna Badge Soft (Background Terang, Teks Gelap) -- */
+/* Orange Soft (Untuk Datang) */
+.badge-sultan-light-orange { 
+    background-color: #fff3cd !important; 
+    color: #856404 !important; 
+    border-color: #ffeeba !important;
 }
-.sultan-spinner {
-    width: 3rem; height: 3rem; color: #800000; margin-bottom: 10px;
+/* Hitam Soft / Abu (Untuk Pulang) */
+.badge-sultan-light-dark { 
+    background-color: #d6d8d9 !important; 
+    color: #1b1e21 !important; 
+    border-color: #c6c8ca !important;
 }
+/* Hijau Soft (Sukses/OK) */
+.badge-sultan-light-success { 
+    background-color: #d4edda !important; 
+    color: #155724 !important; 
+    border-color: #c3e6cb !important;
+}
+/* Biru Soft (Revisi) */
+.badge-sultan-light-info { 
+    background-color: #d1ecf1 !important; 
+    color: #0c5460 !important; 
+    border-color: #bee5eb !important;
+}
+/* Merah Soft (Tolak) */
+.badge-sultan-light-danger { 
+    background-color: #f8d7da !important; 
+    color: #721c24 !important; 
+    border-color: #f5c6cb !important;
+}
+/* Kuning Soft (Proses) */
+.badge-sultan-light-warning { 
+    background-color: #fff3cd !important; 
+    color: #856404 !important; 
+}
+
+
+/* 3. BUTTON STYLE: "3D SOLID" (Agar terlihat Klik-able) */
+.btn-icon-sultan {
+    width: 32px;
+    height: 32px;
+    border-radius: 50% !important; /* Bulat Penuh */
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    color: white !important;
+    cursor: pointer;
+    
+    /* EFEK 3D (Shadow Tebal di Bawah) */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.15s ease-in-out;
+}
+
+/* Efek Tekan (Penting untuk UX) */
+.btn-icon-sultan:hover {
+    transform: translateY(-2px); /* Naik dikit */
+    box-shadow: 0 7px 14px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+}
+.btn-icon-sultan:active {
+    transform: translateY(1px); /* Turun seolah ditekan */
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+
+/* -- Warna Tombol Solid (Vibrant) -- */
+.btn-icon-sultan-info    { background: linear-gradient(145deg, #17a2b8, #138496); }
+.btn-icon-sultan-success { background: linear-gradient(145deg, #28a745, #218838); }
+.btn-icon-sultan-warning { background: linear-gradient(145deg, #ffc107, #e0a800); color: #212529 !important; }
+.btn-icon-sultan-danger  { background: linear-gradient(145deg, #dc3545, #c82333); }
 </style>
