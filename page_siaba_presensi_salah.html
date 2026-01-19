@@ -311,24 +311,24 @@ function applyFilterSalahPresensi() {
     var unit = $('#filterUnitSalah').val(); 
     var stat = $('#filterStatusSalah').val();
 
-    // LANGKAH 1: RESET TABEL KE KONDISI LOADING
-    // Jika DataTable aktif, matikan dulu agar kita bisa ubah HTML-nya manual
+    // Reset DataTable agar HTML bisa diedit manual
     if ($.fn.DataTable.isDataTable('#tabelSalah')) {
         $('#tabelSalah').DataTable().destroy();
     }
 
-    // LANGKAH 2: MASUKKAN SPINNER MANUAL (Cara Paling Aman)
-    // Header tabel tetap terlihat, tapi isinya kita ganti spinner
+    // INJECT HTML: Menggunakan class .sultan-loading-container dari css_sultan
     var htmlLoading = `
         <tr>
-            <td colspan="15" class="text-center p-5">
-                <div class="spinner-border text-maroon mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-                <h6 class="text-muted font-weight-bold">Sedang memuat data...</h6>
+            <td colspan="15" class="p-0 border-0">
+                <div class="sultan-loading-container">
+                    <div class="spinner-border sultan-spinner" role="status"></div>
+                    <h6 class="text-muted font-weight-bold">Sedang memuat data...</h6>
+                </div>
             </td>
         </tr>`;
+    
     $('#bodyTabelSalah').html(htmlLoading);
 
-    // LANGKAH 3: PANGGIL SERVER
     google.script.run
         .withSuccessHandler(renderTabelSalah)
         .withFailureHandler(function(e){
@@ -340,26 +340,21 @@ function applyFilterSalahPresensi() {
 function refreshTabelSalah() { applyFilterSalahPresensi(); }
 
 function renderTabelSalah(jsonString) {
-    // 1. PARSE DATA
     var data = [];
     try { data = JSON.parse(jsonString); } catch(e) { return; }
 
-    // 2. JIKA DATA KOSONG
     if(data.length === 0) { 
-        $('#bodyTabelSalah').empty(); // Hapus spinner
-        // Aktifkan DataTable kosong (biar muncul pesan "No matching records found")
+        $('#bodyTabelSalah').empty(); 
         initDataTableStandard('#tabelSalah'); 
         return; 
     }
 
-    // 3. SORTING DATA (Terbaru diatas)
+    // Sorting
     const parseWaktu = (str) => {
         if (!str || str.length < 5) return 0;
         try {
-            var parts = str.split(' '); 
-            var dSplit = parts[0].split(/[-/]/); 
-            var tSplit = (parts[1]||"00:00:00").split(':');
-            return new Date(dSplit[2], dSplit[1]-1, dSplit[0], tSplit[0]||0, tSplit[1]||0).getTime();
+            var parts = str.split(' '); var d = parts[0].split(/[-/]/); var t = (parts[1]||"00:00:00").split(':');
+            return new Date(d[2], d[1]-1, d[0], t[0]||0, t[1]||0).getTime();
         } catch(e) { return 0; }
     };
     data.sort((a, b) => {
@@ -368,10 +363,6 @@ function renderTabelSalah(jsonString) {
         return maxB - maxA; 
     });
 
-    // 4. SUSUN HTML (String Concatenation - Paling Cepat)
-    var html = '';
-    
-    // Cek Admin sekali saja di luar loop
     var isAdmin = false;
     try {
         var user = JSON.parse(localStorage.getItem("siksUser"));
@@ -379,34 +370,31 @@ function renderTabelSalah(jsonString) {
         if (role.includes('admin') || role.includes('super')) isAdmin = true;
     } catch(e) {}
 
+    var html = '';
     for (var i = 0; i < data.length; i++) {
         var row = data[i]; DATA_SALAH[row.rowBaris] = row;
         
         var safeNama = escapeHtml(row.namaAsn).toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
         
-        // GUNAKAN FUNGSI BADGE ANDA (Orange/Black)
+        // BADGE: Panggil Helper renderBadgeSultan
         var badgeJenis = renderBadgeSultan(row.jenis);
         var badgeStatus = renderBadgeSultan(row.status);
-        
         if (row.ket && row.ket.length > 2) {
              badgeStatus += `<i class="fas fa-info-circle text-info ml-2" title="${escapeHtml(row.ket)}"></i>`;
         }
 
         var st = (row.status || "").toLowerCase();
-        
-        // Kunci jika mengandung kata 'ok', 'setuju', atau 'acc'
         var isLocked = (st.includes('ok') || st.includes('setuju') || st.includes('acc'));
-        
-        // Jika terkunci, beri style disabled dan cursor not-allowed
         var btnAttr = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
 
+        // TOMBOL: Menggunakan class 'btn-icon-sultan' (Style diatur di css_sultan)
         var btnVerif = isAdmin ? `<button class="btn-icon-sultan btn-icon-sultan-success btn-aksi-verif" onclick="verifikasiDataSalah('${row.rowBaris}')" title="Verifikasi"><i class="fas fa-check"></i></button>` : '';
         
-        // Terapkan btnAttr ke tombol Edit dan Hapus
-        var btnEdit = `<button class="btn-icon-sultan btn-icon-sultan-warning btn-aksi-edit" onclick="editDataSalah('${row.rowBaris}')" title="Edit" ${btnAttr}><i class="fas fa-pencil-alt"></i></button>`;
+        var btnEdit = `<button class="btn-icon-sultan btn-icon-sultan-warning btn-aksi-edit" onclick="editDataSalah('${row.rowBaris}')" title="Edit" ${btnAttr}><i class="fas fa-pencil-alt" style="font-size: 14px;"></i></button>`;
+        
         var btnHapus = `<button class="btn-icon-sultan btn-icon-sultan-danger btn-aksi-hapus" onclick="hapusDataSalah('${row.rowBaris}')" title="Hapus" ${btnAttr}><i class="fas fa-trash"></i></button>`;
 
-        var delay = i * 0.03; // Efek animasi dikit
+        var delay = i * 0.03; 
         html += `<tr class="tr-animasi text-nowrap" style="animation-delay:${delay}s">
             <td class="col-sticky-left font-weight-bold text-dark">${safeNama}</td>
             <td>${row.nip||''}</td>
@@ -416,7 +404,7 @@ function renderTabelSalah(jsonString) {
             <td class="text-muted" style="font-size:11px;">${row.tglAjuan||'-'}</td>
             <td class="text-muted" style="font-size:11px;">${row.userInput||'-'}</td>
             <td class="text-center">${badgeStatus}</td>
-            <td class="text-center"><div class="d-flex justify-content-center btn-aksi-group">${btnVerif}${btnEdit}${btnHapus}</div></td>
+            <td class="text-center"><div class="d-flex justify-content-center btn-aksi-group" style="gap:5px;">${btnVerif}${btnEdit}${btnHapus}</div></td>
             <td class="text-muted" style="font-size:11px;">${row.tglEdit||'-'}</td>
             <td class="text-muted" style="font-size:11px;">${row.userEdit||'-'}</td>
             <td class="text-muted" style="font-size:11px;">${row.tglVerif||'-'}</td>
@@ -424,10 +412,8 @@ function renderTabelSalah(jsonString) {
         </tr>`;
     }
 
-    // 5. RENDER KE LAYAR
     $('#bodyTabelSalah').html(html);
 
-    // 6. AKTIFKAN DATATABLE (FITUR SEARCH/PAGING NYALA SEKARANG)
     setTimeout(function() {
         initDataTableStandard('#tabelSalah');
         if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
@@ -464,35 +450,34 @@ function initDataTableStandard(tableId) {
     });
 }
 
-// --- FUNGSI BADGE (PERSIS DARI ANDA) ---
+// REVISI BADGE (MENGGUNAKAN STYLE LIGHT/SOFT AGAR BEDA DENGAN TOMBOL)
 function renderBadgeSultan(text) {
     if (!text) return '-'; 
     var s = String(text).toLowerCase();
     
-    // 1. LOGIKA JENIS (DATANG / PULANG) - Warna Custom
+    // 1. BADGE JENIS (Datang/Pulang) - Style Light
     if (s.includes('datang')) {
-        return '<span class="badge badge-orange badge-sultan-jenis"><i class="fas fa-sun mr-1"></i>DATANG</span>';
+        return '<span class="badge badge-sultan badge-sultan-light-orange"><i class="fas fa-sun mr-1"></i>DATANG</span>';
     }
     if (s.includes('pulang')) {
-        return '<span class="badge badge-black badge-sultan-jenis"><i class="fas fa-moon mr-1"></i>PULANG</span>';
+        return '<span class="badge badge-sultan badge-sultan-light-dark"><i class="fas fa-moon mr-1"></i>PULANG</span>';
     }
     
-    // 2. LOGIKA STATUS
-    var c = 'secondary'; 
-    var i = '';
+    // 2. BADGE STATUS - Style Light
+    var styleClass = 'badge-sultan-light-dark'; // Default
+    var icon = '';
     
     if (s.includes('ok') || s.includes('setuju')) { 
-        c = 'success'; i = 'check';  
+        styleClass = 'badge-sultan-light-success'; icon = 'check'; 
     } else if (s.includes('revisi')) { 
-        c = 'info'; i = 'sync-alt';  
+        styleClass = 'badge-sultan-light-info'; icon = 'sync-alt'; 
     } else if (s.includes('tolak')) { 
-        c = 'danger'; i = 'times';   
+        styleClass = 'badge-sultan-light-danger'; icon = 'times'; 
     } else { 
-        c = 'warning text-white'; i = 'clock'; 
+        styleClass = 'badge-sultan-light-warning'; icon = 'clock'; 
     }
     
-    // Menggunakan class badge-sultan-status agar bentuknya pill
-    return '<span class="badge badge-'+c+' badge-sultan-status"><i class="fas fa-'+i+' mr-1"></i>'+text+'</span>';
+    return '<span class="badge badge-sultan '+styleClass+'"><i class="fas fa-'+icon+' mr-1"></i>'+text+'</span>';
 }
 
 function escapeHtml(text) {

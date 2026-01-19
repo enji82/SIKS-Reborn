@@ -274,7 +274,7 @@ function getLapbulRiwayatData() {
             const dateValue = row['Tanggal Unggah'];
             // Format Tanggal Unggah
             row['Tanggal Unggah'] = (dateValue instanceof Date && !isNaN(dateValue)) ? 
-                                    Utilities.formatDate(dateValue, ssTimezone, "dd/MM/yyyy HH:mm:ss") : 
+                                    Utilities.formatDateLapbul(dateValue, ssTimezone, "dd/MM/yyyy HH:mm:ss") : 
                                     (row['Tanggal Unggah'] || '-');
             
             // Hapus penambahan kolom "Aksi"
@@ -441,10 +441,10 @@ const parseDateForSort = (dateStr) => {
 };
 
 // GANTI FUNGSI HELPER INI (baris 86)
-const formatDate = (cell) => {
+const formatDateLapbul = (cell) => {
     // KUNCI PERBAIKAN: Cek jika cell adalah Date object yang valid
     if (cell instanceof Date && !isNaN(cell)) {
-        return Utilities.formatDate(cell, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+        return Utilities.formatDateLapbul(cell, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
     }
     // Jika tidak valid (null, "", dll.), kembalikan string '-'
     return cell || '-'; 
@@ -503,9 +503,9 @@ const mapSheet = (sheet, source, timeZone) => {
             "Dokumen": getCleanedDisplayValue(displayRow, mapping["Dokumen"]) || '',
             // Aksi tidak memiliki kolom di spreadsheet, hanya di rendering
             "Tanggal Unggah": (dateUnggahRaw instanceof Date) ?
- Utilities.formatDate(dateUnggahRaw, timeZone, "dd/MM/yyyy HH:mm:ss") : '-',
+ Utilities.formatDateLapbul(dateUnggahRaw, timeZone, "dd/MM/yyyy HH:mm:ss") : '-',
             "Update": (dateUpdateRaw instanceof Date) ?
- Utilities.formatDate(dateUpdateRaw, timeZone, "dd/MM/yyyy HH:mm:ss") : '-',
+ Utilities.formatDateLapbul(dateUpdateRaw, timeZone, "dd/MM/yyyy HH:mm:ss") : '-',
         };
         
         return rowObject;
@@ -691,7 +691,7 @@ function updateLapbulData(formData) {
 
     // 2. Format timestamp 'Update'
     const timeZone = Session.getScriptTimeZone();
-    formData.Update = Utilities.formatDate(new Date(), timeZone, "dd/MM/yyyy HH:mm:ss");
+    formData.Update = Utilities.formatDateLapbul(new Date(), timeZone, "dd/MM/yyyy HH:mm:ss");
     formData.Dokumen = fileUrl; // URL dokumen
     
     // 3. Susun Baris Data Baru (Iterasi berdasarkan header)
@@ -741,7 +741,7 @@ function updateLapbulData(formData) {
 function deleteLapbulData(rowIndex, source, deleteCode) {
   try {
     const today = new Date();
-    const todayCode = Utilities.formatDate(today, Session.getScriptTimeZone(), "yyyyMMdd");
+    const todayCode = Utilities.formatDateLapbul(today, Session.getScriptTimeZone(), "yyyyMMdd");
     
     if (String(deleteCode).trim() !== todayCode) {
       throw new Error("Kode Hapus salah.");

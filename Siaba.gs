@@ -1796,3 +1796,318 @@ function getFolderTahunBulan(parentId, strTgl) {
   
   return targetFolder;
 }
+
+/* ====================================================================== */
+/* MODUL: PERJALANAN DINAS (SIABA) - FULL BACKEND                         */
+/* ====================================================================== */
+
+var ID_SS_DINAS = "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M"; 
+var ID_FOLDER_DINAS = "1uPeOU7F_mgjZVyOLSsj-3LXGdq9rmmWl";
+
+/* TIMPA FUNGSI INI DI SIABA.GS */
+function getDaftarDinas(tahun, bulan, status, _cb) {
+  try {
+    SpreadsheetApp.flush();
+    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+    var sheet = ss.getSheetByName("Perjalanan_Dinas");
+    if (!sheet) return JSON.stringify([]);
+
+    var data = sheet.getDataRange().getValues();
+    var result = [];
+    
+    // Filter
+    var fTahun = (tahun == null) ? "" : String(tahun).trim();
+    var fBulan = (bulan == null) ? "" : String(bulan).trim();
+    var fStatus = (status == null) ? "" : String(status).trim();
+
+    console.log("FILTER -> Thn: [" + fTahun + "], Bln: [" + fBulan + "]");
+
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (String(row[1]).trim() === "") continue; 
+
+      // Parsing Tanggal (Smart Parser)
+      var valTgl = row[3];
+      var rowTahun = "", rowBulan = "";
+
+      if (valTgl instanceof Date) {
+        rowTahun = String(valTgl.getFullYear());
+        rowBulan = String(valTgl.getMonth() + 1);
+      } else {
+        var s = String(valTgl).replace(/'/g, "").trim();
+        var parts = s.split(/[-/]/); 
+        if (parts.length === 3) {
+           if(parts[2].length === 4) { rowTahun = String(parts[2]); rowBulan = String(parseInt(parts[1], 10)); }
+           else if (parts[0].length === 4) { rowTahun = String(parts[0]); rowBulan = String(parseInt(parts[1], 10)); }
+        }
+      }
+
+      var matchTahun = (fTahun === "") || (rowTahun === fTahun);
+      var matchBulan = (fBulan === "") || (rowBulan === fBulan);
+      var matchStatus = (fStatus === "") || (String(row[9]) == fStatus);
+
+      if (matchTahun && matchBulan && matchStatus) {
+        // AMBIL LAST ACTIVITY (MAX DATE)
+        // Kolom L(11), N(13), P(15)
+        var t1 = parseTime(row[11]); // Tgl Kirim
+        var t2 = parseTime(row[13]); // Last Update
+        var t3 = parseTime(row[15]); // Tgl Verif
+        var lastActivity = Math.max(t1, t2, t3);
+
+        result.push({
+          rowBaris: i + 1,
+          jenis: row[0], noSpt: row[1], tglSpt: cleanDate(row[2]), tglMulai: cleanDate(row[3]), tglSelesai: cleanDate(row[4]),
+          tujuan: row[5], kegiatan: row[6], jmlAsn: row[7], dokumen: row[8], status: row[9], jenisDok: row[10],
+          tglKirim: cleanDate(row[11]), userKirim: row[12], lastUpdate: cleanDate(row[13]), lastUser: row[14],
+          tglVerif: cleanDate(row[15]), verifikator: row[16], keterangan: row[17],
+          timestamp: lastActivity // Simpan untuk sorting
+        });
+      }
+    }
+    
+    // SORTING BERDASARKAN LAST ACTIVITY TERBARU
+    result.sort(function(a, b) { return b.timestamp - a.timestamp; });
+    
+    return JSON.stringify(result);
+  } catch (e) { return JSON.stringify([]); }
+}
+
+// HELPER BARU UNTUK PARSE WAKTU (Simpan di paling bawah Siaba.gs)
+function parseTime(val) {
+  if(!val) return 0;
+  if(val instanceof Date) return val.getTime();
+  // Jika format text 'dd-mm-yyyy HH:mm
+  var s = String(val).replace(/'/g, "").trim();
+  // Coba parsing sederhana
+  var parts = s.split(" ");
+  if(parts.length < 1) return 0;
+  var dateParts = parts[0].split("-");
+  if(dateParts.length !== 3) return 0;
+  // Asumsi dd-mm-yyyy
+  var y = parseInt(dateParts[2]);
+  var m = parseInt(dateParts[1]) - 1;
+  var d = parseInt(dateParts[0]);
+  var h = 0, min = 0;
+  if(parts.length > 1) {
+      var timeParts = parts[1].split(":");
+      if(timeParts.length >= 2) { h=parseInt(timeParts[0]); min=parseInt(timeParts[1]); }
+  }
+  return new Date(y, m, d, h, min).getTime();
+}
+
+/* 2. SIMPAN DATA (UNIFIED) */
+/* UPDATE BACKEND AGAR BISA EDIT DATA HEADER */
+function simpanSptUnified(payload) {
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+    var sheetMaster = ss.getSheetByName("Perjalanan_Dinas");
+    var sheetDetail = ss.getSheetByName("Perjalanan_Dinas_Peserta");
+    
+    if (!sheetDetail) {
+      sheetDetail = ss.insertSheet("Perjalanan_Dinas_Peserta");
+      sheetDetail.appendRow(["No SPT", "NIP", "Nama", "Unit", "Status", "Keterangan", "Waktu Input"]);
+    }
+
+    var now = new Date();
+    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
+    var userName = payload.user_login || "User Web";
+
+    // Format Tanggal untuk disimpan
+    var tglSptTxt = toTextDate(payload.header.tglSpt);
+    var tglMulaiTxt = toTextDate(payload.header.tglMulai);
+    var tglSelesaiTxt = toTextDate(payload.header.tglSelesai);
+
+    // 1. PROSES FILE
+    var fileUrl = "";
+    if (payload.fileData && payload.fileName) {
+      var folder = DriveApp.getFolderById(ID_FOLDER_DINAS);
+      var blob = Utilities.newBlob(Utilities.base64Decode(payload.fileData), payload.mimeType, payload.fileName);
+      var file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrl = file.getUrl();
+    }
+
+    // 2. SIMPAN / UPDATE MASTER DATA
+    if (payload.isNewSpt) {
+      // --- INSERT BARU ---
+      sheetMaster.appendRow([
+        payload.header.jenis, payload.header.noSpt, tglSptTxt, tglMulaiTxt, tglSelesaiTxt,
+        payload.header.tujuan, payload.header.kegiatan, payload.listPeserta.length, fileUrl, "Diproses", 
+        payload.header.jenisDok, sysDateStr, userName, sysDateStr, userName, "", "", ""
+      ]);
+    } else {
+      // --- UPDATE EXISTING (EDIT MODE) ---
+      var dataM = sheetMaster.getDataRange().getValues();
+      for(var j=1; j<dataM.length; j++){
+        if(String(dataM[j][1]) === String(payload.header.noSpt)) {
+          // A. Update Data Pokok (Header) -> INI YANG BARU DITAMBAHKAN
+          sheetMaster.getRange(j+1, 1).setValue(payload.header.jenis);    // Kolom A
+          sheetMaster.getRange(j+1, 3).setValue(tglSptTxt);               // Kolom C
+          sheetMaster.getRange(j+1, 4).setValue(tglMulaiTxt);             // Kolom D
+          sheetMaster.getRange(j+1, 5).setValue(tglSelesaiTxt);           // Kolom E
+          sheetMaster.getRange(j+1, 6).setValue(payload.header.tujuan);   // Kolom F
+          sheetMaster.getRange(j+1, 7).setValue(payload.header.kegiatan); // Kolom G
+          
+          // B. Update File (Jika ada)
+          if(fileUrl !== "") {
+             sheetMaster.getRange(j+1, 9).setValue(fileUrl); // Kolom I
+          }
+          // C. Update Jenis Dok (Jika berubah)
+          if(payload.header.jenisDok) {
+             sheetMaster.getRange(j+1, 11).setValue(payload.header.jenisDok); // Kolom K
+          }
+
+          // D. Update Jumlah Peserta & Log
+          var curJml = parseInt(dataM[j][7] || 0);
+          sheetMaster.getRange(j+1, 8).setValue(curJml + payload.listPeserta.length); 
+          sheetMaster.getRange(j+1, 14).setValue(sysDateStr); // Last Update
+          sheetMaster.getRange(j+1, 15).setValue(userName);   // Last User
+          
+          // Opsional: Jika status sebelumnya "Revisi", kembalikan ke "Diproses" setelah diedit?
+          // Jika ingin fitur itu, uncomment baris bawah:
+          // sheetMaster.getRange(j+1, 10).setValue("Diproses"); 
+
+          break;
+        }
+      }
+    }
+
+    // 3. SIMPAN PESERTA BARU (APPEND)
+    var rowsPeserta = [];
+    payload.listPeserta.forEach(function(p){
+      rowsPeserta.push([payload.header.noSpt, p.nip, p.nama, p.unit, "Diproses", "", sysDateStr]);
+    });
+    if(rowsPeserta.length > 0) {
+      sheetDetail.getRange(sheetDetail.getLastRow() + 1, 1, rowsPeserta.length, 7).setValues(rowsPeserta);
+    }
+
+    SpreadsheetApp.flush();
+    Utilities.sleep(2000); 
+    return "Sukses";
+  } catch (e) { return "Error: " + e.toString(); }
+}
+
+/* 3. FUNGSI PENCARIAN PEGAWAI (YANG DIPERBAIKI) */
+function cariPegawaiDatabase(keyword) {
+  var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+  var sheet = ss.getSheetByName("Database"); 
+  if(!sheet) return JSON.stringify([]);
+
+  var data = sheet.getDataRange().getValues();
+  var result = []; // Nama variabel konsisten
+  var k = keyword.toLowerCase();
+
+  for(var i=1; i<data.length; i++) {
+    var nip = String(data[i][1]).toLowerCase(); 
+    var nama = String(data[i][2]).toLowerCase();
+    
+    if(nama.includes(k) || nip.includes(k)) {
+       // Ambil Unit, NIP, Nama
+       result.push({ unit: data[i][0], nip: data[i][1], nama: data[i][2] });
+       
+       // Batasi 10 hasil agar tidak berat
+       if(result.length >= 10) break;
+    }
+  }
+  return JSON.stringify(result);
+}
+
+/* 4. HELPERS DATE & TEXT (WAJIB ADA) */
+function cleanDate(val) {
+  if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), "dd-MM-yyyy");
+  return String(val).replace(/'/g, "").trim();
+}
+
+function toTextDate(isoDate) {
+  if(!isoDate) return "";
+  var parts = isoDate.split("-");
+  if(parts.length !== 3) return "'" + isoDate;
+  return "'" + parts[2] + "-" + parts[1] + "-" + parts[0];
+}
+
+function toHtmlDate(textDate) {
+  var s = String(textDate).replace(/'/g, "").trim();
+  var parts = s.split("-");
+  if(parts.length !== 3) return "";
+  return parts[2] + "-" + parts[1] + "-" + parts[0];
+}
+
+/* 5. FUNGSI PENDUKUNG LAINNYA */
+function verifikasiDataDinas(rowBaris, status, keterangan, userVerifikator) {
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+    var sheet = ss.getSheetByName("Perjalanan_Dinas");
+    var row = parseInt(rowBaris);
+    var verifikator = userVerifikator || "Admin";
+    var now = new Date();
+    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
+
+    sheet.getRange(row, 10).setValue(status);
+    sheet.getRange(row, 14).setValue(sysDateStr);
+    sheet.getRange(row, 15).setValue(verifikator);
+    sheet.getRange(row, 16).setValue(sysDateStr);
+    sheet.getRange(row, 17).setValue(verifikator);
+
+    if (keterangan) {
+        sheet.getRange(row, 18).setValue(keterangan);
+    } else if (status === 'Disetujui') {
+        sheet.getRange(row, 18).setValue("");
+    }
+    
+    SpreadsheetApp.flush();
+    Utilities.sleep(1500); 
+    return "Sukses";
+  } catch(e) { return "Error: " + e.toString(); }
+}
+
+function hapusDataDinas(rowBaris) {
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+    var sheet = ss.getSheetByName("Perjalanan_Dinas");
+    sheet.deleteRow(parseInt(rowBaris));
+    SpreadsheetApp.flush();
+    Utilities.sleep(1500); 
+    return "Sukses";
+  } catch(e) { return "Error: " + e.toString(); }
+}
+
+function cekInfoSpt(noSpt) {
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+    var sheet = ss.getSheetByName("Perjalanan_Dinas");
+    if (!sheet) return JSON.stringify({ found: false });
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][1]).trim().toUpperCase() === String(noSpt).trim().toUpperCase()) {
+        return JSON.stringify({
+          found: true,
+          data: {
+            jenis: data[i][0],
+            tglSpt: toHtmlDate(data[i][2]),
+            tglMulai: toHtmlDate(data[i][3]),
+            tglSelesai: toHtmlDate(data[i][4]),
+            tujuan: data[i][5],
+            kegiatan: data[i][6],
+            status: data[i][9],
+            jenisDok: data[i][10]
+          }
+        });
+      }
+    }
+    return JSON.stringify({ found: false });
+  } catch(e) { return JSON.stringify({ found: false }); }
+}
+
+function getPesertaDinas(noSpt) {
+  var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+  var sheet = ss.getSheetByName("Perjalanan_Dinas_Peserta");
+  if (!sheet) return JSON.stringify([]);
+  var data = sheet.getDataRange().getValues();
+  var result = [];
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim().toUpperCase() === String(noSpt).trim().toUpperCase()) {
+      result.push({ nip: data[i][1], nama: data[i][2], unit: data[i][3], status: data[i][4] });
+    }
+  }
+  return JSON.stringify(result);
+}

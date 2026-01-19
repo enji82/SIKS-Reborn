@@ -760,8 +760,8 @@ function submitHapusDataLupa(e) {
 
             // B. PROSES DEPAN (Notifikasi Statis)
             Swal.fire({
-                title: 'Terhapus!',
-                html: 'Data berhasil dipindahkan ke <b>Tong Sampah</b>.',
+                title: 'Sukses',
+                html: 'Data lupa presensi berhasil dihapus.',
                 icon: 'success',
                 confirmButtonText: 'OK',
                 confirmButtonColor: '#d33', // Merah sesuai tema hapus
@@ -780,8 +780,13 @@ function submitHapusDataLupa(e) {
 
 function verifikasiDataLupa(id) {
     if ($('#modalVerif').length === 0) {
-        alert("FATAL ERROR: HTML Modal belum terpasang.");
-        return;
+    Swal.fire({
+        icon: 'error',
+        title: 'Error Sistem',
+        text: 'Komponen Modal Verifikasi tidak ditemukan dalam kode HTML.',
+        confirmButtonColor: '#d33'
+    });
+    return;
     }
 
     var row = DATA_LUPA[id];
