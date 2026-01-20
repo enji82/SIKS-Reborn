@@ -1872,6 +1872,87 @@ function getDaftarDinas(tahun, bulan, status, _cb) {
   } catch (e) { return JSON.stringify([]); }
 }
 
+function simpanSptUnified(payload) {
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
+    var sheetMaster = ss.getSheetByName("Perjalanan_Dinas");
+    var sheetDetail = ss.getSheetByName("Perjalanan_Dinas_Peserta");
+    
+    if (!sheetDetail) {
+      sheetDetail = ss.insertSheet("Perjalanan_Dinas_Peserta");
+      sheetDetail.appendRow(["No SPT", "NIP", "Nama", "Unit", "Status", "Keterangan", "Waktu Input"]);
+    }
+
+    var now = new Date();
+    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
+    var userName = payload.user_login || "User Web";
+
+    // Format Header
+    var tglSptTxt = toTextDate(payload.header.tglSpt);
+    var tglMulaiTxt = toTextDate(payload.header.tglMulai);
+    var tglSelesaiTxt = toTextDate(payload.header.tglSelesai);
+
+    // Proses File
+    var fileUrl = "";
+    if (payload.fileData && payload.fileName) {
+      var folder = DriveApp.getFolderById(ID_FOLDER_DINAS);
+      var blob = Utilities.newBlob(Utilities.base64Decode(payload.fileData), payload.mimeType, payload.fileName);
+      var file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrl = file.getUrl();
+    }
+
+    if (payload.isNewSpt) {
+      // INSERT BARU
+      sheetMaster.appendRow([
+        payload.header.jenis, payload.header.noSpt, tglSptTxt, tglMulaiTxt, tglSelesaiTxt,
+        payload.header.tujuan, payload.header.kegiatan, payload.listPeserta.length, fileUrl, "Diproses", 
+        payload.header.jenisDok, sysDateStr, userName, sysDateStr, userName, "", "", ""
+      ]);
+    } else {
+      // EDIT / UPDATE
+      var dataM = sheetMaster.getDataRange().getValues();
+      var found = false;
+      for(var j=1; j<dataM.length; j++){
+        if(String(dataM[j][1]).trim() === String(payload.header.noSpt).trim()) {
+          var r = j + 1;
+          // Update Header
+          if(payload.header.jenis) sheetMaster.getRange(r, 1).setValue(payload.header.jenis);
+          if(payload.header.tglSpt) sheetMaster.getRange(r, 3).setValue(tglSptTxt);
+          if(payload.header.tglMulai) sheetMaster.getRange(r, 4).setValue(tglMulaiTxt);
+          if(payload.header.tglSelesai) sheetMaster.getRange(r, 5).setValue(tglSelesaiTxt);
+          if(payload.header.tujuan) sheetMaster.getRange(r, 6).setValue(payload.header.tujuan);
+          if(payload.header.kegiatan) sheetMaster.getRange(r, 7).setValue(payload.header.kegiatan);
+          
+          if(fileUrl !== "") sheetMaster.getRange(r, 9).setValue(fileUrl);
+          if(payload.header.jenisDok) sheetMaster.getRange(r, 11).setValue(payload.header.jenisDok);
+
+          // Update Log (Kolom N & O)
+          var curJml = parseInt(dataM[j][7] || 0);
+          sheetMaster.getRange(r, 8).setValue(curJml + payload.listPeserta.length);
+          sheetMaster.getRange(r, 14).setValue(sysDateStr); // Last Update
+          sheetMaster.getRange(r, 15).setValue(userName);   // Last User
+          found = true;
+          break;
+        }
+      }
+      if(!found) return "Error: Data tidak ditemukan.";
+    }
+
+    // Simpan Peserta
+    var rowsPeserta = [];
+    payload.listPeserta.forEach(function(p){
+      rowsPeserta.push([payload.header.noSpt, p.nip, p.nama, p.unit, "Diproses", "", sysDateStr]);
+    });
+    if(rowsPeserta.length > 0) {
+      sheetDetail.getRange(sheetDetail.getLastRow() + 1, 1, rowsPeserta.length, 7).setValues(rowsPeserta);
+    }
+
+    SpreadsheetApp.flush();
+    return "Sukses";
+  } catch (e) { return "Error: " + e.toString(); }
+}
+
 // HELPER BARU UNTUK PARSE WAKTU (Simpan di paling bawah Siaba.gs)
 function parseTime(val) {
   if(!val) return 0;
@@ -1896,95 +1977,79 @@ function parseTime(val) {
 }
 
 /* 2. SIMPAN DATA (UNIFIED) */
-/* UPDATE BACKEND AGAR BISA EDIT DATA HEADER */
-function simpanSptUnified(payload) {
-  try {
-    var ss = SpreadsheetApp.openById(ID_SS_DINAS);
-    var sheetMaster = ss.getSheetByName("Perjalanan_Dinas");
-    var sheetDetail = ss.getSheetByName("Perjalanan_Dinas_Peserta");
+function renderTabelDinas(jsonString) {
+    var data = []; try { data = JSON.parse(jsonString); } catch(e) { return; }
+    console.log("Rendering " + data.length + " data.");
     
-    if (!sheetDetail) {
-      sheetDetail = ss.insertSheet("Perjalanan_Dinas_Peserta");
-      sheetDetail.appendRow(["No SPT", "NIP", "Nama", "Unit", "Status", "Keterangan", "Waktu Input"]);
+    // MATIKAN DATATABLES DULU
+    if ($.fn.DataTable.isDataTable('#tabelDinas')) {
+        $('#tabelDinas').DataTable().destroy();
     }
 
-    var now = new Date();
-    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
-    var userName = payload.user_login || "User Web";
+    $('#bodyTabelDinas').empty();
 
-    // Format Tanggal untuk disimpan
-    var tglSptTxt = toTextDate(payload.header.tglSpt);
-    var tglMulaiTxt = toTextDate(payload.header.tglMulai);
-    var tglSelesaiTxt = toTextDate(payload.header.tglSelesai);
-
-    // 1. PROSES FILE
-    var fileUrl = "";
-    if (payload.fileData && payload.fileName) {
-      var folder = DriveApp.getFolderById(ID_FOLDER_DINAS);
-      var blob = Utilities.newBlob(Utilities.base64Decode(payload.fileData), payload.mimeType, payload.fileName);
-      var file = folder.createFile(blob);
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      fileUrl = file.getUrl();
+    if(!data || data.length === 0) { 
+        initDataTableStandard('#tabelDinas'); 
+        return; 
     }
 
-    // 2. SIMPAN / UPDATE MASTER DATA
-    if (payload.isNewSpt) {
-      // --- INSERT BARU ---
-      sheetMaster.appendRow([
-        payload.header.jenis, payload.header.noSpt, tglSptTxt, tglMulaiTxt, tglSelesaiTxt,
-        payload.header.tujuan, payload.header.kegiatan, payload.listPeserta.length, fileUrl, "Diproses", 
-        payload.header.jenisDok, sysDateStr, userName, sysDateStr, userName, "", "", ""
-      ]);
-    } else {
-      // --- UPDATE EXISTING (EDIT MODE) ---
-      var dataM = sheetMaster.getDataRange().getValues();
-      for(var j=1; j<dataM.length; j++){
-        if(String(dataM[j][1]) === String(payload.header.noSpt)) {
-          // A. Update Data Pokok (Header) -> INI YANG BARU DITAMBAHKAN
-          sheetMaster.getRange(j+1, 1).setValue(payload.header.jenis);    // Kolom A
-          sheetMaster.getRange(j+1, 3).setValue(tglSptTxt);               // Kolom C
-          sheetMaster.getRange(j+1, 4).setValue(tglMulaiTxt);             // Kolom D
-          sheetMaster.getRange(j+1, 5).setValue(tglSelesaiTxt);           // Kolom E
-          sheetMaster.getRange(j+1, 6).setValue(payload.header.tujuan);   // Kolom F
-          sheetMaster.getRange(j+1, 7).setValue(payload.header.kegiatan); // Kolom G
-          
-          // B. Update File (Jika ada)
-          if(fileUrl !== "") {
-             sheetMaster.getRange(j+1, 9).setValue(fileUrl); // Kolom I
-          }
-          // C. Update Jenis Dok (Jika berubah)
-          if(payload.header.jenisDok) {
-             sheetMaster.getRange(j+1, 11).setValue(payload.header.jenisDok); // Kolom K
-          }
-
-          // D. Update Jumlah Peserta & Log
-          var curJml = parseInt(dataM[j][7] || 0);
-          sheetMaster.getRange(j+1, 8).setValue(curJml + payload.listPeserta.length); 
-          sheetMaster.getRange(j+1, 14).setValue(sysDateStr); // Last Update
-          sheetMaster.getRange(j+1, 15).setValue(userName);   // Last User
-          
-          // Opsional: Jika status sebelumnya "Revisi", kembalikan ke "Diproses" setelah diedit?
-          // Jika ingin fitur itu, uncomment baris bawah:
-          // sheetMaster.getRange(j+1, 10).setValue("Diproses"); 
-
-          break;
+    var isAdmin = false; 
+    try { var user = JSON.parse(localStorage.getItem("siksUser")); if (user && (user.role.toLowerCase().includes('admin') || user.role.toLowerCase().includes('super'))) isAdmin = true; } catch(e) {}
+    
+    var html = "";
+    for (var i = 0; i < data.length; i++) {
+        var row = data[i]; 
+        DATA_DINAS[row.rowBaris] = row;
+        
+        var safeNoSpt = cleanText(row.noSpt); 
+        var safeUrl = (row.dokumen||"").replace(/'/g, "%27").replace(/"/g, "%22");
+        
+        var btnDetail = `<button class="btn btn-outline-info btn-aksi-table" onclick="tambahDataDinasWithVal('${safeNoSpt}')"><i class="fas fa-pencil-alt mr-1"></i> Detail / Edit</button>`;
+        
+        // --- UPDATE TOMBOL DOKUMEN DISINI (PREVIEW MODAL) ---
+        var btnFile = '-';
+        if(safeUrl.length > 5) {
+             var jns = (row.jenisDok || "").toUpperCase();
+             var iconBtn = (jns === "SPT") ? 'btn-icon-info' : 'btn-icon-warning';
+             var iconFa = (jns === "SPT") ? 'fa-eye' : 'fa-exclamation-triangle';
+             
+             // Panggil fungsi previewDokumen() alih-alih window.open()
+             btnFile = `<button class="btn-icon-sultan ${iconBtn}" onclick="previewDokumen('${safeUrl}')" title="Lihat Dokumen"><i class="fas ${iconFa}" style="font-size:12px;"></i></button>`;
         }
-      }
-    }
+        
+        var btnAdmin = '-';
+        if (isAdmin) { 
+            btnAdmin = `<div class="d-flex justify-content-center" style="gap: 5px;">
+                <button class="btn-icon-sultan btn-icon-success" onclick="bukaModalVerif('${row.rowBaris}')" title="Verifikasi"><i class="fas fa-check" style="font-size:12px;"></i></button>
+                <button class="btn-icon-sultan btn-icon-danger" onclick="hapusDataDinas('${row.rowBaris}')" title="Hapus"><i class="fas fa-trash" style="font-size:12px;"></i></button>
+            </div>`; 
+        }
 
-    // 3. SIMPAN PESERTA BARU (APPEND)
-    var rowsPeserta = [];
-    payload.listPeserta.forEach(function(p){
-      rowsPeserta.push([payload.header.noSpt, p.nip, p.nama, p.unit, "Diproses", "", sysDateStr]);
-    });
-    if(rowsPeserta.length > 0) {
-      sheetDetail.getRange(sheetDetail.getLastRow() + 1, 1, rowsPeserta.length, 7).setValues(rowsPeserta);
+        html += `<tr class="tr-animasi" style="animation: slideInUp 0.4s ease-out forwards; animation-delay: ${i * 0.05}s;">
+            <td class="align-middle bg-white border-right">${btnDetail}</td>
+            <td class="align-middle text-black-sultan">${cleanText(row.jenis)}</td>
+            <td class="align-middle font-weight-bold text-black-sultan">${safeNoSpt}</td>
+            <td class="align-middle text-black-sultan">${row.tglSpt}</td>
+            <td class="align-middle text-black-sultan">${row.tglMulai}</td>
+            <td class="align-middle text-black-sultan">${row.tglSelesai}</td>
+            <td class="col-wrap-sultan text-black-sultan">${cleanText(row.tujuan)}</td>
+            <td class="col-wrap-sultan text-black-sultan small">${cleanText(row.kegiatan)}</td>
+            <td class="text-center align-middle font-weight-bold text-black-sultan">${row.jmlAsn||'0'}</td>
+            <td class="text-center align-middle">${btnFile}</td>
+            <td class="align-middle small text-black-sultan">${cleanText(row.jenisDok)}</td>
+            <td class="text-center align-middle">${renderBadgeSultan(row.status, row.keterangan)}</td>
+            <td class="text-center align-middle">${btnAdmin}</td>
+            <td class="align-middle small text-muted">${row.tglKirim||'-'}</td>
+            <td class="align-middle small text-muted">${cleanText(row.userKirim)}</td>
+            <td class="align-middle small text-muted">${row.lastUpdate||'-'}</td>
+            <td class="align-middle small text-muted">${cleanText(row.lastUser)}</td>
+            <td class="align-middle small text-muted">${row.tglVerif||'-'}</td>
+            <td class="align-middle small text-muted">${cleanText(row.verifikator)}</td>
+        </tr>`;
     }
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000); 
-    return "Sukses";
-  } catch (e) { return "Error: " + e.toString(); }
+    
+    $('#bodyTabelDinas').html(html);
+    initDataTableStandard('#tabelDinas');
 }
 
 /* 3. FUNGSI PENCARIAN PEGAWAI (YANG DIPERBAIKI) */

@@ -322,6 +322,35 @@
   </div>
 </div>
 
+<div class="modal fade" id="modalPreviewDokumen" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document" style="height: 90vh;">
+        <div class="modal-content modal-content-sultan border-0 shadow-lg h-100">
+            <div class="modal-header bg-maroon text-white py-2">
+                <h6 class="modal-title font-weight-bold">
+                    <i class="fas fa-file-alt mr-2"></i>Pratinjau Dokumen
+                </h6>
+                <div class="ml-auto">
+                    <a href="#" id="btnFullDownload" target="_blank" class="btn btn-xs btn-light text-maroon font-weight-bold shadow-sm mr-2">
+                        <i class="fas fa-external-link-alt mr-1"></i> Buka Full
+                    </a>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-body p-0 bg-dark h-100 d-flex flex-column">
+                <iframe id="frameDokumenViewer" src="" style="width: 100%; flex-grow: 1; border: none;" allow="autoplay"></iframe>
+                
+                <div id="errPreview" class="text-center text-white p-5" style="display:none;">
+                    <i class="fas fa-eye-slash fa-3x mb-3 text-white-50"></i>
+                    <p>Pratinjau tidak tersedia di dalam aplikasi.<br>Silakan klik tombol <b>Buka Full</b> di pojok kanan atas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" data-backdrop="static">
     <div class="modal-dialog modal-xl" role="document" style="max-width: 95vw;"> 
       <div class="modal-content border-0 shadow-lg modal-content-sultan">
@@ -462,7 +491,7 @@ function renderTabelDinas(jsonString) {
     var data = []; try { data = JSON.parse(jsonString); } catch(e) { return; }
     console.log("Rendering " + data.length + " data.");
     
-    // MATIKAN DATATABLES DULU (KUNCI SUKSES)
+    // MATIKAN DATATABLES DULU
     if ($.fn.DataTable.isDataTable('#tabelDinas')) {
         $('#tabelDinas').DataTable().destroy();
     }
@@ -487,14 +516,15 @@ function renderTabelDinas(jsonString) {
         
         var btnDetail = `<button class="btn btn-outline-info btn-aksi-table" onclick="tambahDataDinasWithVal('${safeNoSpt}')"><i class="fas fa-pencil-alt mr-1"></i> Detail / Edit</button>`;
         
+        // --- UPDATE TOMBOL DOKUMEN DISINI (PREVIEW MODAL) ---
         var btnFile = '-';
         if(safeUrl.length > 5) {
              var jns = (row.jenisDok || "").toUpperCase();
-             if(jns === "SPT") {
-                 btnFile = `<button class="btn-icon-sultan btn-icon-info" onclick="window.open('${safeUrl}')" title="Lihat PDF"><i class="fas fa-eye" style="font-size:12px;"></i></button>`;
-             } else {
-                 btnFile = `<button class="btn-icon-sultan btn-icon-warning" onclick="window.open('${safeUrl}')" title="Cek Dokumen (Bukan SPT)"><i class="fas fa-exclamation-triangle" style="font-size:12px;"></i></button>`;
-             }
+             var iconBtn = (jns === "SPT") ? 'btn-icon-info' : 'btn-icon-warning';
+             var iconFa = (jns === "SPT") ? 'fa-eye' : 'fa-exclamation-triangle';
+             
+             // Panggil fungsi previewDokumen() alih-alih window.open()
+             btnFile = `<button class="btn-icon-sultan ${iconBtn}" onclick="previewDokumen('${safeUrl}')" title="Lihat Dokumen"><i class="fas ${iconFa}" style="font-size:12px;"></i></button>`;
         }
         
         var btnAdmin = '-';
@@ -529,8 +559,6 @@ function renderTabelDinas(jsonString) {
     }
     
     $('#bodyTabelDinas').html(html);
-    
-    // HIDUPKAN LAGI
     initDataTableStandard('#tabelDinas');
 }
 
@@ -555,7 +583,22 @@ function initDataTableStandard(tableId) {
 function cleanText(text) { if (text == null) return ""; return String(text).replace(/(\r\n|\n|\r)/gm, " ").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function renderBadgeSultan(status, ket) { var badge = '<span class="badge badge-secondary">Unknown</span>'; var s = (status||"").toLowerCase(); if (s.includes('setuju') || s.includes('acc')) badge = `<span class="badge badge-sultan badge-sultan-light-success"><i class="fas fa-check-circle mr-1"></i>${status}</span>`; else if (s.includes('tolak')) badge = `<span class="badge badge-sultan badge-sultan-light-danger"><i class="fas fa-times-circle mr-1"></i>${status}</span>`; else if (s.includes('proses')) badge = `<span class="badge badge-sultan badge-sultan-light-warning"><i class="fas fa-clock mr-1"></i>${status}</span>`; else badge = `<span class="badge badge-sultan badge-sultan-light-info">${status}</span>`; if(ket && ket.trim() !== "") { badge += ` <i class="fas fa-info-circle text-info ml-1" title="${cleanText(ket)}"></i>`; } return badge; }
 function tambahDataDinasWithVal(noSpt) { tambahDataDinas(); $('#uniNoSpt').val(noSpt); cekNoSptUnified(); }
-function tambahDataDinas() { UNI_IS_NEW_SPT = true; UNI_TEMP_PESERTA = []; IS_FORM_LOCKED = false; $('#uniNoSpt').val('').prop('disabled', false).focus(); $('#msgCekSpt').removeClass('text-success text-danger').text('Tekan Enter / Cek.'); $('#areaFormUtama').hide().removeClass('uni-fade-active'); $('#uniBtnSimpan').hide(); lockFormControls(false); $('#uniJenis').val(''); $('#uniTglSpt').val(''); $('#uniTglMulai').val(''); $('#uniTglSelesai').val(''); $('#uniTujuan').val(''); $('#uniKegiatan').val(''); $('#uniJenisDok').val(''); $('#uniFile').val(''); $('.custom-file-label').html('Pilih file...'); $('#divUniFile').show(); $('#badgeStatusSpt').attr('class', 'float-right badge badge-sultan badge-sultan-light-info').text('BARU'); $('#panelCariPegawai').hide(); $('#uniInputCari').val(''); $('#uniHasilCari').html(''); renderUniTabel(); try { var user = JSON.parse(localStorage.getItem("siksUser")); $('#uniUserLogin').val(user.nama || "User Web"); } catch(e){} $('#modalUnified').modal('show'); }
+function tambahDataDinas() { 
+  UNI_IS_NEW_SPT = true; 
+  UNI_TEMP_PESERTA = []; 
+  IS_FORM_LOCKED = false; 
+  $('#uniNoSpt').val('').prop('disabled', false).focus(); $('#msgCekSpt').removeClass('text-success text-danger').text('Tekan Enter / Cek.'); 
+  $('#areaFormUtama').hide().removeClass('uni-fade-active'); 
+  $('#uniBtnSimpan').hide(); lockFormControls(false); $('#uniJenis').val(''); $('#uniTglSpt').val(''); $('#uniTglMulai').val(''); $('#uniTglSelesai').val(''); $('#uniTujuan').val(''); $('#uniKegiatan').val(''); $('#uniJenisDok').val(''); $('#uniFile').val(''); $('.custom-file-label').html('Pilih file...'); $('#divUniFile').show(); $('#badgeStatusSpt').attr('class', 'float-right badge badge-sultan badge-sultan-light-info').text('BARU'); $('#panelCariPegawai').hide(); $('#uniInputCari').val(''); $('#uniHasilCari').html(''); renderUniTabel(); try { 
+        var user = JSON.parse(localStorage.getItem("siksUser")); 
+        // Masukkan nama ke input hidden agar dikirim ke backend
+        $('#uniUserLogin').val(user.nama || "User Web"); 
+    } catch(e){
+        $('#uniUserLogin').val("User Web");
+    } 
+    $('#modalUnified').modal('show'); 
+}
+
 function cekNoSptUnified() { 
     var noSpt = $('#uniNoSpt').val().trim(); 
     if (noSpt.length < 3) { Swal.fire('Perhatian', 'Minimal 3 karakter!', 'warning'); return; } 
@@ -659,4 +702,31 @@ function execSimpan(payload, btn, txt) { google.script.run.withSuccessHandler(fu
 function bukaModalVerif(rowId) { var data = DATA_DINAS[rowId]; if(!data) return; $('#verifRowId').val(rowId); $('#vNoSpt').text(data.noSpt); $('#vTglSpt').text(data.tglSpt); $('#vTglDinas').text(data.tglMulai + ' s.d ' + data.tglSelesai); $('#vTujuan').text(data.tujuan); $('#vKegiatan').text(data.kegiatan); $('#vJml').text((data.jmlAsn || '0') + ' Orang'); $('#vCatatan').val(''); $('#vListPeserta').html('<li class="text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> Loading...</li>'); google.script.run.withSuccessHandler(function(json){ var list = JSON.parse(json); var li = ""; if (list.length === 0) { li = '<li class="text-danger font-italic">Kosong.</li>'; } else { list.forEach(function(p){ li += `<li class="mb-1"><b>${p.nama}</b><br><small class="text-muted">${p.nip}</small></li>`; }); } $('#vListPeserta').html(li); }).getPesertaDinas(data.noSpt); var url = data.dokumen || ""; if (url.length > 10) { var previewUrl = url.replace(/\/view.*/, '/preview'); $('#framePreview').attr('src', previewUrl).show(); $('#previewError').hide(); $('#linkFileFull').attr('href', url); } else { $('#framePreview').hide(); $('#previewError').show(); $('#linkFileFull').attr('href', '#'); } $('#modalVerifikasi').modal('show'); }
 function execVerifSide(status) { var rowId = $('#verifRowId').val(); var ket = $('#vCatatan').val().trim(); if ((status === 'Revisi' || status === 'Ditolak') && ket === "") { Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Tulis alasan!', confirmButtonColor: '#d33' }); return; } var colorBtn = '#28a745'; if(status === 'Revisi') colorBtn = '#ffc107'; if(status === 'Ditolak') colorBtn = '#dc3545'; var myName = "Admin"; try { var user = JSON.parse(localStorage.getItem("siksUser")); if(user && user.nama) myName = user.nama; } catch(e){} Swal.fire({ title: 'Konfirmasi ' + status, text: 'Lanjutkan?', icon: 'question', showCancelButton: true, confirmButtonColor: colorBtn, confirmButtonText: 'Ya' }).then((result) => { if (result.isConfirmed) { Swal.fire({title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }}); google.script.run.withSuccessHandler(function(res){ Swal.close(); if(res === 'Sukses') { $('#modalVerifikasi').modal('hide'); NotifSultan.toast('success', 'Berhasil'); setTimeout(() => applyFilterDinas(), 500); } else { Swal.fire('Error', res, 'error'); } }).verifikasiDataDinas(rowId, status, ket, myName); } }); }
 function hapusDataDinas(rowBaris) { Swal.fire({ title: 'Hapus Data?', text: "Permanen!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' }).then((result) => { if (result.isConfirmed) { Swal.fire({title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }}); google.script.run.withSuccessHandler(function(res){ Swal.close(); if(res === 'Sukses') { NotifSultan.toast('success', 'Dihapus'); applyFilterDinas(); } else { Swal.fire('Error', res, 'error'); } }).hapusDataDinas(rowBaris); } }); }
+/* FUNGSI BUKA MODAL PREVIEW */
+function previewDokumen(url) {
+    if (!url) return;
+
+    // 1. Konversi Link Google Drive (View -> Preview)
+    // Link asli: .../file/d/ID_FILE/view?usp=sharing
+    // Link embed: .../file/d/ID_FILE/preview
+    var previewUrl = url;
+    if (url.includes('drive.google.com') && url.includes('/view')) {
+        previewUrl = url.replace(/\/view.*/, '/preview');
+    }
+
+    // 2. Set Source Iframe
+    $('#frameDokumenViewer').attr('src', previewUrl).show();
+    $('#errPreview').hide();
+    
+    // 3. Set Tombol Fallback (Buka Tab Baru)
+    $('#btnFullDownload').attr('href', url);
+
+    // 4. Tampilkan Modal
+    $('#modalPreviewDokumen').modal('show');
+
+    // 5. Handler Error Iframe (Opsional)
+    $('#frameDokumenViewer').on('load', function(){
+        // Bisa tambahkan loading spinner stop disini jika mau
+    });
+}
 </script>
