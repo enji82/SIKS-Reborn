@@ -1,159 +1,991 @@
-<header>
-  <h2>DATA CUTI</h2>
-</header>
-
-<div class="filter-container">
-  <div class="filter-group">
-    <label for="filterTahunData">Tahun:</label>
-    <select id="filterTahunData"></select>
-  </div>
-  <div class="filter-group">
-    <label for="filterUnitData">Unit Kerja:</label>
-    <select id="filterUnitData"></select>
-  </div>
-  
-  <div class="filter-group" style="margin-left: auto;">
-    <label for="searchDataCuti" class="search-icon-label"><i class="fas fa-search"></i></label>
-    <input type="search" id="searchDataCuti" class="search-input" placeholder="Cari Nama/NIP...">
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-calendar-alt text-maroon mr-2"></i>Data Cuti Pegawai
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
   </div>
 </div>
 
-<main class="table-view-container">
-  
-  <div id="tableWrapperDataCuti" style="display:flex; position: relative;"> 
-    
-    <div id="tableOverlayLoaderDataCuti" style="display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: center; flex-direction: column; border-radius: 8px; backdrop-filter: blur(2px);">
-        <div class="spinner-container">
-            <div class="spinner-bar" style="background-color: #e74c3c;"></div>
-            <div class="spinner-bar" style="background-color: #2ecc71;"></div>
-            <div class="spinner-bar" style="background-color: #f1c40f;"></div>
-            <div class="spinner-bar" style="background-color: #3498db;"></div>
-        </div>
-        <p style="margin-top: 15px; color: white; font-weight: bold; letter-spacing: 1px;">Memuat Data...</p>
-    </div>
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
 
-    <div class="table-container">
-      <table id="dataCutiTable" class="data-table freeze-pane-table">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
+        <div class="card-sultan p-3 mb-2">
+            <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="applyFilterCuti()" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+                
+                <select id="filterTahun" class="form-control form-control-sultan" style="width: auto; min-width: 100px;">
+                    </select>
+                
+                <select id="filterBulan" class="form-control form-control-sultan" style="width: auto; min-width: 120px;">
+                    <option value="">- Semua Bulan -</option>
+                    <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
+                    <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
+                    <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
+                    <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+                </select>
+                
+                <select id="filterStatus" class="form-control form-control-sultan" style="width: auto;">
+                    <option value="">- Semua Status -</option>
+                    <option value="Disetujui">Disetujui</option>
+                    <option value="Diproses">Diproses</option>
+                    <option value="Revisi">Revisi</option>
+                    <option value="Ditolak">Ditolak</option>
+                </select>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="applyFilterCuti(event)" title="Cari">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+
+                <div class="ml-auto d-none d-md-block"></div>
+                
+                <button type="button" class="btn btn-primary font-weight-bold shadow-sm" onclick="tambahDataCuti()">
+                    <i class="fas fa-plus mr-1"></i> Ajukan Cuti
+                </button>
+            </div>
+        </div>
+
+        <div class="card-sultan">
+            <div class="card-body p-0">
+              <style>
+                /* STYLE KHUSUS TABEL CUTI (Sesuai Golden Standard) */
+                .table-freeze-wrapper { 
+                    width: 100%;
+                    max-height: none !important; 
+                    overflow-y: hidden !important; 
+                    overflow-x: auto !important;   
+                    position: relative;
+                    border: 1px solid #dee2e6;
+                    margin-bottom: 20px;
+                }
+                
+                .col-sticky-left { position: sticky; left: 0; background-color: #fff; z-index: 50; border-right: 2px solid #dee2e6 !important; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+                thead th.col-sticky-left { z-index: 150; background-color: #f8f9fa; }
+                
+                .col-jenis { min-width: 80px; text-align: center; font-weight: bold; }
+                .text-black-sultan { color: #000 !important; }
+              </style>
+
+              <table id="tabelCuti" class="table table-premium table-sultan-compact mb-0 w-100">
+                <thead>
+                  <tr>
+                    <th class="col-sticky-left">Nama ASN</th>
+                    <th>NIP</th>
+                    <th class="text-center">Jenis</th>
+                    <th>Tgl Mulai</th>
+                    <th>Tgl Selesai</th>
+                    <th class="text-center">Jml</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Unduh File</th>
+                    <th class="text-center" style="min-width: 100px;">Aksi</th>
+                    <th class="small text-muted">Tgl Input</th>
+                    <th class="small text-muted">User Input</th>
+                    <th class="small text-muted">Tgl Edit</th>
+                    <th class="small text-muted">User Edit</th>
+                    <th class="small text-muted">Tgl Verif</th>
+                    <th class="small text-muted">Verifikator</th>
+                  </tr>
+                </thead>
+                <tbody id="bodyTabelCuti"></tbody>
+              </table>
+            </div>
+        </div>
+      </div>
     </div>
   </div>
-</main>
+</section>
 
-<style>
-  /* --- 1. LAYOUT WRAPPER (Spesifik Halaman) --- */
-  #main-content { overflow-y: hidden !important; }
-  
-  main.table-view-container { 
-      flex-grow: 1 !important; 
-      min-height: 0 !important; 
-      display: flex !important; 
-      flex-direction: column !important; 
-  }
-  
-  #tableWrapperDataCuti { 
-      flex-grow: 1 !important; 
-      min-height: 0 !important; 
-      display: flex !important; 
-      flex-direction: column !important; 
-      margin-bottom: 0; 
-  }
-  
-  #tableWrapperDataCuti .table-container { 
-      flex-grow: 1 !important; 
-      overflow: auto !important; 
-      border-radius: 10px; 
-      border-bottom: none; 
-  }
-  #tableWrapperDataCuti .table-container::-webkit-scrollbar { display: none !important; }
+<div class="modal fade" id="modalPreviewDokumen" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document" style="height: 90vh;">
+        <div class="modal-content modal-content-sultan border-0 shadow-lg h-100">
+            <div class="modal-header bg-maroon text-white py-2 align-items-center">
+                <h6 class="modal-title font-weight-bold"><i class="fas fa-file-alt mr-2"></i>Pratinjau Dokumen</h6>
+                <div class="ml-auto d-flex align-items-center">
+                    <a href="#" id="btnDownloadDokumen" target="_blank" class="btn btn-sm btn-light text-maroon font-weight-bold shadow-sm mr-2">
+                        <i class="fas fa-download mr-1"></i> Unduh
+                    </a>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+            </div>
+            <div class="modal-body p-0 bg-dark h-100">
+                <iframe id="frameDokumenViewer" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 
-  /* --- 2. OVERRIDE GLOBAL SEPERLUNYA --- */
-  
-  /* Kita menimpa padding global (.data-table) hanya untuk tabel ini */
-  /* agar barisnya lebih tinggi sesuai keinginan Anda */
-  #dataCutiTable th, #dataCutiTable td { 
-      padding: 10px 10px !important; /* Override Global (biasanya 8px) */
-      box-sizing: border-box;
-  }
+<div class="modal fade" id="modalAjukanCuti" tabindex="-1" role="dialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content modal-content-sultan border-0 shadow-lg">
+      
+      <div class="modal-header bg-maroon text-white">
+        <h5 class="modal-title font-weight-bold">
+          <i class="fas fa-plus-circle mr-2"></i>Form Pengajuan Cuti
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+      </div>
 
-  /* --- 3. KONFIGURASI FREEZE PANE (HEADER 2 BARIS) --- */
-  /* CSS Global hanya menangani header 1 baris, jadi kita harus atur baris ke-2 disini */
+      <div class="modal-body bg-light">
+        <form id="formCuti">
+          <input type="hidden" id="editRowId" value="">
+          
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Unit Kerja</label>
+              <select id="inputUnit" class="form-control form-control-sultan" onchange="filterNamaByUnit()">
+                <option value="">- Pilih Unit -</option>
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Nama ASN</label>
+              <select id="inputNama" class="form-control form-control-sultan" disabled onchange="filterNipByNama()">
+                <option value="">- Pilih Nama -</option>
+              </select>
+            </div>
+          </div>
 
-  /* Baris 1 (Ikut Global, cuma pastikan tinggi) */
-  #dataCutiTable thead tr:first-child th { 
-      height: 40px; 
-      z-index: 20; 
-  }
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>NIP</label>
+              <select id="inputNIP" class="form-control form-control-sultan" disabled onchange="setPegawaiDetails()">
+                <option value="">- Otomatis -</option>
+              </select>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Status Kepegawaian</label>
+              <input type="text" id="inputStatusPegawai" class="form-control bg-white" readonly placeholder="-" disabled>
+            </div>
+          </div>
 
-  /* Baris 2 (Sub-Header - Perlu diatur manual posisinya) */
-  #dataCutiTable thead tr:nth-child(2) th { 
-      position: sticky; 
-      top: 40px; /* Menempel di bawah Baris 1 */
-      height: 40px;
-      z-index: 20; 
-      background-color: #101E26; /* Wajib definisikan ulang agar tidak transparan */
-      border-bottom: 2px solid rgba(0, 195, 255, 0.5);
-  }
+          <hr>
 
-  /* --- 4. KONFIGURASI KOLOM BEKU (KIRI) --- */
+          <div class="form-group">
+            <label>Jenis Cuti</label>
+            <select id="inputJenisCuti" class="form-control form-control-sultan">
+               <option value="">- Pilih Jenis Cuti -</option>
+            </select>
+            <small class="text-muted font-italic">Pilihan cuti menyesuaikan status kepegawaian.</small>
+          </div>
 
-  /* Kolom 1 (No) */
-  #dataCutiTable tbody td:nth-child(1) { 
-      position: sticky; left: 0; z-index: 10; 
-      background-color: #1c2e3a; 
-      width: 50px; min-width: 50px; max-width: 50px;
-  }
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Tanggal Mulai</label>
+              <input type="date" id="inputTglMulai" class="form-control form-control-sultan" onchange="hitungHariCuti()">
+            </div>
+            <div class="form-group col-md-4">
+              <label>Tanggal Selesai</label>
+              <input type="date" id="inputTglSelesai" class="form-control form-control-sultan" onchange="hitungHariCuti()">
+            </div>
+            <div class="form-group col-md-4">
+              <label>Jumlah Hari</label>
+              <input type="text" id="inputJumlahHari" class="form-control form-control-sultan bg-white" placeholder="0 Hari">
+              <small class="text-danger font-weight-bold" style="font-size: 11px;">
+                *Cuti tahunan, hitung hari efektif saja.
+              </small>
+            </div>
+          </div>
 
-  /* Kolom 2 (Nama ASN) */
-  #dataCutiTable tbody td:nth-child(2) { 
-      position: sticky; left: 50px; z-index: 10; 
-      background-color: #1c2e3a; 
-      text-align: left !important; min-width: 200px;
-  }
+          <div class="form-group">
+            <label>Alasan Cuti</label>
+            <textarea id="inputAlasan" class="form-control form-control-sultan" rows="2" placeholder="Tulis alasan lengkap..."></textarea>
+          </div>
 
-  /* --- 5. SUDUT MATI (HEADER KIRI ATAS) --- */
-  /* Pertemuan Header & Kolom Kiri (Wajib paling atas) */
-  
-  #dataCutiTable thead tr:first-child th:nth-child(1) { 
-      position: sticky !important; left: 0 !important; top: 0 !important; 
-      z-index: 40 !important; width: 50px; min-width: 50px; max-width: 50px;
-  }
-  
-  #dataCutiTable thead tr:first-child th:nth-child(2) { 
-      position: sticky !important; left: 50px !important; top: 0 !important; 
-      z-index: 40 !important; min-width: 200px;
-  }
+          <div class="form-row">
+            <div class="form-group col-md-6">
+            <label>Alamat Selama Cuti</label>
+            <textarea id="inputAlamat" class="form-control form-control-sultan" rows="4" style="height: 100px !important; resize: vertical;"></textarea>
+          </div>
+            <div class="form-group col-md-6">
+              <label>Nomor HP / WhatsApp</label>
+              <input type="text" id="inputHP" class="form-control form-control-sultan">
+            </div>
+          </div>
 
-  /* --- 6. PEWARNAAN KOLOM (Fitur Unik Halaman Ini) --- */
-  
-  /* Pasangan Warna */
-  #dataCutiTable tbody td:nth-child(4), #dataCutiTable tbody td:nth-child(5) {
-      background-color: rgba(52, 152, 219, 0.1); color: #3498db;
-  }
-  #dataCutiTable tbody td:nth-child(6), #dataCutiTable tbody td:nth-child(7) {
-      background-color: rgba(46, 204, 113, 0.1); color: #2ecc71;
-  }
-  #dataCutiTable tbody td:nth-child(8), #dataCutiTable tbody td:nth-child(9) {
-      background-color: rgba(241, 196, 15, 0.1); color: #f1c40f;
-  }
-  #dataCutiTable tbody td:nth-child(10), #dataCutiTable tbody td:nth-child(11) {
-      background-color: rgba(155, 89, 182, 0.1); color: #9b59b6;
-  }
-  #dataCutiTable tbody td:nth-child(12), #dataCutiTable tbody td:nth-child(13) {
-      background-color: rgba(231, 76, 60, 0.1); color: #e74c3c; font-weight: bold;
-  }
+        </form>
+      </div>
 
-  /* Rata Kiri Default */
-  #dataCutiTable tbody td:nth-child(2),
-  #dataCutiTable tbody td:nth-child(3) { text-align: left; }
+      <div class="modal-footer bg-white">
+        <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-maroon font-weight-bold shadow-sm" id="btnKirimCuti" onclick="kirimPengajuanCuti()">
+          <i class="fas fa-paper-plane mr-2"></i>Kirim Pengajuan
+        </button>
+      </div>
 
-  /* Hover Effect (Wajib !important untuk menembus warna kolom) */
-  #dataCutiTable tbody tr:hover td { background-color: rgba(255, 255, 255, 0.15) !important; }
-  
-  /* Hover Konsisten Kolom Beku */
-  #dataCutiTable tbody tr:hover td:nth-child(1), 
-  #dataCutiTable tbody tr:hover td:nth-child(2) { 
-      background-color: #2a4152 !important; 
-  }
-</style>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-navy text-white">
+                <h5 class="modal-title"><i class="fas fa-check-double mr-2"></i>Verifikasi Pengajuan Cuti</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="row no-gutters" style="height: 80vh;">
+                    
+                    <div class="col-lg-8 border-right bg-light d-flex flex-column">
+                        <div class="p-2 bg-secondary text-center small text-white">
+                            <i class="fas fa-file-pdf mr-1"></i> Preview Dokumen
+                        </div>
+                        <iframe id="iframePreview" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                    </div>
+
+                    <div class="col-lg-4 p-4" style="overflow-y: auto;">
+                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">Data Pegawai</h6>
+                        
+                        <div class="form-group mb-2">
+                            <label class="small text-muted mb-0">Nama ASN</label>
+                            <div class="font-weight-bold" id="verifNama">-</div>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="small text-muted mb-0">Unit Kerja</label>
+                            <div id="verifUnit">-</div>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label class="small text-muted mb-0">Jenis & Tanggal Cuti</label>
+                            <div class="text-primary font-weight-bold" id="verifJenis">-</div>
+                            <div class="small" id="verifTanggal">-</div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">Keputusan Admin</h6>
+                        <input type="hidden" id="verifRowId">
+                        
+                        <div class="form-group">
+                            <label class="small">Status Verifikasi</label>
+                            <select class="form-control" id="verifStatus">
+                                <option value="Disetujui">Disetujui (ACC)</option>
+                                <option value="Ditolak">Ditolak</option>
+                                <option value="Revisi">Perlu Revisi</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="small">Catatan Admin (Opsional)</label>
+                            <textarea class="form-control" id="verifCatatan" rows="3" placeholder="Contoh: Tanggal tumpang tindih..."></textarea>
+                        </div>
+
+                        <button onclick="simpanVerifikasi()" class="btn btn-success btn-block btn-lg mt-4 shadow-sm">
+                            <i class="fas fa-save mr-2"></i>Simpan Keputusan
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var DATA_CUTI = {};
+var DB_CUTI = [];
+
+$(document).ready(function(){
+    // 1. Generate Tahun Otomatis
+    initFilterTahun();
+    
+    // 2. Set Default Filter (Bulan & Tahun Ini)
+    var now = new Date();
+    $('#filterTahun').val(now.getFullYear());
+    // Bulan index 0-11, Array Bulan Sultan pakai Nama Indonesia
+    var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    $('#filterBulan').val(arrBulan[now.getMonth()]);
+    
+    // 3. Load Data
+    applyFilterCuti();
+});
+
+$(document).on('click', '.btn-verifikasi', function(e) {
+    e.preventDefault();
+    var id = $(this).data('id'); // Ambil ID dari atribut data-id
+    bukaVerifikasi(id); // Panggil fungsi
+});
+
+function initFilterTahun() { 
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var h = '<option value="">- Semua Tahun -</option>';
+    for(var i=0; i<3; i++) { 
+        var t = curYear - i; 
+        h += `<option value="${t}">${t}</option>`; 
+    } 
+    $('#filterTahun').html(h); 
+}
+
+function applyFilterCuti(e) {
+    if(e) e.preventDefault();
+
+    // Loading UI Golden Standard
+    var loadingHtml = `
+      <tr class="tr-animasi">
+        <td colspan="15" class="text-center bg-white border-0 py-5">
+          <div class="d-flex flex-column justify-content-center align-items-center">
+            <div class="spinner-border text-maroon mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+            <h6 class="font-weight-bold text-muted">Sedang memuat data...</h6>
+          </div>
+        </td>
+      </tr>`;
+    $('#bodyTabelCuti').empty().html(loadingHtml);
+    
+    var thn = $('#filterTahun').val();
+    var bln = $('#filterBulan').val();
+    var stat = $('#filterStatus').val();
+    // Unit bisa diambil dari localStorage user login jika perlu filter per unit
+    var unit = ""; 
+
+    google.script.run
+        .withSuccessHandler(renderTabelCuti)
+        .withFailureHandler(function(err){ 
+            $('#bodyTabelCuti').html('<tr><td colspan="15" class="text-center text-danger p-5">Gagal: '+err+'</td></tr>'); 
+        })
+        .getDaftarCuti(thn, bln, unit, stat);
+}
+
+function renderTabelCuti(jsonString) {
+    var data = []; try { data = JSON.parse(jsonString); } catch(e) { return; }
+    
+    if ($.fn.DataTable.isDataTable('#tabelCuti')) { $('#tabelCuti').DataTable().destroy(); }
+    $('#bodyTabelCuti').empty();
+
+    if(!data || data.length === 0) { 
+        initDataTableStandard('#tabelCuti'); return; 
+    }
+
+    var isAdmin = false; 
+    try { var user = JSON.parse(localStorage.getItem("siksUser")); if (user && (user.role.toLowerCase().includes('admin') || user.role.toLowerCase().includes('super'))) isAdmin = true; } catch(e) {}
+    
+    var html = "";
+    for (var i = 0; i < data.length; i++) {
+        var row = data[i]; 
+        DATA_CUTI[row.rowBaris] = row;
+        
+        // Singkatan Jenis Cuti
+        var jenisSingkat = row.jenis;
+        var j = (row.jenis || "").toLowerCase();
+        if(j.includes("tahunan")) jenisSingkat = "CT";
+        else if(j.includes("sakit")) jenisSingkat = "CS";
+        else if(j.includes("penting")) jenisSingkat = "CAP";
+        else if(j.includes("melahirkan")) jenisSingkat = "CM";
+        else if(j.includes("besar")) jenisSingkat = "CB";
+        else if(j.includes("luar tanggungan")) jenisSingkat = "CLTN";
+        else if(j.includes("umroh")) jenisSingkat = "CT";
+
+        // UI BADGE (Style Light sesuai css_sultan.html)
+        var badgeStatus = renderBadgeSultan(row.status);
+        if(row.ket && row.ket.trim() !== "") {
+            badgeStatus += ` <i class="fas fa-info-circle text-info ml-1" title="${cleanText(row.ket)}" style="cursor:pointer;"></i>`;
+        }
+
+        // UI TOMBOL FILE (btn-icon-sultan-info)
+        var btnFile = '-';
+        if(row.fileUrl && row.fileUrl.length > 10) {
+             btnFile = `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewDokumen('${row.fileUrl}')" title="Lihat Berkas"><i class="fas fa-eye" style="font-size:12px;"></i></button>`;
+        }
+
+        // UI TOMBOL AKSI (Gunakan class btn-icon-sultan-*)
+        var btnAksi = '<div class="d-flex justify-content-center">';
+        var isLocked = (String(row.status).includes("Disetujui") || String(row.status).includes("OK"));
+        
+        // 1. Tombol Verifikasi (Admin) - Hijau (Success)
+        if(isAdmin) {
+            btnAksi += `<button type="button" class="btn-icon-sultan btn-icon-sultan-success mx-1 btn-verifikasi" data-id="${i}" title="Verifikasi"><i class="fas fa-check" style="font-size:12px;"></i></button>`;
+        }
+
+        // 2. Tombol Edit - Kuning (Warning)
+        if (!isLocked) {
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-warning mx-1" onclick="tambahDataCutiWithVal('${row.rowBaris}')" title="Edit"><i class="fas fa-pencil-alt" style="font-size:12px;"></i></button>`;
+        } else {
+            // Disabled style manual karena btn-icon-sultan tidak punya state disabled bawaan bootstrap
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-warning mx-1" style="opacity:0.5; cursor:not-allowed;" title="Terkunci"><i class="fas fa-lock" style="font-size:12px;"></i></button>`;
+        }
+        
+        // 3. Tombol Hapus - Merah (Danger)
+        if (!isLocked) {
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-danger mx-1" onclick="hapusDataCuti('${row.rowBaris}')" title="Hapus"><i class="fas fa-trash" style="font-size:12px;"></i></button>`;
+        } else {
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-danger mx-1" style="opacity:0.5; cursor:not-allowed;" title="Terkunci"><i class="fas fa-lock" style="font-size:12px;"></i></button>`;
+        }
+        btnAksi += '</div>';
+
+        html += `<tr class="tr-animasi">
+            <td class="col-sticky-left text-black-sultan font-weight-bold align-middle">${cleanText(row.nama)}</td>
+            <td class="align-middle">${cleanText(row.nip)}</td>
+            <td class="text-center font-weight-bold align-middle">${jenisSingkat}</td>
+            <td class="text-nowrap align-middle">${cleanText(row.tglMulai)}</td>
+            <td class="text-nowrap align-middle">${cleanText(row.tglSelesai)}</td>
+            <td class="text-center font-weight-bold align-middle">${row.jumlah || '0'}</td>
+            <td class="text-center align-middle">${badgeStatus}</td>
+            <td class="text-center align-middle">${btnFile}</td>
+            <td class="text-center text-nowrap align-middle" style="min-width:120px;">${btnAksi}</td>
+            <td class="small text-muted align-middle">${cleanText(row.tglInput)}</td>
+            <td class="small text-muted align-middle">${cleanText(row.userInput)}</td>
+            <td class="small text-muted align-middle">${cleanText(row.tglEdit)}</td>
+            <td class="small text-muted align-middle">${cleanText(row.userEdit)}</td>
+            <td class="small text-muted align-middle">${cleanText(row.tglVerif)}</td>
+            <td class="small text-muted align-middle">${cleanText(row.verifikator)}</td>
+        </tr>`;
+    }
+    
+    $('#bodyTabelCuti').html(html);
+    initDataTableStandard('#tabelCuti');
+}
+
+/* HELPER FUNCTIONS (SAMA SEPERTI MODUL LAIN) */
+function initDataTableStandard(tableId) { 
+    if ($.fn.DataTable.isDataTable(tableId)) { $(tableId).DataTable().destroy(); } 
+    $(tableId).DataTable({ 
+        "ordering": false, "pageLength": 10, "autoWidth": false, 
+        "dom": "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'<'table-freeze-wrapper'tr>>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>", 
+        "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "search": "", "searchPlaceholder": "Cari data...", "emptyTable": "Data tidak ditemukan." } 
+    }); 
+}
+
+function cleanText(text) { if (text == null) return ""; return String(text).replace(/(\r\n|\n|\r)/gm, " ").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+function renderBadgeSultan(status) { 
+    var s = (status||"").toLowerCase(); 
+    var badgeClass = "";
+    var icon = "";
+
+    // Cek class di css_sultan.html: 
+    // badge-sultan-light-success, badge-sultan-light-danger, dst.
+
+    if (s.includes('setuju') || s.includes('acc') || s.includes('ok')) {
+        badgeClass = "badge-sultan-light-success"; 
+        icon = "fa-check-circle";
+    } 
+    else if (s.includes('tolak')) {
+        badgeClass = "badge-sultan-light-danger"; 
+        icon = "fa-times-circle";
+    } 
+    else if (s.includes('revisi')) {
+        badgeClass = "badge-sultan-light-info"; 
+        icon = "fa-sync-alt";
+    } 
+    else {
+        // Diproses / Default
+        badgeClass = "badge-sultan-light-warning"; 
+        icon = "fa-clock";
+    }
+    
+    // Struktur HTML Badge Sultan
+    return `<span class="badge badge-sultan ${badgeClass}"><i class="fas ${icon} mr-1"></i>${status}</span>`; 
+}
+
+function previewDokumen(url) {
+    if (!url) return;
+    
+    // 1. Link Preview (Embed)
+    var previewUrl = url;
+    if (url.includes('drive.google.com') && url.includes('/view')) {
+        previewUrl = url.replace(/\/view.*/, '/preview');
+    }
+    $('#frameDokumenViewer').attr('src', previewUrl);
+    
+    // 2. Link Download (Buka Tab Baru)
+    $('#btnDownloadDokumen').attr('href', url);
+
+    $('#modalPreviewDokumen').modal('show');
+}
+
+// A. LOGIC UNIT KERJA
+function populateUnitKerja() {
+    var units = [...new Set(DB_CUTI.map(item => item.unit))]; // Get Unique Units
+    units.sort();
+    
+    var h = '<option value="">- Pilih Unit -</option>';
+    units.forEach(u => { h += `<option value="${u}">${u}</option>`; });
+    $('#inputUnit').html(h);
+}
+
+// B. LOGIC FILTER NAMA BERDASARKAN UNIT
+function filterNamaByUnit() {
+    var valUnit = $('#inputUnit').val();
+    $('#inputNama').empty().html('<option value="">- Pilih Nama -</option>').prop('disabled', true);
+    $('#inputNIP').empty().html('<option value="">- Otomatis -</option>').prop('disabled', true);
+    $('#inputStatusPegawai').val('');
+
+    if (valUnit) {
+        var names = DB_CUTI.filter(x => x.unit === valUnit).map(x => x.nama);
+        names = [...new Set(names)].sort(); // Unique & Sort
+        
+        var h = '<option value="">- Pilih Nama -</option>';
+        names.forEach(n => { h += `<option value="${n}">${n}</option>`; });
+        $('#inputNama').html(h).prop('disabled', false);
+    }
+}
+
+// C. LOGIC FILTER NIP BERDASARKAN NAMA
+function filterNipByNama() {
+    var valNama = $('#inputNama').val();
+    $('#inputNIP').empty().prop('disabled', true);
+    $('#inputStatusPegawai').val('');
+    
+    if (valNama) {
+        // Cari pegawai dengan nama tersebut
+        var pegawai = DB_CUTI.filter(x => x.nama === valNama);
+        
+        if (pegawai.length === 1) {
+            // Jika cuma 1 NIP, otomatis pilih dan kunci
+            var p = pegawai[0];
+            $('#inputNIP').html(`<option value="${p.nip}" selected>${p.nip}</option>`);
+            setPegawaiDetails(); // Trigger isi detail
+        } else if (pegawai.length > 1) {
+            // Jika > 1 NIP (Nama Kembar), suruh pilih
+            var h = '<option value="">- Pilih NIP -</option>';
+            pegawai.forEach(p => { h += `<option value="${p.nip}">${p.nip}</option>`; });
+            $('#inputNIP').html(h).prop('disabled', false);
+        }
+    }
+}
+
+// D. ISI DETAIL OTOMATIS (Status, Alamat, HP) & LOAD JENIS CUTI
+function setPegawaiDetails() {
+    var valNip = $('#inputNIP').val();
+    if (!valNip) return;
+    
+    var p = DB_CUTI.find(x => x.nip === valNip);
+    if (p) {
+        $('#inputStatusPegawai').val(p.status);
+        $('#inputAlamat').val(p.alamat);
+        $('#inputHP').val(p.hp);
+        
+        populateJenisCuti(p.status); // Load Dropdown Jenis Cuti sesuai Status
+    }
+}
+
+// E. LOGIC JENIS CUTI (PNS vs NON PNS)
+function populateJenisCuti(status) {
+    var s = (status || "").toUpperCase();
+    var opsi = [];
+    
+    // Logika Opsi sesuai Status
+    if (s.includes("PNS") || s.includes("CPNS")) {
+        opsi = ["Cuti Tahunan", "Cuti Sakit", "Cuti Alasan Penting", "Cuti Melahirkan", "Cuti Besar", "Cuti di Luar Tanggungan Negara", "Cuti Umroh"];
+    } else {
+        // Non PNS (PPPK / Honorer)
+        opsi = ["Cuti Tahunan", "Cuti Sakit", "Cuti Melahirkan", "Cuti Umroh"];
+    }
+    
+    var h = '<option value="">- Pilih Jenis Cuti -</option>';
+    opsi.forEach(o => { h += `<option value="${o}">${o}</option>`; });
+    
+    // ISI HTML DAN BUKA KUNCI (DISABLED = FALSE)
+    $('#inputJenisCuti').html(h).prop('disabled', false);
+}
+
+// F. LOGIC HITUNG HARI
+function hitungHariCuti() {
+    var tgl1 = $('#inputTglMulai').val();
+    var tgl2 = $('#inputTglSelesai').val();
+    
+    if (tgl1 && tgl2) {
+        var d1 = new Date(tgl1);
+        var d2 = new Date(tgl2);
+        
+        // Validasi: Tgl Selesai tidak boleh sebelum Mulai
+        if (d2 < d1) {
+            Swal.fire('Error', 'Tanggal Selesai tidak boleh sebelum Tanggal Mulai!', 'error');
+            $('#inputTglSelesai').val('');
+            $('#inputJumlahHari').val('');
+            return;
+        }
+        
+        // Hitung selisih hari (+1 agar inklusif)
+        var diffTime = Math.abs(d2 - d1);
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+        
+        // HANYA ANGKA SAJA (Tanpa teks "Hari")
+        $('#inputJumlahHari').val(diffDays);
+    }
+}
+
+// G. KIRIM PENGAJUAN (SUBMIT)
+function kirimPengajuanCuti() {
+    // Validasi Input
+    if (!$('#inputUnit').val() || !$('#inputNama').val() || !$('#inputNIP').val()) {
+        Swal.fire('Gagal', 'Identitas Pegawai belum lengkap!', 'warning'); return;
+    }
+    if (!$('#inputJenisCuti').val()) {
+        Swal.fire('Gagal', 'Pilih Jenis Cuti!', 'warning'); return;
+    }
+    if (!$('#inputTglMulai').val() || !$('#inputTglSelesai').val()) {
+        Swal.fire('Gagal', 'Tanggal Cuti wajib diisi!', 'warning'); return;
+    }
+    if (!$('#inputAlasan').val()) {
+        Swal.fire('Gagal', 'Alasan Cuti wajib diisi!', 'warning'); return;
+    }
+
+    var btn = $('#btnKirimCuti');
+    var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengirim...');
+
+    // Ambil User Login
+    var myName = "User Web";
+    try { var user = JSON.parse(localStorage.getItem("siksUser")); if(user && user.nama) myName = user.nama; } catch(e){}
+
+    var payload = {
+        unit: $('#inputUnit').val(),
+        nama: $('#inputNama').val(),
+        nip: $('#inputNIP').val(),
+        jenisCuti: $('#inputJenisCuti').val(),
+        tglMulai: $('#inputTglMulai').val(),
+        tglSelesai: $('#inputTglSelesai').val(),
+        jumlahHari: $('#inputJumlahHari').val(),
+        alasan: $('#inputAlasan').val(),
+        alamat: $('#inputAlamat').val(),
+        hp: $('#inputHP').val(),
+        userInput: myName
+    };
+
+    google.script.run
+        .withSuccessHandler(function(res){
+            btn.prop('disabled', false).html(txt);
+            if (res === "Sukses") {
+                $('#modalAjukanCuti').modal('hide');
+                Swal.fire('Berhasil', 'Pengajuan cuti terkirim.', 'success');
+                applyFilterCuti(); // Refresh Tabel
+            } else {
+                Swal.fire('Error', res, 'error');
+            }
+        })
+        .withFailureHandler(function(err){
+            btn.prop('disabled', false).html(txt);
+            Swal.fire('Error', err.toString(), 'error');
+        })
+        .simpanPengajuanCuti(payload);
+}
+
+/* 1. FUNGSI EDIT: MEMBUKA MODAL & MENGISI DATA LAMA */
+function tambahDataCutiWithVal(rowIdx) {
+    // 1. CEK DATABASE DULU: Apakah DB_CUTI sudah ada isinya?
+    // Jika user langsung klik Edit saat baru buka web, DB_CUTI biasanya masih kosong.
+    if (DB_CUTI.length === 0) {
+        // Tampilkan Loading
+        Swal.fire({
+            html: `
+                <div class="d-flex flex-column align-items-center py-4">
+                    <div class="spinner-border text-maroon mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h6 class="font-weight-bold text-muted">Memuat Data Pegawai...</h6>
+                </div>
+            `,
+            showConfirmButton: false, allowOutsideClick: false, width: 300
+        });
+        
+        // Panggil Server
+        google.script.run.withSuccessHandler(function(json){
+            DB_CUTI = JSON.parse(json); // Simpan ke variabel global
+            Swal.close();
+            // SETELAH DATA SIAP, PANGGIL FUNGSI INI LAGI (REKURSIF)
+            tambahDataCutiWithVal(rowIdx);
+        }).getDatabaseCutiOptions();
+        
+        return; // Berhenti di sini, tunggu loading selesai
+    }
+
+    // --- JIKA DATABASE SUDAH SIAP, LANJUTKAN ---
+    var data = DATA_CUTI[rowIdx]; // Data dari Tabel Utama
+    if (!data) return;
+
+    // Reset Form & Set Mode Edit
+    $('#formCuti')[0].reset();
+    $('#editRowId').val(rowIdx);
+    
+    $('.modal-title').html('<i class="fas fa-pencil-alt mr-2"></i>Edit Pengajuan Cuti');
+    $('#btnKirimCuti').html('<i class="fas fa-save mr-2"></i>Simpan Perubahan');
+
+    // 2. ISI IDENTITAS (LOCK)
+    $('#inputUnit').html(`<option value="${data.unit}">${data.unit}</option>`).prop('disabled', true);
+    $('#inputNama').html(`<option value="${data.nama}">${data.nama}</option>`).prop('disabled', true);
+    $('#inputNIP').html(`<option value="${data.nip}">${data.nip}</option>`).prop('disabled', true);
+    
+    // 3. CARI STATUS PEGAWAI DI DB_CUTI (Fix Masalah Status Kosong)
+    // Gunakan String() dan trim() agar pencarian NIP akurat (aman dari spasi)
+    var peg = DB_CUTI.find(x => String(x.nip).trim() === String(data.nip).trim());
+    var statusPeg = peg ? peg.status : ""; 
+    
+    $('#inputStatusPegawai').val(statusPeg);
+
+    // 4. ISI JENIS CUTI (Fix Masalah Kadang Muncul Kadang Tidak)
+    // PENTING: Panggil fungsi populate DULU, baru set valuenya.
+    // Hapus setTimeout karena proses ini sebenarnya synchronous (cepat).
+    populateJenisCuti(statusPeg); 
+    
+    // Set Value (Pastikan nilainya persis sama dengan opsi dropdown)
+    $('#inputJenisCuti').val(data.jenis); 
+
+    // 5. ISI TANGGAL & LAINNYA
+    $('#inputTglMulai').val(indoDateToIso(data.tglMulai));
+    $('#inputTglSelesai').val(indoDateToIso(data.tglSelesai));
+    $('#inputJumlahHari').val(data.jumlah);
+    $('#inputAlasan').val(data.alasan);
+    $('#inputAlamat').val(data.alamat);
+    $('#inputHP').val(data.telepon);
+
+    // Tampilkan Modal
+    $('#modalAjukanCuti').modal('show');
+}
+
+/* 2. UPDATE FUNGSI TAMBAH BARU (RESET HIDDEN ID) */
+function tambahDataCuti() {
+    // 1. RESET SISA-SISA MODE EDIT
+    // Kosongkan ID agar sistem tahu ini INPUT BARU
+    $('#editRowId').val(""); 
+    
+    // Kembalikan Judul & Tombol ke default
+    $('.modal-title').html('<i class="fas fa-plus-circle mr-2"></i>Form Pengajuan Cuti');
+    $('#btnKirimCuti').html('<i class="fas fa-paper-plane mr-2"></i>Kirim Pengajuan');
+
+    // 2. RESET FORM INPUT
+    $('#formCuti')[0].reset();
+    
+    // Reset Dropdown & Disabled
+    $('#inputNama, #inputNIP, #inputJenisCuti').prop('disabled', true).html('<option value="">- Pilih -</option>');
+    
+    // Pastikan Unit Kerja BISA DIKLIK (karena di mode Edit ini didisable)
+    $('#inputUnit').prop('disabled', false); 
+    
+    $('#inputStatusPegawai').val('');
+    $('#inputJumlahHari').val('');
+    
+    // 3. CEK DATABASE (DB_CUTI)
+    // Jika user baru buka web dan langsung klik Tambah, load DB dulu
+    if (DB_CUTI.length === 0) {
+        Swal.fire({
+            html: `
+                <div class="d-flex flex-column align-items-center py-4">
+                    <div class="spinner-border text-maroon mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h6 class="font-weight-bold text-muted">Memuat Database...</h6>
+                </div>
+            `,
+            showConfirmButton: false, allowOutsideClick: false, width: 300
+        });
+        
+        google.script.run.withSuccessHandler(function(json){
+            DB_CUTI = JSON.parse(json);
+            Swal.close();
+            populateUnitKerja();
+            $('#modalAjukanCuti').modal('show');
+        }).getDatabaseCutiOptions();
+    } else {
+        // Jika DB sudah ada, langsung buka
+        populateUnitKerja();
+        $('#modalAjukanCuti').modal('show');
+    }
+}
+
+/* 3. UPDATE FUNGSI KIRIM (CEK BARU ATAU EDIT) */
+function kirimPengajuanCuti() {
+    // Validasi Basic
+    if (!$('#inputNIP').val()) { Swal.fire('Gagal', 'Data Pegawai belum terisi!', 'warning'); return; }
+    if (!$('#inputTglMulai').val()) { Swal.fire('Gagal', 'Tanggal Cuti wajib diisi!', 'warning'); return; }
+
+    var btn = $('#btnKirimCuti');
+    var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+
+    var myName = "User Web";
+    try { var user = JSON.parse(localStorage.getItem("siksUser")); if(user && user.nama) myName = user.nama; } catch(e){}
+
+    // Siapkan Payload
+    var payload = {
+        rowBaris: $('#editRowId').val(), // Jika ada isinya = EDIT
+        unit: $('#inputUnit').val(),
+        nama: $('#inputNama').val(),
+        nip: $('#inputNIP').val(),
+        jenisCuti: $('#inputJenisCuti').val(),
+        tglMulai: $('#inputTglMulai').val(),
+        tglSelesai: $('#inputTglSelesai').val(),
+        jumlahHari: $('#inputJumlahHari').val(),
+        alasan: $('#inputAlasan').val(),
+        alamat: $('#inputAlamat').val(),
+        hp: $('#inputHP').val(),
+        userInput: myName
+    };
+    
+    // Tentukan Fungsi Backend: Update atau Simpan Baru?
+    var runner = google.script.run.withSuccessHandler(function(res){
+        btn.prop('disabled', false).html(txt);
+        if (res === "Sukses") {
+            $('#modalAjukanCuti').modal('hide');
+            Swal.fire('Berhasil', 'Data berhasil disimpan & Dokumen diperbarui.', 'success');
+            applyFilterCuti(); // Refresh Tabel
+        } else {
+            Swal.fire('Error', res, 'error');
+        }
+    }).withFailureHandler(function(err){
+        btn.prop('disabled', false).html(txt);
+        Swal.fire('Error', err.toString(), 'error');
+    });
+
+    if (payload.rowBaris && payload.rowBaris !== "") {
+        // Panggil Fungsi UPDATE
+        runner.updatePengajuanCuti(payload);
+    } else {
+        // Panggil Fungsi SIMPAN BARU
+        runner.simpanPengajuanCuti(payload);
+    }
+}
+
+/* 4. HELPER KONVERSI TANGGAL (Indo Text to ISO Date Input) */
+function indoDateToIso(str) {
+    // Input: "21 Januari 2026" -> Output: "2026-01-21"
+    if(!str) return "";
+    var months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    var parts = str.split(" ");
+    if (parts.length < 3) return "";
+    
+    var d = parts[0]; if(d.length < 2) d = "0"+d;
+    var mName = parts[1];
+    var y = parts[2];
+    
+    var mIndex = months.indexOf(mName);
+    if (mIndex < 0) return "";
+    var m = mIndex + 1; if(m < 10) m = "0"+m;
+    
+    return y + "-" + m + "-" + d;
+}
+
+/* FUNGSI HAPUS DATA DENGAN KONFIRMASI KODE */
+function hapusDataCuti(rowIdx) {
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        html: `
+            <p class="text-muted mb-3">Anda yakin ingin menghapus data cuti ini?</p>
+            <div class="alert alert-warning text-sm">
+                <i class="fas fa-lock mr-1"></i>
+                Hubungi admin Korwil untuk mendapatkan kode hapus.
+            </div>
+        `,
+        input: 'text',
+        inputPlaceholder: 'Masukkan Kode Hapus...',
+        inputAttributes: {
+            autocapitalize: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash-alt"></i> Hapus Permanen',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: (kode) => {
+            if (!kode) {
+                Swal.showValidationMessage('Kode hapus wajib diisi!');
+            }
+            return kode; // Oper kode ke 'then'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var inputKode = result.value;
+            
+            // Panggil Server untuk Menghapus
+            google.script.run.withSuccessHandler(function(res) {
+                if (res === "Sukses") {
+                    Swal.fire(
+                        'Terhapus!',
+                        'Data pengajuan cuti berhasil dihapus.',
+                        'success'
+                    );
+                    applyFilterCuti(); // Refresh Tabel
+                } else if (res === "KODE_SALAH") {
+                    Swal.fire(
+                        'Gagal!',
+                        'Kode hapus yang Anda masukkan SALAH.',
+                        'error'
+                    );
+                } else {
+                    Swal.fire('Error', res, 'error');
+                }
+            }).withFailureHandler(function(err) {
+                Swal.fire('Error', err.toString(), 'error');
+            }).hapusPengajuanCuti(rowIdx, inputKode);
+        }
+    });
+}
+
+/* 1. BUKA MODAL VERIFIKASI */
+function bukaVerifikasi(rowIdx) {
+    var data = DATA_CUTI[rowIdx];
+    if (!data) return;
+
+    // Isi Data Ringkasan Kanan
+    $('#verifRowId').val(rowIdx);
+    $('#verifNama').text(data.nama);
+    $('#verifUnit').text(data.unit);
+    $('#verifJenis').text(data.jenis);
+    $('#verifTanggal').text(data.tglMulai + " s.d " + data.tglSelesai);
+    
+    // Set Status & Catatan Saat Ini (Jika ada)
+    // Asumsi: data.status ada di array DATA_CUTI (perlu dipastikan saat render tabel)
+    // Jika belum ada, default ke 'Disetujui'
+    $('#verifStatus').val(data.status === "Diproses" ? "Disetujui" : data.status);
+    $('#verifCatatan').val(data.catatan || ""); 
+
+    // SETUP IFRAME PDF
+    // Link PDF biasanya format "/view?usp=...", kita ubah jadi "/preview" agar bersih
+    var link = data.linkPdf; // Pastikan kolom index 12 (M) masuk ke variabel ini saat loadData
+    
+    if (link && link.includes("drive.google.com")) {
+        // Trik ubah link 'view' menjadi 'preview'
+        var previewLink = link.replace(/\/view.*/, '/preview'); 
+        $('#iframePreview').attr('src', previewLink);
+    } else {
+        // Jika tidak ada link PDF
+        $('#iframePreview').attr('src', '');
+        // Tampilkan pesan error di iframe (opsional) atau biarkan kosong
+    }
+
+    // Tampilkan Modal
+    $('#modalVerifikasi').modal('show');
+}
+
+/* 2. SIMPAN KEPUTUSAN VERIFIKASI */
+function simpanVerifikasi() {
+    var rowId = $('#verifRowId').val();
+    var status = $('#verifStatus').val();
+    var catatan = $('#verifCatatan').val();
+    
+    if(!rowId) return;
+
+    // Tombol Loading
+    var btn = $('button[onclick="simpanVerifikasi()"]');
+    var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+    // Ambil Nama Admin dari LocalStorage (opsional)
+    var adminName = "Admin";
+    try { var u = JSON.parse(localStorage.getItem("siksUser")); if(u) adminName = u.nama; } catch(e){}
+
+    google.script.run.withSuccessHandler(function(res){
+        btn.prop('disabled', false).html(txt);
+        if (res === "Sukses") {
+            $('#modalVerifikasi').modal('hide');
+            Swal.fire({
+                icon: 'success', 
+                title: 'Terverifikasi!',
+                text: 'Status pengajuan berhasil diubah menjadi: ' + status,
+                timer: 1500, showConfirmButton: false
+            });
+            applyFilterCuti(); // Refresh Tabel
+        } else {
+            Swal.fire('Gagal', res, 'error');
+        }
+    }).withFailureHandler(function(err){
+        btn.prop('disabled', false).html(txt);
+        Swal.fire('Error', err.toString(), 'error');
+    }).verifikasiPengajuan(rowId, status, catatan, adminName);
+}
+</script>
