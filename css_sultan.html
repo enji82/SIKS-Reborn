@@ -423,7 +423,7 @@
 .dataTables_wrapper > .row:last-child {
     padding-left: 15px !important;  /* Menjorok ke dalam (kiri) */
     padding-right: 15px !important; /* Menjorok ke dalam (kanan) */
-    padding-top: 15px;              /* Jarak atas agar tidak sumpek */
+    padding-top: 5px;              /* Jarak atas agar tidak sumpek */
 }
 
 /* 2. Mempercantik Input Search & Dropdown Length (Global) */
@@ -579,4 +579,69 @@ table.dataTable tbody td {
 .btn-icon-sultan-success { background: linear-gradient(145deg, #28a745, #218838); }
 .btn-icon-sultan-warning { background: linear-gradient(145deg, #ffc107, #e0a800); color: #212529 !important; }
 .btn-icon-sultan-danger  { background: linear-gradient(145deg, #dc3545, #c82333); }
+
+/* TOMBOL UNDUH SULTAN (SOLID NAVY GOLD) */
+.btn-unduh-preview {
+    background-color: #001f3f;     /* Background Navy Solid */
+    color: #d4af37 !important;     /* Teks Emas */
+    border: 1px solid #001f3f;     /* Border Navy */
+    
+    border-radius: 50px;           /* Rounded Pill */
+    padding: 6px 15px;             /* Padding pas agar tidak gepeng */
+    
+    font-size: 11px;
+    font-weight: 700;              /* Tebal */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    
+    box-shadow: 0 4px 6px rgba(0, 31, 63, 0.3); /* Bayangan biru gelap */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* EFEK HOVER: BERUBAH JADI EMAS */
+.btn-unduh-preview:hover {
+    background-color: #d4af37;     /* Background Emas */
+    color: #001f3f !important;     /* Teks Navy */
+    border-color: #d4af37;         /* Border Emas */
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); /* Glow Emas */
+    transform: translateY(-2px);   /* Efek naik sedikit */
+}
+
+/* IKON */
+.btn-unduh-preview i {
+    color: #d4af37;                /* Ikon Awal Emas */
+    margin-right: 6px;
+    font-size: 12px;
+    transition: color 0.3s;
+}
+
+/* EFEK HOVER IKON */
+.btn-unduh-preview:hover i {
+    color: #001f3f;                /* Ikon jadi Navy saat hover */
+}
+
+/* CLASS BARU: INPUT LEBAR OTOMATIS */
+.input-auto-width {
+    width: auto !important;       /* Lebar mengikuti konten */
+    display: inline-block;        /* Agar bisa berjajar */
+    min-width: 120px;            /* Lebar minimal agar tidak terlalu kecil */
+    max-width: 300px;            /* Batas maksimal agar tidak merusak layout */
+    white-space: nowrap;          /* Teks tidak turun baris */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* CSS Tambahan untuk Mobile (Opsional: di HP tetap full width agar mudah ditekan) */
+@media (max-width: 576px) {
+    .input-auto-width {
+        width: 100% !important;
+        margin-bottom: 5px;
+    }
+}
 </style>

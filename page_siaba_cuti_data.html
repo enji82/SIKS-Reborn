@@ -16,22 +16,56 @@
     <div class="row justify-content-center">
       <div class="col-12">
 
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            
+            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+            </div>
+
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top">
+                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
+                  <li class="mb-1">Untuk mengajukan cuti silakan klik tombol <b><i class="fas fa-plus mr-1"></i>Ajukan Cuti</b>.</li>
+                  <li>Formulir Permintaan dan Pemberian Cuti dapat diunduh apabila status sudah <span class="badge badge-success" style="font-size: 11px;">Disetujui</span>.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <div class="card-sultan p-3 mb-2">
             <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
                 <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="applyFilterCuti()" title="Refresh Data">
                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
                 
-                <select id="filterTahun" class="form-control form-control-sultan" style="width: auto; min-width: 100px;">
-                    </select>
-                
-                <select id="filterBulan" class="form-control form-control-sultan" style="width: auto; min-width: 120px;">
-                    <option value="">- Semua Bulan -</option>
-                    <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
-                    <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
-                    <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
-                    <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+                <select id="filterTahun" class="form-control form-control-sultan input-auto-width">
                 </select>
+                
+                <select id="filterBulan" class="form-control form-control-sultan input-auto-width">
+                    <option value="">- Semua Bulan -</option>
+                    <option value="Januari">Januari</option>
+                    <option value="Februari">Februari</option>
+                    <option value="Maret">Maret</option>
+                    <option value="April">April</option>
+                    <option value="Mei">Mei</option>
+                    <option value="Juni">Juni</option>
+                    <option value="Juli">Juli</option>
+                    <option value="Agustus">Agustus</option>
+                    <option value="September">September</option>
+                    <option value="Oktober">Oktober</option>
+                    <option value="November">November</option>
+                    <option value="Desember">Desember</option>
+                </select>
+
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width">
+                    <option value="">- Semua Unit Kerja -</option>
+                    </select>
                 
                 <select id="filterStatus" class="form-control form-control-sultan" style="width: auto;">
                     <option value="">- Semua Status -</option>
@@ -64,7 +98,6 @@
                     overflow-x: auto !important;   
                     position: relative;
                     border: 1px solid #dee2e6;
-                    margin-bottom: 20px;
                 }
                 
                 .col-sticky-left { position: sticky; left: 0; background-color: #fff; z-index: 50; border-right: 2px solid #dee2e6 !important; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
@@ -303,7 +336,7 @@ $(document).ready(function(){
     // Bulan index 0-11, Array Bulan Sultan pakai Nama Indonesia
     var arrBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $('#filterBulan').val(arrBulan[now.getMonth()]);
-    
+    populateUnitFilter();
     // 3. Load Data
     applyFilterCuti();
 });
@@ -325,34 +358,42 @@ function initFilterTahun() {
     $('#filterTahun').html(h); 
 }
 
-function applyFilterCuti(e) {
-    if(e) e.preventDefault();
+/* 2. FUNGSI BARU: ISI DROPDOWN UNIT */
+function populateUnitFilter() {
+    google.script.run.withSuccessHandler(function(units) {
+        var html = '<option value="">- Semua Unit Kerja -</option>';
+        if (units && units.length > 0) {
+            units.forEach(function(u) {
+                html += `<option value="${u}">${u}</option>`;
+            });
+        }
+        $('#filterUnit').html(html);
+    }).getUnitOptions();
+}
 
-    // Loading UI Golden Standard
-    var loadingHtml = `
-      <tr class="tr-animasi">
-        <td colspan="15" class="text-center bg-white border-0 py-5">
-          <div class="d-flex flex-column justify-content-center align-items-center">
-            <div class="spinner-border text-maroon mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-            <h6 class="font-weight-bold text-muted">Sedang memuat data...</h6>
-          </div>
-        </td>
-      </tr>`;
-    $('#bodyTabelCuti').empty().html(loadingHtml);
+/* 3. UPDATE FUNGSI UTAMA: APPLY FILTER */
+function applyFilterCuti() {
+    // Tampilkan Loading di Tabel
+    $('#bodyTabelCuti').html('<tr><td colspan="15" class="text-center py-5"><div class="spinner-border text-maroon" role="status"></div><p class="mt-2 text-muted">Mengambil data...</p></td></tr>');
     
+    // Ambil Nilai Filter
     var thn = $('#filterTahun').val();
     var bln = $('#filterBulan').val();
-    var stat = $('#filterStatus').val();
-    // Unit bisa diambil dari localStorage user login jika perlu filter per unit
-    var unit = ""; 
+    var unt = $('#filterUnit').val(); // <-- AMBIL NILAI UNIT
 
-    google.script.run
-        .withSuccessHandler(renderTabelCuti)
-        .withFailureHandler(function(err){ 
-            $('#bodyTabelCuti').html('<tr><td colspan="15" class="text-center text-danger p-5">Gagal: '+err+'</td></tr>'); 
-        })
-        .getDaftarCuti(thn, bln, unit, stat);
+    // Panggil Backend dengan 3 Parameter
+    google.script.run.withSuccessHandler(renderTabelCuti)
+        .getDataCuti(thn, bln, unt);
 }
+
+/* 4. TAMBAHKAN LISTENER CHANGE (Agar otomatis reload saat ganti unit) */
+$('#filterUnit').change(function(){
+    applyFilterCuti();
+});
+// Pastikan listener tahun & bulan juga ada
+$('#filterTahun, #filterBulan').change(function(){
+    applyFilterCuti();
+});
 
 function renderTabelCuti(jsonString) {
     var data = []; try { data = JSON.parse(jsonString); } catch(e) { return; }
@@ -380,43 +421,58 @@ function renderTabelCuti(jsonString) {
         else if(j.includes("penting")) jenisSingkat = "CAP";
         else if(j.includes("melahirkan")) jenisSingkat = "CM";
         else if(j.includes("besar")) jenisSingkat = "CB";
-        else if(j.includes("luar tanggungan")) jenisSingkat = "CLTN";
+        else if(j.includes("luar")) jenisSingkat = "CLTN";
         else if(j.includes("umroh")) jenisSingkat = "CT";
 
-        // UI BADGE (Style Light sesuai css_sultan.html)
+        // UI BADGE
         var badgeStatus = renderBadgeSultan(row.status);
         if(row.ket && row.ket.trim() !== "") {
             badgeStatus += ` <i class="fas fa-info-circle text-info ml-1" title="${cleanText(row.ket)}" style="cursor:pointer;"></i>`;
         }
 
-        // UI TOMBOL FILE (btn-icon-sultan-info)
+        // Cek Status Approval
+        var isApproved = (String(row.status).includes("Disetujui") || String(row.status).includes("OK"));
+        
+        // --- LOGIKA TOMBOL FILE (UNDUH) ---
         var btnFile = '-';
         if(row.fileUrl && row.fileUrl.length > 10) {
-             btnFile = `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewDokumen('${row.fileUrl}')" title="Lihat Berkas"><i class="fas fa-eye" style="font-size:12px;"></i></button>`;
+            if (isApproved) {
+                // USER BIASA: Jika Disetujui -> Muncul Tombol UNDUH (Tapi aksi: Preview Modal)
+                // Kita panggil fungsi previewDokumen() milik modal, bukan href link langsung.
+                btnFile = `<a href="javascript:void(0)" onclick="previewDokumen('${row.fileUrl}')" class="btn-unduh-preview" title="Lihat Dokumen Sah">
+                             <i class="fas fa-file-download"></i> Unduh
+                           </a>`;
+            } else {
+                // USER BIASA: Jika Belum Disetujui -> Kosong (-)
+                btnFile = '-';
+                
+                // ADMIN: Tetap bisa lihat preview walau belum disetujui (tombol mata kecil)
+                if(isAdmin) {
+                    btnFile = `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewDokumen('${row.fileUrl}')" title="Preview Admin"><i class="fas fa-eye" style="font-size:12px;"></i></button>`;
+                }
+            }
         }
 
-        // UI TOMBOL AKSI (Gunakan class btn-icon-sultan-*)
+        // --- UI TOMBOL AKSI ---
         var btnAksi = '<div class="d-flex justify-content-center">';
-        var isLocked = (String(row.status).includes("Disetujui") || String(row.status).includes("OK"));
         
-        // 1. Tombol Verifikasi (Admin) - Hijau (Success)
+        // 1. Verifikasi (Admin Only)
         if(isAdmin) {
-            btnAksi += `<button type="button" class="btn-icon-sultan btn-icon-sultan-success mx-1 btn-verifikasi" data-id="${i}" title="Verifikasi"><i class="fas fa-check" style="font-size:12px;"></i></button>`;
+            btnAksi += `<button type="button" class="btn-icon-sultan btn-icon-sultan-success mx-1 btn-verifikasi" data-id="${row.rowBaris}" title="Verifikasi"><i class="fas fa-check" style="font-size:12px;"></i></button>`;
         }
 
-        // 2. Tombol Edit - Kuning (Warning)
-        if (!isLocked) {
-            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-warning mx-1" onclick="tambahDataCutiWithVal('${row.rowBaris}')" title="Edit"><i class="fas fa-pencil-alt" style="font-size:12px;"></i></button>`;
+        // 2. Edit (Terkunci jika Disetujui)
+        if (!isApproved) {
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-warning mx-1" onclick="tambahDataCutiWithVal('${row.rowBaris}')" title="Edit / Revisi"><i class="fas fa-pencil-alt" style="font-size:12px;"></i></button>`;
         } else {
-            // Disabled style manual karena btn-icon-sultan tidak punya state disabled bawaan bootstrap
-            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-warning mx-1" style="opacity:0.5; cursor:not-allowed;" title="Terkunci"><i class="fas fa-lock" style="font-size:12px;"></i></button>`;
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-warning mx-1" style="opacity:0.5; cursor:not-allowed;" title="Sudah Disetujui (Terkunci)"><i class="fas fa-lock" style="font-size:12px;"></i></button>`;
         }
         
-        // 3. Tombol Hapus - Merah (Danger)
-        if (!isLocked) {
+        // 3. Hapus (Terkunci jika Disetujui)
+        if (!isApproved) {
             btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-danger mx-1" onclick="hapusDataCuti('${row.rowBaris}')" title="Hapus"><i class="fas fa-trash" style="font-size:12px;"></i></button>`;
         } else {
-            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-danger mx-1" style="opacity:0.5; cursor:not-allowed;" title="Terkunci"><i class="fas fa-lock" style="font-size:12px;"></i></button>`;
+            btnAksi += `<button class="btn-icon-sultan btn-icon-sultan-danger mx-1" style="opacity:0.5; cursor:not-allowed;" title="Sudah Disetujui (Terkunci)"><i class="fas fa-lock" style="font-size:12px;"></i></button>`;
         }
         btnAksi += '</div>';
 
@@ -919,7 +975,12 @@ function hapusDataCuti(rowIdx) {
 /* 1. BUKA MODAL VERIFIKASI */
 function bukaVerifikasi(rowIdx) {
     var data = DATA_CUTI[rowIdx];
-    if (!data) return;
+    
+    // Debugging: Cek di Console Browser jika tombol tidak merespon
+    if (!data) {
+        console.error("Data tidak ditemukan untuk baris: " + rowIdx);
+        return;
+    }
 
     // Isi Data Ringkasan Kanan
     $('#verifRowId').val(rowIdx);
@@ -928,24 +989,20 @@ function bukaVerifikasi(rowIdx) {
     $('#verifJenis').text(data.jenis);
     $('#verifTanggal').text(data.tglMulai + " s.d " + data.tglSelesai);
     
-    // Set Status & Catatan Saat Ini (Jika ada)
-    // Asumsi: data.status ada di array DATA_CUTI (perlu dipastikan saat render tabel)
-    // Jika belum ada, default ke 'Disetujui'
+    // Set Status & Catatan Saat Ini
     $('#verifStatus').val(data.status === "Diproses" ? "Disetujui" : data.status);
-    $('#verifCatatan').val(data.catatan || ""); 
+    $('#verifCatatan').val(data.ket || ""); // Backend kirim key 'ket', bukan 'catatan'
 
     // SETUP IFRAME PDF
-    // Link PDF biasanya format "/view?usp=...", kita ubah jadi "/preview" agar bersih
-    var link = data.linkPdf; // Pastikan kolom index 12 (M) masuk ke variabel ini saat loadData
+    // PERBAIKAN: Backend mengirim key 'fileUrl', bukan 'linkPdf'
+    var link = data.fileUrl; 
     
     if (link && link.includes("drive.google.com")) {
-        // Trik ubah link 'view' menjadi 'preview'
+        // Trik ubah link 'view' menjadi 'preview' agar embedable
         var previewLink = link.replace(/\/view.*/, '/preview'); 
         $('#iframePreview').attr('src', previewLink);
     } else {
-        // Jika tidak ada link PDF
         $('#iframePreview').attr('src', '');
-        // Tampilkan pesan error di iframe (opsional) atau biarkan kosong
     }
 
     // Tampilkan Modal

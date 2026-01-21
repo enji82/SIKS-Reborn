@@ -3030,11 +3030,148 @@ function verifikasiPengajuan(rowBaris, status, catatan, adminName) {
     var row = parseInt(rowBaris);
     if (isNaN(row) || row < 2) return "Error: Baris tidak valid.";
 
-    // Update Kolom K (11) = Status, Kolom L (12) = Catatan
-    // Kita timpa nilainya sesuai input admin
-    sheet.getRange(row, 11, 1, 2).setValues([[status, catatan]]);
+    // Update Data
+    // Kolom K (11) = Status
+    // Kolom L (12) = Catatan (Keterangan)
+    sheet.getRange(row, 11).setValue(status);
+    sheet.getRange(row, 12).setValue(catatan);
+    
+    // Update Metadata Verifikasi
+    // Kolom R (18) = Tgl Verif
+    // Kolom S (19) = Verifikator
+    var now = new Date();
+    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    
+    sheet.getRange(row, 18).setValue(sysDateStr);
+    sheet.getRange(row, 19).setValue(adminName || "Admin");
     
     return "Sukses";
     
   } catch (e) { return "Error Verif: " + e.toString(); }
+}
+
+/* 1. UPDATE FUNGSI OPSI UNIT (SUMBER: DATABASE CUTI KOLOM B) */
+function getUnitOptions() {
+  var ss = SpreadsheetApp.openById(ID_SS_CUTI);
+  var sheet = ss.getSheetByName("Database Cuti"); // GANTI SHEET
+  if (!sheet) return [];
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  
+  // AMBIL KOLOM B (Index 1) sesuai permintaan
+  var data = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  
+  var uniqueUnits = [];
+  var seen = {};
+  
+  for (var i = 0; i < data.length; i++) {
+    var unit = String(data[i][0]).trim();
+    if (unit !== "" && !seen[unit]) {
+      uniqueUnits.push(unit);
+      seen[unit] = true;
+    }
+  }
+  
+  uniqueUnits.sort();
+  return uniqueUnits;
+}
+
+/* 2. UPDATE FUNGSI GET DATA (LOGIKA FILTER LEBIH AMAN) */
+function getDataCuti(tahun, bulan, unitFilter) { 
+  var ss = SpreadsheetApp.openById(ID_SS_CUTI);
+  var sheet = ss.getSheetByName("Form Cuti");
+  if (!sheet) return JSON.stringify([]);
+  
+  // Ambil semua data & display values (agar tanggal terbaca sebagai teks apa adanya)
+  var data = sheet.getDataRange().getValues();
+  // Opsional: Gunakan getDisplayValues jika ingin format teks persis seperti di layar Excel
+  var displayData = sheet.getDataRange().getDisplayValues(); 
+  
+  var result = [];
+  
+  // Normalisasi Filter
+  var fTahun = tahun ? String(tahun).trim() : "";
+  var fBulan = bulan ? String(bulan).toLowerCase().trim() : "";
+  var fUnit  = unitFilter ? String(unitFilter).toLowerCase().trim() : "";
+
+  // Loop mulai baris ke-2 (Index 1)
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];     // Data asli (mungkin object date)
+    var rowTxt = displayData[i]; // Data teks (tampilan)
+    
+    // Index Kolom: A=0(Unit), E=4(TglMulai)
+    var rowUnitRaw = String(row[0]).toLowerCase();
+    
+    // Ambil teks tanggal dari displayData agar lebih akurat sesuai tampilan
+    var tglMulaiTxt = String(rowTxt[4]).trim(); // "21 Januari 2026"
+    
+    // Deteksi Tahun & Bulan
+    var rTahun = "";
+    var rBulan = "";
+    
+    // Coba parsing format "dd MMMM yyyy" (Spasi)
+    var parts = tglMulaiTxt.split(" ");
+    if (parts.length >= 3) {
+       rBulan = parts[1].toLowerCase(); // "januari"
+       rTahun = parts[2]; // "2026"
+    } 
+    // Fallback: Jika gagal split spasi, mungkin format "yyyy-mm-dd" atau lainnya
+    else {
+       // Coba baca dari object Date jika ada
+       if (row[4] instanceof Date) {
+          rTahun = String(row[4].getFullYear());
+          var mIndex = row[4].getMonth();
+          var mNames = ["januari","februari","maret","april","mei","juni","juli","agustus","september","oktober","november","desember"];
+          rBulan = mNames[mIndex];
+       }
+    }
+
+    // --- LOGIKA FILTER AMAN ---
+    
+    // 1. Cek Tahun: Lolos jika filter kosong ATAU tahun cocok ATAU tahun tidak terdeteksi (tampilkan saja drpd hilang)
+    var matchTahun = (fTahun === "") || (rTahun === fTahun);
+    
+    // 2. Cek Bulan: Lolos jika filter kosong ATAU bulan cocok
+    var matchBulan = (fBulan === "") || (rBulan === fBulan);
+    
+    // 3. Cek Unit: Lolos jika filter kosong ATAU teks unit mengandung kata kunci
+    var matchUnit = (fUnit === "") || (rowUnitRaw.indexOf(fUnit) > -1);
+
+    // Gabungkan
+    if (matchTahun && matchBulan && matchUnit) {
+      result.push({
+        rowBaris: i + 1,
+        unit: rowTxt[0],   // Gunakan rowTxt agar format terjaga
+        nama: rowTxt[1],
+        nip:  rowTxt[2],
+        jenis: rowTxt[3],
+        tglMulai: rowTxt[4],
+        tglSelesai: rowTxt[5],
+        jumlah: rowTxt[6],
+        alasan: rowTxt[7],
+        alamat: rowTxt[8],
+        telepon: rowTxt[9],
+        status: rowTxt[10],
+        ket: rowTxt[11],
+        fileUrl: rowTxt[12], // Link PDF
+        tglInput: rowTxt[13],
+        userInput: rowTxt[14],
+        tglEdit: rowTxt[15],
+        userEdit: rowTxt[16],
+        tglVerif: rowTxt[17],
+        verifikator: rowTxt[18]
+      });
+    }
+  }
+  
+  // Urutkan Terbaru di Atas
+  result.reverse();
+  return JSON.stringify(result);
+}
+
+// Helper Format Tanggal Pendek (dd/MM/yy HH:mm)
+function formatDateShort(dateObj) {
+  if (!dateObj) return "";
+  return Utilities.formatDate(new Date(dateObj), Session.getScriptTimeZone(), "dd/MM/yy HH:mm");
 }
