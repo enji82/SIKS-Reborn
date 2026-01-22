@@ -3083,10 +3083,9 @@ function getDataCuti(tahun, bulan, unitFilter) {
   var sheet = ss.getSheetByName("Form Cuti");
   if (!sheet) return JSON.stringify([]);
   
-  // Ambil semua data & display values (agar tanggal terbaca sebagai teks apa adanya)
-  var data = sheet.getDataRange().getValues();
-  // Opsional: Gunakan getDisplayValues jika ingin format teks persis seperti di layar Excel
-  var displayData = sheet.getDataRange().getDisplayValues(); 
+  // Ambil Data Tampilan (Display Values) agar format tanggal konsisten "dd-MM-yyyy HH:mm:ss"
+  var dataRaw = sheet.getDataRange().getValues();
+  var dataDisplay = sheet.getDataRange().getDisplayValues(); 
   
   var result = [];
   
@@ -3095,54 +3094,37 @@ function getDataCuti(tahun, bulan, unitFilter) {
   var fBulan = bulan ? String(bulan).toLowerCase().trim() : "";
   var fUnit  = unitFilter ? String(unitFilter).toLowerCase().trim() : "";
 
-  // Loop mulai baris ke-2 (Index 1)
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];     // Data asli (mungkin object date)
-    var rowTxt = displayData[i]; // Data teks (tampilan)
+  // Loop Data (Mulai Baris 2)
+  for (var i = 1; i < dataRaw.length; i++) {
+    var row = dataRaw[i];       // Raw data (untuk cek tanggal object)
+    var rowTxt = dataDisplay[i];// Display data (untuk teks konsisten)
     
     // Index Kolom: A=0(Unit), E=4(TglMulai)
     var rowUnitRaw = String(row[0]).toLowerCase();
+    var tglMulaiTxt = String(rowTxt[4]).trim(); 
     
-    // Ambil teks tanggal dari displayData agar lebih akurat sesuai tampilan
-    var tglMulaiTxt = String(rowTxt[4]).trim(); // "21 Januari 2026"
-    
-    // Deteksi Tahun & Bulan
+    // Deteksi Tahun & Bulan (Logic Toleran)
     var rTahun = "";
     var rBulan = "";
-    
-    // Coba parsing format "dd MMMM yyyy" (Spasi)
     var parts = tglMulaiTxt.split(" ");
     if (parts.length >= 3) {
-       rBulan = parts[1].toLowerCase(); // "januari"
-       rTahun = parts[2]; // "2026"
-    } 
-    // Fallback: Jika gagal split spasi, mungkin format "yyyy-mm-dd" atau lainnya
-    else {
-       // Coba baca dari object Date jika ada
-       if (row[4] instanceof Date) {
-          rTahun = String(row[4].getFullYear());
-          var mIndex = row[4].getMonth();
-          var mNames = ["januari","februari","maret","april","mei","juni","juli","agustus","september","oktober","november","desember"];
-          rBulan = mNames[mIndex];
-       }
+       rBulan = parts[1].toLowerCase();
+       rTahun = parts[2];
+    } else if (row[4] instanceof Date) {
+       rTahun = String(row[4].getFullYear());
+       var mNames = ["januari","februari","maret","april","mei","juni","juli","agustus","september","oktober","november","desember"];
+       rBulan = mNames[row[4].getMonth()];
     }
 
-    // --- LOGIKA FILTER AMAN ---
-    
-    // 1. Cek Tahun: Lolos jika filter kosong ATAU tahun cocok ATAU tahun tidak terdeteksi (tampilkan saja drpd hilang)
+    // LOGIKA FILTER
     var matchTahun = (fTahun === "") || (rTahun === fTahun);
-    
-    // 2. Cek Bulan: Lolos jika filter kosong ATAU bulan cocok
     var matchBulan = (fBulan === "") || (rBulan === fBulan);
-    
-    // 3. Cek Unit: Lolos jika filter kosong ATAU teks unit mengandung kata kunci
-    var matchUnit = (fUnit === "") || (rowUnitRaw.indexOf(fUnit) > -1);
+    var matchUnit  = (fUnit === "")  || (rowUnitRaw.indexOf(fUnit) > -1);
 
-    // Gabungkan
     if (matchTahun && matchBulan && matchUnit) {
       result.push({
         rowBaris: i + 1,
-        unit: rowTxt[0],   // Gunakan rowTxt agar format terjaga
+        unit: rowTxt[0],
         nama: rowTxt[1],
         nip:  rowTxt[2],
         jenis: rowTxt[3],
@@ -3154,19 +3136,42 @@ function getDataCuti(tahun, bulan, unitFilter) {
         telepon: rowTxt[9],
         status: rowTxt[10],
         ket: rowTxt[11],
-        fileUrl: rowTxt[12], // Link PDF
-        tglInput: rowTxt[13],
+        fileUrl: rowTxt[12],
+        
+        // Tanggal-tanggal Aktivitas (Penting untuk Sorting)
+        tglInput: rowTxt[13], // Col N
         userInput: rowTxt[14],
-        tglEdit: rowTxt[15],
+        tglEdit: rowTxt[15],  // Col P
         userEdit: rowTxt[16],
-        tglVerif: rowTxt[17],
+        tglVerif: rowTxt[17], // Col R
         verifikator: rowTxt[18]
       });
     }
   }
   
-  // Urutkan Terbaru di Atas
-  result.reverse();
+  // --- SMART SORTING: LAST ACTIVITY ---
+  // Kita cari tanggal paling baru di antara Input, Edit, atau Verif
+  result.sort(function(a, b) {
+      // Helper: Parse "dd-MM-yyyy HH:mm:ss" ke Milliseconds
+      function getMs(str) {
+          if (!str || str.length < 10) return 0;
+          try {
+            var parts = str.split(" ");     // Pisah Tanggal & Jam
+            var d = parts[0].split("-");    // [dd, MM, yyyy]
+            var t = parts[1].split(":");    // [HH, mm, ss]
+            // New Date(yyyy, mm-1, dd, hh, mm, ss)
+            return new Date(d[2], d[1]-1, d[0], t[0], t[1], t[2]).getTime();
+          } catch(e) { return 0; }
+      }
+      
+      // Cari momen terakhir aktivitas masing-masing baris
+      var maxA = Math.max(getMs(a.tglInput), getMs(a.tglEdit), getMs(a.tglVerif));
+      var maxB = Math.max(getMs(b.tglInput), getMs(b.tglEdit), getMs(b.tglVerif));
+      
+      // Urutkan Descending (Paling Besar/Baru di Atas)
+      return maxB - maxA;
+  });
+  
   return JSON.stringify(result);
 }
 
@@ -3174,4 +3179,46 @@ function getDataCuti(tahun, bulan, unitFilter) {
 function formatDateShort(dateObj) {
   if (!dateObj) return "";
   return Utilities.formatDate(new Date(dateObj), Session.getScriptTimeZone(), "dd/MM/yy HH:mm");
+}
+
+/* ======================================================================
+   MODUL: SISA CUTI TAHUNAN
+   ====================================================================== */
+function getSisaCutiData() {
+  var ID_SS_SISA = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS_SISA);
+    var sheet = ss.getSheetByName("Sisa CT");
+    if (!sheet) return JSON.stringify({ error: "Sheet 'Sisa CT' tidak ditemukan." });
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 1) return JSON.stringify({ headers: [], data: [] });
+    
+    // Ambil Data dari Kolom A sampai M (13 Kolom)
+    // Gunakan getDisplayValues() agar data persis seperti tampilan di Excel
+    var range = sheet.getRange(1, 1, lastRow, 13); 
+    var rawValues = range.getDisplayValues(); 
+    
+    // Pisahkan Header (Baris 1) dan Data (Baris 2 dst)
+    var headers = rawValues[0];
+    var rows = rawValues.slice(1);
+    
+    // URUTKAN ABJAD BERDASARKAN NAMA (Kolom B -> Index 1)
+    rows.sort(function(a, b) {
+       var valA = String(a[1]).toLowerCase();
+       var valB = String(b[1]).toLowerCase();
+       if (valA < valB) return -1;
+       if (valA > valB) return 1;
+       return 0;
+    });
+
+    return JSON.stringify({
+      headers: headers,
+      data: rows
+    });
+    
+  } catch (e) {
+    return JSON.stringify({ error: "Error Server: " + e.toString() });
+  }
 }

@@ -1,139 +1,334 @@
-<header>
-  <h2>SISA CUTI TAHUNAN PEGAWAI</h2>
-</header>
-
-<div class="filter-container">
-  <div class="filter-group">
-    <label for="filterUnitCutiSisa">Unit Kerja:</label>
-    <select id="filterUnitCutiSisa"></select>
-  </div>
-  
-  <div class="filter-group" style="margin-left: auto;">
-    <label for="searchCutiSisa" class="search-icon-label"><i class="fas fa-search"></i></label>
-    <input type="search" id="searchCutiSisa" class="search-input" placeholder="Cari Nama/NIP...">
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-chart-pie text-maroon mr-2"></i>Sisa Cuti Tahunan
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
   </div>
 </div>
 
-<main class="table-view-container">
-  <div id="tableWrapperCutiSisa" style="display:flex; position: relative;"> 
-    
-    <div id="tableOverlayLoaderCutiSisa" style="display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: center; flex-direction: column; border-radius: 8px; backdrop-filter: blur(2px);">
-        <div class="spinner-container">
-            <div class="spinner-bar" style="background-color: #e74c3c;"></div>
-            <div class="spinner-bar" style="background-color: #2ecc71;"></div>
-            <div class="spinner-bar" style="background-color: #f1c40f;"></div>
-            <div class="spinner-bar" style="background-color: #3498db;"></div>
-        </div>
-        <p style="margin-top: 15px; color: white; font-weight: bold; letter-spacing: 1px;">Memuat Data...</p>
-    </div>
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
 
-    <div class="table-container">
-        <table id="cutiSisaTable" class="data-table freeze-pane-table">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top">
+                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
+                  <li class="mb-1">Data yang ditampilkan bersumber langsung dari database Sisa Cuti Tahunan (CT).</li>
+                  <li>Jika nilai sisa cuti berwarna <span class="badge badge-danger">Merah</span>, artinya jumlah cuti minus (hutang).</li>
+                  <li>Gunakan filter Unit Kerja untuk mempersempit tampilan data.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="reloadSisaCuti()" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterUnitSisa" class="form-control form-control-sultan" style="width: auto; min-width: 250px; max-width: 100%;">
+                    <option value="">- Memuat Unit Kerja... -</option>
+                </select>
+
+                <span id="loadingStatus" class="text-muted small font-italic ml-2" style="display:none;">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Memproses...
+                </span>
+
+            </div>
+        </div>
+
+        <div class="card-sultan">
+            <div class="card-body p-0">
+              
+              <style>
+                /* --- [1] TINGGI BARIS & FONT --- */
+                #tabelSisa td, #tabelSisa th {
+                    padding-top: 8px !important;    
+                    padding-bottom: 8px !important; 
+                    vertical-align: middle !important;
+                }
+
+                /* --- [2] FREEZE COLUMN (NAMA) --- */
+                .col-sticky-left {
+                    position: sticky;
+                    left: 0;
+                    z-index: 5;
+                    border-right: 2px solid #dee2e6 !important; 
+                    background-color: #fff; 
+                }
+                thead .col-sticky-left {
+                    z-index: 10;
+                    background-color: #001f3f !important; 
+                    color: white;
+                }
+                .table-striped tbody tr:nth-of-type(odd) .col-sticky-left {
+                    background-color: rgba(0,0,0,.05); 
+                }
+
+                /* --- [3] WARNA BARU (LIGHT MODE) --- */
+                
+                /* Kolom I (Orange Pucat, Teks Gelap) */
+                .bg-orange-light { 
+                    background-color: #fff3cd !important; 
+                    color: #856404 !important; 
+                    font-weight: bold; 
+                }
+                
+                /* Kolom M (Hijau Pucat, Teks Gelap) */
+                .bg-green-light { 
+                    background-color: #d4edda !important; 
+                    color: #155724 !important; 
+                    font-weight: bold; 
+                }
+                
+                /* Hover Row Effect (Tetap nyaman dibaca) */
+                .table-hover tbody tr:hover td {
+                    color: #212529; /* Pastikan teks jadi hitam saat hover */
+                }
+                /* Kecuali span minus, tetap putih */
+                .table-hover tbody tr:hover span.val-minus {
+                    color: #fff;
+                }
+
+                /* Blok Merah untuk Nilai Minus */
+                .val-minus { 
+                    background-color: #dc3545; color: white; padding: 2px 8px; 
+                    border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block;
+                }
+              </style>
+
+              <table id="tabelSisa" class="table table-premium table-sultan-compact mb-0 w-100">
+                <thead class="bg-navy text-white">
+                   <tr id="headerRow">
+                       </tr>
+                </thead>
+                <tbody id="bodyTabelSisa">
+                   </tbody>
+              </table>
+            </div>
+        </div>
+
+      </div>
     </div>
   </div>
-</main>
+</section>
 
-<style>
-  /* --- 1. LAYOUT WRAPPER --- */
-  #main-content { overflow-y: hidden !important; }
-  
-  main.table-view-container { 
-      flex-grow: 1 !important; 
-      min-height: 0 !important; 
-      display: flex !important; 
-      flex-direction: column !important; 
-  }
-  
-  #tableWrapperCutiSisa { 
-      flex-grow: 1 !important; 
-      min-height: 0 !important; 
-      display: flex !important; 
-      flex-direction: column !important; 
-      margin-bottom: 0; 
-  }
-  
-  #tableWrapperCutiSisa .table-container { 
-      flex-grow: 1 !important; 
-      overflow: auto !important; 
-      border-radius: 10px; 
-      border-bottom: none; 
-  }
-  #tableWrapperCutiSisa .table-container::-webkit-scrollbar { display: none !important; }
+<script>
+    var GLOBAL_SISA_DATA = [];
+    var GLOBAL_HEADERS = [];
 
-  /* --- 2. ATURAN KOLOM SPESIFIK --- */
-  
-  /* Kolom 1 (No): Paksa lebar fix 50px */
-  #cutiSisaTable th:nth-child(1),
-  #cutiSisaTable td:nth-child(1) {
-      width: 50px;
-      min-width: 50px;
-      max-width: 50px;
-      box-sizing: border-box !important;
-  }
+    $(document).ready(function() {
+        renderMessageDOM("loading");
+        loadDataSisaCuti();
 
-  /* Kolom 2 (Nama ASN): Rata Kiri & Lebar Min */
-  #cutiSisaTable tbody td:nth-child(2) {
-      text-align: left !important; 
-      min-width: 200px;
-  }
+        $('#filterUnitSisa').change(function() {
+            renderTabelDOM($(this).val());
+        });
+    });
 
-  /* Rata Kiri Lainnya */
-  #cutiSisaTable tbody td:nth-child(3) {
-      text-align: left !important;
-  }
+    function reloadSisaCuti() {
+        renderMessageDOM("loading");
+        loadDataSisaCuti();
+    }
 
-  /* --- 3. PERBAIKAN FREEZE PANE (SUDUT MATI) --- */
-  /* Masalah scroll terjadi karena Header Kolom 1 & 2 perlu dikunci 2 arah (Top & Left) */
-  /* Kita override CSS global khusus untuk 2 sel header ini dengan !important */
-  
-  #cutiSisaTable thead th:nth-child(1) {
-      position: sticky !important;
-      top: 0 !important;        /* Kunci ke Atas */
-      left: 0 !important;       /* Kunci ke Kiri */
-      z-index: 10 !important;   /* Layer Paling Atas (di atas header lain & body) */
-      background-color: #101E26 !important; /* Pastikan background tidak transparan */
-  }
-  
-  #cutiSisaTable thead th:nth-child(2) {
-      position: sticky !important;
-      top: 0 !important;        /* Kunci ke Atas */
-      left: 50px !important;    /* Kunci ke Kiri (setelah kolom 1) */
-      z-index: 10 !important;   /* Layer Paling Atas */
-      background-color: #101E26 !important;
-  }
+    /* RENDER PESAN (LOADING/ERROR) */
+    function renderMessageDOM(type, msgText) {
+        var tbody = document.getElementById('bodyTabelSisa');
+        tbody.innerHTML = ""; 
 
-  /* --- 4. PEWARNAAN KOLOM --- */
-  
-  /* Kolom 7 (Biru Muda) */
-  #cutiSisaTable tbody td:nth-child(7) {
-      background-color: rgba(52, 152, 219, 0.15);
-      color: #3498db;
-      font-weight: bold;
-  }
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.colSpan = 12; 
+        td.className = "p-0 border-0";
 
-  /* Kolom 8 (Ungu Muda) */
-  #cutiSisaTable tbody td:nth-child(8) {
-      background-color: rgba(155, 89, 182, 0.15);
-      color: #9b59b6;
-      font-weight: bold;
-  }
+        if (type === "loading") {
+            var divContainer = document.createElement('div');
+            divContainer.className = "sultan-loading-container";
+            var divSpinner = document.createElement('div');
+            divSpinner.className = "spinner-border sultan-spinner";
+            divSpinner.setAttribute("role", "status");
+            var h6 = document.createElement('h6');
+            h6.className = "text-muted font-weight-bold";
+            h6.textContent = "Sedang memuat database...";
+            divContainer.appendChild(divSpinner);
+            divContainer.appendChild(h6);
+            td.appendChild(divContainer);
 
-  /* Kolom 12 (Hijau) */
-  #cutiSisaTable tbody td:nth-child(12) {
-      background-color: rgba(46, 204, 113, 0.15);
-      color: #2ecc71;
-      font-weight: bold;
-  }
-  
-  /* Hover Effect */
-  #cutiSisaTable tbody tr:hover td { background-color: rgba(255, 255, 255, 0.08); }
-  
-  /* Pastikan hover kolom freeze (kiri) warnanya konsisten/gelap */
-  #cutiSisaTable tbody tr:hover td:nth-child(1), 
-  #cutiSisaTable tbody tr:hover td:nth-child(2) { 
-      background-color: #2a4152 !important; 
-  }
-</style>
+        } else if (type === "error") {
+            td.className = "text-center text-danger p-4";
+            td.textContent = msgText || "Terjadi kesalahan.";
+
+        } else if (type === "empty") {
+            td.className = "text-center p-4";
+            var iIcon = document.createElement('i');
+            iIcon.className = "fas fa-search fa-3x text-gray-300 mb-3";
+            var pText = document.createElement('p');
+            pText.className = "text-muted";
+            pText.textContent = "Tidak ada data ditemukan.";
+            td.appendChild(iIcon);
+            td.appendChild(pText);
+        }
+
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    }
+
+    /* LOAD DATA SERVER */
+    function loadDataSisaCuti() {
+        google.script.run
+            .withSuccessHandler(function(jsonStr) {
+                var res = JSON.parse(jsonStr);
+                if (res.error) { renderMessageDOM("error", res.error); return; }
+                
+                GLOBAL_SISA_DATA = res.data;
+                GLOBAL_HEADERS = res.headers;
+
+                renderHeaderDOM(res.headers);
+                populateFilterDOM(res.data);
+                renderTabelDOM(""); 
+            })
+            .withFailureHandler(function(err) {
+                renderMessageDOM("error", "Gagal memuat: " + err);
+            })
+            .getSisaCutiData();
+    }
+
+    /* RENDER HEADER */
+    function renderHeaderDOM(headers) {
+        var tr = document.getElementById('headerRow');
+        tr.innerHTML = ""; 
+        
+        for (var i = 1; i <= 12; i++) {
+            var th = document.createElement('th');
+            th.className = "align-middle text-center text-nowrap";
+            th.textContent = headers[i] || "-";
+            
+            if (i === 1) { // Freeze Kolom Nama
+                th.classList.add('col-sticky-left');
+                th.style.minWidth = "200px"; 
+            }
+            tr.appendChild(th);
+        }
+    }
+
+    /* POPULATE FILTER */
+    function populateFilterDOM(dataRows) {
+        var uniqueUnits = [];
+        var seen = {};
+        for(var i=0; i<dataRows.length; i++) {
+            var u = String(dataRows[i][0]).trim();
+            if (u && !seen[u]) { uniqueUnits.push(u); seen[u] = true; }
+        }
+        uniqueUnits.sort();
+        
+        var select = document.getElementById('filterUnitSisa');
+        select.innerHTML = ""; 
+        var optDef = document.createElement('option');
+        optDef.value = "";
+        optDef.textContent = "- Semua Unit Kerja -";
+        select.appendChild(optDef);
+        
+        for(var j=0; j<uniqueUnits.length; j++) {
+            var opt = document.createElement('option');
+            opt.value = uniqueUnits[j];
+            opt.textContent = uniqueUnits[j];
+            select.appendChild(opt);
+        }
+    }
+
+    /* RENDER TABEL (DENGAN WARNA BARU) */
+    function renderTabelDOM(unitFilter) {
+        if ($.fn.DataTable.isDataTable('#tabelSisa')) { $('#tabelSisa').DataTable().destroy(); }
+
+        var tbody = document.getElementById('bodyTabelSisa');
+        tbody.innerHTML = ""; 
+        
+        var data = GLOBAL_SISA_DATA || [];
+        var fUnit = unitFilter ? String(unitFilter).toLowerCase().trim() : "";
+        var count = 0;
+        var fragment = document.createDocumentFragment();
+
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i];
+            if (!row) continue;
+            var rowUnit = String(row[0] || "").toLowerCase(); 
+
+            if (fUnit === "" || rowUnit === fUnit) {
+                count++;
+                var tr = document.createElement('tr');
+                
+                for (var c = 1; c <= 12; c++) {
+                    var val = (row[c] === undefined || row[c] === null) ? "" : String(row[c]);
+                    
+                    var td = document.createElement('td');
+                    td.className = "align-middle text-center text-nowrap";
+                    
+                    // A. FREEZE NAMA
+                    if (c === 1) {
+                        td.classList.add('col-sticky-left');
+                        td.classList.add('text-left');
+                        td.classList.remove('text-center');
+                        td.style.fontWeight = "600";
+                    }
+
+                    // B. WARNA KOLOM (GANTI CLASS JADI LIGHT)
+                    if (c === 8) td.classList.add("bg-orange-light"); // Kolom I
+                    if (c === 12) td.classList.add("bg-green-light"); // Kolom M
+
+                    // C. ISI KONTEN
+                    if (val == "0" || val === "0.00") {
+                        td.textContent = "-";
+                    } else {
+                         var numVal = parseFloat(val.replace(",","."));
+                         if (!isNaN(numVal) && numVal < 0) {
+                             var span = document.createElement('span');
+                             span.className = "val-minus";
+                             span.textContent = val;
+                             td.appendChild(span);
+                         } else {
+                             td.textContent = val; 
+                         }
+                    }
+                    tr.appendChild(td);
+                }
+                fragment.appendChild(tr);
+            }
+        }
+
+        if (count === 0) {
+            renderMessageDOM("empty");
+        } else {
+            tbody.appendChild(fragment);
+        }
+        
+        $('#tabelSisa').DataTable({
+            "ordering": false, 
+            "pageLength": 10,
+            "autoWidth": false,
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "search": "", "searchPlaceholder": "Cari nama..." },
+            "initComplete": function() {
+                 var table = $(this);
+                 if (!table.parent().hasClass('table-responsive')) {
+                     table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
+                 }
+            }
+        });
+    }
+</script>

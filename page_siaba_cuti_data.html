@@ -3,7 +3,7 @@
     <div class="row mb-2">
       <div class="col-sm-12">
         <h5 class="m-0 font-weight-bold">
-          <i class="fas fa-calendar-alt text-maroon mr-2"></i>Data Cuti Pegawai
+          <i class="fas fa-calendar-alt text-maroon mr-2"></i>Data Pengajuan Cuti
         </h5>
         <hr class="style-sultan-solid">
       </div>
@@ -48,7 +48,7 @@
                 </select>
                 
                 <select id="filterBulan" class="form-control form-control-sultan input-auto-width">
-                    <option value="">- Semua Bulan -</option>
+                    <option value="">- Bulan -</option>
                     <option value="Januari">Januari</option>
                     <option value="Februari">Februari</option>
                     <option value="Maret">Maret</option>
@@ -350,7 +350,7 @@ $(document).on('click', '.btn-verifikasi', function(e) {
 function initFilterTahun() { 
     var now = new Date();
     var curYear = now.getFullYear();
-    var h = '<option value="">- Semua Tahun -</option>';
+    var h = '<option value="">- Tahun -</option>';
     for(var i=0; i<3; i++) { 
         var t = curYear - i; 
         h += `<option value="${t}">${t}</option>`; 
@@ -373,13 +373,23 @@ function populateUnitFilter() {
 
 /* 3. UPDATE FUNGSI UTAMA: APPLY FILTER */
 function applyFilterCuti() {
-    // Tampilkan Loading di Tabel
-    $('#bodyTabelCuti').html('<tr><td colspan="15" class="text-center py-5"><div class="spinner-border text-maroon" role="status"></div><p class="mt-2 text-muted">Mengambil data...</p></td></tr>');
+    // Tampilkan Loading di Tabel (Gaya Sultan Golden Standard)
+    var htmlLoading = `
+        <tr>
+            <td colspan="15" class="p-0 border-0">
+                <div class="sultan-loading-container">
+                    <div class="spinner-border sultan-spinner" role="status"></div>
+                    <h6 class="text-muted font-weight-bold">Sedang memuat data...</h6>
+                </div>
+            </td>
+        </tr>`;
+    
+    $('#bodyTabelCuti').html(htmlLoading);
     
     // Ambil Nilai Filter
     var thn = $('#filterTahun').val();
     var bln = $('#filterBulan').val();
-    var unt = $('#filterUnit').val(); // <-- AMBIL NILAI UNIT
+    var unt = $('#filterUnit').val();
 
     // Panggil Backend dengan 3 Parameter
     google.script.run.withSuccessHandler(renderTabelCuti)
