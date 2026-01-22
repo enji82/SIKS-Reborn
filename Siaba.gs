@@ -3222,3 +3222,343 @@ function getSisaCutiData() {
     return JSON.stringify({ error: "Error Server: " + e.toString() });
   }
 }
+
+/* ======================================================================
+   MODUL: REKAP CUTI (MULTI-SHEET)
+   ====================================================================== */
+
+function getRekapYears() {
+  var ID_MASTER = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo"; // ID Spreadsheet Master
+  try {
+    var ss = SpreadsheetApp.openById(ID_MASTER);
+    var sheet = ss.getSheetByName("Jumlah Cuti");
+    if (!sheet) return [];
+    
+    // Ambil Kolom A (Tahun) & B (Sheet ID/Nama Tab) mulai baris 2
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+    
+    var data = sheet.getRange(2, 1, lastRow - 1, 2).getDisplayValues();
+    // Filter baris kosong
+    var result = data.filter(function(row) { return row[0] !== "" && row[1] !== ""; });
+    
+    return result.map(function(r) { return { tahun: r[0], id: r[1] }; });
+  } catch (e) { return []; }
+}
+
+function getRekapData(targetInput) {
+  var ID_MASTER = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var ss, sheet;
+
+  // 1. Coba cari sebagai Nama Tab di dalam File Master dulu
+  try {
+    ss = SpreadsheetApp.openById(ID_MASTER);
+    sheet = ss.getSheetByName(targetInput);
+  } catch(e) {}
+
+  // 2. Jika tidak ketemu, anggap input adalah ID Spreadsheet terpisah
+  if (!sheet) {
+      try {
+        ss = SpreadsheetApp.openById(targetInput);
+        sheet = ss.getSheets()[0]; // Ambil sheet pertama
+      } catch(e) {
+        return JSON.stringify({ error: "Gagal membuka data. Pastikan Nama Tab atau ID File benar." });
+      }
+  }
+  
+  try {
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 3) return JSON.stringify({ h1:[], h2:[], data: [] });
+    
+    // Ambil Data A sampai O (15 Kolom)
+    // Baris 1: Header Utama, Baris 2: Sub Header, Baris 3+: Data
+    var range = sheet.getRange(1, 1, lastRow, 15);
+    var rawValues = range.getDisplayValues();
+    
+    var h1 = rawValues[0];
+    var h2 = rawValues[1];
+    var dataRows = rawValues.slice(2);
+    
+    return JSON.stringify({ h1: h1, h2: h2, data: dataRows });
+  } catch (e) {
+    return JSON.stringify({ error: "Error: " + e.toString() });
+  }
+}
+
+/* ======================================================================
+   MODUL: UNGGAH SURAT CUTI (UPDATE LOGIC)
+   ====================================================================== */
+
+function getUnitOptionsUnggah() {
+  var ID_SS = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS);
+    var sheet = ss.getSheetByName("Form Cuti"); // Spesifik Sheet Form Cuti
+    if (!sheet) return [];
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+    
+    // Ambil Kolom A (Unit Kerja) dari Form Cuti
+    var data = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+    var unique = {};
+    var result = [];
+    
+    for (var i = 0; i < data.length; i++) {
+      var unit = String(data[i][0]).trim();
+      if (unit && !unique[unit]) {
+        unique[unit] = true;
+        result.push(unit);
+      }
+    }
+    
+    result.sort();
+    return result;
+  } catch (e) {
+    return [];
+  }
+}
+
+function getDaftarUnggahCuti(tahun, bulan, unit, status) {
+  var ID_SS = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var SHEET_NAME = "Form Cuti";
+  
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) return JSON.stringify([]);
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return JSON.stringify([]);
+    
+    // Ambil Data A s.d AX (Index 0 s.d 49)
+    var data = sheet.getRange(2, 1, lastRow - 1, 50).getDisplayValues();
+    var result = [];
+
+    // Filter Helper
+    var fTahun  = (tahun && String(tahun).trim() !== "") ? String(tahun).trim() : null;
+    var fBulan  = (bulan && String(bulan).trim() !== "") ? String(bulan).trim() : null;
+    var fUnit   = (unit && String(unit).trim() !== "" && unit !== "SEMUA") ? String(unit).trim() : null;
+    var fStatus = (status && String(status).trim() !== "" && status !== "SEMUA") ? String(status).trim() : null;
+    var arrBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+    // --- HELPER: Parse Segala Jenis Tanggal ke Timestamp ---
+    // Menerima format: "12 Januari 2026", "22-01-2026 14:00:00", atau "2026-01-01"
+    function parseToTs(strDate) {
+      if (!strDate || strDate === "") return 0;
+      strDate = String(strDate).trim();
+
+      // 1. Cek Format System Timestamp (dd-MM-yyyy HH:mm:ss) -> Kolom AR, AT, AV
+      if (strDate.indexOf(":") > -1 && strDate.indexOf("-") > -1 && strDate.length > 10) {
+         // Contoh: 22-01-2026 14:30:15
+         var parts = strDate.split(" ");
+         var dPart = parts[0].split("-");
+         var tPart = parts[1].split(":");
+         return new Date(dPart[2], dPart[1]-1, dPart[0], tPart[0], tPart[1], tPart[2]).getTime();
+      }
+
+      // 2. Cek Format Teks Indonesia (dd MMMM yyyy) -> Kolom E
+      if (strDate.indexOf(" ") > -1) {
+         var p = strDate.split(" ");
+         if (p.length >= 3) {
+             var thn = 0, bln = 0, tgl = 0;
+             // Cari Tahun (4 digit)
+             for(var i=0; i<p.length; i++) {
+                 if(!isNaN(p[i]) && p[i].length === 4) thn = parseInt(p[i]);
+                 else if(arrBulanIndo.indexOf(p[i]) > -1) bln = arrBulanIndo.indexOf(p[i]);
+                 else if(!isNaN(p[i]) && p[i].length <= 2) tgl = parseInt(p[i]);
+             }
+             if (thn > 0) return new Date(thn, bln, tgl).getTime();
+         }
+      }
+
+      // 3. Fallback ke Date Parsing standar
+      var std = new Date(strDate).getTime();
+      return isNaN(std) ? 0 : std;
+    }
+
+    for (var i = 0; i < data.length; i++) {
+        var row = data[i];
+        
+        // Validasi Dasar
+        if (!row[1]) continue; 
+        if (String(row[10]).trim().toLowerCase() !== "disetujui") continue;
+
+        // --- FILTER ---
+        var rawTgl = String(row[4]).trim(); // Tgl Mulai (Col E)
+        var rTahun = "", rBulan = "";
+        
+        // Ekstrak Tahun/Bulan dari Tgl Mulai untuk Filter
+        if (rawTgl.indexOf(" ") > -1) {
+             var p = rawTgl.split(" ");
+             if (p.length >= 3) {
+                 for(var x=0; x<p.length; x++) {
+                     if(!isNaN(p[x]) && p[x].length === 4) rTahun = p[x];
+                     if(arrBulanIndo.indexOf(p[x]) > -1) rBulan = p[x];
+                 }
+             }
+        }
+        
+        if (fTahun && rTahun !== fTahun) continue;
+        if (fBulan && rBulan !== fBulan) continue;
+        if (fUnit && String(row[0]).trim() !== fUnit) continue;
+        
+        var stUnggah = String(row[42]).trim(); 
+        if (fStatus) {
+            if (fStatus === "Belum" && stUnggah !== "") continue;
+            if (fStatus !== "Belum" && stUnggah !== fStatus) continue;
+        }
+
+        // --- HITUNG LAST ACTIVITY ---
+        // Kita cari waktu paling maksimum dari 4 kejadian:
+        var tsMulai  = parseToTs(row[4]);  // E (Tanggal Mulai Cuti)
+        var tsUnggah = parseToTs(row[43]); // AR (Tanggal Upload)
+        var tsEdit   = parseToTs(row[45]); // AT (Tanggal Edit)
+        var tsVerif  = parseToTs(row[47]); // AV (Tanggal Verif)
+
+        // Ambil nilai terbesar (terbaru)
+        var lastActivityTs = Math.max(tsMulai, tsUnggah, tsEdit, tsVerif);
+
+        result.push({
+            rowBaris: i + 2,
+            unit: row[0],
+            nama: row[1],
+            nip: row[2],
+            jenis: row[3],
+            tglMulai: row[4],
+            tglSelesai: row[5],
+            jumlah: row[6],
+            
+            fileUrl: row[41],      
+            statusUnggah: row[42], 
+            
+            tglUnggah: row[43],    
+            userUnggah: row[44],   
+            tglEdit: row[45],      
+            userEdit: row[46],     
+            tglVerif: row[47],     
+            verifikator: row[48],  
+            ket: row[49],
+            
+            // Simpan timestamp untuk sorting
+            lastActivity: lastActivityTs
+        });
+    }
+
+    // --- SORTING FINAL: Last Activity Descending (Terbaru di Atas) ---
+    result.sort(function(a, b) { 
+        // Jika timestamp sama, fallback ke urutan baris (ID)
+        if (b.lastActivity === a.lastActivity) {
+            return b.rowBaris - a.rowBaris;
+        }
+        return b.lastActivity - a.lastActivity; 
+    });
+
+    return JSON.stringify(result);
+
+  } catch (e) {
+    return JSON.stringify([{ error: e.toString() }]);
+  }
+}
+
+function hapusUnggahCuti(recId, userLogin) {
+  var ID_SS = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var SHEET_NAME = "Form Cuti";
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    var row = parseInt(recId);
+    // Hapus konten kolom AP s.d AX (9 kolom)
+    sheet.getRange(row, 42, 1, 9).clearContent();
+    return "Sukses";
+  } catch (e) { throw new Error(e.message); }
+}
+
+function simpanUnggahSurat(form, fileData) {
+  var ID_SS = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var ID_FOLDER = "1uPeOU7F_mgjZVyOLSsj-3LXGdq9rmmWl"; // Folder Cuti
+  var SHEET_NAME = "Form Cuti";
+
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    var row = parseInt(form.recId);
+    
+    // Validasi Row
+    if (isNaN(row) || row < 2) throw new Error("Data tidak valid.");
+
+    var now = new Date();
+    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    var userName = form.user_login || "User Web";
+
+    // 1. PROSES FILE
+    var fileUrl = "";
+    if (fileData && fileData.data) {
+        var folder = DriveApp.getFolderById(ID_FOLDER);
+        // Format Nama File: SURAT_CUTI - NAMA - JENIS - TGL.pdf
+        var namaFile = "SURAT_CUTI - " + form.nama + " - " + form.jenis + ".pdf";
+        var blob = Utilities.newBlob(Utilities.base64Decode(fileData.data), fileData.mimeType, namaFile);
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        fileUrl = file.getUrl();
+    } else {
+        throw new Error("File wajib diunggah.");
+    }
+
+    // 2. TENTUKAN KOLOM UPDATE
+    // AP=42 (index 42 di getRange?), AQ=43...
+    // AP adalah kolom ke-42.
+    
+    // Cek apakah ini Update (Edit) atau Baru
+    var oldStatus = sheet.getRange(row, 43).getValue(); // AQ (Status)
+    var isEdit = (oldStatus !== "" && oldStatus !== null);
+
+    if (isEdit) {
+        // UPDATE MODE: Update File (AP), Status (AQ), Log Edit (AT, AU)
+        sheet.getRange(row, 42).setValue(fileUrl);      // AP
+        sheet.getRange(row, 43).setValue("Diproses");   // AQ (Reset Status)
+        sheet.getRange(row, 46).setValue(sysDateStr);   // AT (Tgl Edit)
+        sheet.getRange(row, 47).setValue(userName);     // AU (User Edit)
+        // Kosongkan Verif
+        sheet.getRange(row, 48).setValue("");           // AV
+        sheet.getRange(row, 49).setValue("");           // AW
+    } else {
+        // NEW MODE: Update File (AP), Status (AQ), Log Unggah (AR, AS)
+        sheet.getRange(row, 42).setValue(fileUrl);      // AP
+        sheet.getRange(row, 43).setValue("Diproses");   // AQ
+        sheet.getRange(row, 44).setValue(sysDateStr);   // AR (Tgl Unggah)
+        sheet.getRange(row, 45).setValue(userName);     // AS (User Unggah)
+    }
+
+    return "Sukses";
+
+  } catch (e) {
+    throw new Error("Gagal Unggah: " + e.message);
+  }
+}
+
+function verifikasiUnggahSurat(form) {
+  var ID_SS = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var SHEET_NAME = "Form Cuti";
+
+  try {
+    var ss = SpreadsheetApp.openById(ID_SS);
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    var row = parseInt(form.recId);
+
+    var now = new Date();
+    var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+
+    // Update Status (AQ / Col 43)
+    sheet.getRange(row, 43).setValue(form.status);
+    
+    // Update Verif Log (AV / 48, AW / 49, AX / 50)
+    sheet.getRange(row, 48).setValue(sysDateStr);      // AV
+    sheet.getRange(row, 49).setValue(form.user_verif); // AW
+    sheet.getRange(row, 50).setValue(form.ket);        // AX (Keterangan)
+
+    return "Sukses";
+  } catch (e) {
+    throw new Error("Gagal Verifikasi: " + e.message);
+  }
+}

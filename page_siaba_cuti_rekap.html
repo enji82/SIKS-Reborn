@@ -1,168 +1,357 @@
-<header>
-  <h2>CEK UNGGAHAN FORMULIR PERMINTAAN DAN PEMBERIAN CUTI</h2>
-</header>
-
-<div class="filter-container">
-  <div class="filter-group">
-    <label for="filterTahunCekCuti">Tahun:</label>
-    <select id="filterTahunCekCuti"></select>
-  </div>
-  <div class="filter-group">
-    <label for="filterBulanCekCuti">Bulan:</label>
-    <select id="filterBulanCekCuti"></select>
-  </div>
-  <div class="filter-group">
-    <label for="filterUnitCekCuti">Unit Kerja:</label>
-    <select id="filterUnitCekCuti"></select>
-  </div>
-  
-  <div class="filter-group" style="margin-left: auto;">
-    <label for="searchCekCuti" class="search-icon-label"><i class="fas fa-search"></i></label>
-    <input type="search" id="searchCekCuti" class="search-input" placeholder="Cari Nama/NIP...">
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-list-alt text-maroon mr-2"></i>Rekap Jumlah Cuti
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
   </div>
 </div>
 
-<main class="table-view-container">
-  
-  <div id="tableWrapperCekCuti" style="display:flex; position: relative;"> 
-    
-    <div id="tableOverlayLoaderCekCuti" style="display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: center; flex-direction: column; border-radius: 8px; backdrop-filter: blur(2px);">
-        <div class="spinner-container">
-            <div class="spinner-bar" style="background-color: #e74c3c;"></div>
-            <div class="spinner-bar" style="background-color: #2ecc71;"></div>
-            <div class="spinner-bar" style="background-color: #f1c40f;"></div>
-            <div class="spinner-bar" style="background-color: #3498db;"></div>
-        </div>
-        <p style="margin-top: 15px; color: white; font-weight: bold; letter-spacing: 1px;">Memuat Data...</p>
-    </div>
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
 
-    <div class="table-container">
-      <table id="cekCutiTable" class="data-table freeze-pane-table">
-        <thead>
-          <tr>
-            <th>No.</th>
-            <th>Nama ASN</th> <th>NIP</th>      <th>Jenis Cuti</th> <th>Tgl Mulai</th>  <th>Tgl Selesai</th><th>Hari</th>       <th>Formulir</th>   <th>Status</th>     <th>Keterangan</th> <th>Aksi</th>       
-            <th>Tgl Pengajuan</th> <th>Update</th>     </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top">
+                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
+                  <li class="mb-1">Halaman ini merupakan rekapitulasi cuti yang sudah diambil.</li>
+                  <li>Pilih <b>Tahun</b> lalu klik tombol <b>Cari</b> (ikon kaca pembesar) untuk memuat data.</li>
+                  <li>CT: Cuti Tahunan, CS: Cuti Sakit, CAP: Cuti Alasan Penting, CM: Cuti Melahirkan, CB: Cuti Besar, CLTN: Cuti di Luar Tanggunan Negara.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap">
+                
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="processSelectedYear()" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterTahun" class="form-control form-control-sultan form-control-auto" style="min-width: 100px;">
+                    <option value="">Tahun...</option>
+                </select>
+
+                <select id="filterUnit" class="form-control form-control-sultan form-control-auto" style="min-width: 250px;" disabled>
+                    <option value="">- Tunggu Data -</option>
+                </select>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="processSelectedYear()" title="Cari Data">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+
+            </div>
+        </div>
+
+        <div class="card-sultan">
+            <div class="card-body p-0">
+              
+              <style>
+                /* --- STYLE TABEL (SULTAN COMPACT) --- */
+                table.dataTable tbody td, table.dataTable tbody th {
+                    vertical-align: middle !important;
+                    /*padding: 6px 10px !important;  */
+                    font-size: 13px;
+                }
+
+                /* --- FREEZE COLUMN FIXED (SOLID WHITE) --- */
+                .col-sticky-left {
+                    position: sticky;
+                    left: 0;
+                    z-index: 5;
+                    border-right: 2px solid #dee2e6 !important;
+                    background-color: #ffffff !important; /* Wajib Solid White agar tidak transparan */
+                }
+                
+                /* Header Sticky: Background Dark */
+                thead .col-sticky-left {
+                    z-index: 10;
+                    background-color: #343a40 !important; 
+                    color: white;
+                }
+                
+                /* Hover Row: Ubah warna freeze column juga saat dihover */
+                .table-hover tbody tr:hover td {
+                    background-color: #fff8f8 !important; /* Efek hover kemerahan tipis khas Sultan */
+                }
+                /* Pastikan kolom freeze juga ikut berubah warnanya */
+                .table-hover tbody tr:hover .col-sticky-left {
+                    background-color: #fff8f8 !important;
+                }
+
+                /* Header Utama */
+                .th-main {
+                    background-color: #343a40; 
+                    color: white;
+                    text-transform: uppercase;
+                    border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+                    padding-top: 4px !important;    
+                    padding-bottom: 4px !important;
+                }
+                
+                /* Sub Header */
+                .th-sub {
+                    background-color: #001f3f; /* Navy */
+                    color: white;
+                    font-size: 11px;
+                    font-weight: normal;
+                    padding-top: 4px !important;    
+                    padding-bottom: 4px !important;
+                }
+              </style>
+
+              <div class="table-responsive">
+                  <table id="tabelRekap" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100" style="min-width: 1400px;">
+                    <thead id="headTabelRekap">
+                       </thead>
+                    <tbody id="bodyTabelRekap"></tbody>
+                  </table>
+              </div>
+            </div>
+        </div>
+
+      </div>
     </div>
   </div>
-</main>
+</section>
 
-<style>
-  /* --- LAYOUT UTAMA --- */
-  #main-content { overflow-y: hidden !important; }
-  
-  main.table-view-container { 
-      flex-grow: 1 !important; 
-      min-height: 0 !important; 
-      display: flex !important; 
-      flex-direction: column !important; 
-  }
-  
-  #tableWrapperCekCuti { 
-      flex-grow: 1 !important; 
-      min-height: 0 !important; 
-      display: flex !important; 
-      flex-direction: column !important; 
-      margin-bottom: 0; 
-  }
-  
-  #tableWrapperCekCuti .table-container { 
-      flex-grow: 1 !important; 
-      overflow: auto !important; 
-      border-radius: 10px; 
-      border-bottom: none; 
-  }
-  #tableWrapperCekCuti .table-container::-webkit-scrollbar { display: none !important; }
+<script>
+    var GLOBAL_YEAR_MAP = [];
+    var GLOBAL_REKAP_DATA = []; 
 
-  /* --- TABEL --- */
-  #cekCutiTable { 
-      border-collapse: separate; 
-      border-spacing: 0; 
-      width: 100%;
-  }
+    $(document).ready(function() {
+        renderMessage("loading");
+        initYears(); 
+        
+        // Listener Filter Unit (Client Side)
+        $('#filterUnit').change(function() {
+            renderTableBody($(this).val());
+        });
+        
+        // Note: Filter Tahun tidak auto-load, harus klik tombol Cari (btnCari)
+    });
 
-  /* Style Dasar */
-  #cekCutiTable th, #cekCutiTable td { 
-      padding: 8px 12px; 
-      vertical-align: middle; 
-      border-bottom: 1px solid rgba(255,255,255,0.1); 
-      border-right: 1px solid rgba(255,255,255,0.1); 
-      font-size: 13px; 
-      white-space: nowrap; 
-      text-align: center; 
-  }
+    function initYears() {
+        google.script.run.withSuccessHandler(function(years) {
+            GLOBAL_YEAR_MAP = years;
+            var select = document.getElementById('filterTahun');
+            select.innerHTML = "";
+            
+            if (!years || years.length === 0) {
+                var opt = document.createElement('option');
+                opt.text = "Kosong";
+                select.appendChild(opt);
+                renderMessage("error", "Konfigurasi tahun tidak ditemukan.");
+                return;
+            }
 
-  /* --- HEADER FREEZE --- */
-  #cekCutiTable thead th { 
-      position: sticky; 
-      top: 0; 
-      z-index: 5; 
-      background-color: #101E26; 
-      border-bottom: 2px solid rgba(0, 195, 255, 0.5); 
-  }
+            var currentYear = new Date().getFullYear().toString();
+            var found = false;
 
-  /* --- KOLOM FREEZE (BODY) --- */
-  /* Kolom 1: No */
-  #cekCutiTable tbody td:nth-child(1) { 
-      position: sticky; left: 0; z-index: 3; 
-      background-color: #1c2e3a; 
-  }
-  /* Kolom 2: Nama ASN */
-  #cekCutiTable tbody td:nth-child(2) { 
-      position: sticky; left: 50px; z-index: 3; 
-      background-color: #1c2e3a; 
-      text-align: left !important; 
-  }
+            years.forEach(function(y) {
+                var opt = document.createElement('option');
+                opt.value = y.id; 
+                opt.text = y.tahun;
+                if (y.tahun == currentYear) { opt.selected = true; found = true; }
+                select.appendChild(opt);
+            });
+            
+            // Default pilih paling atas jika tahun ini tidak ketemu
+            if (!found && years.length > 0) select.selectedIndex = 0;
 
-  /* --- SUDUT MATI (HEADER) --- */
-  #cekCutiTable thead th:nth-child(1) { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 7 !important; background-color: #101E26 !important; }
-  #cekCutiTable thead th:nth-child(2) { position: sticky !important; left: 50px !important; top: 0 !important; z-index: 7 !important; background-color: #101E26 !important; }
+            // Auto Load Pertama Kali (Default Tahun Ini)
+            processSelectedYear();
 
-  /* --- PENGATURAN KOLOM --- */
-  
-  /* Rata Kiri */
-  #cekCutiTable tbody td:nth-child(9), /* NIP */
-  #cekCutiTable tbody td:nth-child(10) /* Keterangan */
-  {
-      text-align: left; 
-  }
-  
-  /* Wrap Text Keterangan */
-  #cekCutiTable td:nth-child(10) {
-      white-space: pre-wrap; 
-      min-width: 150px;
-      max-width: 250px;
-      text-align: left;
-  }
+        }).getRekapYears();
+    }
 
-  /* Lebar Kolom Aksi */
-  #cekCutiTable th:nth-child(11), 
-  #cekCutiTable td:nth-child(11) { 
-      min-width: 180px; 
-  }
+    function processSelectedYear() {
+        var sheetId = $('#filterTahun').val();
+        if (!sheetId) {
+             Swal.fire('Peringatan', 'Silakan pilih tahun terlebih dahulu.', 'warning');
+             return;
+        }
 
-  /* --- STATUS --- */
-  .status-ok { color: #2ecc71; font-weight: bold; }
-  .status-tolak { color: #e74c3c; font-weight: bold; }
-  .status-proses { color: #f1c40f; font-style: italic; }
-  .status-revisi { color: #e67e22; font-weight: bold; }
+        if ($.fn.DataTable.isDataTable('#tabelRekap')) {
+            $('#tabelRekap').DataTable().destroy();
+        }
 
-  /* --- TOMBOL --- */
-  /* Tidak perlu mendefinisikan .action-btn dsb disini lagi */
-  /* Cukup layout container tombolnya saja */
-  .action-buttons { 
-      display: flex; 
-      gap: 5px; 
-      justify-content: center; 
-  }
+        renderMessage("loading");
+        $('#filterUnit').prop('disabled', true).html('<option>Memuat...</option>');
 
-  /* Hover Effect */
-  #cekCutiTable tbody tr:hover td { background-color: rgba(255, 255, 255, 0.08); }
-  #cekCutiTable tbody tr:hover td:nth-child(1), 
-  #cekCutiTable tbody tr:hover td:nth-child(2) { 
-      background-color: #2a4152; 
-  }
-</style>
+        google.script.run.withSuccessHandler(function(jsonStr) {
+            var res = JSON.parse(jsonStr);
+            if (res.error) { renderMessage("error", res.error); return; }
+
+            GLOBAL_REKAP_DATA = res.data;
+            renderFullHeader(res.h1, res.h2);
+            populateFilterUnit(res.data);
+            renderTableBody(""); 
+
+        }).withFailureHandler(function(e) {
+            renderMessage("error", "Gagal koneksi: " + e);
+        }).getRekapData(sheetId);
+    }
+
+    function renderFullHeader(h1, h2) {
+        var thead = document.getElementById('headTabelRekap');
+        thead.innerHTML = "";
+
+        // ROW 1
+        var tr1 = document.createElement('tr');
+        
+        // Col B (Nama) - Sticky
+        var thB = createTh(h1[1] || "Nama ASN", 2, 1, "th-main col-sticky-left");
+        thB.style.minWidth = "220px";
+        tr1.appendChild(thB);
+
+        // Col C (NIP)
+        var thC = createTh(h1[2] || "NIP", 2, 1, "th-main text-center");
+        thC.style.minWidth = "50px";
+        tr1.appendChild(thC);
+
+        // Col D-O (Group)
+        for (var i = 3; i <= 14; i += 2) {
+            var title = h1[i] || "";
+            var thGroup = createTh(title, 1, 2, "th-main text-center");
+            tr1.appendChild(thGroup);
+        }
+        thead.appendChild(tr1);
+
+        // ROW 2
+        var tr2 = document.createElement('tr');
+        for (var j = 3; j <= 14; j++) {
+            var subTitle = h2[j] || "-";
+            var thSub = createTh(subTitle, 1, 1, "th-sub text-center");
+            tr2.appendChild(thSub);
+        }
+        thead.appendChild(tr2);
+    }
+
+    function createTh(text, rowSpan, colSpan, className) {
+        var th = document.createElement('th');
+        th.className = "align-middle " + className;
+        if (rowSpan > 1) th.rowSpan = rowSpan;
+        if (colSpan > 1) th.colSpan = colSpan;
+        th.textContent = text;
+        return th;
+    }
+
+    function renderTableBody(filterUnit) {
+        if ($.fn.DataTable.isDataTable('#tabelRekap')) {
+            $('#tabelRekap').DataTable().destroy();
+        }
+
+        var tbody = document.getElementById('bodyTabelRekap');
+        tbody.innerHTML = "";
+        
+        var data = GLOBAL_REKAP_DATA;
+        var fUnit = filterUnit ? String(filterUnit).toLowerCase().trim() : "";
+        var count = 0;
+        var fragment = document.createDocumentFragment();
+
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i]; if (!row) continue;
+            var rowUnit = String(row[0] || "").toLowerCase();
+
+            if (fUnit === "" || rowUnit === fUnit) {
+                count++;
+                var tr = document.createElement('tr');
+
+                // 1. NAMA (Freeze) - Background Putih Solid (dari CSS)
+                var tdNama = document.createElement('td');
+                tdNama.className = "col-sticky-left text-left text-nowrap";
+                tdNama.style.fontWeight = "600";
+                tdNama.textContent = row[1] || "";
+                tr.appendChild(tdNama);
+
+                // 2. NIP
+                var tdNip = document.createElement('td');
+                tdNip.className = "text-center text-nowrap";
+                tdNip.textContent = row[2] || ""; 
+                tr.appendChild(tdNip);
+
+                // 3. DATA ANGKA
+                for (var c = 3; c <= 14; c++) {
+                    var td = document.createElement('td');
+                    td.className = "text-center";
+                    var val = (row[c] === undefined || row[c] === null) ? "" : String(row[c]);
+                    if (val == "0" || val === "0.00") td.textContent = "-";
+                    else td.textContent = val;
+                    tr.appendChild(td);
+                }
+                fragment.appendChild(tr);
+            }
+        }
+
+        if (count === 0) {
+            renderMessage("empty");
+        } else {
+            tbody.appendChild(fragment);
+            
+            $('#tabelRekap').DataTable({
+                "ordering": false,
+                "pageLength": 10,
+                "autoWidth": false,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json",
+                    "search": "",
+                    "searchPlaceholder": "Cari Nama/NIP..."
+                },
+                "initComplete": function() {
+                    var table = $(this);
+                    if (!table.parent().hasClass('table-responsive')) {
+                        table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
+                    }
+                }
+            });
+        }
+    }
+
+    function populateFilterUnit(data) {
+        var unique = []; var seen = {};
+        data.forEach(function(row) {
+            var unit = String(row[0] || "").trim();
+            if (unit && !seen[unit]) { unique.push(unit); seen[unit] = true; }
+        });
+        unique.sort();
+        var select = document.getElementById('filterUnit');
+        select.innerHTML = '<option value="">- Semua Unit Kerja -</option>';
+        unique.forEach(function(u) {
+            var opt = document.createElement('option'); opt.value = u; opt.text = u; select.appendChild(opt);
+        });
+        $('#filterUnit').prop('disabled', false);
+    }
+
+    function renderMessage(type, msg) {
+        var tbody = document.getElementById('bodyTabelRekap');
+        tbody.innerHTML = "";
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.colSpan = 14; td.className = "p-0 border-0";
+
+        if (type === "loading") {
+             td.innerHTML = '<div class="sultan-loading-container"><div class="spinner-border sultan-spinner" role="status"></div><h6 class="text-muted font-weight-bold">Mengambil data rekap...</h6></div>';
+        } else if (type === "empty") {
+             td.innerHTML = '<div class="text-center p-4"><i class="fas fa-search fa-3x text-gray-300 mb-3"></i><p class="text-muted">Tidak ada data ditemukan.</p></div>';
+        } else if (type === "error") {
+             td.className = "text-center text-danger p-4"; td.textContent = msg;
+        }
+        tr.appendChild(td); tbody.appendChild(tr);
+    }
+</script>
