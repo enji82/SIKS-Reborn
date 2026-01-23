@@ -36,96 +36,78 @@ function getSiabaFilters() {
 }
 
 function getSiabaPresensiHarian(filterTahun, filterBulan, filterUnit) {
-  const ID_DB = "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA";
+  const ID_DB = "1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA"; 
   
   try {
-    // 1. LOOKUP
-    let ssLookup;
-    try { ssLookup = SpreadsheetApp.openById(ID_DB); } 
-    catch(e) { return JSON.stringify({ error: "Gagal buka Database Lookup." }); }
-
-    const sheetLookup = ssLookup.getSheetByName("Lookup Siaba");
-    if (!sheetLookup) return JSON.stringify({ error: "Sheet Lookup Siaba hilang." });
-
-    const dataLookup = sheetLookup.getDataRange().getDisplayValues();
-    let targetId = "", customSheet = "";
+    // 1. CARI FILE TARGET
+    var ssLookup = SpreadsheetApp.openById(ID_DB);
+    var sheetLookup = ssLookup.getSheetByName("Lookup Siaba");
+    var dataLookup = sheetLookup.getDataRange().getDisplayValues();
+    var targetId = "", customSheet = "";
     
-    for (let i = 1; i < dataLookup.length; i++) {
+    for (var i = 1; i < dataLookup.length; i++) {
         if (dataLookup[i][0] == filterTahun && dataLookup[i][1] == filterBulan) {
-            targetId = dataLookup[i][2]; 
+            targetId = dataLookup[i][2];
             customSheet = dataLookup[i][3];     
             break; 
         }
     }
-
-    if (!targetId) return JSON.stringify({ error: `Data ${filterBulan} ${filterTahun} tidak ada di Lookup.` });
-
-    // 2. TARGET FILE
-    let ssTarget;
-    try { ssTarget = SpreadsheetApp.openById(targetId); }
-    catch(e) { return JSON.stringify({ error: `Gagal buka file ID: ...${targetId.substr(-5)}` }); }
-
-    // 3. TARGET SHEET
-    let sheetTarget = null;
-    let usedName = "";
-
-    if (customSheet) { sheetTarget = ssTarget.getSheetByName(customSheet); usedName = customSheet; }
-    if (!sheetTarget) { sheetTarget = ssTarget.getSheetByName("Data Siaba"); usedName = "Data Siaba"; }
-    if (!sheetTarget) { 
-        const all = ssTarget.getSheets(); 
-        if (all.length > 0) { sheetTarget = all[0]; usedName = sheetTarget.getName(); }
-    }
-
-    if (!sheetTarget) return JSON.stringify({ error: "File target kosong." });
-
-    // 4. GET DATA
-    const maxCol = sheetTarget.getLastColumn();
-    if (maxCol < 4) return JSON.stringify({ error: `Sheet '${usedName}' kolom < 4.` });
-
-    const allData = sheetTarget.getDataRange().getDisplayValues();
-    const headerData = allData[0].slice(3);
-
-    allData.shift(); 
     
-    let result = [];
-    
-    for (let i = 0; i < allData.length; i++) {
-        let row = allData[i];
-        if (row.length < 3) continue;
-        
-        let rowUnit = row[2]; 
-        
-        if (filterUnit === "SEMUA" || rowUnit == filterUnit) {
-            let rowData = row.slice(3, 3 + headerData.length);
-            result.push(rowData);
+    if (!targetId) return JSON.stringify({ error: "Data Periode " + filterBulan + " " + filterTahun + " belum tersedia." });
+
+    // 2. BUKA SHEET
+    var ssTarget = SpreadsheetApp.openById(targetId);
+    var sheetTarget = customSheet ? ssTarget.getSheetByName(customSheet) : ssTarget.getSheets()[0];
+    if (!sheetTarget) sheetTarget = ssTarget.getSheetByName("Data Siaba");
+
+    // 3. AMBIL DATA
+    var lastRow = sheetTarget.getLastRow();
+    var lastCol = sheetTarget.getLastColumn(); 
+    if (lastCol < 87) return JSON.stringify({ error: "Format kolom sheet tidak sesuai." });
+
+    var allData = sheetTarget.getRange(1, 1, lastRow, lastCol).getDisplayValues();
+    var headerRow = allData[0].slice(3, 87); // Header D s.d CI
+    var rawRows = allData.slice(1);
+
+    var cleanRows = [];
+    for (var i = 0; i < rawRows.length; i++) {
+        var r = rawRows[i];
+        // Filter Server Side (Hanya jika diminta spesifik, tapi biasanya SEMUA)
+        if (filterUnit === "SEMUA" || r[2] === filterUnit) {
+            cleanRows.push(r);
         }
     }
 
-    // 5. SORTING
-    if (result.length > 0) {
-        result.sort((a, b) => {
-            const getVal = (val) => val === "" ? 0 : (parseInt(val) || 0);
-            
-            if (a.length < 22 || b.length < 22) return 0;
+    // 4. SORTING BERTINGKAT (TP > TA > PLA > LA)
+    cleanRows.sort(function(a, b) {
+        var tpA = parseInt(a[5]) || 0; var tpB = parseInt(b[5]) || 0;
+        if (tpB !== tpA) return tpB - tpA; 
+        
+        var taA = parseInt(a[20]) || 0; var taB = parseInt(b[20]) || 0;
+        if (taB !== taA) return taB - taA; 
 
-            const tpA = getVal(a[2]), tpB = getVal(b[2]);
-            if (tpB !== tpA) return tpB - tpA;
-            const taA = getVal(a[17]), taB = getVal(b[17]);
-            if (taB !== taA) return taB - taA; 
-            const plaA = getVal(a[19]), plaB = getVal(b[19]);
-            if (plaB !== plaA) return plaB - plaA; 
-            const laA = getVal(a[21]), laB = getVal(b[21]);
-            return laB - laA; 
-        });
-    }
+        var plaA = parseInt(a[22]) || 0; var plaB = parseInt(b[22]) || 0;
+        if (plaB !== plaA) return plaB - plaA; 
+
+        var laA = parseInt(a[24]) || 0; var laB = parseInt(b[24]) || 0;
+        return laB - laA; 
+    });
+
+    // 5. DATA MAPPING (D-CI + UNIT HIDDEN)
+    // Kita tambahkan Unit Kerja (r[2]) di indeks terakhir array agar bisa difilter di frontend
+    var finalData = cleanRows.map(function(row) {
+        var dataD_CI = row.slice(3, 87); // Kolom D s.d CI
+        var unitMeta = row[2];           // Kolom C (Unit)
+        return dataD_CI.concat([unitMeta]); // Gabung: [D...CI, UNIT]
+    });
 
     return JSON.stringify({
-      headers: headerData,
-      rows: result
+      headers: headerRow,
+      rows: finalData
     });
 
   } catch (e) {
-    return JSON.stringify({ error: "SYSTEM ERROR: " + e.message });
+    return JSON.stringify({ error: "Error Server: " + e.message });
   }
 }
 

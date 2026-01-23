@@ -5,7 +5,7 @@
         <h5 class="m-0 font-weight-bold">
           <i class="fas fa-calendar-alt text-maroon mr-2"></i>Rekap Presensi Harian
         </h5>
-        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+        <hr class="style-sultan-solid">
       </div>
     </div>
   </div>
@@ -15,65 +15,65 @@
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-12">
-        
-        <div class="control-bar mb-3 d-flex flex-wrap align-items-center bg-white p-3 shadow-sm rounded">
-          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
-            <button type="button" class="btn btn-sm border-tegas btn-square-sultan shadow-sm" onclick="loadFilterOptions(true)" title="Reset Filter">
-              <i class="fas fa-sync-alt text-maroon"></i>
-            </button>
-            <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
-            <select id="filterTahun" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 100px;">
-              <option value="">- Tahun -</option>
-            </select>
-            <select id="filterBulan" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 130px;">
-              <option value="">- Bulan -</option>
-            </select>
-            <select id="filterUnit" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="min-width: 250px;">
-              <option value="">- Pilih Unit Kerja -</option>
-            </select>
-            <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm" onclick="cariDataPresensi()" title="Tampilkan Data">
-               <i class="fas fa-search"></i>
-            </button>
+
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            
+            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+            </div>
+
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top">
+                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
+                  <li class="mb-1">Halaman ini menampilkan rekaman presensi harian ASN pada aplikasi Siaba.</li>
+                  <li>Data yang ditampilkan tidak up to date, tetapi diperbarui pada jangka waktu tertentu.</li>
+                </ul>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table id="tabelPresensi" class="table table-hover table-premium table-sticky-first mb-0" style="width:100%;">
-                <thead class="bg-light">
-                  <tr id="headerRow">
-                    </tr>
-                </thead>
-                <tbody id="bodyRow">
-                    <tr id="msgRow">
-                        <td colspan="10" class="text-center py-5 text-muted small">
-                            <i class="fas fa-filter fa-2x mb-2 text-light-gray"></i><br>
-                            Pilih Unit Kerja & klik tombol <b>Cari</b>.
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap align-items-center">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="initFilters(true)" title="Reset Filter">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+                <select id="filterTahun" class="form-control form-control-sultan input-auto-width" style="min-width: 100px;"></select>
+                <select id="filterBulan" class="form-control form-control-sultan input-auto-width" style="min-width: 120px;">
+                    <option value="">- Bulan -</option>
+                </select>
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width" style="min-width: 250px;" disabled>
+                    <option value="">- Tunggu Data -</option>
+                </select>
+                <div class="border-left mx-2" style="height: 25px; border-color: #ccc;"></div>
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="fetchDataPresensi()" title="Muat Data">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-sultan">
+            <div class="card-body p-3">
+              
+              <table id="tabelPresensi" class="table table-bordered table-hover table-premium table-sultan-compact table-sticky mb-0 w-100">
+                <thead id="headTabel">
+                    </thead>
+                <tbody id="bodyTabel">
+                    <tr>
+                        <td class="text-center p-5" colspan="100%">
+                            <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                            <h6 class="text-muted font-weight-bold">Sedang memuat data...</h6>
                         </td>
                     </tr>
                 </tbody>
               </table>
-            </div>
-            
-            <div class="p-3 bg-light border-top small">
-                <span class="font-weight-bold text-maroon mr-2">KETERANGAN:</span>
-                
-                <span class="badge badge-danger">TP</span> Tidak Presensi &nbsp;
-                <span class="badge badge-success">H</span> Hadir &nbsp;
-                <span class="badge badge-light border">HK</span> Hari Kerja &nbsp;
-                
-                <span class="badge badge-danger">TA</span> Terlambat &nbsp;
-                <span class="badge badge-danger">PLA</span> Pulang Awal &nbsp;
-                <span class="badge badge-danger">LA</span> Lupa Absen &nbsp;
 
-                <span class="badge badge-primary">DD/DL</span> Dinas &nbsp;
-                <span class="badge badge-warning text-white">CUTI</span> (CT, CS, CM, CAP, CB) &nbsp;
-                
-                <span class="badge badge-light border text-muted">-</span> Data Kosong
             </div>
-
-          </div>
         </div>
 
       </div>
@@ -82,195 +82,224 @@
 </section>
 
 <style>
-    .btn-maroon { background-color: #800000; color: white; border: 1px solid #600000; }
-    .btn-maroon:hover { background-color: #a00000; color: white; }
-    .btn-pulse { animation: pulse-red 2s infinite; }
-    @keyframes pulse-red {
-        0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(128, 0, 0, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
+    /* 1. KOLOM 2 S.D TERAKHIR: RATA TENGAH */
+    #tabelPresensi th:not(:first-child),
+    #tabelPresensi td:not(:first-child) {
+        text-align: center !important;
+        vertical-align: middle !important;
     }
-    .text-light-gray { color: #ccc; }
-    
-    /* WARNA KHUSUS TABEL */
-    .bg-pink-sultan { background-color: #ffe6e6 !important; }
-    .bg-abu-terang { background-color: #f4f6f9 !important; color: #ced4da !important; }
-    .text-orange-sultan { color: #fd7e14 !important; font-weight: bold; }
-    .text-blue-sultan { color: #007bff !important; font-weight: bold; }
 
-    /* Sticky First Column */
-    .table-sticky-first thead th:first-child,
-    .table-sticky-first tbody td:first-child {
-        position: sticky; left: 0; background-color: #fff; z-index: 5;
-        border-right: 2px solid #dee2e6; box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    /* 2. KOLOM PERTAMA (NAMA): STICKY & RATA KIRI */
+    #tabelPresensi .col-sticky-left {
+        text-align: left !important;
+        padding-left: 15px !important;
+        position: sticky !important;
+        left: 0;
+        border-right: 2px solid #dee2e6 !important;
+        z-index: 5;
     }
-    .table-sticky-first thead th:first-child { z-index: 6; background-color: #f8f9fa; }
-    .table-premium td, .table-premium th { white-space: nowrap; padding: 6px 10px; vertical-align: middle; font-size: 13px; }
+
+    /* 3. SETTING WARNA BACKGROUND (HEADER & BODY) */
+    /* Header: Abu Gelap */
+    #tabelPresensi thead .col-sticky-left { 
+        background-color: #343a40 !important; 
+        color: #ffffff !important;
+        z-index: 6; 
+    }
+    /* Body Normal: Putih */
+    #tabelPresensi tbody .col-sticky-left { 
+        background-color: #ffffff !important; 
+    }
+
+    /* --- [FIX HOVER: DISAMAKAN WARNANYA] --- */
+    /* Tentukan satu warna hover (misal #e2e6ea) dan terapkan ke KEDUANYA */
+    
+    /* A. Hover untuk Baris Biasa */
+    #tabelPresensi.table-hover tbody tr:hover {
+        background-color: #e2e6ea !important;
+    }
+    /* B. Hover untuk Baris Biasa (memastikan sel ikut berubah) */
+    #tabelPresensi.table-hover tbody tr:hover td {
+        background-color: #e2e6ea !important;
+    }
+    /* C. Hover untuk Kolom Sticky (Menimpa warna putih) */
+    #tabelPresensi.table-hover tbody tr:hover .col-sticky-left {
+        background-color: #e2e6ea !important; 
+    }
+
+    /* 5. UTILITY WARNA & ANIMASI */
+    .bg-pink-alert { background-color: #ffe6e6 !important; color: #dc3545 !important; font-weight: bold; }
+    .bg-grey-soft  { background-color: #f8f9fa !important; color: #adb5bd !important; }
+    .text-green-soft { color: #28a745 !important; font-weight: bold; }
+    .text-blue-soft  { color: #17a2b8 !important; font-weight: bold; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .tr-animasi { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; }
 </style>
 
 <script>
-  $(document).ready(function() {
-    NotifSultan.loading("Menyiapkan Aplikasi...");
+    var GLOBAL_MASTER_DATA = []; 
+    var GLOBAL_HEADERS = [];
+    var CACHED_TH = "";
+    var CACHED_BL = "";
 
-    setTimeout(function() {
-        if ($.fn.select2) $('.filter-select').select2({ theme: 'bootstrap4' });
-        $('#filterTahun, #filterBulan, #filterUnit').on('change', function() { resetTabelUI(); });
-        loadFilterOptions(); 
-        if (typeof renderDropdown === 'function') {
-            renderDropdown("filterUnit", "UnitKerjaSiaba");
-            setTimeout(function() {
-                if ($('#filterUnit option[value="SEMUA"]').length === 0) {
-                    $('#filterUnit').prepend('<option value="SEMUA" class="font-weight-bold">-- SEMUA UNIT KERJA --</option>');
-                    $('#filterUnit').trigger('change.select2');
-                }
-            }, 1500); 
-        }
-    }, 100);
-  });
-
-  function resetTabelUI() {
-      if ($.fn.DataTable.isDataTable('#tabelPresensi')) $('#tabelPresensi').DataTable().destroy();
-      $('#headerRow').empty();
-      $('#bodyRow').html(`<tr><td colspan="10" class="text-center py-5 text-muted small"><i class="fas fa-search fa-2x mb-2 text-maroon"></i><br>Klik tombol <b>Cari</b>.</td></tr>`);
-      $('#btnCari').addClass('btn-pulse');
-  }
-
-  // --- A. LOAD FILTER ---
-  function loadFilterOptions(isRefresh = false) {
-    if(isRefresh) NotifSultan.loading("Menyegarkan Filter...");
-    google.script.run
-      .withSuccessHandler(function(response) {
-        if(isRefresh) Swal.close();
-        let data;
-        try { data = JSON.parse(response); } 
-        catch(e) { NotifSultan.alert('error', 'Parse Error', 'Gagal membaca filter.'); return; }
-        if (data.error) { NotifSultan.alert('error', 'Gagal', data.error); return; }
-
-        renderOption('#filterTahun', data.years, 'Tahun');
-        renderOption('#filterBulan', data.months, 'Bulan');
-
-        let curYear = new Date().getFullYear();
-        let curMonth = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][new Date().getMonth()];
-        if (!setSelectValue('#filterTahun', curYear) && data.years.length > 0) setSelectValue('#filterTahun', data.years[0]);
-        if (!setSelectValue('#filterBulan', curMonth) && data.months.length > 0) setSelectValue('#filterBulan', data.months[0]);
-        if(!isRefresh) Swal.close(); 
-      })
-      .withFailureHandler(function(err) {
-        if(isRefresh) Swal.close();
-        NotifSultan.alert('error', 'Koneksi Gagal', err.message);
-      })
-      .getSiabaFilters();
-  }
-
-  function renderOption(el, arr, label) {
-    let html = `<option value="">- ${label} -</option>`;
-    arr.forEach(x => html += `<option value="${x}">${x}</option>`);
-    $(el).html(html);
-  }
-
-  function setSelectValue(el, val) {
-    let found = false;
-    $(el + ' option').each(function() {
-      if ($(this).text().trim().toLowerCase() === String(val).toLowerCase()) {
-          $(this).prop('selected', true); found = true;
-      }
+    $(document).ready(function() {
+        initFilters();
     });
-    if(found) $(el).val($(el + ' option:selected').val()).trigger('change.select2');
-    return found;
-  }
 
-  // --- B. CARI DATA ---
-  function cariDataPresensi() {
-    const thn = $('#filterTahun').val();
-    const bln = $('#filterBulan').val();
-    const unit = $('#filterUnit').val();
+    function initFilters(isRefresh = false) {
+        if(isRefresh) Swal.fire({title: 'Memuat...', didOpen: () => { Swal.showLoading() }});
 
-    if (!thn || !bln || !unit) {
-        NotifSultan.alert('warning', 'Filter Kurang', 'Pilih <b>Unit Kerja</b>, Tahun, dan Bulan.');
-        return;
+        google.script.run.withSuccessHandler(function(res) {
+            if(isRefresh) Swal.close();
+            var data = JSON.parse(res);
+            
+            var elThn = $('#filterTahun').empty().append('<option value="">- Tahun -</option>');
+            data.years.forEach(y => elThn.append(`<option value="${y}">${y}</option>`));
+            
+            var elBln = $('#filterBulan').empty().append('<option value="">- Bulan -</option>');
+            data.months.forEach(m => elBln.append(`<option value="${m}">${m}</option>`));
+
+            var now = new Date();
+            var curYear = now.getFullYear().toString();
+            var mNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            var curMonth = mNames[now.getMonth()];
+
+            if ($("#filterTahun option[value='"+curYear+"']").length > 0) $('#filterTahun').val(curYear);
+            if ($("#filterBulan option[value='"+curMonth+"']").length > 0) $('#filterBulan').val(curMonth);
+
+            loadDropdownUnit();
+            setTimeout(fetchDataPresensi, 500);
+
+        }).getSiabaFilters();
     }
 
-    $('#btnCari').removeClass('btn-pulse');
-    NotifSultan.loading("Mengambil Data...");
-    if ($.fn.DataTable.isDataTable('#tabelPresensi')) $('#tabelPresensi').DataTable().destroy();
-    $('#bodyRow').empty();
+    function loadDropdownUnit() {
+        google.script.run.withSuccessHandler(function(units) {
+            var el = $('#filterUnit');
+            el.empty().append('<option value="SEMUA">- Semua Unit Kerja -</option>');
+            units.forEach(u => el.append(`<option value="${u}">${u}</option>`));
+            el.prop('disabled', false);
+        }).getUnitOptions();
+    }
 
-    google.script.run
-      .withSuccessHandler(function(response) {
-        Swal.close();
-        let data;
-        try { data = JSON.parse(response); } 
-        catch(e) { NotifSultan.alert('error', 'Data Corrupt', 'Gagal parsing data.'); return; }
+    function fetchDataPresensi() {
+        var th = $('#filterTahun').val();
+        var bl = $('#filterBulan').val();
+        var unit = $('#filterUnit').val() || "SEMUA";
 
-        if (data.error) return NotifSultan.alert('error', 'Backend Error', data.error);
+        if (!th || !bl) return;
+
+        // CEK CACHE
+        if (th === CACHED_TH && bl === CACHED_BL && GLOBAL_MASTER_DATA.length > 0) {
+            filterLocalData(unit);
+            return; 
+        }
+
+        // REQUEST BARU
+        $('#btnCari').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        if ($.fn.DataTable.isDataTable('#tabelPresensi')) { $('#tabelPresensi').DataTable().destroy(); }
         
-        if (!data.rows || data.rows.length === 0) {
-            $('#headerRow').empty();
-            $('#bodyRow').html('<tr><td colspan="10" class="text-center py-5 text-muted"><i class="far fa-folder-open fa-2x mb-2 text-light-gray"></i><br>Data tidak ditemukan.</td></tr>');
+        // KONSISTENSI SPINNER
+        $('#bodyTabel').html('<tr><td class="text-center p-5" colspan="100%"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengambil data...</h6></td></tr>');
+        $('#headTabel').empty(); 
+
+        google.script.run
+            .withSuccessHandler(function(res) {
+                var data = JSON.parse(res);
+                if (data.error) {
+                    $('#bodyTabel').html(`<tr><td class="text-center text-danger p-5 font-weight-bold" colspan="100%">${data.error}</td></tr>`);
+                } else {
+                    GLOBAL_HEADERS = data.headers;
+                    GLOBAL_MASTER_DATA = data.rows; 
+                    CACHED_TH = th;
+                    CACHED_BL = bl;
+                    filterLocalData(unit);
+                }
+                $('#btnCari').prop('disabled', false).html('<i class="fas fa-search"></i>');
+            })
+            .withFailureHandler(function(err) {
+                $('#bodyTabel').html(`<tr><td class="text-center text-danger p-5" colspan="100%">Error: ${err.message}</td></tr>`);
+                $('#btnCari').prop('disabled', false).html('<i class="fas fa-search"></i>');
+            })
+            .getSiabaPresensiHarian(th, bl, "SEMUA");
+    }
+
+    function filterLocalData(unit) {
+        var dataToShow = GLOBAL_MASTER_DATA;
+        if (unit && unit !== "SEMUA") {
+            var searchUnit = String(unit).trim().toLowerCase();
+            dataToShow = GLOBAL_MASTER_DATA.filter(function(row) {
+                var lastIdx = row.length - 1;
+                var rowUnit = String(row[lastIdx]).trim().toLowerCase();
+                return rowUnit === searchUnit;
+            });
+        }
+        renderTable(dataToShow);
+    }
+
+    function renderTable(rows) {
+        if ($.fn.DataTable.isDataTable('#tabelPresensi')) { $('#tabelPresensi').DataTable().destroy(); }
+        var tbody = $('#bodyTabel').empty();
+        var thead = $('#headTabel').empty();
+
+        if (!rows || rows.length === 0) {
+            tbody.html('<tr><td class="text-center p-5 text-muted" colspan="100%"><i class="fas fa-search fa-3x mb-3 text-gray-300"></i><br>Data tidak ditemukan.</td></tr>');
             return;
         }
-        renderTabel(data);
-      })
-      .withFailureHandler(function(err) {
-        Swal.close();
-        NotifSultan.alert('error', 'Gagal', err.message);
-      })
-      .getSiabaPresensiHarian(thn, bln, unit);
-  }
 
-  // --- C. RENDER TABEL (LOGIKA WARNA & ISI) ---
-  function renderTabel(data) {
-    let th = '';
-    data.headers.forEach((h, idx) => {
-        let align = (idx === 0) ? 'text-left pl-3' : 'text-center';
-        th += `<th class="${align}">${h}</th>`;
-    });
-    $('#headerRow').html(th);
+        // RENDER HEADER (FIX: TAMBAHKAN CLASS 'th-main')
+        var trHead = '<tr>';
+        GLOBAL_HEADERS.forEach(function(h, idx) {
+            var style = (idx === 0) ? 'style="min-width: 250px;"' : '';
+            // Tambahkan 'th-main' agar style global masuk, dan 'col-sticky-left' untuk sticky
+            var cls = (idx === 0) ? "th-main col-sticky-left" : "th-main"; 
+            trHead += `<th class="${cls}" ${style}>${h}</th>`;
+        });
+        trHead += '</tr>';
+        thead.html(trHead);
 
-    let tr = '';
-    data.rows.forEach((row) => {
-      tr += '<tr>';
-      row.forEach((cell, idx) => {
-        let val = cell;
-        let display = val;
-        let str = String(val).toUpperCase().trim();
-        let cellClass = (idx === 0) ? 'text-left pl-3 font-weight-bold text-dark' : 'text-center';
-        
-        // 1. Bersihkan Data (0 jadi -)
-        if (val === 0 || val === "0") display = "-";
+        // RENDER BODY
+        var html = "";
+        rows.forEach(function(row, i) {
+            var delay = i * 0.05; 
+            html += `<tr class="tr-animasi" style="animation-delay: ${delay}s">`;
+            
+            for (var colIdx = 0; colIdx < row.length - 1; colIdx++) {
+                var val = row[colIdx];
+                var display = val;
+                var styleClass = "text-nowrap "; 
 
-        // 2. Logika Kolom Data (Mulai Kolom L / Index 8 ke atas)
-        if (idx >= 8) {
-            if (display === "-") {
-                cellClass += " bg-abu-terang"; // ABU
-            } 
-            else if (['DD','DL'].includes(str)) {
-                cellClass += " text-blue-sultan"; // BIRU
+                // Kolom Sticky
+                if (colIdx === 0) styleClass += "col-sticky-left font-weight-bold text-dark ";
+
+                if (val == 0 || val == "0" || val == "") display = "-";
+
+                // Coloring
+                if (colIdx === 2 && parseInt(val) > 0) styleClass += "bg-pink-alert "; 
+                if (colIdx >= 22) {
+                    var strVal = String(val).toUpperCase().trim();
+                    if (val === "" || val === null) styleClass += "bg-pink-alert ";
+                    else if (display === "-") styleClass += "bg-grey-soft ";
+                    else if (['CT','CS','CM','CAP','CB'].includes(strVal)) styleClass += "text-green-soft ";
+                    else if (['DD','DL'].includes(strVal)) styleClass += "text-blue-soft ";
+                    else if (['TA','PLA','LA'].includes(strVal)) styleClass += "text-danger font-weight-bold ";
+                }
+
+                html += `<td class="${styleClass}">${display}</td>`;
             }
-            else if (['CT','CS','CM','CAP','CB'].includes(str)) {
-                cellClass += " text-orange-sultan"; // ORANGE
-            }
-        }
-        
-        // 3. Logika Kolom TP (Index 2) -> Pink jika > 0
-        if (idx === 2) {
-            let numVal = parseInt(val) || 0;
-            if (numVal > 0) cellClass += " bg-pink-sultan text-danger font-weight-bold";
-        }
+            html += '</tr>';
+        });
 
-        tr += `<td class="${cellClass}">${display}</td>`;
-      });
-      tr += '</tr>';
-    });
-    $('#bodyRow').html(tr);
+        tbody.html(html);
 
-    if ($.fn.DataTable.isDataTable('#tabelPresensi')) $('#tabelPresensi').DataTable().destroy();
-    var table = $('#tabelPresensi').DataTable({
-      "scrollX": true, "responsive": false, "ordering": false, "autoWidth": true, "pageLength": 25,
-      "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
-      "dom": 't<"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
-      "initComplete": function() { setTimeout(function() { $('#tabelPresensi').DataTable().columns.adjust(); $(window).trigger('resize'); if (typeof enableDragScroll === "function") enableDragScroll('tabelPresensi'); }, 500); },
-      "drawCallback": function() { $('.dataTables_scrollHead').css('border-bottom', 'none'); $('.dataTables_scrollBody table').css('margin-top', '0'); }
-    });
-  }
+        $('#tabelPresensi').DataTable({
+            "ordering": false,
+            "pageLength": 10,
+            "autoWidth": false,
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+            "dom": "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                   "<'row'<'col-sm-12'<'table-responsive't>>>" +
+                   "<'row mt-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+        });
+    }
 </script>

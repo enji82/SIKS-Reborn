@@ -10,7 +10,7 @@
     --warna-cyan: #00ffff;         /* Biru Neon (Level 2) */
     --warna-hijau: #00ff00;        /* Hijau Neon (Level 3) */
     --warna-tegas: #343a40;
-    --warna-abu-bg: #f4f6f9;
+    --warna-abu-bg: #f4cccc;
     --shadow-sultan: 0 4px 6px -1px rgba(0,0,0,0.1);
     --radius-sultan: 8px;
   }
@@ -445,7 +445,7 @@ div.dataTables_wrapper div.dataTables_length select {
 div.dataTables_wrapper div.dataTables_info {
     padding-top: 0.85em;
     color: #858796; /* Abu-abu soft */
-    font-weight: 500;
+    /* font-weight: 500; */
 }
 
 /* ============================================================
@@ -644,4 +644,31 @@ table.dataTable tbody td {
         margin-bottom: 5px;
     }
 }
+
+/* 1. ANIMASI BARIS (GOLDEN STANDARD) */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.tr-animasi {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0; 
+}
+/* Efek muncul bergantian (Staggered) */
+.tr-animasi:nth-child(1) { animation-delay: 0.05s; }
+.tr-animasi:nth-child(2) { animation-delay: 0.1s; }
+.tr-animasi:nth-child(3) { animation-delay: 0.15s; }
+.tr-animasi:nth-child(4) { animation-delay: 0.2s; }
+.tr-animasi:nth-child(5) { animation-delay: 0.25s; }
+.tr-animasi:nth-child(6) { animation-delay: 0.3s; }
+.tr-animasi:nth-child(7) { animation-delay: 0.35s; }
+.tr-animasi:nth-child(8) { animation-delay: 0.4s; }
+.tr-animasi:nth-child(9) { animation-delay: 0.45s; }
+.tr-animasi:nth-child(10) { animation-delay: 0.5s; }
+
+/* 4. WARNA KONDISIONAL */
+.bg-pink-alert { background-color: #ffe6e6 !important; color: #dc3545 !important; font-weight: bold; }
+.bg-grey-soft  { background-color: #f8f9fa !important; color: #adb5bd !important; }
+.text-green-soft { color: #28a745 !important; font-weight: bold; }
+.text-blue-soft  { color: #17a2b8 !important; font-weight: bold; }
 </style>
