@@ -36,17 +36,20 @@ const FOLDER_CONFIG = {
   SIABA_PAK_DOCS: "1cvn-pOufs-OIbFQfqhmxc3fcmFuox4Sc",
 };
 
-function doGet() {
-  return HtmlService.createTemplateFromFile('index')
-    .evaluate()
-    .setTitle('SIKS - REBORN')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function doGet(e) {
+  // Gunakan 'createTemplateFromFile' agar bisa membaca <?!= include ?>
+  var template = HtmlService.createTemplateFromFile('index');
+  
+  // Wajib ada .evaluate() untuk merender template
+  return template.evaluate()
+      .setTitle('SIKS - REBORN')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 // PERBAIKAN VITAL: Menggunakan Template agar kode <?!= di dalam file diproses server
 function include(filename) {
-  return HtmlService.createTemplateFromFile(filename).evaluate().getContent();
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
 function checkLogin(username, password) {

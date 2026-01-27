@@ -1,3 +1,5 @@
+<?!= include('js_core_sultan'); ?>
+
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -5,7 +7,7 @@
         <h5 class="m-0 font-weight-bold">
           <i class="fas fa-user-times text-maroon mr-2"></i>Rekap Tidak Presensi
         </h5>
-        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+        <hr class="style-sultan-solid">
       </div>
     </div>
   </div>
@@ -15,57 +17,64 @@
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-12">
-        
-        <div class="control-bar mb-3 d-flex flex-wrap align-items-center bg-white p-3 shadow-sm rounded">
-          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
-            <button type="button" class="btn btn-sm border-tegas btn-square-sultan shadow-sm" onclick="loadFilterTidak(true)" title="Refresh Data">
-              <i class="fas fa-sync-alt text-maroon"></i>
-            </button>
-            <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
-            <select id="filterTahun" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 100px;">
-              <option value="">- Tahun -</option>
-            </select>
-            <select id="filterBulan" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="width: 130px;">
-              <option value="">- Bulan -</option>
-            </select>
-            <select id="filterUnit" class="form-control form-control-sm filter-select border-tegas shadow-sm" style="min-width: 250px;">
-              <option value="SEMUA">- Pilih Unit Kerja -</option>
-            </select>
-            <button type="button" id="btnCari" class="btn btn-sm btn-maroon btn-square-sultan shadow-sm" onclick="cariDataTidak()" title="Tampilkan Data">
-               <i class="fas fa-search"></i>
-            </button>
+
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-2 pl-3 text-justify">
+                  <li>Halaman ini menampilkan rekaman ASN yang tidak melakukan presensi (Alpha/Lupa).</li>
+                  <li>Data yang ditampilkan diperbarui secara berkala (tidak realtime).</li>
+                  <li><strong>Kode:</strong> LAD (Lupa Absen Datang), LAP (Lupa Absen Pulang), LA (Lupa Absen Total).</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table id="tabelTidak" class="table table-hover table-premium table-sticky-first mb-0" style="width:100%;">
-                <thead class="bg-light">
-                  <tr id="headerRow">
-                    </tr>
-                </thead>
-                <tbody id="bodyRow">
-                    <tr id="msgRow">
-                        <td colspan="10" class="text-center py-5 text-muted small">
-                            <i class="fas fa-spinner fa-spin fa-2x mb-2 text-maroon"></i><br>
-                            Memuat data seluruh unit...
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap align-items-center">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="initFilters(true)" title="Reset Filter">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterTahun" class="form-control form-control-sultan input-auto-width min-w-100"><option value="">- Tahun -</option></select>
+                <select id="filterBulan" class="form-control form-control-sultan input-auto-width min-w-120"><option value="">- Bulan -</option></select>
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width min-w-250" disabled>
+                    <option value="">- Tunggu Data -</option>
+                </select>
+
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="fetchDataTidak()" title="Muat Data">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-sultan">
+            <div class="card-body p-3">
+              <table id="tabelTidak" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100" width="100%">
+                <thead id="headTabel" style="display:none;"></thead>
+                <tbody id="bodyTabel">
+                    <tr>
+                        <td class="text-center td-spinner" colspan="100%">
+                            <div class="sultan-loading-container">
+                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                <h6 class="text-muted font-weight-bold">Menyiapkan tabel...</h6>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
               </table>
             </div>
-
-            <div class="p-3 bg-light border-top small">
-                <span class="font-weight-bold text-maroon mr-2">KETERANGAN:</span>
-                <span class="badge badge-warning text-white">LA</span> Lupa Absen &nbsp;
-                <span class="badge badge-warning text-white">LAD</span> Lupa Absen Datang &nbsp;
-                <span class="badge badge-warning text-white">LAP</span> Lupa Absen Pulang &nbsp;
-                <span class="badge badge-light border">D</span> Datang &nbsp;
-                <span class="badge badge-light border">P</span> Pulang
-            </div>
-
-          </div>
         </div>
 
       </div>
@@ -73,198 +82,186 @@
   </div>
 </section>
 
-<style>
-    .btn-maroon { background-color: #800000; color: white; border: 1px solid #600000; }
-    .btn-maroon:hover { background-color: #a00000; color: white; }
-    .btn-pulse { animation: pulse-red 2s infinite; }
-    @keyframes pulse-red {
-        0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(128, 0, 0, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
-    }
-    
-    /* Sticky First Column */
-    .table-sticky-first thead th:first-child,
-    .table-sticky-first tbody td:first-child {
-        position: sticky; left: 0; background-color: #fff; z-index: 5;
-        border-right: 2px solid #dee2e6; box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-    }
-    .table-sticky-first thead th:first-child { z-index: 6; background-color: #f8f9fa; }
-    .table-premium td, .table-premium th { white-space: nowrap; padding: 6px 10px; vertical-align: middle; font-size: 13px; }
-</style>
-
 <script>
-  $(document).ready(function() {
-    NotifSultan.loading("Menyiapkan Aplikasi...");
+    var GLOBAL_MASTER_DATA = []; 
+    var GLOBAL_HEADERS = [];
+    var CACHED_TH = "";
+    var CACHED_BL = "";
 
-    setTimeout(function() {
-        if ($.fn.select2) $('.filter-select').select2({ theme: 'bootstrap4' });
-        
-        // Auto Reset/Load jika filter berubah
-        $('#filterTahun, #filterBulan, #filterUnit').on('change', function() {
-             // Opsional: Bisa langsung trigger cariDataTidak() disini jika mau ultra-live
-        });
+    $(document).ready(function() {
+        initFilters();
+    });
 
-        if (typeof renderDropdown === 'function') {
-            renderDropdown("filterUnit", "UnitKerjaSiaba");
-            setTimeout(function() {
-                if ($('#filterUnit option[value="SEMUA"]').length === 0) {
-                    $('#filterUnit').prepend('<option value="SEMUA" class="font-weight-bold">-- SEMUA UNIT KERJA --</option>');
-                }
-                $('#filterUnit').val('SEMUA').trigger('change.select2');
-            }, 500);
+    // --- 1. FILTER ---
+    function initFilters(isRefresh = false) {
+        if(isRefresh) Sultan.notif.loading(); // Use Core
+
+        google.script.run.withSuccessHandler(function(res) {
+            if(isRefresh) Sultan.notif.tutup();
+            var data = JSON.parse(res);
+            
+            var elThn = $('#filterTahun').empty().append('<option value="">- Tahun -</option>');
+            if(data.years) data.years.forEach(y => elThn.append(`<option value="${y}">${y}</option>`));
+            var elBln = $('#filterBulan').empty().append('<option value="">- Bulan -</option>');
+            if(data.months) data.months.forEach(m => elBln.append(`<option value="${m}">${m}</option>`));
+
+            var now = new Date();
+            var curYear = now.getFullYear().toString();
+            var mNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            var curMonth = mNames[now.getMonth()];
+
+            if ($("#filterTahun option[value='"+curYear+"']").length > 0) $('#filterTahun').val(curYear);
+            if ($("#filterBulan option[value='"+curMonth+"']").length > 0) $('#filterBulan').val(curMonth);
+
+            loadDropdownUnit();
+            
+            // Auto Load setelah 0.5 detik
+            if ($('#filterTahun').val() && $('#filterBulan').val()) {
+                setTimeout(fetchDataTidak, 500);
+            }
+
+        }).getSiabaTidakFilters();
+    }
+
+    function loadDropdownUnit() {
+        google.script.run.withSuccessHandler(function(units) {
+            var el = $('#filterUnit');
+            el.empty().append('<option value="SEMUA">- Semua Unit Kerja -</option>');
+            if (units && units.length > 0) units.forEach(u => el.append(`<option value="${u}">${u}</option>`));
+            el.prop('disabled', false);
+        }).getUnitOptions(); 
+    }
+
+    // --- 2. FETCH DATA ---
+    function fetchDataTidak() {
+        var th = $('#filterTahun').val();
+        var bl = $('#filterBulan').val();
+        var unit = $('#filterUnit').val() || "SEMUA";
+
+        if (!th || !bl) return;
+
+        // Cache Check
+        if (th === CACHED_TH && bl === CACHED_BL && GLOBAL_MASTER_DATA.length > 0) {
+            filterLocalData(unit);
+            return; 
         }
 
-        // Load Filter & Auto Start
-        loadFilterTidak(); 
-    }, 100);
-  });
+        if ($.fn.DataTable.isDataTable('#tabelTidak')) { $('#tabelTidak').DataTable().destroy(); }
+        $('#headTabel').hide();
 
-  // --- A. LOAD FILTER & AUTO LOAD ---
-  function loadFilterTidak(isRefresh = false) {
-    if(isRefresh) NotifSultan.loading("Menyegarkan Data...");
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        if(isRefresh) Swal.close();
-        let data;
-        try { data = JSON.parse(response); } 
-        catch(e) { NotifSultan.alert('error', 'Parse Error', 'Gagal membaca filter.'); return; }
-
-        if (data.error) { NotifSultan.alert('error', 'Gagal', data.error); return; }
-
-        renderOption('#filterTahun', data.years, 'Tahun');
-        renderOption('#filterBulan', data.months, 'Bulan');
-
-        let curYear = new Date().getFullYear();
-        let curMonth = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][new Date().getMonth()];
-
-        if (!setSelectValue('#filterTahun', curYear) && data.years.length > 0) setSelectValue('#filterTahun', data.years[0]);
-        if (!setSelectValue('#filterBulan', curMonth) && data.months.length > 0) setSelectValue('#filterBulan', data.months[0]);
+        // UI Feedback
+        $('#bodyTabel').html('<tr><td class="text-center td-spinner" colspan="100%"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengambil data...</h6></td></tr>');
         
-        // --- AUTO LOAD TRIGGER ---
-        setTimeout(function(){
-            cariDataTidak();
-        }, 800); 
+        // Tombol Loading (Icon Only)
+        $('#btnCari').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
-      })
-      .withFailureHandler(function(err) {
-        if(isRefresh) Swal.close();
-        NotifSultan.alert('error', 'Koneksi Gagal', err.message);
-      })
-      .getSiabaTidakFilters();
-  }
+        google.script.run
+            .withSuccessHandler(function(res) {
+                var data = JSON.parse(res);
+                if (data.error) {
+                    $('#bodyTabel').html(`<tr><td class="text-center text-danger td-spinner font-weight-bold" colspan="100%">${data.error}</td></tr>`);
+                } else {
+                    GLOBAL_HEADERS = data.headers;
+                    GLOBAL_MASTER_DATA = data.rows; 
+                    CACHED_TH = th;
+                    CACHED_BL = bl;
+                    
+                    filterLocalData(unit); 
+                }
+                // Restore Tombol
+                $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            })
+            .withFailureHandler(function(err) {
+                $('#bodyTabel').html(`<tr><td class="text-center text-danger td-spinner" colspan="100%">Error: ${err.message}</td></tr>`);
+                $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            })
+            .getSiabaTidakData(th, bl, "SEMUA"); 
+    }
 
-  function renderOption(el, arr, label) {
-    let html = `<option value="">- ${label} -</option>`;
-    arr.forEach(x => html += `<option value="${x}">${x}</option>`);
-    $(el).html(html);
-  }
+    // --- 3. FILTER LOCAL ---
+    function filterLocalData(unit) {
+        var rowsToShow = GLOBAL_MASTER_DATA;
+        if (unit && unit !== "SEMUA") {
+            var searchUnit = String(unit).trim().toUpperCase();
+            rowsToShow = GLOBAL_MASTER_DATA.filter(function(row) {
+                var lastIdx = row.length - 1;
+                var rowUnit = String(row[lastIdx]).trim().toUpperCase();
+                return rowUnit === searchUnit;
+            });
+        }
+        renderTable(rowsToShow);
+    }
 
-  function setSelectValue(el, val) {
-    let found = false;
-    $(el + ' option').each(function() {
-      if ($(this).text().trim().toLowerCase() === String(val).toLowerCase()) {
-          $(this).prop('selected', true); found = true;
-      }
-    });
-    if(found) $(el).val($(el + ' option:selected').val()).trigger('change.select2');
-    return found;
-  }
+    // --- 4. RENDER TABLE ---
+    function renderTable(rows) {
+        if ($.fn.DataTable.isDataTable('#tabelTidak')) { $('#tabelTidak').DataTable().destroy(); }
+        var tbody = $('#bodyTabel').empty();
+        var thead = $('#headTabel').empty().show();
 
-  // --- B. CARI DATA ---
-  function cariDataTidak() {
-    const thn = $('#filterTahun').val();
-    const bln = $('#filterBulan').val();
-    const unit = $('#filterUnit').val() || "SEMUA"; 
-
-    if (!thn || !bln) return; // Tunggu filter siap
-
-    NotifSultan.loading("Memuat Data...");
-    $('#btnCari').removeClass('btn-pulse');
-
-    if ($.fn.DataTable.isDataTable('#tabelTidak')) $('#tabelTidak').DataTable().destroy();
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        Swal.close();
-        let data;
-        try { data = JSON.parse(response); } 
-        catch(e) { NotifSultan.alert('error', 'Data Corrupt', 'Gagal parsing data.'); return; }
-
-        if (data.error) return NotifSultan.alert('error', 'Backend Error', data.error);
-        
-        if (!data.rows || data.rows.length === 0) {
-            $('#headerRow').empty();
-            $('#bodyRow').html('<tr><td colspan="10" class="text-center py-5 text-muted"><i class="far fa-folder-open fa-2x mb-2 text-light-gray"></i><br>Data Kosong / Tidak Ditemukan.</td></tr>');
+        if (!rows || rows.length === 0) {
+            tbody.html(`<tr><td class="text-center td-spinner text-muted" colspan="100%"><div class="py-5"><i class="fas fa-search fa-3x mb-3 text-gray-300"></i><h6 class="font-weight-bold">Data tidak ditemukan.</h6></div></td></tr>`);
             return;
         }
-        renderTabel(data);
-      })
-      .withFailureHandler(function(err) {
-        Swal.close();
-        NotifSultan.alert('error', 'Gagal', err.message);
-      })
-      .getSiabaTidakData(thn, bln, unit);
-  }
 
-  // --- C. RENDER TABEL ---
-  function renderTabel(data) {
-    // 1. Header
-    let th = '';
-    data.headers.forEach((h, idx) => {
-        let align = (idx === 0) ? 'text-left pl-3' : 'text-center';
-        th += `<th class="${align}">${h}</th>`;
-    });
-    $('#headerRow').html(th);
+        // A. HEADER (Dinamis + Rata Tengah)
+        var trHead = '<tr>';
+        GLOBAL_HEADERS.forEach(function(h, idx) {
+            // Kolom 0 Sticky, Sisanya Tengah
+            var cls = (idx === 0) ? "col-sticky-left" : "text-center"; 
+            trHead += `<th class="${cls}">${h}</th>`;
+        });
+        trHead += '</tr>';
+        thead.html(trHead);
 
-    // 2. Body
-    let tr = '';
-    data.rows.forEach((row) => {
-      tr += '<tr>';
-      row.forEach((cell, idx) => {
-        let val = cell || "";
-        let display = val;
-        let cellClass = 'text-center';
-        
-        // KOLOM 1: Nama (Rata Kiri, Bold)
-        if (idx === 0) {
-            display = `<span class="font-weight-bold text-dark">${val}</span>`;
-            cellClass = 'text-left pl-3'; 
-        }
-        // KOLOM ANGKA (Biasanya idx > 0)
-        else {
-             if (val === 0 || val === "0") display = "-";
-        }
+        // B. BODY
+        var html = "";
+        rows.forEach(function(row, i) {
+            var delay = i * 0.05; 
+            html += `<tr class="tr-animasi" style="animation-delay: ${delay}s">`;
+            
+            // Loop kolom (skip unit hidden)
+            for (var colIdx = 0; colIdx < row.length - 1; colIdx++) {
+                var val = row[colIdx];
+                var display = val;
+                var styleClass = ""; 
 
-        tr += `<td class="${cellClass}">${display}</td>`;
-      });
-      tr += '</tr>';
-    });
-    $('#bodyRow').html(tr);
+                // 1. Kolom Nama (Sticky)
+                if (colIdx === 0) {
+                    styleClass += "col-sticky-left font-weight-bold text-dark bg-white ";
+                } 
+                else {
+                    styleClass += "text-center "; // Rata Tengah Standar
+                }
+                
+                // 2. Logika Isi Data
+                if (val == 0 || val == "0" || val == "") {
+                    display = "-";
+                    // Jika bukan kolom sticky, kasih background abu
+                    if(colIdx !== 0) styleClass += "bg-abu-terang ";
+                } else {
+                    // Jika ada angka > 0 -> Background Pink Alert
+                    if (!isNaN(val) && val > 0) {
+                        styleClass += "bg-pink-alert "; 
+                    }
+                }
 
-    // 3. Init DataTable
-    if ($.fn.DataTable.isDataTable('#tabelTidak')) $('#tabelTidak').DataTable().destroy();
+                html += `<td class="${styleClass}">${display}</td>`;
+            }
+            html += '</tr>';
+        });
 
-    var table = $('#tabelTidak').DataTable({
-      "scrollX": true,          
-      "responsive": false, 
-      "ordering": false, // Backend sudah sorting Descending by Kolom F
-      "autoWidth": true,
-      "pageLength": 25,         
-      "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
-      "dom": 't<"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
-      "initComplete": function() {
-          setTimeout(function() { 
-             $('#tabelTidak').DataTable().columns.adjust(); 
-             $(window).trigger('resize'); 
-             if (typeof enableDragScroll === "function") enableDragScroll('tabelTidak'); 
-          }, 500);
-      },
-      "drawCallback": function() {
-          $('.dataTables_scrollHead').css('border-bottom', 'none');
-          $('.dataTables_scrollBody table').css('margin-top', '0');
-      }
-    });
-  }
+        tbody.html(html);
+
+        // C. INIT DATATABLES
+        $('#tabelTidak').DataTable({
+            "ordering": false,
+            "pageLength": 10,
+            "autoWidth": false,
+            "scrollX": false, // Aman karena dibungkus table-responsive
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "search": "", "searchPlaceholder": "Cari Nama/NIP..." },
+            "dom": "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                   "<'row'<'col-sm-12'<'table-responsive't>>>" +
+                   "<'row mt-3'<'col-sm-12 col-md-5 small text-muted'i><'col-sm-12 col-md-7'p>>"
+        });
+    }
 </script>

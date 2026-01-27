@@ -1,9 +1,11 @@
+<?!= include('js_core_sultan'); ?>
+
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-12">
         <h5 class="m-0 font-weight-bold">
-          <i class="fas fa-user-clock text-maroon mr-2"></i>Data Salah Presensi
+          <i class="fas fa-exclamation-circle text-maroon mr-2"></i>Data Salah Presensi
         </h5>
         <hr class="style-sultan-solid">
       </div>
@@ -18,17 +20,19 @@
 
         <div class="card-sultan mb-3">
           <div class="card-body py-2 px-3 border-left-dark">
-            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapseSalah" aria-expanded="false" style="cursor:pointer;">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
               <div class="d-flex align-items-center text-maroon font-weight-bold">
                 <i class="fas fa-info-circle mr-2"></i> Informasi
               </div>
-              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
             </div>
-            <div id="infoCollapseSalah" class="collapse">
-              <div class="mt-2 pt-2 border-top">
-                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
-                  <li class="mb-1">Fitur ini digunakan jika ASN melakukan kesalahan status presensi (Misal: Seharusnya Pulang tapi klik Datang).</li>
-                  <li>Data yang sudah disetujui (OK) tidak dapat diedit atau dihapus kembali oleh user.</li>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
+                  <li class="mb-1">Fasilitas bagi ASN yang salah memilih jenis presensi (Datang/Pulang).</li>
+                  <li>Data yang sudah disetujui (OK) tidak dapat diedit kembali oleh user.</li>
+                  <li>Arahkan kursor ke status untuk melihat <strong>Alasan/Keterangan</strong>.</li>
                 </ul>
               </div>
             </div>
@@ -36,14 +40,15 @@
         </div>
         
         <div class="card-sultan p-3 mb-3">
-            <div class="d-flex-gap">
-                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshTabelSalah()" title="Refresh">
+            <div class="d-flex-gap align-items-center">
+                
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshTabelSalah()" title="Refresh Data">
                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
 
-                <select id="filterTahunSalah" class="form-control form-control-sultan form-control-auto" style="min-width: 80px;"></select>
+                <select id="filterTahunSalah" class="form-control form-control-sultan input-auto-width min-w-80"></select>
                 
-                <select id="filterBulanSalah" class="form-control form-control-sultan form-control-auto">
+                <select id="filterBulanSalah" class="form-control form-control-sultan input-auto-width">
                     <option value="">- Bulan -</option>
                     <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
                     <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
@@ -51,17 +56,21 @@
                     <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
                 </select>
 
-                <select id="filterStatusSalah" class="form-control form-control-sultan form-control-auto">
+                <select id="filterStatusSalah" class="form-control form-control-sultan input-auto-width">
                     <option value="">- Status -</option>
-                    <option value="Diproses">Diproses</option><option value="Revisi">Revisi</option>
-                    <option value="OK">Disetujui</option><option value="Ditolak">Ditolak</option>
+                    <option value="Diproses">Diproses</option>
+                    <option value="Revisi">Revisi</option>
+                    <option value="OK">Disetujui</option>
+                    <option value="Ditolak">Ditolak</option>
                 </select>
 
-                <select id="filterUnitSalah" class="form-control form-control-sultan form-control-auto" style="max-width: 250px;">
+                <select id="filterUnitSalah" class="form-control form-control-sultan input-auto-width max-w-250">
                     <option value="">- Semua Unit Kerja -</option>
                 </select>
 
-                <button type="button" id="btnCariSalah" class="btn btn-maroon shadow-sm" onclick="applyFilterSalahPresensi()" title="Cari">
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCariSalah" class="btn btn-maroon shadow-sm" onclick="applyFilterSalahPresensi()" title="Cari Data">
                     <i class="fas fa-search text-white"></i>
                 </button>
 
@@ -70,6 +79,7 @@
                 <button type="button" class="btn btn-primary font-weight-bold shadow-sm" onclick="tambahDataSalah()">
                     <i class="fas fa-plus mr-1"></i> Tambah
                 </button>
+                
                 <button type="button" id="btnSampahSalah" class="btn btn-secondary font-weight-bold shadow-sm" onclick="bukaTongSampahSalah()" style="display: none;">
                     <i class="fas fa-trash-restore"></i>
                 </button>
@@ -77,36 +87,46 @@
         </div>
 
         <div class="card-sultan">
-            <div class="card-body p-0">
-              <table id="tabelSalah" class="table table-premium table-sultan-compact mb-0 w-100">
-                <thead>
-                  <tr>
-                    <th class="col-sticky-left" style="min-width: 250px;">Nama ASN</th>
-                    <th class="text-nowrap">NIP</th>
-                    <th class="text-nowrap">Tanggal</th>
-                    <th class="text-nowrap">Jam</th>
-                    <th class="text-center text-nowrap">Jenis</th>
-                    <th class="small text-muted text-nowrap">Tgl Kirim</th>
-                    <th class="small text-muted text-nowrap">User Input</th>
-                    <th class="text-center text-nowrap">Status</th>
-                    <th class="text-center text-nowrap">Aksi</th>
-                    <th class="small text-muted text-nowrap">Tgl Edit</th>
-                    <th class="small text-muted text-nowrap">User Edit</th>
-                    <th class="small text-muted text-nowrap">Tgl Verif</th>
-                    <th class="small text-muted text-nowrap">Admin Verif</th>
-                  </tr>
-                </thead>
-                <tbody id="bodyTabelSalah"></tbody>
-              </table>
-            </div>
-          </div>
+          <div class="card-body p-3">
+            <table id="tabelSalah" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
+              
+              <thead id="headTabelSalah" style="display:none;">
+                <tr>
+                  <th class="col-sticky-left" style="min-width: 250px;">Nama ASN</th>
+                  <th class="text-nowrap">NIP</th>
+                  <th class="text-nowrap text-center">Tanggal</th>
+                  <th class="text-nowrap text-center">Jam</th>
+                  <th class="text-center text-nowrap">Jenis</th>
+                  <th class="text-center text-nowrap">Status</th>
+                  <th class="text-center text-nowrap">Aksi</th>
+                  <th class="small text-muted text-nowrap text-center">Tgl Kirim</th>
+                  <th class="small text-muted text-nowrap">User Input</th>
+                  <th class="small text-muted text-nowrap text-center">Tgl Edit</th>
+                  <th class="small text-muted text-nowrap">User Edit</th>
+                  <th class="small text-muted text-nowrap text-center">Tgl Verif</th>
+                  <th class="small text-muted text-nowrap">Admin Verif</th>
+                </tr>
+              </thead>
 
+              <tbody id="bodyTabelSalah">
+                  <tr>
+                      <td class="text-center td-spinner" colspan="100%">
+                          <div class="sultan-loading-container">
+                              <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                              <h6 class="text-muted font-weight-bold">Menyiapkan tabel...</h6>
+                          </div>
+                      </td>
+                  </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<div class="modal fade" id="modalTambahSalah" tabindex="-1" role="dialog">
+<div class="modal fade" id="modalTambah" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content border-0 shadow-lg modal-content-sultan">
       <div class="modal-header bg-maroon">
@@ -115,543 +135,477 @@
       </div>
       <form id="formSalahAbsen" onsubmit="simpanDataSalah(event)">
       <div class="modal-body bg-light">
-        <input type="hidden" id="recIdSalah" name="recId">
-        <input type="hidden" name="user_login" id="hideUserLoginSalah">
-        <input type="hidden" id="modeFormSalah" value="tambah"> 
-        <input type="hidden" name="nip_lama" id="hideNipLamaSalah">
-        <input type="hidden" name="tgl_lama" id="hideTglLamaSalah">
-        <input type="hidden" name="jam_lama" id="hideJamLamaSalah">
+        <input type="hidden" id="recId" name="recId">
+        <input type="hidden" name="user_login" id="hideUserLogin">
+        <input type="hidden" id="modeForm" value="tambah"> 
+        <input type="hidden" name="nip_lama" id="hideNipLama">
+        <input type="hidden" name="tgl_lama" id="hideTglLama">
+        <input type="hidden" name="jam_lama" id="hideJamLama">
         
-        <div class="form-group"><label class="form-label-sultan">Unit Kerja</label><select class="form-control form-control-sultan" id="selUnitSalah" name="unit_kerja" required onchange="filterNamaPegawaiSalah()"><option value="">- Memuat Data... -</option></select></div>
-        <div class="form-group"><label class="form-label-sultan">Nama ASN</label><select class="form-control form-control-sultan" id="selNamaSalah" name="nama_asn" required disabled onchange="filterNipPegawaiSalah()"><option value="">- Pilih Unit Dulu -</option></select></div>
-        <div class="form-group"><label class="form-label-sultan">NIP</label><select class="form-control form-control-sultan" id="selNipSalah" name="nip_asn" required disabled><option value="">- Otomatis -</option></select></div>
+        <div class="form-group">
+            <label class="form-label-sultan">Unit Kerja</label>
+            <select class="form-control form-control-sultan" id="selUnit" name="unit_kerja" required onchange="filterNamaPegawaiSalah()">
+                <option value="">- Memuat Data... -</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label-sultan">Nama ASN</label>
+            <select class="form-control form-control-sultan" id="selNama" name="nama_asn" required disabled onchange="filterNipPegawaiSalah()">
+                <option value="">- Pilih Unit Dulu -</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label-sultan">NIP</label>
+            <select class="form-control form-control-sultan" id="selNip" name="nip_asn" required disabled>
+                <option value="">- Otomatis / Pilih NIP -</option>
+            </select>
+        </div>
         
         <div class="row">
-            <div class="col-6"><div class="form-group"><label class="form-label-sultan">Tanggal</label><input type="date" id="inputTglSalah" name="tanggal" class="form-control form-control-sultan" required></div></div>
-            <div class="col-6"><div class="form-group"><label class="form-label-sultan">Waktu (Jam)</label><input type="time" id="inputJamSalah" name="waktu" class="form-control form-control-sultan" required></div></div>
+            <div class="col-6">
+                <div class="form-group">
+                    <label class="form-label-sultan">Tanggal Koreksi</label>
+                    <input type="date" name="tanggal" class="form-control form-control-sultan" required>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="form-group">
+                    <label class="form-label-sultan">Waktu (Jam)</label>
+                    <input type="time" name="waktu" class="form-control form-control-sultan" required>
+                </div>
+            </div>
         </div>
         
         <div class="form-group">
-            <label class="form-label-sultan">Salah Presensi</label>
+            <label class="form-label-sultan">Seharusnya Jenis Presensi:</label>
             <select name="jenis" id="inputJenisSalah" class="form-control form-control-sultan" required>
                 <option value="">- Pilih -</option>
                 <option value="Datang">Datang</option>
                 <option value="Pulang">Pulang</option>
             </select>
         </div>
-
-      </div>
+        </div>
       <div class="modal-footer justify-content-between bg-white">
           <button type="button" class="btn btn-default shadow-sm" data-dismiss="modal">Batal</button>
-          <button type="submit" id="btnKirimSalah" class="btn btn-maroon shadow-sm px-4 font-weight-bold"><i class="fas fa-paper-plane mr-1"></i> Kirim</button>
+          <button type="submit" id="btnKirim" class="btn btn-maroon shadow-sm px-4 font-weight-bold">
+              <i class="fas fa-paper-plane mr-1"></i> Simpan
+          </button>
       </div>
       </form>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalHapusSalah" tabindex="-1" role="dialog" data-backdrop="static">
+<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog" data-backdrop="static">
     <div class="modal-dialog" role="document">
         <div class="modal-content border-0 shadow-lg modal-content-sultan">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i>Hapus Data Salah Presensi</h5>
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i>Hapus Data</h5>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <form id="formHapusSalah" onsubmit="submitHapusDataSalah(event)">
                 <div class="modal-body bg-white">
-                    <input type="hidden" id="hapusNipSalah">
-                    <input type="hidden" id="hapusTglSalah">
-                    <input type="hidden" id="hapusJamSalah">
-                    <input type="hidden" id="hapusUserLoginSalah">
-                    <div class="alert alert-light border-danger text-dark mb-3 shadow-sm">
-                      <table class="table table-sm table-borderless mb-0 small">
-                          <tr><td width="35%" class="font-weight-bold text-muted">Nama ASN</td><td>: <span id="viewNamaHapus" class="font-weight-bold text-danger"></span></td></tr>
-                          <tr><td class="font-weight-bold text-muted">Tanggal</td><td>: <span id="viewTglHapus"></span></td></tr>
-                          <tr><td class="font-weight-bold text-muted">Jam</td><td>: <span id="viewJamHapus"></span></td></tr>
-                          <tr><td class="font-weight-bold text-muted">Jenis</td><td>: <span id="viewJenisHapus"></span></td></tr>
+                    <input type="hidden" id="hapusRecId" name="recId">
+                    <input type="hidden" id="hapusUserLogin" name="user_login">
+                    
+                    <div class="alert alert-light border-danger text-dark mb-3 shadow-sm small">
+                      <table class="table table-sm table-borderless mb-0">
+                          <tr><td class="text-muted font-weight-bold" width="30%">Nama</td><td>: <span id="viewNama" class="text-danger font-weight-bold"></span></td></tr>
+                          <tr><td class="text-muted">NIP</td><td>: <span id="viewNip"></span></td></tr>
+                          <tr><td class="text-muted">Unit</td><td>: <span id="viewUnit"></span></td></tr>
+                          <tr><td class="text-muted">Waktu</td><td>: <span id="viewTgl"></span> (<span id="viewJam"></span>)</td></tr>
                       </table>
                   </div>
+
                     <div class="form-group">
                         <label class="form-label-sultan">Kode Konfirmasi</label>
-                        <input type="text" id="inputKodeSalah" class="form-control form-control-sultan text-center font-weight-bold" placeholder="Masukkan Kode" required autocomplete="off">
-                        <small class="text-danger font-italic mt-1 d-block"><i class="fas fa-lock mr-1"></i> Hubungi admin Korwil untuk mendapatkan kode hapus.</small>
+                        <input type="text" id="inputKode" class="form-control form-control-sultan text-center font-weight-bold" placeholder="_ _ _ _ _ _" required autocomplete="off">
+                        <small class="text-danger font-italic mt-1 d-block"><i class="fas fa-lock mr-1"></i> Hubungi admin Korwil untuk mendapatkan kode.</small>
                     </div>
+
                     <div class="form-group">
                         <label class="form-label-sultan">Alasan Penghapusan</label>
-                        <textarea id="inputAlasanSalah" class="form-control form-control-sultan" rows="2" placeholder="Wajib diisi..." required></textarea>
+                        <textarea id="inputAlasan" class="form-control form-control-sultan" rows="2" placeholder="Wajib diisi..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between bg-light">
                     <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">Batal</button>
-                    <button type="submit" id="btnEksekusiHapusSalah" class="btn btn-danger shadow-sm font-weight-bold px-4"><i class="fas fa-trash mr-1"></i> Hapus Data</button>
+                    <button type="submit" id="btnEksekusiHapus" class="btn btn-danger shadow-sm font-weight-bold px-4">
+                        <i class="fas fa-trash mr-1"></i> Hapus
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalVerifSalah" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+<div class="modal fade" id="modalVerif" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
         <div class="modal-content border-0 shadow-lg modal-content-sultan">
-            <div class="modal-header bg-maroon text-white">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-check-double mr-2"></i>Verifikasi Salah Presensi</h5>
+            
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-check-circle mr-2"></i>Verifikasi Data</h5>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form id="formVerifSalah" onsubmit="submitVerifikasiDataSalah(event)">
-                <div class="modal-body bg-light p-0">
-                    <div class="row no-gutters h-100">
-                        <div class="col-md-7 border-right bg-white p-4">
-                            <input type="hidden" id="verifNipSalah">
-                            <input type="hidden" id="verifTglSalah">
-                            <input type="hidden" id="verifJamSalah">
-                            <input type="hidden" id="verifAdminSalah">
-                            <h6 class="text-secondary font-weight-bold mb-3 border-bottom pb-2">DATA PENGAJUAN</h6>
-                            <table class="table table-sm table-borderless small mb-2">
-                                <tr><td class="text-muted" width="30%">Nama ASN</td><td class="font-weight-bold text-dark" id="vNamaSalah"></td></tr>
-                                <tr><td class="text-muted">NIP</td><td id="vNipSalah"></td></tr>
-                                <tr><td class="text-muted">Tanggal</td><td class="font-weight-bold" id="vTglSalah"></td></tr>
-                                <tr><td class="text-muted">Jam</td><td class="font-weight-bold text-danger h5" id="vJamSalah"></td></tr>
-                                <tr><td class="text-muted">Jenis</td><td id="vJenisSalah"></td></tr>
+            
+            <form id="formVerifSalah" onsubmit="submitVerifikasiSalah(event)">
+                <div class="modal-body bg-white">
+                    <input type="hidden" id="verifRecId" name="recId">
+
+                    <div class="alert alert-light border shadow-sm mb-3">
+                        <table class="table table-sm table-borderless mb-0 small">
+                            <tr>
+                                <td class="text-muted font-weight-bold" width="30%">Nama ASN</td>
+                                <td class="font-weight-bold text-dark" id="vNama">: -</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">NIP</td>
+                                <td id="vNip">: -</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Unit Kerja</td>
+                                <td id="vUnit">: -</td>
+                            </tr>
+                            <tr><td colspan="2"><hr class="my-1"></td></tr>
+                            <tr>
+                                <td class="text-muted">Tanggal</td>
+                                <td class="font-weight-bold" id="vTgl">: -</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Waktu</td>
+                                <td class="font-weight-bold text-danger" id="vJam">: -</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Jenis Salah</td>
+                                <td id="vJenis">: -</td>
+                            </tr>
                             </table>
-                            <div class="alert alert-info small mt-3"><i class="fas fa-info-circle mr-1"></i> Pastikan data koreksi di atas sudah sesuai dengan presensi yang sebenarnya.</div>
-                        </div>
-                        <div class="col-md-5 bg-light p-4">
-                            <h6 class="text-secondary font-weight-bold mb-3">KEPUTUSAN</h6>
-                            <div class="form-group">
-                                <label class="form-label-sultan">Status Verifikasi <span class="text-danger">*</span></label>
-                                <select class="form-control form-control-sultan font-weight-bold" id="inputStatusVerifSalah" required>
-                                    <option value="">- Pilih Status -</option>
-                                    <option value="OK" class="text-success">✅ Disetujui (OK)</option>
-                                    <option value="Revisi" class="text-info">🔄 Perlu Revisi</option>
-                                    <option value="Ditolak" class="text-danger">❌ Ditolak</option>
-                                    <option value="Diproses" class="text-warning">⏳ Diproses</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label-sultan">Catatan</label>
-                                <textarea class="form-control form-control-sultan" id="inputKetVerifSalah" rows="4" placeholder="Catatan untuk pemohon..."></textarea>
-                            </div>
-                            <button type="submit" id="btnSimpanVerifSalah" class="btn btn-maroon btn-block shadow-sm py-2 font-weight-bold mt-4"><i class="fas fa-save mr-2"></i>SIMPAN</button>
-                        </div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label-sultan text-success font-weight-bold">Status Keputusan</label>
+                        <select class="form-control form-control-sultan font-weight-bold" id="selectStatusVerif" required>
+                            <option value="">- Pilih Keputusan -</option>
+                            <option value="OK" class="text-success">✅ SETUJUI (OK)</option>
+                            <option value="Revisi" class="text-info">🔄 Minta Revisi</option>
+                            <option value="Ditolak" class="text-danger">❌ TOLAK</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label-sultan">Catatan Verifikator (Alasan)</label>
+                        <textarea class="form-control form-control-sultan" id="inputKetVerif" rows="3" placeholder="Alasan / Catatan..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer justify-content-between bg-light">
+                    <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">Batal</button>
+                    <button type="submit" id="btnSimpanVerif" class="btn btn-success shadow-sm px-4 font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Simpan
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalSampahSalah" tabindex="-1" role="dialog">
+<div class="modal fade" id="modalSampah" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content border-0 shadow-lg modal-content-sultan">
-            <div class="modal-header bg-secondary py-2" style="border-bottom: 3px solid #FFD700;">
-                <h6 class="modal-title text-white font-weight-bold">
-                    <i class="fas fa-trash-restore mr-2"></i>Restore Data Salah Presensi
-                </h6>
-                <button type="button" class="close text-white pt-2" data-dismiss="modal"><span>&times;</span></button>
+            <div class="modal-header bg-secondary py-2">
+                <h6 class="modal-title text-white font-weight-bold"><i class="fas fa-trash-restore mr-2"></i>Restore Data</h6>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            
             <div class="modal-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm table-striped table-hover mb-0 text-xs-custom w-100">
                         <thead class="bg-light text-secondary">
                             <tr>
-                                <th class="pl-3 py-2">Nama</th><th class="py-2">Tgl</th><th class="py-2">Jam</th>
-                                <th class="py-2">Alasan</th><th class="py-2">Oleh</th><th class="text-center py-2">Aksi</th>
+                                <th class="pl-3 py-2">Nama</th>
+                                <th class="py-2">Tgl</th>
+                                <th class="py-2">Jam</th>
+                                <th class="py-2">Alasan Hapus</th>
+                                <th class="py-2">Oleh</th>
+                                <th class="text-center py-2">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="bodySampahSalah"></tbody>
+                        <tbody id="bodySampah"></tbody>
                     </table>
                 </div>
-                <div id="loadingSampahSalah" class="text-center p-3" style="display:none"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
-                <div id="emptySampahSalah" class="text-center p-4" style="display:none"><p class="text-muted small">Tong sampah kosong.</p></div>
+                <div id="loadingSampah" class="text-center p-3" style="display:none"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
+                <div id="emptySampah" class="text-center p-4" style="display:none"><p class="text-muted small">Sampah kosong.</p></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// =========================================================================
-// SCRIPT: DATA SALAH PRESENSI (METODE STANDARD & STABIL)
-// =========================================================================
+// =================================================================
+// 1. GLOBAL VARIABLES
+// =================================================================
 var DATA_SALAH = {}; 
 var DB_PEGAWAI_SALAH = [];
+var GLOBAL_CACHE_SALAH = []; 
+var CACHE_THN_SALAH = "";
+var CACHE_BLN_SALAH = "";
 
 $(document).ready(function() {
-    console.log("Halaman Siap: Metode Standard");
-
-    // 1. CEK USER
+    console.log("Halaman Salah Siap: Fixed Backend Names.");
     try {
-        var sesi = localStorage.getItem("siksUser");
-        if (sesi) {
-            var user = JSON.parse(sesi);
-            $('#hideUserLoginSalah').val(user.nama || user.fullName || "User Web");
-            var role = String(user.role || "").toLowerCase();
-            if (role.includes('admin') || role.includes('super')) $('#btnSampahSalah').show();
-        }
+        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+        if ((user.role||"").toLowerCase().includes('admin')) $('#btnSampahSalah').show();
+        $('#hideUserLogin').val(user.nama || "User Web");
     } catch (e) {}
 
-    // 2. SETUP FILTER
-    loadDropdownPegawaiSalah();
-    loadFilterTahunSalah(); 
+    var thn = new Date().getFullYear();
+    var $sel = $('#filterTahunSalah').empty().append('<option value="">- Tahun -</option>');
+    for(var i = thn - 3; i <= thn + 1; i++){ $sel.append('<option value="'+i+'">'+i+'</option>'); }
+    $sel.val(thn); 
+    
     var arrBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
     $('#filterBulanSalah').val(arrBulan[new Date().getMonth()]);
-    $('#filterStatusSalah').val('');
-
-    // 3. LOAD DATA
+    
+    loadDropdownPegawaiSalah();
     applyFilterSalahPresensi();
 });
 
-// =========================================================================
-// FUNGSI UTAMA: LOAD DATA
-// =========================================================================
+function refreshTabelSalah() { applyFilterSalahPresensi(); }
 
 function applyFilterSalahPresensi() {
     var th = $('#filterTahunSalah').val(); 
     var bl = $('#filterBulanSalah').val();
-    var unit = $('#filterUnitSalah').val(); 
-    var stat = $('#filterStatusSalah').val();
+    if (!th || !bl) return; 
 
-    // Reset DataTable agar HTML bisa diedit manual
-    if ($.fn.DataTable.isDataTable('#tabelSalah')) {
-        $('#tabelSalah').DataTable().destroy();
+    if (th === CACHE_THN_SALAH && bl === CACHE_BLN_SALAH && GLOBAL_CACHE_SALAH.length > 0) {
+        jalankanFilterLokalSalah(); return; 
     }
 
-    // INJECT HTML: Menggunakan class .sultan-loading-container dari css_sultan
-    var htmlLoading = `
-        <tr>
-            <td colspan="15" class="p-0 border-0">
-                <div class="sultan-loading-container">
-                    <div class="spinner-border sultan-spinner" role="status"></div>
-                    <h6 class="text-muted font-weight-bold">Sedang memuat data...</h6>
-                </div>
-            </td>
-        </tr>`;
-    
-    $('#bodyTabelSalah').html(htmlLoading);
+    if ($.fn.DataTable.isDataTable('#tabelSalah')) { $('#tabelSalah').DataTable().destroy(); }
+    $('#headTabelSalah').hide(); 
+    $('#bodyTabelSalah').html('<tr><td class="text-center td-spinner" colspan="100%"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Sedang mengambil data...</h6></div></td></tr>');
+    $('#btnCariSalah').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
     google.script.run
-        .withSuccessHandler(renderTabelSalah)
-        .withFailureHandler(function(e){
-            $('#bodyTabelSalah').html(`<tr><td colspan="15" class="text-center text-danger p-4">Error: ${e.message}</td></tr>`);
+        .withSuccessHandler(function(jsonString) {
+            $('#btnCariSalah').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            try {
+                GLOBAL_CACHE_SALAH = JSON.parse(jsonString);
+                CACHE_THN_SALAH = th; CACHE_BLN_SALAH = bl;
+                jalankanFilterLokalSalah();
+            } catch (e) { $('#bodyTabelSalah').html('<tr><td colspan="100%" class="text-center text-danger p-5">'+e.message+'</td></tr>'); }
         })
-        .getDaftarSalahPresensi(th, bl, unit, stat);
+        .withFailureHandler(function(e){
+            $('#btnCariSalah').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            $('#bodyTabelSalah').html('<tr><td colspan="100%" class="text-center text-danger p-5">'+e.message+'</td></tr>');
+        })
+        .getDaftarSalahPresensi(th, bl); 
 }
 
-function refreshTabelSalah() { applyFilterSalahPresensi(); }
+function jalankanFilterLokalSalah() {
+    var un = $('#filterUnitSalah').val();
+    var st = $('#filterStatusSalah').val();
+    var targetUnit = (un && un !== "SEMUA") ? String(un).trim().toUpperCase() : "SEMUA";
+    var targetStat = (st && st !== "") ? String(st).trim().toUpperCase() : "";
 
-function renderTabelSalah(jsonString) {
-    var data = [];
-    try { data = JSON.parse(jsonString); } catch(e) { return; }
-
-    if(data.length === 0) { 
-        $('#bodyTabelSalah').empty(); 
-        initDataTableStandard('#tabelSalah'); 
-        return; 
-    }
-
-    // Sorting
-    const parseWaktu = (str) => {
-        if (!str || str.length < 5) return 0;
-        try {
-            var parts = str.split(' '); var d = parts[0].split(/[-/]/); var t = (parts[1]||"00:00:00").split(':');
-            return new Date(d[2], d[1]-1, d[0], t[0]||0, t[1]||0).getTime();
-        } catch(e) { return 0; }
-    };
-    data.sort((a, b) => {
-        var maxA = Math.max(parseWaktu(a.tglAjuan), parseWaktu(a.tglEdit), parseWaktu(a.tglVerif));
-        var maxB = Math.max(parseWaktu(b.tglAjuan), parseWaktu(b.tglEdit), parseWaktu(b.tglVerif));
-        return maxB - maxA; 
+    var hasilSaringan = GLOBAL_CACHE_SALAH.filter(function(row) {
+        var rowUnit = String(row.unit || "").trim().toUpperCase();
+        var rowStat = String(row.status || "").trim().toUpperCase();
+        var passUnit = (targetUnit === "SEMUA" || rowUnit === targetUnit);
+        var passStat = true;
+        if (targetStat !== "") {
+            if (targetStat === "DIPROSES") passStat = (rowStat === "" || rowStat === "DIPROSES");
+            else if (targetStat === "OK") passStat = (rowStat.includes("OK") || rowStat.includes("SETUJU"));
+            else passStat = rowStat.includes(targetStat);
+        }
+        return passUnit && passStat;
     });
+    renderTabelSalah(hasilSaringan);
+}
 
-    var isAdmin = false;
+function renderTabelSalah(data) {
     try {
-        var user = JSON.parse(localStorage.getItem("siksUser"));
-        var role = String(user.role || "").toLowerCase();
-        if (role.includes('admin') || role.includes('super')) isAdmin = true;
-    } catch(e) {}
+        if ($.fn.DataTable.isDataTable('#tabelSalah')) {
+            $('#tabelSalah').DataTable().clear().destroy();
+        }
+        $('#bodyTabelSalah').empty();
 
-    var html = '';
-    for (var i = 0; i < data.length; i++) {
-        var row = data[i]; DATA_SALAH[row.rowBaris] = row;
-        
-        var safeNama = escapeHtml(row.namaAsn).toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-        
-        // BADGE: Panggil Helper renderBadgeSultan
-        var badgeJenis = renderBadgeSultan(row.jenis);
-        var badgeStatus = renderBadgeSultan(row.status);
-        if (row.ket && row.ket.length > 2) {
-             badgeStatus += `<i class="fas fa-info-circle text-info ml-2" title="${escapeHtml(row.ket)}"></i>`;
+        if(!data || data.length === 0) { 
+            $('#headTabelSalah').show(); 
+            initDataTableStandard('#tabelSalah', true); 
+            return; 
         }
 
-        var st = (row.status || "").toLowerCase();
-        var isLocked = (st.includes('ok') || st.includes('setuju') || st.includes('acc'));
-        var btnAttr = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+        // Sorting Last Activity
+        data.sort(function(a, b) {
+            var tA = Math.max(parseDateTime(a.tglKirim), parseDateTime(a.tglEdit), parseDateTime(a.tglVerif));
+            var tB = Math.max(parseDateTime(b.tglKirim), parseDateTime(b.tglEdit), parseDateTime(b.tglVerif));
+            return tB - tA; 
+        });
 
-        // TOMBOL: Menggunakan class 'btn-icon-sultan' (Style diatur di css_sultan)
-        var btnVerif = isAdmin ? `<button class="btn-icon-sultan btn-icon-sultan-success btn-aksi-verif" onclick="verifikasiDataSalah('${row.rowBaris}')" title="Verifikasi"><i class="fas fa-check"></i></button>` : '';
+        $('#headTabelSalah').show();
         
-        var btnEdit = `<button class="btn-icon-sultan btn-icon-sultan-warning btn-aksi-edit" onclick="editDataSalah('${row.rowBaris}')" title="Edit" ${btnAttr}><i class="fas fa-pencil-alt" style="font-size: 14px;"></i></button>`;
-        
-        var btnHapus = `<button class="btn-icon-sultan btn-icon-sultan-danger btn-aksi-hapus" onclick="hapusDataSalah('${row.rowBaris}')" title="Hapus" ${btnAttr}><i class="fas fa-trash"></i></button>`;
+        var isAdmin = false;
+        try { isAdmin = (localStorage.getItem("siksUser")||"").toLowerCase().includes("admin"); } catch(e){}
 
-        var delay = i * 0.03; 
-        html += `<tr class="tr-animasi text-nowrap" style="animation-delay:${delay}s">
-            <td class="col-sticky-left font-weight-bold text-dark">${safeNama}</td>
-            <td>${row.nip||''}</td>
-            <td>${row.tanggal||''}</td>
-            <td class="font-weight-bold">${row.jam||''}</td>
-            <td class="text-center">${badgeJenis}</td>
-            <td class="text-muted" style="font-size:11px;">${row.tglAjuan||'-'}</td>
-            <td class="text-muted" style="font-size:11px;">${row.userInput||'-'}</td>
-            <td class="text-center">${badgeStatus}</td>
-            <td class="text-center"><div class="d-flex justify-content-center btn-aksi-group" style="gap:5px;">${btnVerif}${btnEdit}${btnHapus}</div></td>
-            <td class="text-muted" style="font-size:11px;">${row.tglEdit||'-'}</td>
-            <td class="text-muted" style="font-size:11px;">${row.userEdit||'-'}</td>
-            <td class="text-muted" style="font-size:11px;">${row.tglVerif||'-'}</td>
-            <td class="text-muted" style="font-size:11px;">${row.adminVerif||'-'}</td>
-        </tr>`;
-    }
+        DATA_SALAH = {}; 
+        var html = "";
 
-    $('#bodyTabelSalah').html(html);
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i]; 
+            DATA_SALAH[row.rowBaris] = row; 
+            
+            var safeId   = String(row.rowBaris); 
+            var sNama    = escapeHtml(row.nama);
+            var sNip     = escapeHtml(row.nip);
+            var sKet     = escapeHtml(row.ket); 
+            var cleanTgl = escapeHtml((row.tanggal || "").replace(/'/g, ""));
+            var cleanJam = escapeHtml((row.jam || "").substring(0, 5));
 
-    setTimeout(function() {
-        initDataTableStandard('#tabelSalah');
-        if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
-    }, 50);
-}
+            var badgeJenis = row.jenis.includes('Datang') 
+                ? '<span class="badge badge-sultan badge-sultan-light-orange">DATANG</span>' 
+                : '<span class="badge badge-sultan badge-sultan-light-dark">PULANG</span>';
+            
+            var badgeStatus = renderBadgeStatus(row.status, sKet);
 
-// =========================================================================
-// HELPER STANDARD (TIDAK NEKO-NEKO)
-// =========================================================================
-
-function initDataTableStandard(tableId) {
-    // Hancurkan jika sisa-sisa lama masih ada
-    if ($.fn.DataTable.isDataTable(tableId)) {
-        $(tableId).DataTable().destroy();
-    }
-
-    // Init Baru - Konfigurasi Standard
-    $(tableId).DataTable({
-        "ordering": false,       // Matikan sorting default biar urutan sesuai Array kita
-        "pageLength": 10,
-        "autoWidth": false,      // Penting buat responsif
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json",
-            "emptyTable": "Tidak ada data yang tersedia pada tabel ini",
-            "zeroRecords": "Tidak ditemukan data yang sesuai"
-        },
-        "initComplete": function() {
-            var table = $(this);
-            // Bungkus div responsive biar bisa scroll horizontal di HP
-            if (!table.parent().hasClass('table-responsive')) {
-                table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
+            var btnVerif = '';
+            if(isAdmin) {
+                btnVerif = '<button class="btn-icon-sultan btn-icon-sultan-success" onclick="verifikasiDataSalah(\''+safeId+'\')" title="Verif"><i class="fas fa-check"></i></button>';
             }
+            
+            var isLocked = (String(row.status).toLowerCase().includes('ok') || String(row.status).toLowerCase().includes('setuju'));
+            var attrDis = isLocked ? 'disabled style="opacity:0.5"' : '';
+            
+            var btnEdit = '<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="editDataSalah(\''+safeId+'\')" '+attrDis+' title="Edit"><i class="fas fa-pencil-alt"></i></button>';
+            var btnHapus = '<button class="btn-icon-sultan btn-icon-sultan-danger" onclick="hapusDataSalah(\''+safeId+'\')" '+attrDis+' title="Hapus"><i class="fas fa-trash"></i></button>';
+
+            // --- ANIMASI DELAY ---
+            // Setiap baris muncul lebih lambat 50ms dari baris sebelumnya
+            var delay = i * 50; 
+            if(delay > 1000) delay = 1000; // Batasi max delay agar tidak terlalu lama menunggu
+
+            html += '<tr class="tr-animasi" style="animation-delay: '+delay+'ms">' +
+                '<td class="col-sticky-left font-weight-bold text-dark bg-white">'+sNama+'</td>' +
+                '<td>'+sNip+'</td>' +
+                '<td class="text-center">'+cleanTgl+'</td>' +
+                '<td class="text-center font-weight-bold">'+cleanJam+'</td>' +
+                '<td class="text-center">'+badgeJenis+'</td>' +
+                '<td class="text-center">'+badgeStatus+'</td>' +
+                '<td class="text-center"><div class="d-flex justify-content-center" style="gap:4px">'+btnVerif+btnEdit+btnHapus+'</div></td>' +
+                '<td class="small text-muted text-center">'+(row.tglKirim||'-')+'</td>' +
+                '<td class="small text-muted">'+(row.userInput||'-')+'</td>' +
+                '<td class="small text-muted text-center">'+(row.tglEdit||'-')+'</td>' +
+                '<td class="small text-muted">'+(row.userEdit||'-')+'</td>' +
+                '<td class="small text-muted text-center">'+(row.tglVerif||'-')+'</td>' +
+                '<td class="small text-muted">'+(row.adminVerif||'-')+'</td>' +
+            '</tr>';
         }
-    });
+
+        document.getElementById('bodyTabelSalah').innerHTML = html;
+        setTimeout(function() { 
+            initDataTableStandard('#tabelSalah'); 
+            if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
+        }, 10);
+    } catch (err) {
+        console.error(err);
+        $('#bodyTabelSalah').html('<tr><td colspan="100%">Render Error: '+err.message+'</td></tr>');
+    }
 }
 
-// REVISI BADGE (MENGGUNAKAN STYLE LIGHT/SOFT AGAR BEDA DENGAN TOMBOL)
-function renderBadgeSultan(text) {
-    if (!text) return '-'; 
-    var s = String(text).toLowerCase();
-    
-    // 1. BADGE JENIS (Datang/Pulang) - Style Light
-    if (s.includes('datang')) {
-        return '<span class="badge badge-sultan badge-sultan-light-orange"><i class="fas fa-sun mr-1"></i>DATANG</span>';
-    }
-    if (s.includes('pulang')) {
-        return '<span class="badge badge-sultan badge-sultan-light-dark"><i class="fas fa-moon mr-1"></i>PULANG</span>';
-    }
-    
-    // 2. BADGE STATUS - Style Light
-    var styleClass = 'badge-sultan-light-dark'; // Default
-    var icon = '';
-    
-    if (s.includes('ok') || s.includes('setuju')) { 
-        styleClass = 'badge-sultan-light-success'; icon = 'check'; 
-    } else if (s.includes('revisi')) { 
-        styleClass = 'badge-sultan-light-info'; icon = 'sync-alt'; 
-    } else if (s.includes('tolak')) { 
-        styleClass = 'badge-sultan-light-danger'; icon = 'times'; 
-    } else { 
-        styleClass = 'badge-sultan-light-warning'; icon = 'clock'; 
-    }
-    
-    return '<span class="badge badge-sultan '+styleClass+'"><i class="fas fa-'+icon+' mr-1"></i>'+text+'</span>';
+function escapeHtml(text) { if (!text) return ""; return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+function parseDateTime(str) { if (!str || str.length < 5) return 0; var clean = String(str).replace(/'/g, "").trim(); try { var parts = clean.split(/\s+/); var datePart = parts[0]; var timePart = parts[1] || "00:00:00"; var d = datePart.split(/[-/]/); if (d.length !== 3) return 0; var t = timePart.split(":"); return new Date(parseInt(d[2]), parseInt(d[1]) - 1, parseInt(d[0]), parseInt(t[0]||0), parseInt(t[1]||0), parseInt(t[2]||0)).getTime(); } catch (e) { return 0; } }
+function initDataTableStandard(tableId) { if ($.fn.DataTable.isDataTable(tableId)) $(tableId).DataTable().clear().destroy(); $(tableId).DataTable({ "ordering": false, "pageLength": 10, "autoWidth": false, "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "emptyTable": "Data tidak ditemukan." }, "initComplete": function() { if (!$(tableId).parent().hasClass('table-scroll-wrapper')) { $(tableId).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width: 100%; position: relative;"></div>'); } } }); }
+function loadDropdownPegawaiSalah() { google.script.run.withSuccessHandler(function(data) { if (!Array.isArray(data)) return; DB_PEGAWAI_SALAH = data; var unikUnit = [...new Set(data.map(item => item.unit))].sort(); var opts = '<option value="">- Pilih Unit -</option>'; var filterOpts = '<option value="SEMUA">- Semua Unit Kerja -</option>'; unikUnit.forEach(function(u) { if(u){ var sU = escapeHtml(u); opts += '<option value="'+sU+'">'+sU+'</option>'; filterOpts += '<option value="'+sU+'">'+sU+'</option>'; }}); $('#selUnit').html(opts); $('#filterUnitSalah').html(filterOpts); $('#filterUnitSalah').val('SEMUA'); }).getDatabasePegawai(); }
+function renderBadgeStatus(status, ket) { var s = String(status || "").toLowerCase(); var style = 'badge-sultan-light-dark'; var icon = ''; if (s.includes('ok') || s.includes('setuju')) { style = 'badge-sultan-light-success'; icon = 'check'; } else if (s.includes('revisi')) { style = 'badge-sultan-light-info'; icon = 'sync-alt'; } else if (s.includes('tolak')) { style = 'badge-sultan-light-danger'; icon = 'times'; } else { style = 'badge-sultan-light-warning'; icon = 'clock'; } var info = (ket && ket.length > 2 && ket !== '-') ? '<i class="fas fa-info-circle text-info ml-2" title="'+escapeHtml(ket)+'" data-toggle="tooltip" style="cursor:help;"></i>' : ''; return '<span class="badge badge-sultan '+style+'"><i class="fas fa-'+icon+' mr-1"></i>'+(status || 'Diproses')+'</span>' + info; }
+
+function filterNamaPegawaiSalah(){ var unit=$('#selUnit').val(); var $selNama=$('#selNama').empty().append('<option value="">- Pilih Nama -</option>').prop('disabled',true); $('#selNip').empty().append('<option value="">- Otomatis -</option>').prop('disabled',true); if(!unit)return; var filtered=DB_PEGAWAI_SALAH.filter(x=>x.unit===unit); var unikNama=[...new Set(filtered.map(item=>item.nama))].sort(); unikNama.forEach(nama=>{$selNama.append('<option value="'+nama+'">'+nama+'</option>');}); $selNama.prop('disabled',false); }
+function filterNipPegawaiSalah(){ var unit=$('#selUnit').val(); var nama=$('#selNama').val(); var $selNip=$('#selNip').empty(); if(!nama){$selNip.append('<option value="">- Otomatis -</option>').prop('disabled',true);return;} var kandidat=DB_PEGAWAI_SALAH.filter(x=>x.unit===unit&&x.nama===nama); if(kandidat.length===1){ $selNip.append('<option value="'+kandidat[0].nip+'" selected>'+kandidat[0].nip+'</option>').prop('disabled',true); }else{ $selNip.append('<option value="">- Pilih NIP -</option>'); kandidat.forEach(x=>{$selNip.append('<option value="'+x.nip+'">'+x.nip+'</option>');}); $selNip.prop('disabled',false); } }
+
+// CRUD (PANGGIL FUNGSI BACKEND ...ABSEN)
+function tambahDataSalah(){ $('#formSalahAbsen')[0].reset(); $('#recId').val(''); $('#modeForm').val('tambah'); $('#modalTambah .modal-header').removeClass('bg-warning').addClass('bg-maroon'); $('#modalTambah .modal-title').html('<i class="fas fa-file-signature mr-2"></i>Form Salah Presensi'); $('#selUnit').val('').trigger('change').prop('disabled',false); setTimeout(function(){$('#selNama').prop('disabled',true);$('#selNip').prop('disabled',true);},100); $('#modalTambah').modal('show'); }
+function editDataSalah(id){ var row = DATA_SALAH[id]; if(!row) return; $('#recId').val(row.rowBaris); $('#modeForm').val('edit'); $('#modalTambah .modal-header').removeClass('bg-maroon').addClass('bg-warning'); $('#modalTambah .modal-title').html('<i class="fas fa-edit mr-2"></i>Edit Data Salah Presensi'); $('#selUnit').val(row.unit).trigger('change').prop('disabled',true); setTimeout(function(){$('#selNama').val(row.nama).trigger('change').prop('disabled',true);$('#selNip').val(row.nip).prop('disabled',true);},500); var rawTgl = row.tanggal ? row.tanggal.replace(/'/g,"") : ""; var tglIso = rawTgl; if(rawTgl.includes("-")){ var p = rawTgl.split('-'); if(p[0].length === 2) tglIso = p[2]+'-'+p[1]+'-'+p[0]; } $('input[name="tanggal"]').val(tglIso); $('input[name="waktu"]').val(row.jam ? row.jam.replace(/'/g,"").substring(0,5) : ""); $('#inputJenisSalah').val(row.jenis); $('#hideNipLama').val(row.nip); $('#hideTglLama').val(row.tanggal); $('#hideJamLama').val(row.jam); $('#modalTambah').modal('show'); }
+
+// SIMPAN & UPDATE (PANGGIL ...ABSEN)
+function simpanDataSalah(e) { 
+    e.preventDefault(); var recId = $('#recId').val(); var btn = $('#btnKirim'); var txt = btn.html(); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Proses...'); 
+    var dataForm = { recId: recId, unit_kerja: $('#selUnit').val(), nama_asn: $('#selNama').val(), nip_asn: $('#selNip').val(), tanggal: $('input[name="tanggal"]').val(), waktu: $('input[name="waktu"]').val(), jenis: $('#inputJenisSalah').val(), alasan: "-", user_login: $('#hideUserLogin').val(), nip_lama: $('#hideNipLama').val(), tgl_lama: $('#hideTglLama').val(), jam_lama: $('#hideJamLama').val() }; 
+    var cbSuccess = function(res) { 
+        btn.prop('disabled', false).html(txt); $('#modalTambah').modal('hide'); 
+        if (res.toString().toLowerCase().includes('sukses')) { CACHE_THN_SALAH = ""; applyFilterSalahPresensi(); Sultan.notif.sukses('Data berhasil dikirim.'); } else { Sultan.notif.gagal(res); }
+    }; 
+    // PERBAIKAN: Panggil simpanSalahAbsen & updateSalahAbsen (sesuai backend lama)
+    if (recId) { google.script.run.withSuccessHandler(cbSuccess).updateSalahAbsen(dataForm); } else { google.script.run.withSuccessHandler(cbSuccess).simpanSalahAbsen(dataForm); } 
 }
 
-function escapeHtml(text) {
-  if (text == null) return '';
-  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-
-// =========================================================================
-// FUNGSI CRUD (TIDAK ADA PERUBAHAN)
-// =========================================================================
-function tambahDataSalah() {
-    $('#formSalahAbsen')[0].reset(); $('#modeFormSalah').val('tambah');
-    $('#modalTambahSalah .modal-header').removeClass('bg-warning').addClass('bg-maroon');
-    $('#modalTambahSalah .modal-title').html('<i class="fas fa-file-signature mr-2"></i>Form Salah Presensi');
-    $('#modalTambahSalah .modal-title, .close').removeClass('text-dark').addClass('text-white');
-    $('#btnKirimSalah').html('<i class="fas fa-paper-plane mr-1"></i> Kirim');
-    var $selUnit = $('#selUnitSalah').empty().append('<option value="">- Pilih Unit Kerja -</option>');
-    if (DB_PEGAWAI_SALAH && DB_PEGAWAI_SALAH.length > 0) {
-       var unikUnit = [...new Set(DB_PEGAWAI_SALAH.map(item => item.unit))].sort();
-       unikUnit.forEach(function(u) { if(u) $selUnit.append(`<option value="${u}">${u}</option>`); });
-    } else { loadDropdownPegawaiSalah(); }
-    $selUnit.prop('disabled', false);
-    $('#selNamaSalah').prop('disabled', true).empty().append('<option value="">- Pilih Unit -</option>');
-    $('#selNipSalah').prop('disabled', true).empty().append('<option>-</option>');
-    $('#modalTambahSalah').modal('show');
-}
-function editDataSalah(id) {
-    var data = DATA_SALAH[id]; if(!data) return;
-    $('#recIdSalah').val(data.rowBaris); $('#modeFormSalah').val('edit');
-    $('#hideNipLamaSalah').val(data.nip); $('#hideTglLamaSalah').val(data.tanggal); $('#hideJamLamaSalah').val(data.jam);
-    $('#modalTambahSalah .modal-header').removeClass('bg-maroon').addClass('bg-warning');
-    $('#modalTambahSalah .modal-title').html('<i class="fas fa-edit mr-2"></i>Edit Data Salah Presensi');
-    $('#modalTambahSalah .modal-title, #modalTambahSalah .close').removeClass('text-white').addClass('text-dark');
-    $('#btnKirimSalah').html('<i class="fas fa-save mr-1"></i> Update');
-    var uiTgl = ""; if (data.tanggal) { var p = String(data.tanggal).split(/[-/]/); if (p.length === 3) uiTgl = p[2] + '-' + p[1] + '-' + p[0]; }
-    $('#inputTglSalah').val(uiTgl);
-    $('#inputJamSalah').val(String(data.jam || "").trim().substring(0, 5));
-    $('#inputJenisSalah').val(data.jenis);
-    $('#selUnitSalah').html(`<option selected>${data.unitKerja}</option>`).prop('disabled', true);
-    $('#selNamaSalah').html(`<option selected>${data.namaAsn}</option>`).prop('disabled', true);
-    $('#selNipSalah').html(`<option selected>${data.nip}</option>`).prop('disabled', true);
-    $('#modalTambahSalah').modal('show');
-}
-function simpanDataSalah(e) {
-    e.preventDefault(); 
-    var mode = $('#modeFormSalah').val();
-    var btn = $('#btnKirimSalah'); var txt = btn.html(); 
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
-    var dataForm = {
-        unit_kerja: $('#selUnitSalah').val(), nama_asn: $('#selNamaSalah').val(), nip_asn: $('#selNipSalah').val(),
-        tanggal: $('#inputTglSalah').val(), waktu: $('#inputJamSalah').val(), jenis: $('#inputJenisSalah').val(),
-        nip_lama: $('#hideNipLamaSalah').val(), tgl_lama: $('#hideTglLamaSalah').val(), jam_lama: $('#hideJamLamaSalah').val()
-    };
-    var onSuccess = function(res) {
-        btn.prop('disabled', false).html(txt); $('#modalTambahSalah').modal('hide');
-        var pesan = res ? res.toString().toLowerCase() : "";
-        if(pesan.includes('sukses') || pesan.includes('berhasil')) { applyFilterSalahPresensi(); Swal.fire({ title: 'Sukses!', text: res, icon: 'success', confirmButtonColor: '#1cc88a' }); } 
-        else { Swal.fire('Gagal', res, 'error'); }
-    };
-    var onFail = function(err) { btn.prop('disabled', false).html(txt); Swal.fire('Error', err.message, 'error'); };
-    if (mode === 'edit') google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFail).updateSalahAbsen(dataForm);
-    else google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFail).simpanSalahAbsen(dataForm);
-}
-function hapusDataSalah(id) {
-    var data = DATA_SALAH[id]; if(!data) return;
-    $('#viewNamaHapus').text(data.namaAsn); $('#viewTglHapus').text(data.tanggal); $('#viewJamHapus').text(data.jam); $('#viewJenisHapus').text(data.jenis);
-    $('#hapusNipSalah').val(data.nip); $('#hapusTglSalah').val(data.tanggal); $('#hapusJamSalah').val(data.jam); $('#hapusUserLoginSalah').val($('#hideUserLoginSalah').val());
-    $('#inputKodeSalah').val(''); $('#inputAlasanSalah').val('');
-    $('#modalHapusSalah').modal('show');
-}
-function submitHapusDataSalah(e) {
-    e.preventDefault();
-    var now = new Date(); var kd = now.getFullYear() + "" + String(now.getMonth()+1).padStart(2,'0') + "" + String(now.getDate()).padStart(2,'0');
-    if($('#inputKodeSalah').val() !== kd) { NotifSultan.toast('error', 'Kode Hapus Salah!'); return; }
-    var btn = $('#btnEksekusiHapusSalah'); var txt = btn.html(); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Proses...');
-    var dataKirim = { nip: $('#hapusNipSalah').val(), tgl: $('#hapusTglSalah').val(), jam: $('#hapusJamSalah').val(), alasan: $('#inputAlasanSalah').val(), user: $('#hapusUserLoginSalah').val(), kode: $('#inputKodeSalah').val() };
-    google.script.run.withSuccessHandler(function(){ btn.prop('disabled', false).html(txt); $('#modalHapusSalah').modal('hide'); applyFilterSalahPresensi(); Swal.fire({ title: 'Sukses!', text: 'Data berhasil dihapus.', icon: 'success', confirmButtonColor: '#d33' }); }).withFailureHandler(function(err){ btn.prop('disabled', false).html(txt); Swal.fire('Gagal', err.message, 'error'); }).softDeleteSalahAbsen(dataKirim);
-}
 function verifikasiDataSalah(id) {
-    var data = DATA_SALAH[id]; if(!data) return;
-    $('#verifNipSalah').val(data.nip); $('#verifTglSalah').val(data.tanggal); $('#verifJamSalah').val(data.jam); $('#verifAdminSalah').val($('#hideUserLoginSalah').val() || "Admin");
-    $('#vNamaSalah').text(data.namaAsn); $('#vNipSalah').text(data.nip); $('#vTglSalah').text(data.tanggal); $('#vJamSalah').text(data.jam);
-    $('#vJenisSalah').html(renderBadgeSultan(data.jenis));
-    $('#inputStatusVerifSalah').val(''); $('#inputKetVerifSalah').val(data.ket || "");
-    $('#modalVerifSalah').modal('show');
+    var row = DATA_SALAH[id]; 
+    if (!row) return;
+    
+    // 1. Set Hidden ID
+    $('#verifRecId').val(row.rowBaris);
+    
+    // 2. Set Tampilan Data (Text Content)
+    $('#vNama').text(': ' + row.nama); 
+    $('#vNip').text(': ' + row.nip); 
+    $('#vUnit').text(': ' + row.unit);
+    
+    $('#vTgl').text(': ' + row.tanggal);
+    $('#vJam').text(': ' + row.jam);
+    
+    var bJenis = row.jenis.includes('Datang') 
+        ? '<span class="badge badge-warning ml-1">Datang</span>' 
+        : '<span class="badge badge-dark ml-1">Pulang</span>';
+    $('#vJenis').html(': ' + bJenis); 
+    
+    // 3. Reset Input Form
+    $('#selectStatusVerif').val(''); 
+    
+    // --- PERUBAHAN DISINI ---
+    // Pindahkan Alasan (row.ket) ke dalam Textarea Catatan
+    $('#inputKetVerif').val(row.ket || ""); 
+    
+    // 4. Tampilkan Modal
+    $('#modalVerif').modal('show');
 }
-function submitVerifikasiDataSalah(e) {
+
+function submitVerifikasiSalah(e){
     e.preventDefault();
-    var st = $('#inputStatusVerifSalah').val(); if(!st) { NotifSultan.toast('warning', 'Pilih Status dulu!'); return; }
-    var btn = $('#btnSimpanVerifSalah'); var txt = btn.html(); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
-    var dataKirim = { nip: $('#verifNipSalah').val(), tgl: $('#verifTglSalah').val(), jam: $('#verifJamSalah').val(), status: st, ket: $('#inputKetVerifSalah').val(), admin: $('#verifAdminSalah').val() };
-    google.script.run.withSuccessHandler(function(res){ btn.prop('disabled', false).html(txt); $('#modalVerifSalah').modal('hide'); applyFilterSalahPresensi(); Swal.fire({ title: 'Tersimpan!', text: 'Status verifikasi diperbarui.', icon: 'success', confirmButtonColor: '#1cc88a' }); }).withFailureHandler(function(err){ btn.prop('disabled', false).html(txt); Swal.fire('Gagal', err.message, 'error'); }).processVerifikasiSalahAbsen(dataKirim);
+    var st = $('#selectStatusVerif').val();
+    var ket = $('#inputKetVerif').val().trim();
+    
+    if(!st){ Sultan.notif.info('Pilih status keputusan!'); return; }
+    if((st==='Ditolak' || st==='Revisi') && !ket){ Sultan.notif.gagal('Wajib mengisi catatan!'); return; }
+    
+    var btn=$('#btnSimpanVerif'); var txt=btn.html();
+    btn.prop('disabled',true).html('<i class="fas fa-spinner fa-spin"></i> Proses...');
+    
+    var payload={
+        recId: $('#verifRecId').val(),
+        status: st,
+        ket: ket,
+        admin: $('#hideUserLogin').val()
+    };
+    
+    google.script.run.withSuccessHandler(function(){
+        btn.prop('disabled',false).html(txt);
+        $('#modalVerif').modal('hide');
+        CACHE_THN_SALAH=""; 
+        applyFilterSalahPresensi();
+        Sultan.notif.sukses('Verifikasi disimpan.');
+    }).processVerifikasiSalahAbsen(payload);
 }
 
-function bukaTongSampahSalah() { 
-    $('#bodySampahSalah').html(''); 
-    $('#loadingSampahSalah').show(); 
-    $('#emptySampahSalah').hide(); 
-    $('#modalSampahSalah').modal('show');
-
-    google.script.run.withSuccessHandler(function(data) {
-          $('#loadingSampahSalah').hide(); 
-          
-          if(!data || data.length === 0) { 
-              $('#emptySampahSalah').show(); 
-              return; 
-          }
-
-          var html = '';
-          data.forEach(function(row) {
-              // Encode key
-              var dataKey = encodeURIComponent(row[2]) + '|' + encodeURIComponent(row[3]) + '|' + encodeURIComponent(row[4]);
-              var alasan = row[16] || row[row.length-1] || '-'; 
-              
-              // Tombol Restore Sultan (Hijau Bulat)
-              var btnRestore = `<button class="btn-icon-sultan btn-icon-sultan-success" onclick="restoreDataSalah('${dataKey}')" title="Pulihkan Data">
-                                    <i class="fas fa-trash-restore" style="font-size: 12px;"></i>
-                                </button>`;
-
-              html += `<tr>
-                  <td class="font-weight-bold pl-3 align-middle">${row[1]}</td>
-                  <td class="align-middle">${row[3]}</td>
-                  <td class="align-middle">${row[4]}</td>
-                  <td class="text-danger small font-italic align-middle">${alasan}</td>
-                  <td class="small text-muted align-middle">${row[15]||'-'}</td>
-                  <td class="text-center align-middle">${btnRestore}</td>
-              </tr>`;
-          });
-          $('#bodySampahSalah').html(html);
-
-    }).withFailureHandler(function(err){ 
-        $('#loadingSampahSalah').hide(); 
-        // REVISI FINAL: Gunakan SweetAlert agar konsisten
-        Swal.fire('Gagal Memuat', err.message, 'error'); 
-    }).getDaftarSampah();
+function hapusDataSalah(id){ var row=DATA_SALAH[id]; if(!row)return; $('#hapusRecId').val(row.rowBaris); $('#viewNama').text(row.nama); $('#viewNip').text(row.nip); $('#viewUnit').text(row.unit); $('#viewTgl').text(row.tanggal); $('#viewJam').text(row.jam); $('#inputKode').val(''); $('#inputAlasan').val(''); $('#modalHapus').modal('show'); }
+function submitHapusDataSalah(e){ e.preventDefault(); var now=new Date(); var kd=now.getFullYear()+""+String(now.getMonth()+1).padStart(2,'0')+""+String(now.getDate()).padStart(2,'0'); if($('#inputKode').val()!==kd){ Sultan.notif.gagal('Kode hapus salah!'); return; } var btn=$('#btnEksekusiHapus'); var txt=btn.html(); btn.prop('disabled',true).html('<i class="fas fa-spinner fa-spin"></i> Hapus...'); var payload={ recId: $('#hapusRecId').val(), kode: $('#inputKode').val(), alasan: $('#inputAlasan').val(), user: $('#hideUserLogin').val(), nip: $('#viewNip').text(), tgl: $('#viewTgl').text(), jam: $('#viewJam').text() }; 
+    // PERBAIKAN: Panggil softDeleteSalahAbsen (sesuai backend lama)
+    google.script.run.withSuccessHandler(function(r){ btn.prop('disabled',false).html(txt); $('#modalHapus').modal('hide'); CACHE_THN_SALAH=""; applyFilterSalahPresensi(); Sultan.notif.sukses('Data dihapus.'); }).softDeleteSalahAbsen(payload); 
 }
 
-function restoreDataSalah(key) {
-    Swal.fire({ title: 'Pulihkan?', text: "Data akan kembali aktif.", icon: 'question', showCancelButton: true, confirmButtonColor: '#1cc88a', confirmButtonText: 'Ya' }).then((r) => {
-        if(r.isConfirmed) {
-            var parts = key.split('|');
-            google.script.run.withSuccessHandler(function(){ $('#modalSampahSalah').modal('hide'); Swal.fire('Berhasil', 'Data dipulihkan.', 'success'); applyFilterSalahPresensi(); }).prosesRestoreSalahAbsen(decodeURIComponent(parts[0]), decodeURIComponent(parts[1]), decodeURIComponent(parts[2]));
-        }
-    });
+function bukaTongSampahSalah(){ $('#bodySampah').html(''); $('#loadingSampah').show(); $('#emptySampah').hide(); $('#modalSampah').modal('show'); 
+    // PERBAIKAN: Panggil getDaftarSampah (sesuai backend lama)
+    google.script.run.withSuccessHandler(function(data){ $('#loadingSampah').hide(); if(!data||data.length===0){ $('#emptySampah').show(); return; } var h=''; data.forEach(function(r){ h+=`<tr><td class="pl-3 font-weight-bold">${escapeHtml(r[1])}</td><td>${r[3]}</td><td>${r[4]}</td><td>${escapeHtml(r[16]||r[6])}</td><td>${r[15]||r[7]||'-'}</td><td class="text-center"><button class="btn-icon-sultan btn-icon-sultan-success" onclick="restoreSalah('${r[2]}','${r[3]}','${r[4]}')"><i class="fas fa-trash-restore"></i></button></td></tr>`; }); $('#bodySampah').html(h); }).getDaftarSampah(); 
 }
-function loadDropdownPegawaiSalah() {
-  $('#selUnitSalah').empty().append('<option>Memuat...</option>');
-  google.script.run.withSuccessHandler(function(data) {
-       DB_PEGAWAI_SALAH = data; 
-       var unikUnit = [...new Set(data.map(item => item.unit))].sort();
-       var $sel = $('#selUnitSalah').empty().append('<option value="">- Pilih Unit Kerja -</option>');
-       var $fil = $('#filterUnitSalah').empty().append('<option value="">- Semua Unit Kerja -</option>');
-       unikUnit.forEach(function(u) { if(u) { $sel.append(`<option value="${u}">${u}</option>`); $fil.append(`<option value="${u}">${u}</option>`); }});
-  }).getDatabasePegawai();
-}
-function loadFilterTahunSalah() {
-    var thn = new Date().getFullYear(); var $sel = $('#filterTahunSalah').empty().append('<option value="">- Thn -</option>');
-    for(var i = thn - 2; i <= thn + 1; i++){ $sel.append(`<option value="${i}">${i}</option>`); }
-    $sel.val(thn);
-}
-function filterNamaPegawaiSalah() {
-    var unit = $('#selUnitSalah').val(); var $selNama = $('#selNamaSalah').empty().prop('disabled', true).append('<option>- Pilih -</option>');
-    $('#selNipSalah').empty().prop('disabled', true).append('<option>-</option>');
-    if(unit && DB_PEGAWAI_SALAH.length > 0){
-        var list = DB_PEGAWAI_SALAH.filter(x => x.unit === unit).map(x => x.nama);
-        [...new Set(list)].sort().forEach(n => $selNama.append(`<option value="${n}">${n}</option>`));
-        $selNama.prop('disabled', false);
-    }
-}
-function filterNipPegawaiSalah() {
-    var u = $('#selUnitSalah').val(); var n = $('#selNamaSalah').val(); var $selNip = $('#selNipSalah').empty().prop('disabled', true);
-    if(n && DB_PEGAWAI_SALAH.length > 0){
-        var list = DB_PEGAWAI_SALAH.filter(x => x.unit === u && x.nama === n).map(x => x.nip);
-        if(list.length > 0) { $selNip.append(`<option value="${list[0]}">${list[0]}</option>`).val(list[0]).prop('disabled', false); }
-    }
+
+function restoreSalah(n,t,j){ Sultan.konfirmasi({judul:'Pulihkan Data?',teks:'Data akan dikembalikan ke tabel aktif.'},function(){ 
+    // PERBAIKAN: Panggil prosesRestoreSalahAbsen (sesuai backend lama)
+    google.script.run.withSuccessHandler(function(res){ CACHE_THN_SALAH=""; applyFilterSalahPresensi(); $('#modalSampah').modal('hide'); Sultan.notif.sukses(res); }).prosesRestoreSalahAbsen(n,t,j); }); 
 }
 </script>

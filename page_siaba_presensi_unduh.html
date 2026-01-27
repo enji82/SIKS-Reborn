@@ -1,3 +1,5 @@
+<?!= include('js_core_sultan'); ?>
+
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -5,7 +7,7 @@
         <h5 class="m-0 font-weight-bold">
           <i class="fas fa-cloud-download-alt text-maroon mr-2"></i>Unduh Rekap Bulanan
         </h5>
-        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+        <hr class="style-sultan-solid">
       </div>
     </div>
   </div>
@@ -16,52 +18,54 @@
     <div class="row justify-content-center">
       <div class="col-12">
         
-        <div class="control-bar mb-3 d-flex flex-wrap justify-content-between align-items-center bg-white p-3 shadow-sm rounded">
-          
-          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+        <div class="card-sultan p-3 mb-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-center">
             
-            <button type="button" class="btn border-tegas btn-square-sultan shadow-sm" onclick="goHome()" title="Folder Utama">
-              <i class="fas fa-home text-maroon"></i>
-            </button>
+            <div class="d-flex align-items-center flex-wrap gap-10">
+              
+              <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="goHome()" title="Folder Utama">
+                <i class="fas fa-home text-maroon"></i>
+              </button>
 
-            <button id="btnBack" type="button" class="btn border-tegas btn-square-sultan shadow-sm" onclick="navigateUp()" title="Kembali" style="display:none;">
-              <i class="fas fa-level-up-alt text-dark"></i>
-            </button>
+              <button id="btnBack" type="button" class="btn border-tegas shadow-sm bg-white" onclick="navigateUp()" title="Kembali" style="display:none;">
+                <i class="fas fa-level-up-alt text-dark"></i>
+              </button>
 
-            <button type="button" class="btn border-tegas btn-square-sultan shadow-sm" onclick="refreshCurrentFolder()" title="Refresh">
-              <i class="fas fa-sync-alt text-primary"></i>
-            </button>
+              <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshCurrentFolder()" title="Refresh">
+                <i class="fas fa-sync-alt text-blue-sultan"></i>
+              </button>
 
-            <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
+              <div class="divider-vertical"></div>
 
-            <div class="d-flex align-items-center bg-light px-3 py-2 rounded border-tegas" style="min-width: 200px;">
-                <i class="fas fa-folder text-warning mr-2"></i>
-                <span id="folderNameLabel" class="font-weight-bold text-dark">Memuat...</span>
+              <div class="d-flex align-items-center bg-abu-terang px-3 py-2 rounded border-tegas" style="min-width: 200px;">
+                  <i class="fas fa-folder-open text-gold-sultan mr-2"></i>
+                  <span id="folderNameLabel" class="font-weight-bold text-dark small text-uppercase">MEMUAT...</span>
+              </div>
             </div>
-          </div>
 
-          <div class="mt-2 mt-xl-0 text-muted small font-weight-bold">
-             Total Item: <span id="totalItemCount" class="text-maroon">0</span>
+            <div class="mt-2 mt-xl-0 text-muted small font-weight-bold">
+               Total Item: <span id="totalItemCount" class="text-maroon">0</span>
+            </div>
           </div>
         </div>
 
-        <div class="card shadow-sm border-0">
+        <div class="card-sultan">
           <div class="card-body p-0">
             
             <div id="arsipLoading" class="text-center py-5">
-                <div class="spinner-border text-maroon" role="status">
-                    <span class="sr-only">Loading...</span>
+                <div class="sultan-loading-container">
+                    <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                    <p class="text-muted font-weight-bold">Mengambil data dari Drive...</p>
                 </div>
-                <p class="mt-2 text-muted small">Mengambil data dari Drive...</p>
             </div>
 
             <div class="table-responsive" id="arsipTableWrapper" style="display:none;">
               <table id="tabelArsip" class="table table-hover table-premium mb-0" style="width:100%;">
-                <thead class="bg-light">
+                <thead>
                   <tr>
                     <th style="width: 50px;" class="text-center">No</th>
                     <th>Nama File / Folder</th>
-                    <th style="width: 150px;" class="text-center">Ukuran</th>
+                    <th style="width: 100px;" class="text-center">Ukuran</th>
                     <th style="width: 150px;" class="text-center">Tanggal</th>
                     <th style="width: 120px;" class="text-center">Aksi</th>
                   </tr>
@@ -79,15 +83,29 @@
 </section>
 
 <div class="modal fade" id="modalPreviewArsip" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-xl" role="document" style="height: 90vh;">
-    <div class="modal-content h-100 border-0">
-      <div class="modal-header py-2 bg-light">
-        <h6 class="modal-title font-weight-bold"><i class="fas fa-eye mr-2 text-maroon"></i> Preview File</h6>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
+  <div class="modal-dialog modal-dialog-full" role="document"> 
+    
+    <div class="modal-content modal-content-full-height border-0 shadow-lg"> 
+      
+      <div class="modal-header bg-maroon py-2">
+        <h6 class="modal-title font-weight-bold text-white">
+            <i class="fas fa-file-pdf mr-2"></i> Preview Dokumen
+        </h6>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
-      <div class="modal-body p-0 bg-dark">
-        <iframe id="framePreviewArsip" src="" style="width:100%; height:100%; border:none;"></iframe>
+      
+      <div class="modal-body modal-body-full">
+          <iframe id="framePreviewArsip" class="iframe-full" src=""></iframe>
       </div>
+      
+      <div class="modal-footer justify-content-between bg-light py-2" style="flex-shrink: 0;">
+          <button type="button" class="btn border-tegas shadow-sm" data-dismiss="modal">Tutup</button>
+          
+          <a id="btnDownloadFinal" href="#" target="_blank" class="btn-unduh-preview">
+              <i class="fas fa-download mr-2"></i> UNDUH FILE
+          </a>
+      </div>
+
     </div>
   </div>
 </div>
@@ -97,20 +115,20 @@
   var parentFolderId = null;
 
   $(document).ready(function() {
-      goHome(); // Load Root saat buka halaman
+      goHome(); 
   });
 
-  // --- LOGIKA UTAMA ---
+  // --- 1. LOGIKA LOAD FOLDER ---
   function loadFolder(folderId) {
       $('#arsipLoading').show(); 
       $('#arsipTableWrapper').hide();
-      $('#folderNameLabel').text('Memuat...');
+      $('#folderNameLabel').text('MEMUAT...');
       
       google.script.run
         .withSuccessHandler(renderArsipTable)
         .withFailureHandler(function(err) {
            $('#arsipLoading').hide();
-           NotifSultan.alert('error', 'Gagal', err.message);
+           Sultan.notif.gagal('Gagal memuat folder: ' + err.message);
         })
         .getSiabaUnduhData(folderId);
   }
@@ -118,7 +136,7 @@
   function renderArsipTable(data) {
       if (data.error) {
           $('#arsipLoading').hide();
-          NotifSultan.alert('error', 'Akses Ditolak', data.error);
+          Sultan.notif.gagal(data.error);
           return;
       }
 
@@ -137,51 +155,49 @@
       tbody.empty();
 
       if (items.length === 0) {
-          tbody.append('<tr><td colspan="5" class="text-center py-4 text-muted"><i>Folder ini kosong.</i></td></tr>');
+          tbody.append('<tr><td colspan="5" class="text-center py-5 text-muted"><i><i class="fas fa-folder-open fa-3x mb-3"></i><br>Folder ini kosong.</i></td></tr>');
       } else {
           items.forEach(function(item, i) {
               var tr = $('<tr>').css('cursor', 'pointer');
               
-              // Ikon Berdasarkan Tipe
               var iconHtml = '<i class="fas fa-file text-secondary mr-2"></i>';
-              
-              // Variable Tombol Aksi
               var btnAction = '';
 
+              // --- LOGIKA FOLDER ---
               if (item.type === 'folder') {
-                  iconHtml = '<i class="fas fa-folder text-warning mr-2 fa-lg"></i>';
-                  tr.on('click', function() { loadFolder(item.id); }); // Klik baris -> masuk folder
+                  iconHtml = '<i class="fas fa-folder text-gold-sultan mr-2 fa-lg"></i>';
+                  tr.addClass('font-weight-bold'); // Bold nama folder
                   
-                  // Tombol Buka Folder
-                  btnAction = `<button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-sm" style="font-size:12px;">Buka</button>`;
-              } else {
-                  // Icon File
+                  // Klik Baris -> Masuk Folder
+                  tr.on('click', function() { loadFolder(item.id); }); 
+                  
+                  // Tombol Buka
+                  btnAction = `<button class="btn btn-xs btn-outline-primary shadow-sm rounded-pill px-3" onclick="event.stopPropagation(); loadFolder('${item.id}')">Buka</button>`;
+              
+              } 
+              // --- LOGIKA FILE ---
+              else {
                   var mime = item.mimeType;
+                  // Ikon File
                   if (mime.includes('pdf')) iconHtml = '<i class="fas fa-file-pdf text-danger mr-2 fa-lg"></i>';
-                  else if (mime.includes('image')) iconHtml = '<i class="fas fa-file-image text-purple mr-2 fa-lg"></i>';
-                  else if (mime.includes('spreadsheet') || mime.includes('excel')) iconHtml = '<i class="fas fa-file-excel text-success mr-2 fa-lg"></i>';
-                  else if (mime.includes('document') || mime.includes('word')) iconHtml = '<i class="fas fa-file-word text-primary mr-2 fa-lg"></i>';
+                  else if (mime.includes('image')) iconHtml = '<i class="fas fa-file-image text-purple-sultan mr-2 fa-lg"></i>';
+                  else if (mime.includes('spreadsheet') || mime.includes('excel')) iconHtml = '<i class="fas fa-file-excel text-green-sultan mr-2 fa-lg"></i>';
+                  else if (mime.includes('document') || mime.includes('word')) iconHtml = '<i class="fas fa-file-word text-blue-sultan mr-2 fa-lg"></i>';
                   
-                  // Klik baris -> preview file
-                  tr.on('click', function() { openPreview(item.url, item.mimeType); });
+                  // Klik Baris -> Preview
+                  tr.on('click', function() { openPreview(item.id, item.mimeType); });
 
-                  // --- REVISI: TOMBOL UNDUH ---
-                  // Kita stopPropagation agar saat klik unduh tidak men-trigger preview (tr.click)
-                  // Link download Direct dari Google Drive
-                  var downloadUrl = "https://drive.google.com/uc?export=download&id=" + item.id;
-                  
-                  btnAction = `<a href="${downloadUrl}" target="_blank" 
-                                  class="btn btn-sm btn-success rounded-pill px-3 shadow-sm font-weight-bold" 
-                                  style="font-size:12px;" 
-                                  onclick="event.stopPropagation();">
-                                  <i class="fas fa-download mr-1"></i> Unduh
-                               </a>`;
+                  // Tombol Unduh -> Preview Dulu
+                  btnAction = `<button class="btn btn-xs btn-success shadow-sm rounded-pill px-3 font-weight-bold" 
+                                       onclick="event.stopPropagation(); openPreview('${item.id}', '${item.mimeType}')">
+                                  <i class="fas fa-eye mr-1"></i> Lihat & Unduh
+                               </button>`;
               }
 
               // Render Baris
               tr.append(`<td class="text-center align-middle">${i+1}</td>`);
-              tr.append(`<td class="align-middle font-weight-bold text-dark">${iconHtml} ${item.name}</td>`);
-              tr.append(`<td class="text-center align-middle small">${item.size}</td>`);
+              tr.append(`<td class="align-middle text-dark">${iconHtml} ${item.name}</td>`);
+              tr.append(`<td class="text-center align-middle small text-muted">${item.size}</td>`);
               tr.append(`<td class="text-center align-middle small text-muted">${item.date}</td>`);
               tr.append(`<td class="text-center align-middle">${btnAction}</td>`);
 
@@ -194,45 +210,25 @@
       $('#arsipTableWrapper').fadeIn(300);
   }
 
-  // --- NAVIGASI ---
-  function navigateUp() {
-      if (parentFolderId) loadFolder(parentFolderId);
-  }
+  // --- 2. NAVIGASI ---
+  function navigateUp() { if (parentFolderId) loadFolder(parentFolderId); }
+  function goHome() { loadFolder(null); }
+  function refreshCurrentFolder() { loadFolder(currentFolderId); }
 
-  function goHome() {
-      loadFolder(null); // Null = Root
-  }
-
-  function refreshCurrentFolder() {
-      loadFolder(currentFolderId);
-  }
-
-  // --- PREVIEW ---
-  function openPreview(url, mimeType) {
+  // --- 3. PREVIEW & DOWNLOAD ---
+  function openPreview(fileId, mimeType) {
     if (mimeType === 'application/vnd.google-apps.folder') return;
 
-    var idMatch = url.match(/[-\w]{25,}/); 
-    if(idMatch) {
-        var previewUrl = "https://drive.google.com/file/d/" + idMatch[0] + "/preview";
-        $('#framePreviewArsip').attr('src', previewUrl);
-        $('#modalPreviewArsip').modal('show');
-    } else {
-        window.open(url, '_blank'); 
-    }
+    // URL Preview Google Drive
+    var previewUrl = "https://drive.google.com/file/d/" + fileId + "/preview";
+    // URL Download Google Drive
+    var downloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
+
+    // Set Iframe & Tombol Download
+    $('#framePreviewArsip').attr('src', previewUrl);
+    $('#btnDownloadFinal').attr('href', downloadUrl);
+
+    // Buka Modal
+    $('#modalPreviewArsip').modal('show');
   }
 </script>
-
-<style>
-  #tabelArsip tbody tr:hover {
-      background-color: #f1f2f6; /* Hover effect lembut */
-  }
-  /* Style Sultan & Colors */
-  .btn-square-sultan { border-radius: 6px; font-weight: bold; }
-  .border-tegas { border: 1px solid #dee2e6; }
-  .text-purple { color: #9b59b6; }
-  .text-maroon { color: #800000; }
-  
-  /* Table Compact */
-  .table-premium th { font-size: 13px; vertical-align: middle; border-top: none; }
-  .table-premium td { font-size: 13px; }
-</style>
