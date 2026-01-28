@@ -1,9 +1,223 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-  </head>
-  <body>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-tachometer-alt text-maroon mr-2"></i>Dashboard SIABA
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
     
-  </body>
-</html>
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-maroon shadow-sm">
+                <div class="inner">
+                    <h3 id="totalCuti">0</h3>
+                    <p>Total Cuti</p>
+                </div>
+                <div class="icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="small-box-footer" style="height: 20px;"></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-primary shadow-sm">
+                <div class="inner">
+                    <h3 id="totalDinas">0</h3>
+                    <p>Perjalanan Dinas</p>
+                </div>
+                <div class="icon"><i class="fas fa-car"></i></div>
+                <div class="small-box-footer" style="height: 20px;"></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner text-white">
+                    <h3 id="totalLupa">0</h3>
+                    <p>Lupa Presensi</p>
+                </div>
+                <div class="icon"><i class="fas fa-question-circle"></i></div>
+                <div class="small-box-footer" style="height: 20px;"></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger shadow-sm">
+                <div class="inner">
+                    <h3 id="totalSalah">0</h3>
+                    <p>Salah Presensi</p>
+                </div>
+                <div class="icon"><i class="fas fa-times-circle"></i></div>
+                <div class="small-box-footer" style="height: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-dark"><i class="fas fa-chart-pie mr-1"></i> Akumulasi Status</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 180px;"><canvas id="chartGabungan"></canvas></div>
+                    <hr>
+                    <div class="mt-2">
+                        <div class="d-flex justify-content-between mb-1 small"><span class="text-warning font-weight-bold">Diproses</span><span id="lblProses">0</span></div>
+                        <div class="progress progress-xs mb-2"><div class="progress-bar bg-warning" id="progProses" style="width: 0%"></div></div>
+                        <div class="d-flex justify-content-between mb-1 small"><span class="text-info font-weight-bold">Revisi</span><span id="lblRevisi">0</span></div>
+                        <div class="progress progress-xs mb-2"><div class="progress-bar bg-info" id="progRevisi" style="width: 0%"></div></div>
+                        <div class="d-flex justify-content-between mb-1 small"><span class="text-success font-weight-bold">Disetujui</span><span id="lblSetuju">0</span></div>
+                        <div class="progress progress-xs mb-2"><div class="progress-bar bg-success" id="progSetuju" style="width: 0%"></div></div>
+                        <div class="d-flex justify-content-between mb-1 small"><span class="text-danger font-weight-bold">Ditolak</span><span id="lblTolak">0</span></div>
+                        <div class="progress progress-xs mb-0"><div class="progress-bar bg-danger" id="progTolak" style="width: 0%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-maroon"><i class="fas fa-list-alt mr-1"></i> Rincian Status</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0 text-center valign-middle text-sm">
+                            <thead class="bg-light text-muted font-weight-bold">
+                                <tr><th class="text-left pl-3">MODUL</th><th class="text-warning">PROS</th><th class="text-info">REV</th><th class="text-success">OK</th><th class="text-danger">NO</th></tr>
+                            </thead>
+                            <tbody id="tabelRincianBody" class="font-weight-bold text-secondary">
+                                <tr><td class="text-left pl-3 text-dark">Cuti</td><td id="tdCutiProses" class="text-warning">0</td><td id="tdCutiRevisi" class="text-info">0</td><td id="tdCutiSetuju" class="text-success">0</td><td id="tdCutiTolak" class="text-danger">0</td></tr>
+                                <tr><td class="text-left pl-3 text-dark">Dinas</td><td id="tdDinasProses" class="text-warning">0</td><td id="tdDinasRevisi" class="text-info">0</td><td id="tdDinasSetuju" class="text-success">0</td><td id="tdDinasTolak" class="text-danger">0</td></tr>
+                                <tr><td class="text-left pl-3 text-dark">Lupa</td><td id="tdLupaProses" class="text-warning">0</td><td id="tdLupaRevisi" class="text-info">0</td><td id="tdLupaSetuju" class="text-success">0</td><td id="tdLupaTolak" class="text-danger">0</td></tr>
+                                <tr><td class="text-left pl-3 text-dark">Salah</td><td id="tdSalahProses" class="text-warning">0</td><td id="tdSalahRevisi" class="text-info">0</td><td id="tdSalahSetuju" class="text-success">0</td><td id="tdSalahTolak" class="text-danger">0</td></tr>
+                            </tbody>
+                            <tfoot class="bg-light font-weight-bold text-xs">
+                                <tr><td class="text-left pl-3">TOTAL</td><td id="footProses">0</td><td id="footRevisi">0</td><td id="footSetuju">0</td><td id="footTolak">0</td></tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-purple-sultan"><i class="fas fa-chart-bar mr-1"></i> Tren Kedisiplinan <span id="lblTahunDisiplin"></span></h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 250px;"><canvas id="chartBarDisiplin"></canvas></div>
+                    <div class="mt-2 text-center small text-muted font-italic">*Frekuensi kejadian per bulan</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card-sultan">
+                <div class="card-header bg-maroon text-white"><h3 class="card-title font-weight-bold"><i class="fas fa-history mr-2"></i>Aktivitas Terbaru</h3></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 text-sm">
+                            <thead class="bg-light"><tr><th class="pl-4">MODUL</th><th>NAMA PEGAWAI</th><th>TANGGAL</th><th>STATUS</th></tr></thead>
+                            <tbody id="timelineBody"><tr><td colspan="4" class="text-center p-4"><i class="fas fa-spinner fa-spin text-maroon"></i> Memuat data...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</section>
+
+<style>
+    .bg-maroon { background-color: #800000 !important; }
+    .bg-primary { background-color: #007bff !important; }
+    .bg-warning { background-color: #ffc107 !important; }
+    .bg-danger  { background-color: #dc3545 !important; }
+    .text-purple-sultan { color: #6f42c1; }
+    .progress-xs { height: 6px; border-radius: 4px; background-color: #e9ecef; }
+    .small-box .icon { top: 10px; right: 10px; font-size: 50px; position: absolute; opacity: 0.15; }
+    .valign-middle td, .valign-middle th { vertical-align: middle !important; }
+</style>
+
+<script>
+$(document).ready(function() {
+    loadDashboardData();
+});
+
+function loadDashboardData() {
+    google.script.run
+        .withSuccessHandler(renderDashboard)
+        .withFailureHandler(function(e){ $('#timelineBody').html('<tr><td colspan="4" class="text-center text-danger">Gagal memuat data.</td></tr>'); })
+        .getSiabaDashboardData();
+}
+
+function renderDashboard(jsonStr) {
+    var data = JSON.parse(jsonStr);
+    var s = data.stats;
+
+    // Small Box
+    $('#totalCuti').text(s.cuti.total);
+    $('#totalDinas').text(s.dinas.total);
+    $('#totalLupa').text(s.lupa.total);
+    $('#totalSalah').text(s.salah.total);
+
+    // Tabel
+    fillRow('Cuti', s.cuti); fillRow('Dinas', s.dinas); fillRow('Lupa', s.lupa); fillRow('Salah', s.salah);
+    
+    var p = s.cuti.proses + s.dinas.proses + s.lupa.proses + s.salah.proses;
+    var r = s.cuti.revisi + s.dinas.revisi + s.lupa.revisi + s.salah.revisi;
+    var ok = s.cuti.setuju + s.dinas.setuju + s.lupa.setuju + s.salah.setuju;
+    var no = s.cuti.tolak + s.dinas.tolak + s.lupa.tolak + s.salah.tolak;
+    var tot = p+r+ok+no;
+
+    $('#footProses').text(p); $('#footRevisi').text(r); $('#footSetuju').text(ok); $('#footTolak').text(no);
+    updateProgress("Proses", p, tot); updateProgress("Revisi", r, tot); updateProgress("Setuju", ok, tot); updateProgress("Tolak", no, tot);
+
+    // Chart Pie
+    new Chart(document.getElementById('chartGabungan').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Diproses', 'Revisi', 'Disetujui', 'Ditolak'],
+            datasets: [{ data: [p, r, ok, no], backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'], borderWidth: 2, borderColor: '#ffffff' }]
+        },
+        options: { maintainAspectRatio: false, responsive: true, legend: { position: 'right', labels: { boxWidth: 10, fontSize: 10 } }, cutoutPercentage: 70 }
+    });
+
+    // Chart Bar
+    $('#lblTahunDisiplin').text(data.chartBar.year);
+    new Chart(document.getElementById('chartBarDisiplin').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: data.chartBar.labels, 
+            datasets: [{ label: 'Terlambat', backgroundColor: '#dc3545', data: data.chartBar.terlambat }, { label: 'Pulang Awal', backgroundColor: '#6f42c1', data: data.chartBar.pulangAwal }]
+        },
+        options: { maintainAspectRatio: false, responsive: true, scales: { yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }], xAxes: [{ gridLines: { display: false } }] }, legend: { position: 'top', labels: { boxWidth: 10, fontSize: 10 } } }
+    });
+
+    renderTimeline(data.timeline);
+}
+
+function fillRow(m, o) { $('#td'+m+'Proses').text(o.proses); $('#td'+m+'Revisi').text(o.revisi); $('#td'+m+'Setuju').text(o.setuju); $('#td'+m+'Tolak').text(o.tolak); }
+function updateProgress(id, v, t) { var pct = t > 0 ? Math.round((v/t)*100) : 0; $('#lbl'+id).text(v); $('#prog'+id).css('width', pct + '%'); }
+
+function renderTimeline(timeline) {
+    var tbody = $('#timelineBody'); tbody.empty();
+    if (!timeline || timeline.length === 0) { tbody.html('<tr><td colspan="4" class="text-center text-muted p-4">Belum ada aktivitas.</td></tr>'); return; }
+    timeline.sort(function(a, b) { return (b.tgl < a.tgl) ? -1 : (b.tgl > a.tgl) ? 1 : 0; });
+    timeline.slice(0, 10).forEach(function(row) {
+        var badge = row.status.toLowerCase().includes("setuju") ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-warning">Proses</span>';
+        tbody.append('<tr><td class="pl-4">'+row.type.toUpperCase()+'</td><td class="font-weight-bold">'+row.nama+'</td><td>'+row.tgl+'</td><td>'+badge+'</td></tr>');
+    });
+}
+</script>

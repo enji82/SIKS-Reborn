@@ -3489,3 +3489,108 @@ function verifikasiUnggahSurat(form) {
     throw new Error("Gagal Verifikasi: " + e.message);
   }
 }
+
+/* ======================================================================
+   DASHBOARD STATISTIK SIABA (V5 - FIXED COLUMN MAPPING)
+   ====================================================================== */
+function getSiabaDashboardData() {
+  var ID_SPREADSHEET = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo"; 
+  var ID_SS_TERLAMBAT = "1tQsQY1-Ny1ie66GOZPTLtvZ7BiYCgFdNrX-AVGCtaHA"; 
+
+  // INDEKS KOLOM STATUS (Sesuaikan jika perlu)
+  var IDX_CUTI_TGL = 5, IDX_CUTI_STATUS = 10, IDX_CUTI_NAMA = 1;
+  var IDX_DINAS_TGL = 3, IDX_DINAS_STATUS = 9, IDX_DINAS_NAMA = 1;
+  var IDX_LUPA_TGL = 3, IDX_LUPA_STATUS = 10, IDX_LUPA_NAMA = 1;
+  var IDX_SALAH_TGL = 3, IDX_SALAH_STATUS = 8, IDX_SALAH_NAMA = 1;
+
+  var curYear = new Date().getFullYear().toString();
+
+  var result = {
+    stats: {
+      cuti: { total:0, setuju:0, tolak:0, proses:0, revisi:0 },
+      dinas: { total:0, setuju:0, tolak:0, proses:0, revisi:0 },
+      lupa: { total:0, setuju:0, tolak:0, proses:0, revisi:0 },
+      salah: { total:0, setuju:0, tolak:0, proses:0, revisi:0 }
+    },
+    timeline: [],
+    chartBar: {
+      year: curYear,
+      labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"],
+      terlambat: [0,0,0,0,0,0,0,0,0,0,0,0],
+      pulangAwal: [0,0,0,0,0,0,0,0,0,0,0,0]
+    }
+  };
+
+  // 1. PROSES STATUS & TIMELINE
+  function processSheet(sheetName, type, idxTgl, idxStat, idxNama) {
+    try {
+      var ss = SpreadsheetApp.openById(ID_SPREADSHEET);
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return;
+      
+      var data = sheet.getDataRange().getDisplayValues();
+      if (data.length < 2) return;
+
+      for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        var tgl = String(row[idxTgl] || "");
+        var status = String(row[idxStat] || "").toLowerCase();
+        
+        if (!tgl.includes(curYear)) continue;
+
+        result.stats[type].total++;
+        if (status.includes("setuju") || status.includes("ok")) result.stats[type].setuju++;
+        else if (status.includes("tolak")) result.stats[type].tolak++;
+        else if (status.includes("revisi") || status.includes("ubah")) result.stats[type].revisi++;
+        else result.stats[type].proses++;
+
+        result.timeline.push({ type: type, nama: row[idxNama], tgl: tgl, status: row[idxStat] });
+      }
+    } catch (e) { Logger.log("Error " + sheetName + ": " + e.message); }
+  }
+
+  processSheet("Form Cuti", "cuti", IDX_CUTI_TGL, IDX_CUTI_STATUS, IDX_CUTI_NAMA);
+  processSheet("Perjalanan_Dinas", "dinas", IDX_DINAS_TGL, IDX_DINAS_STATUS, IDX_DINAS_NAMA);
+  processSheet("Lupa_Presensi", "lupa", IDX_LUPA_TGL, IDX_LUPA_STATUS, IDX_LUPA_NAMA);
+  processSheet("Salah_Presensi", "salah", IDX_SALAH_TGL, IDX_SALAH_STATUS, IDX_SALAH_NAMA);
+
+  // 2. PROSES REKAP (TERLAMBAT & PULANG AWAL) - FIXED COLUMN MAPPING
+  function processRekap(sheetName, targetArray) {
+    try {
+      var ss = SpreadsheetApp.openById(ID_SS_TERLAMBAT);
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return;
+
+      var data = sheet.getDataRange().getDisplayValues();
+      
+      // Data mulai baris 3 (index 2)
+      for (var i = 2; i < data.length; i++) {
+        var row = data[i];
+        var rowTahun = String(row[0]).trim(); // Kolom A = Tahun
+        
+        if (rowTahun === curYear) {
+          // Loop 12 Bulan
+          for (var m = 0; m < 12; m++) {
+            // MAPPING KOLOM:
+            // Jan (m=0) => E (Index 4)
+            // Feb (m=1) => G (Index 6)
+            // ... dst (Lompati 1 kolom)
+            var colIndex = 4 + (m * 2);
+            
+            var val = row[colIndex]; 
+            
+            // Hitung jika ada isinya (angka > 0)
+            if (val && val !== "0" && val !== "-" && val.trim() !== "") {
+               result.chartBar[targetArray][m]++;
+            }
+          }
+        }
+      }
+    } catch (e) { Logger.log("Error Rekap " + sheetName + ": " + e.message); }
+  }
+
+  processRekap("Rekap_Terlambat", "terlambat");
+  processRekap("Rekap_Pulang_Awal", "pulangAwal");
+
+  return JSON.stringify(result);
+}
