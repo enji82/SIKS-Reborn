@@ -212,7 +212,7 @@
             // 1. Kolom Nama (Sticky)
             htmlTop += `<th rowspan="2" class="col-sticky-left" style="min-width:200px;">${headerTop[0] || 'Nama'}</th>`;
             // 2. Kolom NIP/Jabatan
-            htmlTop += `<th rowspan="2" style="min-width:150px;">${headerTop[1] || 'NIP/Info'}</th>`;
+            htmlTop += `<th rowspan="2" class="col-sticky-center" style="min-width:150px;">${headerTop[1] || 'NIP/Info'}</th>`;
             
             // Loop kolom Bulan
             for (let i = 2; i < headerTop.length; i++) {
@@ -251,7 +251,7 @@
                 }
                 // 2. NIP (Kiri, Kecil)
                 else if (colIdx === 1) {
-                    styleClass += "text-left small text-muted ";
+                    styleClass += "text-center small text-muted ";
                 }
                 // 3. ANGKA (Tengah)
                 else {

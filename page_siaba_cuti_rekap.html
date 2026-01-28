@@ -1,3 +1,5 @@
+<?!= include('js_core_sultan'); ?>
+
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -18,18 +20,20 @@
 
         <div class="card-sultan mb-3">
           <div class="card-body py-2 px-3 border-left-dark">
-            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
               <div class="d-flex align-items-center text-maroon font-weight-bold">
                 <i class="fas fa-info-circle mr-2"></i> Informasi
               </div>
-              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
             </div>
             <div id="infoCollapse" class="collapse">
-              <div class="mt-2 pt-2 border-top">
-                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
-                  <li class="mb-1">Halaman ini merupakan rekapitulasi cuti yang sudah diambil.</li>
-                  <li>Pilih <b>Tahun</b> lalu klik tombol <b>Cari</b> (ikon kaca pembesar) untuk memuat data.</li>
-                  <li>CT: Cuti Tahunan, CS: Cuti Sakit, CAP: Cuti Alasan Penting, CM: Cuti Melahirkan, CB: Cuti Besar, CLTN: Cuti di Luar Tanggunan Negara.</li>
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-2 pl-3 text-justify">
+                  <li>Halaman ini menampilkan rekapitulasi jumlah cuti yang sudah diambil.</li>
+                  <li>Pilih <b>Tahun</b> dan <b>Unit kerja</> kemudian klik tombol <b>Cari</b> untuk memuat data.</li>
+                  <li><b>Ajuan</b> merupakan jumlah ajuan dan <b>Hari</b> merupakan jumlah hari yang diambil.</li>
+                  <li>Singkatan: <b>CT</b> (Cuti Tahunan), <b>CS</b> (Cuti Sakit), <b>CAP</b> (Cuti Alasan Penting), <b>CM</b> (Cuti Melahirkan), <b>CB</b> (Cuti Besar), <b>CLTN</b> (Cuti di Luar Tanggungan Negara).</li>
                 </ul>
               </div>
             </div>
@@ -37,71 +41,38 @@
         </div>
 
         <div class="card-sultan p-3 mb-3">
-            <div class="d-flex-gap">
+            <div class="d-flex-gap align-items-center">
                 
-                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="processSelectedYear()" title="Refresh Data">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="initYears(true)" title="Reset / Refresh Total">
                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
 
-                <select id="filterTahun" class="form-control form-control-sultan form-control-auto" style="min-width: 100px;">
-                    <option value="">Tahun...</option>
+                <select id="filterTahun" class="form-control form-control-sultan input-auto-width min-w-100">
+                    <option value="">- Tahun -</option>
                 </select>
 
-                <select id="filterUnit" class="form-control form-control-sultan form-control-auto" style="min-width: 250px;" disabled>
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width min-w-250" disabled>
                     <option value="">- Tunggu Data -</option>
                 </select>
 
-                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="processSelectedYear()" title="Cari Data">
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="applySmartFilter()" title="Muat / Filter Data">
                     <i class="fas fa-search text-white"></i>
                 </button>
-
             </div>
         </div>
 
         <div class="card-sultan">
-            <div class="card-body p-0">
-              
+            <div class="card-body p-3">
               <style>
-                /* --- STYLE TABEL (SULTAN COMPACT) --- */
-                table.dataTable tbody td, table.dataTable tbody th {
-                    vertical-align: middle !important;
-                    /*padding: 6px 10px !important;  */
-                    font-size: 13px;
-                }
-
-                /* --- FREEZE COLUMN FIXED (SOLID WHITE) --- */
-                .col-sticky-left {
-                    position: sticky;
-                    left: 0;
-                    z-index: 5;
-                    border-right: 2px solid #dee2e6 !important;
-                    background-color: #ffffff !important; /* Wajib Solid White agar tidak transparan */
-                }
-                
-                /* Header Sticky: Background Dark */
-                thead .col-sticky-left {
-                    z-index: 10;
-                    background-color: #343a40 !important; 
-                    color: white;
-                }
-                
-                /* Hover Row: Ubah warna freeze column juga saat dihover */
-                .table-hover tbody tr:hover td {
-                    background-color: #fff8f8 !important; /* Efek hover kemerahan tipis khas Sultan */
-                }
-                /* Pastikan kolom freeze juga ikut berubah warnanya */
-                .table-hover tbody tr:hover .col-sticky-left {
-                    background-color: #fff8f8 !important;
-                }
-
                 /* Header Utama */
                 .th-main {
                     background-color: #343a40; 
                     color: white;
                     text-transform: uppercase;
                     border-bottom: 1px solid rgba(255,255,255,0.2) !important;
-                    padding-top: 4px !important;    
-                    padding-bottom: 4px !important;
+                    vertical-align: middle !important;
                 }
                 
                 /* Sub Header */
@@ -110,18 +81,52 @@
                     color: white;
                     font-size: 11px;
                     font-weight: normal;
-                    padding-top: 4px !important;    
-                    padding-bottom: 4px !important;
+                    vertical-align: middle !important;
+                }
+
+                /* Freeze Column (Nama) */
+                .col-sticky-left {
+                    position: sticky;
+                    left: 0;
+                    z-index: 5;
+                    border-right: 2px solid #dee2e6 !important;
+                    background-color: #ffffff; /* Wajib putih solid */
+                }
+                
+                /* Freeze Header */
+                thead .col-sticky-left {
+                    z-index: 10;
+                    background-color: #343a40 !important; 
+                    color: white;
+                }
+
+                /* Fix Hover pada Sticky Column */
+                .table-hover tbody tr:hover td, 
+                .table-hover tbody tr:hover .col-sticky-left {
+                    background-color: #fff8f8 !important; /* Efek hover kemerahan */
+                }
+                
+                /* Background Abu untuk nilai kosong */
+                .bg-abu-terang {
+                    background-color: #f8f9fa;
+                    color: #adb5bd;
                 }
               </style>
 
-              <div class="table-responsive">
-                  <table id="tabelRekap" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100" style="min-width: 1400px;">
-                    <thead id="headTabelRekap">
-                       </thead>
-                    <tbody id="bodyTabelRekap"></tbody>
-                  </table>
-              </div>
+              <table id="tabelRekap" class="table table-bordered table-hover table-premium table-sultan-compact table-header-compact mb-0 w-100">
+                <thead id="headTabelRekap" style="display:none;">
+                    </thead>
+                <tbody id="bodyTabelRekap">
+                    <tr>
+                        <td class="text-center td-spinner" colspan="100%">
+                            <div class="sultan-loading-container">
+                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                <h6 class="text-muted font-weight-bold">Menyiapkan tabel...</h6>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+              </table>
             </div>
         </div>
 
@@ -131,31 +136,45 @@
 </section>
 
 <script>
+    // =================================================================
+    // 1. GLOBAL VARIABLES
+    // =================================================================
     var GLOBAL_YEAR_MAP = [];
-    var GLOBAL_REKAP_DATA = []; 
+    var GLOBAL_REKAP_DATA = [];
+    var CACHE_YEAR_LOADED = ""; 
 
+    // =================================================================
+    // 2. INITIALIZATION
+    // =================================================================
     $(document).ready(function() {
-        renderMessage("loading");
+        console.log("🚀 Halaman Rekap Cuti Siap (Smart Filter + UI Fix)");
         initYears(); 
-        
-        // Listener Filter Unit (Client Side)
-        $('#filterUnit').change(function() {
-            renderTableBody($(this).val());
-        });
-        
-        // Note: Filter Tahun tidak auto-load, harus klik tombol Cari (btnCari)
     });
 
-    function initYears() {
+    // =================================================================
+    // 3. LOGIC UTAMA
+    // =================================================================
+
+    function initYears(isRefresh = false) {
+        if(isRefresh) {
+            if ($.fn.DataTable.isDataTable('#tabelRekap')) { $('#tabelRekap').DataTable().destroy(); }
+            $('#headTabelRekap').hide();
+            
+            CACHE_YEAR_LOADED = "";
+            GLOBAL_REKAP_DATA = [];
+            
+            // Render Loading Awal
+            $('#bodyTabelRekap').html('<tr><td class="text-center td-spinner" colspan="100%"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Menyiapkan tabel...</h6></div></td></tr>');
+            
+            $('#filterUnit').prop('disabled', true).html('<option value="">- Tunggu Data -</option>');
+        }
+
         google.script.run.withSuccessHandler(function(years) {
             GLOBAL_YEAR_MAP = years;
-            var select = document.getElementById('filterTahun');
-            select.innerHTML = "";
+            var select = $('#filterTahun');
+            select.empty().append('<option value="">- Tahun -</option>');
             
             if (!years || years.length === 0) {
-                var opt = document.createElement('option');
-                opt.text = "Kosong";
-                select.appendChild(opt);
                 renderMessage("error", "Konfigurasi tahun tidak ditemukan.");
                 return;
             }
@@ -164,194 +183,231 @@
             var found = false;
 
             years.forEach(function(y) {
-                var opt = document.createElement('option');
-                opt.value = y.id; 
-                opt.text = y.tahun;
-                if (y.tahun == currentYear) { opt.selected = true; found = true; }
-                select.appendChild(opt);
+                var isSelected = (y.tahun == currentYear) ? 'selected' : '';
+                if(isSelected) found = true;
+                select.append(`<option value="${y.id}" ${isSelected}>${y.tahun}</option>`);
             });
             
-            // Default pilih paling atas jika tahun ini tidak ketemu
-            if (!found && years.length > 0) select.selectedIndex = 0;
+            if (!found && years.length > 0) {
+                select.val(years[0].id);
+            }
 
-            // Auto Load Pertama Kali (Default Tahun Ini)
-            processSelectedYear();
+            // Auto Load Data Awal (Tahun Ini)
+            applySmartFilter();
 
         }).getRekapYears();
     }
 
-    function processSelectedYear() {
-        var sheetId = $('#filterTahun').val();
-        if (!sheetId) {
-             Swal.fire('Peringatan', 'Silakan pilih tahun terlebih dahulu.', 'warning');
+    // LOGIKA SMART FILTER (Filter Lokal vs Fetch Server)
+    function applySmartFilter() {
+        var selectedSheetId = $('#filterTahun').val();
+        
+        if (!selectedSheetId) {
+             Sultan.notif.info('Silakan pilih tahun terlebih dahulu.');
              return;
         }
 
-        if ($.fn.DataTable.isDataTable('#tabelRekap')) {
-            $('#tabelRekap').DataTable().destroy();
+        if (selectedSheetId === CACHE_YEAR_LOADED && GLOBAL_REKAP_DATA.length > 0) {
+            // Filter Lokal (Cepat)
+            renderTableBody(); 
+        } else {
+            // Ambil dari Server (Loading)
+            fetchDataServer(selectedSheetId);
         }
+    }
 
+    function fetchDataServer(sheetId) {
+        if ($.fn.DataTable.isDataTable('#tabelRekap')) { $('#tabelRekap').DataTable().destroy(); }
+        $('#headTabelRekap').hide();
+        
+        // Tampilkan Spinner Loading
         renderMessage("loading");
+        
         $('#filterUnit').prop('disabled', true).html('<option>Memuat...</option>');
+        $('#btnCari').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
         google.script.run.withSuccessHandler(function(jsonStr) {
-            var res = JSON.parse(jsonStr);
-            if (res.error) { renderMessage("error", res.error); return; }
+            $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            
+            try {
+                var res = JSON.parse(jsonStr);
+                if (res.error) { renderMessage("error", res.error); return; }
 
-            GLOBAL_REKAP_DATA = res.data;
-            renderFullHeader(res.h1, res.h2);
-            populateFilterUnit(res.data);
-            renderTableBody(""); 
+                GLOBAL_REKAP_DATA = res.data || [];
+                CACHE_YEAR_LOADED = sheetId; 
+
+                renderFullHeader(res.h1, res.h2);
+                populateFilterUnit(GLOBAL_REKAP_DATA);
+                renderTableBody();
+
+            } catch(e) {
+                renderMessage("error", "Gagal memproses data: " + e.message);
+            }
 
         }).withFailureHandler(function(e) {
+            $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
             renderMessage("error", "Gagal koneksi: " + e);
         }).getRekapData(sheetId);
     }
 
-    function renderFullHeader(h1, h2) {
-        var thead = document.getElementById('headTabelRekap');
-        thead.innerHTML = "";
+    function renderTableBody() {
+        // Ambil nilai filter Unit saat ini
+        var filterUnitVal = $('#filterUnit').val();
+        var fUnit = filterUnitVal ? String(filterUnitVal).toLowerCase().trim() : "";
 
-        // ROW 1
-        var tr1 = document.createElement('tr');
+        if ($.fn.DataTable.isDataTable('#tabelRekap')) { $('#tabelRekap').DataTable().destroy(); }
         
-        // Col B (Nama) - Sticky
-        var thB = createTh(h1[1] || "Nama ASN", 2, 1, "th-main col-sticky-left");
-        thB.style.minWidth = "220px";
-        tr1.appendChild(thB);
+        var tbody = $('#bodyTabelRekap');
+        tbody.empty();
 
-        // Col C (NIP)
-        var thC = createTh(h1[2] || "NIP", 2, 1, "th-main text-center");
-        thC.style.minWidth = "50px";
-        tr1.appendChild(thC);
-
-        // Col D-O (Group)
-        for (var i = 3; i <= 14; i += 2) {
-            var title = h1[i] || "";
-            var thGroup = createTh(title, 1, 2, "th-main text-center");
-            tr1.appendChild(thGroup);
-        }
-        thead.appendChild(tr1);
-
-        // ROW 2
-        var tr2 = document.createElement('tr');
-        for (var j = 3; j <= 14; j++) {
-            var subTitle = h2[j] || "-";
-            var thSub = createTh(subTitle, 1, 1, "th-sub text-center");
-            tr2.appendChild(thSub);
-        }
-        thead.appendChild(tr2);
-    }
-
-    function createTh(text, rowSpan, colSpan, className) {
-        var th = document.createElement('th');
-        th.className = "align-middle " + className;
-        if (rowSpan > 1) th.rowSpan = rowSpan;
-        if (colSpan > 1) th.colSpan = colSpan;
-        th.textContent = text;
-        return th;
-    }
-
-    function renderTableBody(filterUnit) {
-        if ($.fn.DataTable.isDataTable('#tabelRekap')) {
-            $('#tabelRekap').DataTable().destroy();
+        if (!GLOBAL_REKAP_DATA || GLOBAL_REKAP_DATA.length === 0) {
+            renderMessage("empty");
+            return;
         }
 
-        var tbody = document.getElementById('bodyTabelRekap');
-        tbody.innerHTML = "";
-        
-        var data = GLOBAL_REKAP_DATA;
-        var fUnit = filterUnit ? String(filterUnit).toLowerCase().trim() : "";
+        $('#headTabelRekap').show();
+
+        var rowsHtml = "";
         var count = 0;
-        var fragment = document.createDocumentFragment();
-
-        for (var i = 0; i < data.length; i++) {
-            var row = data[i]; if (!row) continue;
+        
+        for (var i = 0; i < GLOBAL_REKAP_DATA.length; i++) {
+            var row = GLOBAL_REKAP_DATA[i]; if (!row) continue;
+            
             var rowUnit = String(row[0] || "").toLowerCase();
-
-            if (fUnit === "" || rowUnit === fUnit) {
-                count++;
-                var tr = document.createElement('tr');
-
-                // 1. NAMA (Freeze) - Background Putih Solid (dari CSS)
-                var tdNama = document.createElement('td');
-                tdNama.className = "col-sticky-left text-left text-nowrap";
-                tdNama.style.fontWeight = "600";
-                tdNama.textContent = row[1] || "";
-                tr.appendChild(tdNama);
-
-                // 2. NIP
-                var tdNip = document.createElement('td');
-                tdNip.className = "text-center text-nowrap";
-                tdNip.textContent = row[2] || ""; 
-                tr.appendChild(tdNip);
-
-                // 3. DATA ANGKA
-                for (var c = 3; c <= 14; c++) {
-                    var td = document.createElement('td');
-                    td.className = "text-center";
-                    var val = (row[c] === undefined || row[c] === null) ? "" : String(row[c]);
-                    if (val == "0" || val === "0.00") td.textContent = "-";
-                    else td.textContent = val;
-                    tr.appendChild(td);
-                }
-                fragment.appendChild(tr);
+            if (fUnit !== "" && rowUnit !== fUnit) {
+                continue; 
             }
+
+            count++;
+            var delay = count * 0.02; 
+            if (delay > 0.5) delay = 0.5;
+
+            rowsHtml += `<tr class="tr-animasi" style="animation-delay: ${delay}s">`;
+
+            // 1. NAMA (Freeze)
+            rowsHtml += `<td class="col-sticky-left text-left text-nowrap font-weight-bold text-dark bg-white align-middle">${row[1] || ""}</td>`;
+
+            // 2. NIP
+            rowsHtml += `<td class="text-center small text-muted text-nowrap align-middle">${row[2] || ""}</td>`;
+
+            // 3. DATA ANGKA
+            for (var c = 3; c <= 14; c++) {
+                var val = (row[c] === undefined || row[c] === null) ? "" : String(row[c]);
+                var display = val;
+                var cls = "text-center align-middle";
+
+                if (val == "0" || val === "0.00") {
+                    display = "-";
+                    cls += " bg-abu-terang";
+                } else {
+                    cls += " font-weight-bold text-dark";
+                }
+                rowsHtml += `<td class="${cls}">${display}</td>`;
+            }
+            rowsHtml += `</tr>`;
         }
 
         if (count === 0) {
             renderMessage("empty");
         } else {
-            tbody.appendChild(fragment);
+            tbody.html(rowsHtml);
             
             $('#tabelRekap').DataTable({
                 "ordering": false,
                 "pageLength": 10,
                 "autoWidth": false,
+                "scrollX": false, 
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json",
                     "search": "",
                     "searchPlaceholder": "Cari Nama/NIP..."
                 },
-                "initComplete": function() {
-                    var table = $(this);
-                    if (!table.parent().hasClass('table-responsive')) {
-                        table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
-                    }
-                }
+                "dom": "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                       "<'row'<'col-sm-12'<'table-responsive't>>>" +
+                       "<'row mt-3'<'col-sm-12 col-md-5 small text-muted'i><'col-sm-12 col-md-7'p>>"
             });
         }
     }
 
+    // =================================================================
+    // 4. HELPER FUNCTIONS
+    // =================================================================
+
+    function renderFullHeader(h1, h2) {
+        var thead = $('#headTabelRekap');
+        thead.empty();
+
+        // ROW 1
+        var tr1 = $('<tr></tr>');
+        
+        var thB = createTh(h1[1] || "Nama ASN", 2, 1, "th-main col-sticky-left");
+        thB.css('min-width', '220px');
+        tr1.append(thB);
+
+        var thC = createTh(h1[2] || "NIP", 2, 1, "th-main text-center");
+        thC.css('min-width', '120px');
+        tr1.append(thC);
+
+        for (var i = 3; i <= 14; i += 2) {
+            var title = h1[i] || "";
+            var thGroup = createTh(title, 1, 2, "th-main text-center");
+            tr1.append(thGroup);
+        }
+        thead.append(tr1);
+
+        // ROW 2
+        var tr2 = $('<tr></tr>');
+        for (var j = 3; j <= 14; j++) {
+            var subTitle = h2[j] || "-";
+            var thSub = createTh(subTitle, 1, 1, "th-sub text-center");
+            tr2.append(thSub);
+        }
+        thead.append(tr2);
+    }
+
+    function createTh(text, rowSpan, colSpan, className) {
+        var th = $('<th></th>').addClass("align-middle " + className).text(text);
+        if (rowSpan > 1) th.attr('rowspan', rowSpan);
+        if (colSpan > 1) th.attr('colspan', colSpan);
+        return th;
+    }
+
     function populateFilterUnit(data) {
-        var unique = []; var seen = {};
+        var currentVal = $('#filterUnit').val();
+        var unique = new Set();
         data.forEach(function(row) {
             var unit = String(row[0] || "").trim();
-            if (unit && !seen[unit]) { unique.push(unit); seen[unit] = true; }
+            if (unit) unique.add(unit);
         });
-        unique.sort();
-        var select = document.getElementById('filterUnit');
-        select.innerHTML = '<option value="">- Semua Unit Kerja -</option>';
-        unique.forEach(function(u) {
-            var opt = document.createElement('option'); opt.value = u; opt.text = u; select.appendChild(opt);
+        
+        var sortedUnits = Array.from(unique).sort();
+        var select = $('#filterUnit');
+        select.empty().append('<option value="">- Semua Unit Kerja -</option>');
+        
+        sortedUnits.forEach(function(u) {
+            select.append(`<option value="${u}">${u}</option>`);
         });
-        $('#filterUnit').prop('disabled', false);
+        select.prop('disabled', false);
+
+        if(currentVal && unique.has(currentVal)) {
+            select.val(currentVal);
+        }
     }
 
     function renderMessage(type, msg) {
-        var tbody = document.getElementById('bodyTabelRekap');
-        tbody.innerHTML = "";
-        var tr = document.createElement('tr');
-        var td = document.createElement('td');
-        td.colSpan = 14; td.className = "p-0 border-0";
-
+        var tbody = $('#bodyTabelRekap');
+        tbody.empty();
+        
+        var content = '';
         if (type === "loading") {
-             td.innerHTML = '<div class="sultan-loading-container"><div class="spinner-border sultan-spinner" role="status"></div><h6 class="text-muted font-weight-bold">Mengambil data rekap...</h6></div>';
+             content = '<div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengambil data rekap...</h6></div>';
         } else if (type === "empty") {
-             td.innerHTML = '<div class="text-center p-4"><i class="fas fa-search fa-3x text-gray-300 mb-3"></i><p class="text-muted">Tidak ada data ditemukan.</p></div>';
+             content = '<div class="text-center p-4"><i class="fas fa-search fa-3x text-gray-300 mb-3"></i><p class="text-muted">Tidak ada data ditemukan.</p></div>';
         } else if (type === "error") {
-             td.className = "text-center text-danger p-4"; td.textContent = msg;
+             content = `<div class="text-center text-danger p-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>${msg}</div>`;
         }
-        tr.appendChild(td); tbody.appendChild(tr);
+        
+        // [FIX] Menggunakan colspan="100%" agar selalu rata tengah
+        tbody.html(`<tr><td colspan="100%" class="p-0 border-0 text-center td-spinner">${content}</td></tr>`);
     }
 </script>

@@ -1,3 +1,5 @@
+<?!= include('js_core_sultan'); ?>
+
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -18,18 +20,20 @@
 
         <div class="card-sultan mb-3">
           <div class="card-body py-2 px-3 border-left-dark">
-            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
               <div class="d-flex align-items-center text-maroon font-weight-bold">
                 <i class="fas fa-info-circle mr-2"></i> Informasi
               </div>
-              <i class="fas fa-chevron-down text-muted" style="font-size: 12px;"></i>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
             </div>
             <div id="infoCollapse" class="collapse">
-              <div class="mt-2 pt-2 border-top">
-                <ul class="mb-0 pl-3 text-muted" style="font-size: 13px;">
-                  <li class="mb-1">Halaman ini merupakan jumlah cuti tahunan sebagai pedoman untuk menghitung jumlah cuti yang akan diambil.</li>
-                  <li>Sisa CT akan berkurang secara otomatis apabila usulan cuti tahunannya disetujui.</li>
-                  <li>Setiap ASN memiliki hak cuti tahunan setelah masa kerja 1 tahun.</li>
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
+                  <li class="mb-1">Tabel ini menampilkan sisa hak cuti tahunan (N, N-1, N-2).</li>
+                  <li>Sisa CT akan berkurang otomatis jika usulan cuti tahunan disetujui.</li>
+                  <li>Kolom berwarna <span class="text-green-sultan">hijau</span> adalah total hak cuti yang bisa diambil.</li>
+                  <li>Nilai <span class="badge badge-danger">Minus</span> menandakan cuti diambil melebihi kuota (utang cuti).</li>
                 </ul>
               </div>
             </div>
@@ -37,92 +41,48 @@
         </div>
 
         <div class="card-sultan p-3 mb-3">
-            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+            <div class="d-flex-gap align-items-center">
                 
-                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="reloadSisaCuti()" title="Refresh Data">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshDataSisa()" title="Refresh Data">
                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
 
-                <select id="filterUnitSisa" class="form-control form-control-sultan" style="width: auto; min-width: 250px; max-width: 100%;">
+                <select id="filterUnitSisa" class="form-control form-control-sultan input-auto-width min-w-250" onchange="applyFilterSisa()">
                     <option value="">- Memuat Unit Kerja... -</option>
                 </select>
 
-                <span id="loadingStatus" class="text-muted small font-italic ml-2" style="display:none;">
-                    <i class="fas fa-spinner fa-spin mr-1"></i> Memproses...
-                </span>
-
-            </div>
+                </div>
         </div>
 
         <div class="card-sultan">
-            <div class="card-body p-0">
-              
-              <style>
-                /* --- [1] TINGGI BARIS & FONT --- */
-                #tabelSisa td, #tabelSisa th {
-                    padding-top: 8px !important;    
-                    padding-bottom: 8px !important; 
-                    vertical-align: middle !important;
-                }
-
-                /* --- [2] FREEZE COLUMN (NAMA) --- */
-                .col-sticky-left {
-                    position: sticky;
-                    left: 0;
-                    z-index: 5;
-                    border-right: 2px solid #dee2e6 !important; 
-                    background-color: #fff; 
-                }
-                thead .col-sticky-left {
-                    z-index: 10;
-                    background-color: #001f3f !important; 
-                    color: white;
-                }
-                .table-striped tbody tr:nth-of-type(odd) .col-sticky-left {
-                    background-color: rgba(0,0,0,.05); 
-                }
-
-                /* --- [3] WARNA BARU (LIGHT MODE) --- */
-                
-                /* Kolom I (Orange Pucat, Teks Gelap) */
-                .bg-orange-light { 
-                    background-color: #fff3cd !important; 
-                    color: #856404 !important; 
-                    font-weight: bold; 
-                }
-                
-                /* Kolom M (Hijau Pucat, Teks Gelap) */
-                .bg-green-light { 
-                    background-color: #d4edda !important; 
-                    color: #155724 !important; 
-                    font-weight: bold; 
-                }
-                
-                /* Hover Row Effect (Tetap nyaman dibaca) */
-                .table-hover tbody tr:hover td {
-                    color: #212529; /* Pastikan teks jadi hitam saat hover */
-                }
-                /* Kecuali span minus, tetap putih */
-                .table-hover tbody tr:hover span.val-minus {
-                    color: #fff;
-                }
-
-                /* Blok Merah untuk Nilai Minus */
+          <div class="card-body p-3">
+            
+            <style>
                 .val-minus { 
                     background-color: #dc3545; color: white; padding: 2px 8px; 
-                    border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block;
+                    border-radius: 4px; font-weight: bold; font-size: 11px; 
+                    display: inline-block; min-width: 30px;
                 }
-              </style>
+                /* Warna Kolom sesuai logika lama */
+                .bg-col-highlight-1 { background-color: #fff8e1 !important; color: #856404; font-weight:bold; } /* Kuning Soft */
+                .bg-col-highlight-2 { background-color: #e8f5e9 !important; color: #155724; font-weight:bold; } /* Hijau Soft */
+            </style>
 
-              <table id="tabelSisa" class="table table-premium table-sultan-compact mb-0 w-100">
-                <thead class="bg-navy text-white">
-                   <tr id="headerRow">
-                       </tr>
-                </thead>
-                <tbody id="bodyTabelSisa">
-                   </tbody>
-              </table>
-            </div>
+            <table id="tabelSisa" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
+              <thead id="headTabelSisa" style="display:none;">
+                 </thead>
+              <tbody id="bodyTabelSisa">
+                  <tr>
+                      <td class="text-center td-spinner" colspan="100%">
+                          <div class="sultan-loading-container">
+                              <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                              <h6 class="text-muted font-weight-bold">Menyiapkan data...</h6>
+                          </div>
+                      </td>
+                  </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -131,204 +91,205 @@
 </section>
 
 <script>
-    var GLOBAL_SISA_DATA = [];
-    var GLOBAL_HEADERS = [];
+// =================================================================
+// 1. GLOBAL VARIABLES
+// =================================================================
+var SISA_CACHE = []; 
+var SISA_HEADERS = []; 
 
-    $(document).ready(function() {
-        renderMessageDOM("loading");
-        loadDataSisaCuti();
+// =================================================================
+// 2. INITIALIZATION
+// =================================================================
+$(document).ready(function() {
+    console.log("🚀 Halaman Sisa Cuti Siap");
+    refreshDataSisa();
+});
 
-        $('#filterUnitSisa').change(function() {
-            renderTabelDOM($(this).val());
-        });
-    });
+// =================================================================
+// 3. LOGIC UTAMA (LOAD & RENDER)
+// =================================================================
 
-    function reloadSisaCuti() {
-        renderMessageDOM("loading");
-        loadDataSisaCuti();
-    }
+function refreshDataSisa() {
+    // UI Loading
+    if ($.fn.DataTable.isDataTable('#tabelSisa')) { $('#tabelSisa').DataTable().destroy(); }
+    $('#headTabelSisa').hide();
+    $('#bodyTabelSisa').html('<tr><td colspan="100%" class="text-center td-spinner"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Sedang mengambil database...</h6></div></td></tr>');
+    
+    $('#filterUnitSisa').prop('disabled', true);
 
-    /* RENDER PESAN (LOADING/ERROR) */
-    function renderMessageDOM(type, msgText) {
-        var tbody = document.getElementById('bodyTabelSisa');
-        tbody.innerHTML = ""; 
-
-        var tr = document.createElement('tr');
-        var td = document.createElement('td');
-        td.colSpan = 12; 
-        td.className = "p-0 border-0";
-
-        if (type === "loading") {
-            var divContainer = document.createElement('div');
-            divContainer.className = "sultan-loading-container";
-            var divSpinner = document.createElement('div');
-            divSpinner.className = "spinner-border sultan-spinner";
-            divSpinner.setAttribute("role", "status");
-            var h6 = document.createElement('h6');
-            h6.className = "text-muted font-weight-bold";
-            h6.textContent = "Sedang memuat database...";
-            divContainer.appendChild(divSpinner);
-            divContainer.appendChild(h6);
-            td.appendChild(divContainer);
-
-        } else if (type === "error") {
-            td.className = "text-center text-danger p-4";
-            td.textContent = msgText || "Terjadi kesalahan.";
-
-        } else if (type === "empty") {
-            td.className = "text-center p-4";
-            var iIcon = document.createElement('i');
-            iIcon.className = "fas fa-search fa-3x text-gray-300 mb-3";
-            var pText = document.createElement('p');
-            pText.className = "text-muted";
-            pText.textContent = "Tidak ada data ditemukan.";
-            td.appendChild(iIcon);
-            td.appendChild(pText);
-        }
-
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-    }
-
-    /* LOAD DATA SERVER */
-    function loadDataSisaCuti() {
-        google.script.run
-            .withSuccessHandler(function(jsonStr) {
-                var res = JSON.parse(jsonStr);
-                if (res.error) { renderMessageDOM("error", res.error); return; }
+    google.script.run
+        .withSuccessHandler(function(jsonString) {
+            try {
+                var res = JSON.parse(jsonString);
                 
-                GLOBAL_SISA_DATA = res.data;
-                GLOBAL_HEADERS = res.headers;
-
-                renderHeaderDOM(res.headers);
-                populateFilterDOM(res.data);
-                renderTabelDOM(""); 
-            })
-            .withFailureHandler(function(err) {
-                renderMessageDOM("error", "Gagal memuat: " + err);
-            })
-            .getSisaCutiData();
-    }
-
-    /* RENDER HEADER */
-    function renderHeaderDOM(headers) {
-        var tr = document.getElementById('headerRow');
-        tr.innerHTML = ""; 
-        
-        for (var i = 1; i <= 12; i++) {
-            var th = document.createElement('th');
-            th.className = "align-middle text-center text-nowrap";
-            th.textContent = headers[i] || "-";
-            
-            if (i === 1) { // Freeze Kolom Nama
-                th.classList.add('col-sticky-left');
-                th.style.minWidth = "200px"; 
-            }
-            tr.appendChild(th);
-        }
-    }
-
-    /* POPULATE FILTER */
-    function populateFilterDOM(dataRows) {
-        var uniqueUnits = [];
-        var seen = {};
-        for(var i=0; i<dataRows.length; i++) {
-            var u = String(dataRows[i][0]).trim();
-            if (u && !seen[u]) { uniqueUnits.push(u); seen[u] = true; }
-        }
-        uniqueUnits.sort();
-        
-        var select = document.getElementById('filterUnitSisa');
-        select.innerHTML = ""; 
-        var optDef = document.createElement('option');
-        optDef.value = "";
-        optDef.textContent = "- Semua Unit Kerja -";
-        select.appendChild(optDef);
-        
-        for(var j=0; j<uniqueUnits.length; j++) {
-            var opt = document.createElement('option');
-            opt.value = uniqueUnits[j];
-            opt.textContent = uniqueUnits[j];
-            select.appendChild(opt);
-        }
-    }
-
-    /* RENDER TABEL (DENGAN WARNA BARU) */
-    function renderTabelDOM(unitFilter) {
-        if ($.fn.DataTable.isDataTable('#tabelSisa')) { $('#tabelSisa').DataTable().destroy(); }
-
-        var tbody = document.getElementById('bodyTabelSisa');
-        tbody.innerHTML = ""; 
-        
-        var data = GLOBAL_SISA_DATA || [];
-        var fUnit = unitFilter ? String(unitFilter).toLowerCase().trim() : "";
-        var count = 0;
-        var fragment = document.createDocumentFragment();
-
-        for (var i = 0; i < data.length; i++) {
-            var row = data[i];
-            if (!row) continue;
-            var rowUnit = String(row[0] || "").toLowerCase(); 
-
-            if (fUnit === "" || rowUnit === fUnit) {
-                count++;
-                var tr = document.createElement('tr');
-                
-                for (var c = 1; c <= 12; c++) {
-                    var val = (row[c] === undefined || row[c] === null) ? "" : String(row[c]);
-                    
-                    var td = document.createElement('td');
-                    td.className = "align-middle text-center text-nowrap";
-                    
-                    // A. FREEZE NAMA
-                    if (c === 1) {
-                        td.classList.add('col-sticky-left');
-                        td.classList.add('text-left');
-                        td.classList.remove('text-center');
-                        td.style.fontWeight = "600";
-                    }
-
-                    // B. WARNA KOLOM (GANTI CLASS JADI LIGHT)
-                    if (c === 8) td.classList.add("bg-orange-light"); // Kolom I
-                    if (c === 12) td.classList.add("bg-green-light"); // Kolom M
-
-                    // C. ISI KONTEN
-                    if (val == "0" || val === "0.00") {
-                        td.textContent = "-";
-                    } else {
-                         var numVal = parseFloat(val.replace(",","."));
-                         if (!isNaN(numVal) && numVal < 0) {
-                             var span = document.createElement('span');
-                             span.className = "val-minus";
-                             span.textContent = val;
-                             td.appendChild(span);
-                         } else {
-                             td.textContent = val; 
-                         }
-                    }
-                    tr.appendChild(td);
+                if (res.error) {
+                    showError(res.error);
+                    return;
                 }
-                fragment.appendChild(tr);
-            }
-        }
 
-        if (count === 0) {
-            renderMessageDOM("empty");
-        } else {
-            tbody.appendChild(fragment);
-        }
-        
-        $('#tabelSisa').DataTable({
-            "ordering": false, 
-            "pageLength": 10,
-            "autoWidth": false,
-            "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "search": "", "searchPlaceholder": "Cari nama..." },
-            "initComplete": function() {
-                 var table = $(this);
-                 if (!table.parent().hasClass('table-responsive')) {
-                     table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
-                 }
+                SISA_CACHE = res.data || [];
+                SISA_HEADERS = res.headers || [];
+
+                // 1. Render Header 
+                renderHeader(SISA_HEADERS);
+
+                // 2. Populate Filter Unit
+                populateFilterUnit(SISA_CACHE);
+
+                // 3. Render Tabel
+                renderTableSisa(SISA_CACHE);
+
+            } catch (e) {
+                showError("Gagal memproses data: " + e.message);
             }
+        })
+        .withFailureHandler(function(e) {
+            showError("Error Server: " + e.message);
+        })
+        .getSisaCutiData();
+}
+
+function applyFilterSisa() {
+    var selectedUnit = $('#filterUnitSisa').val();
+    
+    var filteredData = [];
+    if (!selectedUnit || selectedUnit === "") {
+        filteredData = SISA_CACHE; 
+    } else {
+        filteredData = SISA_CACHE.filter(function(row) {
+            return String(row[0]).trim() === selectedUnit;
         });
     }
+
+    renderTableSisa(filteredData);
+}
+
+function renderTableSisa(dataRows) {
+    if ($.fn.DataTable.isDataTable('#tabelSisa')) { 
+        $('#tabelSisa').DataTable().clear().destroy(); 
+    }
+    $('#bodyTabelSisa').empty();
+
+    if (!dataRows || dataRows.length === 0) {
+        $('#headTabelSisa').show();
+        initDataTableStandard('#tabelSisa', true);
+        return;
+    }
+
+    $('#headTabelSisa').show();
+
+    var html = "";
+    
+    for (var i = 0; i < dataRows.length; i++) {
+        var row = dataRows[i];
+        
+        html += '<tr class="tr-animasi">';
+        
+        // Loop Kolom Data (Mulai index 1 s.d 12)
+        // 1=Nama, 2=NIP, dst.
+        for (var c = 1; c <= 12; c++) {
+            var rawVal = row[c];
+            var displayVal = rawVal;
+            var cellClass = "text-center align-middle";
+            var style = "";
+
+            // --- FREEZE COLUMN LOGIC ---
+            // Jika kolom Nama (Index 1), tambahkan class 'col-sticky-left' DAN 'bg-white'
+            if (c === 1) {
+                cellClass = "col-sticky-left align-middle font-weight-bold text-dark bg-white";
+                // bg-white Wajib agar tidak transparan saat scroll
+            }
+
+            // --- WARNA KOLOM (LOGIKA ASLI) ---
+            if (c === 8) cellClass += " bg-col-highlight-1"; // Kolom I
+            if (c === 12) cellClass += " bg-col-highlight-2"; // Kolom M (Akhir)
+
+            // --- NILAI MINUS (LOGIKA ASLI) ---
+            if (rawVal == 0 || rawVal == "0" || rawVal == "0.00") {
+                displayVal = "-";
+                style = 'color: #ccc;'; 
+            } else {
+                var num = parseFloat(String(rawVal).replace(',', '.'));
+                if (!isNaN(num) && num < 0) {
+                    displayVal = `<span class="val-minus">${rawVal}</span>`;
+                }
+            }
+
+            html += `<td class="${cellClass}" style="${style}">${displayVal}</td>`;
+        }
+        
+        html += '</tr>';
+    }
+
+    $('#bodyTabelSisa').html(html);
+
+    setTimeout(function() { 
+        initDataTableStandard('#tabelSisa'); 
+    }, 10);
+}
+
+// =================================================================
+// 4. HELPER FUNCTIONS
+// =================================================================
+
+function renderHeader(headers) {
+    var html = '<tr>';
+    for (var i = 1; i <= 12; i++) {
+        var title = headers[i] || "-";
+        var cls = "text-center align-middle";
+        
+        // FREEZE HEADER: Tambahkan class col-sticky-left pada Header Kolom 1
+        if (i === 1) cls += " text-left col-sticky-left";
+        
+        html += `<th class="${cls}">${title}</th>`;
+    }
+    html += '</tr>';
+    $('#headTabelSisa').html(html);
+}
+
+function populateFilterUnit(data) {
+    var uniqueUnits = new Set();
+    data.forEach(function(row) {
+        if(row[0]) uniqueUnits.add(String(row[0]).trim());
+    });
+    
+    var sorted = Array.from(uniqueUnits).sort();
+    var opts = '<option value="">- Semua Unit Kerja -</option>';
+    sorted.forEach(function(u) {
+        opts += `<option value="${u}">${u}</option>`;
+    });
+    
+    $('#filterUnitSisa').html(opts).prop('disabled', false);
+}
+
+// Inisialisasi DataTable persis seperti halaman Lupa Presensi
+function initDataTableStandard(tableId, isEmpty = false) {
+    if ($.fn.DataTable.isDataTable(tableId)) $(tableId).DataTable().clear().destroy();
+    
+    var msg = isEmpty ? "Data tidak ditemukan." : "Memproses tabel...";
+    
+    $(tableId).DataTable({
+        "ordering": false,
+        "pageLength": 10,
+        "autoWidth": false,
+        "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "emptyTable": msg },
+        "initComplete": function(settings, json) {
+            // WRAPPER SCROLL AGAR FREEZE BERFUNGSI
+            if (!$(tableId).parent().hasClass('table-scroll-wrapper')) {
+                $(tableId).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width: 100%; position: relative;"></div>');
+            }
+        }
+    });
+}
+
+function showError(msg) {
+    $('#headTabelSisa').hide();
+    $('#bodyTabelSisa').html(`<tr><td colspan="100%" class="text-center text-danger p-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>${msg}</td></tr>`);
+    $('#filterUnitSisa').prop('disabled', false);
+}
+
+function escapeHtml(text) {
+  if (!text) return "";
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
 </script>

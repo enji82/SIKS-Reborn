@@ -60,7 +60,7 @@
                     <option value="">- Status -</option>
                     <option value="Diproses">Diproses</option>
                     <option value="Revisi">Revisi</option>
-                    <option value="OK">Disetujui</option>
+                    <option value="Disetujui">Disetujui</option>
                     <option value="Ditolak">Ditolak</option>
                 </select>
 
@@ -93,18 +93,16 @@
               <thead id="headTabelSalah" style="display:none;">
                 <tr>
                   <th class="col-sticky-left" style="min-width: 250px;">Nama ASN</th>
-                  <th class="text-nowrap">NIP</th>
+                  <th class="text-nowrap text-center">NIP</th>
                   <th class="text-nowrap text-center">Tanggal</th>
                   <th class="text-nowrap text-center">Jam</th>
                   <th class="text-center text-nowrap">Jenis</th>
                   <th class="text-center text-nowrap">Status</th>
                   <th class="text-center text-nowrap">Aksi</th>
-                  <th class="small text-muted text-nowrap text-center">Tgl Kirim</th>
-                  <th class="small text-muted text-nowrap">User Input</th>
-                  <th class="small text-muted text-nowrap text-center">Tgl Edit</th>
-                  <th class="small text-muted text-nowrap">User Edit</th>
-                  <th class="small text-muted text-nowrap text-center">Tgl Verif</th>
-                  <th class="small text-muted text-nowrap">Admin Verif</th>
+                  
+                  <th class="small text-muted text-nowrap text-center">Dikirim</th>
+                  <th class="small text-muted text-nowrap text-center">Diubah</th>
+                  <th class="small text-muted text-nowrap text-center">Verifikasi</th>
                 </tr>
               </thead>
 
@@ -286,7 +284,7 @@
                         <label class="form-label-sultan text-success font-weight-bold">Status Keputusan</label>
                         <select class="form-control form-control-sultan font-weight-bold" id="selectStatusVerif" required>
                             <option value="">- Pilih Keputusan -</option>
-                            <option value="OK" class="text-success">✅ SETUJUI (OK)</option>
+                            <option value="Disetujui" class="text-success">✅ DISETUJUI</option>
                             <option value="Revisi" class="text-info">🔄 Minta Revisi</option>
                             <option value="Ditolak" class="text-danger">❌ TOLAK</option>
                         </select>
@@ -421,6 +419,7 @@ function jalankanFilterLokalSalah() {
     renderTabelSalah(hasilSaringan);
 }
 
+/* 3. RENDER TABEL (METADATA DIGABUNG) */
 function renderTabelSalah(data) {
     try {
         if ($.fn.DataTable.isDataTable('#tabelSalah')) {
@@ -466,6 +465,7 @@ function renderTabelSalah(data) {
             
             var badgeStatus = renderBadgeStatus(row.status, sKet);
 
+            // --- TOMBOL AKSI ---
             var btnVerif = '';
             if(isAdmin) {
                 btnVerif = '<button class="btn-icon-sultan btn-icon-sultan-success" onclick="verifikasiDataSalah(\''+safeId+'\')" title="Verif"><i class="fas fa-check"></i></button>';
@@ -477,25 +477,40 @@ function renderTabelSalah(data) {
             var btnEdit = '<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="editDataSalah(\''+safeId+'\')" '+attrDis+' title="Edit"><i class="fas fa-pencil-alt"></i></button>';
             var btnHapus = '<button class="btn-icon-sultan btn-icon-sultan-danger" onclick="hapusDataSalah(\''+safeId+'\')" '+attrDis+' title="Hapus"><i class="fas fa-trash"></i></button>';
 
+            // --- FORMAT METADATA (GABUNGAN) ---
+            // 1. Dikirim
+            var metaKirim = `<div style="line-height:1.2; font-size:11px;">
+                                <span class="d-block font-weight-bold text-dark text-nowrap">${row.tglKirim||'-'}</span>
+                                <span class="d-block text-muted text-nowrap">${row.userInput||'-'}</span>
+                             </div>`;
+            // 2. Diubah
+            var metaEdit = `<div style="line-height:1.2; font-size:11px;">
+                                <span class="d-block font-weight-bold text-dark text-nowrap">${row.tglEdit||'-'}</span>
+                                <span class="d-block text-muted text-nowrap">${row.userEdit||'-'}</span>
+                             </div>`;
+            // 3. Verifikasi
+            var metaVerif = `<div style="line-height:1.2; font-size:11px;">
+                                <span class="d-block font-weight-bold text-dark text-nowrap">${row.tglVerif||'-'}</span>
+                                <span class="d-block text-muted text-nowrap">${row.adminVerif||'-'}</span>
+                             </div>`;
+
             // --- ANIMASI DELAY ---
-            // Setiap baris muncul lebih lambat 50ms dari baris sebelumnya
             var delay = i * 50; 
-            if(delay > 1000) delay = 1000; // Batasi max delay agar tidak terlalu lama menunggu
+            if(delay > 1000) delay = 1000; 
 
             html += '<tr class="tr-animasi" style="animation-delay: '+delay+'ms">' +
                 '<td class="col-sticky-left font-weight-bold text-dark bg-white">'+sNama+'</td>' +
-                '<td>'+sNip+'</td>' +
+                '<td class="text-center">'+sNip+'</td>' +
                 '<td class="text-center">'+cleanTgl+'</td>' +
                 '<td class="text-center font-weight-bold">'+cleanJam+'</td>' +
                 '<td class="text-center">'+badgeJenis+'</td>' +
                 '<td class="text-center">'+badgeStatus+'</td>' +
                 '<td class="text-center"><div class="d-flex justify-content-center" style="gap:4px">'+btnVerif+btnEdit+btnHapus+'</div></td>' +
-                '<td class="small text-muted text-center">'+(row.tglKirim||'-')+'</td>' +
-                '<td class="small text-muted">'+(row.userInput||'-')+'</td>' +
-                '<td class="small text-muted text-center">'+(row.tglEdit||'-')+'</td>' +
-                '<td class="small text-muted">'+(row.userEdit||'-')+'</td>' +
-                '<td class="small text-muted text-center">'+(row.tglVerif||'-')+'</td>' +
-                '<td class="small text-muted">'+(row.adminVerif||'-')+'</td>' +
+                
+                // KOLOM BARU (GABUNGAN)
+                '<td class="text-center">'+metaKirim+'</td>' +
+                '<td class="text-center">'+metaEdit+'</td>' +
+                '<td class="text-center">'+metaVerif+'</td>' +
             '</tr>';
         }
 
