@@ -1,3 +1,5 @@
+<?!= include('js_core_sultan'); ?>
+
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -18,21 +20,21 @@
 
         <div class="card-sultan mb-3">
           <div class="card-body py-2 px-3 border-left-dark">
-            <div class="d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false" style="cursor:pointer;">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
               <div class="d-flex align-items-center text-maroon font-weight-bold">
                 <i class="fas fa-info-circle mr-2"></i> Informasi
               </div>
               <i class="fas fa-chevron-down text-muted icon-sm"></i>
             </div>
             <div id="infoCollapse" class="collapse">
-              <div class="mt-2 pt-2 border-top">
-                <ul class="mb-0 pl-3 text-muted text-xs-custom">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
                   <li class="mb-1">Halaman ini untuk mengunggah Surat Permintaan dan Pemberian Cuti yang sudah ditandatangani.</li>
                   <li>Scan dokumen dalam format PDF dengan ukuran maksimal 200 KB.</li>
                   <li>Cari data berdasarkan Tahun dan Bulan tanggal mulai cuti.</li>
                   <li>Klik tombol <i class="fas fa-file-upload text-warning"></i> pada kolom Aksi untuk mengunggah surat cuti.</li>
                   <li>Klik tombol <i class="fas fa-eye text-info"></i> untuk melihat file yang sudah diunggah.</li>
-                  
                 </ul>
               </div>
             </div>
@@ -42,13 +44,13 @@
         <div class="card-sultan p-3 mb-3">
             <div class="d-flex-gap align-items-center">
                 
-                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="loadDataUnggah()" title="Refresh Data">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshDataUnggah()" title="Refresh Data">
                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
 
-                <select id="filterTahun" class="form-control form-control-sultan input-auto-width" style="min-width: 100px;"></select>
+                <select id="filterTahun" class="form-control form-control-sultan input-auto-width min-w-100"></select>
 
-                <select id="filterBulan" class="form-control form-control-sultan input-auto-width" style="min-width: 120px;">
+                <select id="filterBulan" class="form-control form-control-sultan input-auto-width min-w-120">
                     <option value="">- Bulan -</option>
                     <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
                     <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
@@ -56,7 +58,7 @@
                     <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
                 </select>
 
-                <select id="filterUnit" class="form-control form-control-sultan input-auto-width" style="min-width: 200px;" disabled>
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width min-w-200" disabled>
                     <option value="">- Tunggu Data -</option>
                 </select>
 
@@ -65,10 +67,11 @@
                     <option value="Belum">Belum Unggah</option>
                     <option value="Diproses">Diproses</option>
                     <option value="Disetujui">Disetujui</option>
+                    <option value="Revisi">Revisi</option>
                     <option value="Ditolak">Ditolak</option>
                 </select>
 
-                <button type="button" class="btn btn-maroon shadow-sm" onclick="loadDataUnggah()" title="Cari Data">
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="applyFilterUnggah()" title="Cari Data">
                     <i class="fas fa-search text-white"></i>
                 </button>
 
@@ -76,31 +79,58 @@
         </div>
 
         <div class="card-sultan">
-            <div class="card-body p-0">
+            <div class="card-body p-3">
+              
+              <style>
+                .col-sticky-left {
+                    position: sticky;
+                    left: 0;
+                    z-index: 5;
+                    border-right: 2px solid #dee2e6 !important;
+                    background-color: #ffffff; 
+                }
+                thead .col-sticky-left {
+                    z-index: 10;
+                    background-color: #f8f9fa; 
+                }
+                .table-hover tbody tr:hover td, 
+                .table-hover tbody tr:hover .col-sticky-left {
+                    background-color: #fff8f8 !important; 
+                }
+                .meta-cell { font-size: 11px; line-height: 1.2; }
+                .meta-date { font-weight: bold; color: #343a40; display: block; }
+                .meta-user { color: #6c757d; display: block; }
+              </style>
+
               <div class="table-responsive">
                   <table id="tabelUnggah" class="table table-hover table-premium table-sultan-compact mb-0 w-100">
-                    <thead>
+                    <thead id="headTabelUnggah" style="display:none;">
                        <tr>
-                           <th class="th-main col-sticky-left text-nowrap">NAMA ASN</th>
-                           <th class="th-main text-nowrap">NIP</th>
-                           <th class="th-main text-nowrap">JENIS CUTI</th>
-                           <th class="th-main text-nowrap">TGL MULAI</th>
-                           <th class="th-main text-nowrap">TGL SELESAI</th>
-                           <th class="th-main text-center text-nowrap">JML</th>
-                           <th class="th-main text-center text-nowrap">FILE</th>
-                           <th class="th-main text-center text-nowrap">STATUS</th>
+                           <th class="col-sticky-left text-nowrap align-middle">NAMA ASN</th>
+                           <th class="text-nowrap align-middle">NIP</th>
+                           <th class="text-nowrap align-middle">JENIS CUTI</th>
+                           <th class="text-nowrap align-middle">TGL MULAI</th>
+                           <th class="text-nowrap align-middle">TGL SELESAI</th>
+                           <th class="text-center text-nowrap align-middle">JML</th>
+                           <th class="text-center text-nowrap align-middle">FILE</th>
+                           <th class="text-center text-nowrap align-middle">STATUS</th>
+                           <th class="text-center text-nowrap align-middle">AKSI</th>
                            
-                           <th class="th-main text-center text-nowrap">AKSI</th>
-
-                           <th class="th-main text-muted small text-nowrap">TGL UNGGAH</th>
-                           <th class="th-main text-muted small text-nowrap">USER UNGGAH</th>
-                           <th class="th-main text-muted small text-nowrap">TGL EDIT</th>
-                           <th class="th-main text-muted small text-nowrap">USER EDIT</th>
-                           <th class="th-main text-muted small text-nowrap">TGL VERIF</th>
-                           <th class="th-main text-muted small text-nowrap">VERIFIKATOR</th>
+                           <th class="text-center text-muted small text-nowrap align-middle">DIKIRIM</th>
+                           <th class="text-center text-muted small text-nowrap align-middle">DIUBAH</th>
+                           <th class="text-center text-muted small text-nowrap align-middle">VERIFIKASI</th>
                        </tr>
                     </thead>
-                    <tbody id="bodyTabelUnggah"></tbody>
+                    <tbody id="bodyTabelUnggah">
+                        <tr>
+                            <td colspan="12" class="text-center td-spinner">
+                                <div class="sultan-loading-container">
+                                    <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                    <h6 class="text-muted font-weight-bold">Menyiapkan data...</h6>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
                   </table>
               </div>
             </div>
@@ -126,21 +156,18 @@
 
         <div class="alert alert-light border-left-maroon text-dark shadow-sm">
             <h6 class="font-weight-bold mb-1" id="lblNama">Nama Pegawai</h6>
-            <span class="d-block small text-muted mb-2" id="lblInfo">Cuti Tahunan | 12 Jan 2026</span>
+            <span class="d-block small text-muted mb-2" id="lblInfo">Jenis Cuti | Tanggal</span>
         </div>
 
         <div class="form-group">
             <label class="form-label-sultan">Unggah File</label> 
-            
             <div class="custom-file">
                 <input type="file" class="custom-file-input" id="inputFile" accept="application/pdf" onchange="bacaFile(this)" required>
-                <label class="custom-file-label" for="inputFile" id="labelFile">Pilih file...</label>
+                <label class="custom-file-label" for="inputFile" id="labelFile">Pilih file PDF...</label>
             </div>
-
             <small class="form-text text-muted mt-2">
                 Scan dokumen Formulir Permintaan dan Pemberian Cuti yang sudah ditandatangani dalam format PDF dengan ukuran maksimal 100 KB.
             </small>
-            
             <small class="text-success font-italic d-none mt-1" id="pesanFile">File siap diunggah.</small>
         </div>
       </div>
@@ -169,7 +196,7 @@
       <div class="modal-body p-0 h-100">
         <div class="row no-gutters h-100">
             
-            <div class="col-lg-8 h-100 bg-light border-right iframe-viewer-container" style="position: relative;">
+            <div class="col-lg-8 h-100 bg-light border-right position-relative">
                 <div id="loaderVerif" class="d-flex justify-content-center align-items-center h-100 w-100 position-absolute" style="z-index:5; background:rgba(255,255,255,0.8);">
                     <div class="spinner-border text-warning" role="status"></div>
                 </div>
@@ -177,7 +204,7 @@
                 
                 <div id="noFileVerif" class="d-none justify-content-center align-items-center h-100 w-100 text-muted">
                     <div class="text-center">
-                        <i class="fas fa-file-excel fa-3x mb-3"></i>
+                        <i class="fas fa-file-pdf fa-3x mb-3"></i>
                         <p>File tidak ditemukan.</p>
                     </div>
                 </div>
@@ -248,11 +275,21 @@
 </div>
 
 <script>
-    var DATA_UNGGAH = {};
+    // =================================================================
+    // 1. GLOBAL VARIABLES
+    // =================================================================
+    var GLOBAL_UNGGAH_DATA = []; 
+    var GLOBAL_CACHE_KEY = "";   
+    var ROW_DATA_UNGGAH = {};    
     var FILE_BLOB = null;
     var USER_ROLE = "";
 
+    // =================================================================
+    // 2. INITIALIZATION
+    // =================================================================
     $(document).ready(function() {
+        console.log("🚀 Halaman Unggah Cuti Siap (Cache Mode)");
+
         try {
             var u = JSON.parse(localStorage.getItem("siksUser"));
             if(u) {
@@ -261,114 +298,180 @@
             }
         } catch(e){}
 
-        // FILTER TAHUN (2020 s.d 2027)
+        // Init Tahun
         var yNow = new Date().getFullYear();
-        var elTahun = $('#filterTahun');
-        elTahun.empty().append('<option value="">- Semua Tahun -</option>');
+        var elTahun = $('#filterTahun').empty().append('<option value="">- Tahun -</option>');
         for (var i = yNow + 1; i >= 2020; i--) {
             var selected = (i === yNow) ? 'selected' : '';
             elTahun.append(`<option value="${i}" ${selected}>${i}</option>`);
         }
 
+        // Init Bulan
         var mNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
         $('#filterBulan').val(mNames[new Date().getMonth()]);
 
+        // Init Dropdown Unit
         initDropdownUnit();
-        loadDataUnggah();
         
-        $('#modalPreviewFile').on('hidden.bs.modal', function () {
-            $('#framePreviewFile').attr('src', '');
-        });
+        // Load Data Awal
+        applyFilterUnggah();
+        
+        // Reset iframe saat modal tutup
+        $('#modalPreviewFile').on('hidden.bs.modal', function () { $('#framePreviewFile').attr('src', ''); });
+        $('#modalVerif').on('hidden.bs.modal', function () { $('#frameVerif').attr('src', ''); });
     });
 
-    function initDropdownUnit() {
-        google.script.run.withSuccessHandler(function(units) {
-            var el = $('#filterUnit');
-            el.empty().append('<option value="">- Semua Unit Kerja -</option>');
-            units.forEach(u => el.append(`<option value="${u}">${u}</option>`));
-            el.prop('disabled', false);
-        }).getUnitOptionsUnggah();
+    // =================================================================
+    // 3. LOGIKA UTAMA (LOAD & FILTER)
+    // =================================================================
+
+    function refreshDataUnggah() {
+        GLOBAL_CACHE_KEY = ""; 
+        applyFilterUnggah();
     }
 
-    function loadDataUnggah() {
-        if ($.fn.DataTable.isDataTable('#tabelUnggah')) {
-            $('#tabelUnggah').DataTable().destroy();
-        }
-        $('#bodyTabelUnggah').html('<tr><td colspan="17" class="p-0 border-0"><div class="sultan-loading-container"><div class="spinner-border sultan-spinner" role="status"></div><h6 class="text-muted font-weight-bold">Memuat data...</h6></div></td></tr>');
-
+    function applyFilterUnggah() {
         var th = $('#filterTahun').val();
         var bl = $('#filterBulan').val();
-        var un = $('#filterUnit').val();
-        var st = $('#filterStatus').val();
+        var key = th + "-" + bl;
 
-        google.script.run.withSuccessHandler(renderTabel).getDaftarUnggahCuti(th, bl, un, st);
-    }
-
-    function renderTabel(jsonStr) {
-        var data = JSON.parse(jsonStr);
-        var html = "";
-        
-        if (data.error) {
-            $('#bodyTabelUnggah').html(`<tr><td colspan="17" class="text-center text-danger p-4">${data.error}</td></tr>`);
+        if (!th || !bl) {
+            Sultan.notif.info('Pilih Tahun dan Bulan.');
             return;
         }
 
-        data.forEach(function(row) {
-            DATA_UNGGAH[row.rowBaris] = row;
+        if (key === GLOBAL_CACHE_KEY && GLOBAL_UNGGAH_DATA.length > 0) {
+            console.log("⚡ Filter Lokal Aktif");
+            renderTableUnggah();
+        } else {
+            console.log("⏳ Load Server Aktif");
+            fetchDataServer(th, bl);
+        }
+    }
+
+    function fetchDataServer(th, bl) {
+        // [FIX] HIDE HEADER SAAT LOADING
+        if ($.fn.DataTable.isDataTable('#tabelUnggah')) { $('#tabelUnggah').DataTable().destroy(); }
+        $('#headTabelUnggah').hide();
+        $('#bodyTabelUnggah').html('<tr><td colspan="12" class="text-center td-spinner"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengambil data...</h6></div></td></tr>');
+        
+        $('#btnCari').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        $('#filterUnit').prop('disabled', true); 
+
+        google.script.run.withSuccessHandler(function(jsonStr) {
+            $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            $('#filterUnit').prop('disabled', false);
+
+            var data = JSON.parse(jsonStr);
+            if (data.error) {
+                $('#bodyTabelUnggah').html(`<tr><td colspan="12" class="text-center text-danger p-4">${data.error}</td></tr>`);
+                return;
+            }
+
+            GLOBAL_UNGGAH_DATA = data; 
+            GLOBAL_CACHE_KEY = th + "-" + bl;
+
+            renderTableUnggah();
+
+        }).withFailureHandler(function(err) {
+            $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+            $('#bodyTabelUnggah').html(`<tr><td colspan="12" class="text-center text-danger p-4">Error: ${err.message}</td></tr>`);
+        }).getDaftarUnggahCuti(th, bl, "", ""); 
+    }
+
+    function renderTableUnggah() {
+        if ($.fn.DataTable.isDataTable('#tabelUnggah')) { $('#tabelUnggah').DataTable().destroy(); }
+        $('#bodyTabelUnggah').empty();
+
+        var fUnit = $('#filterUnit').val();
+        var fStatus = $('#filterStatus').val();
+
+        var data = GLOBAL_UNGGAH_DATA;
+        var filteredData = [];
+
+        // Filter Lokal
+        for(var i=0; i<data.length; i++) {
+            var row = data[i];
             
-            // --- BADGE ---
+            if (fUnit && fUnit !== "" && row.unit !== fUnit) continue;
+
+            var st = row.statusUnggah || "";
+            if (fStatus === "Belum") {
+                if (st !== "") continue;
+            } else if (fStatus && fStatus !== "") {
+                if (st !== fStatus) continue;
+            }
+
+            filteredData.push(row);
+        }
+
+        if (filteredData.length === 0) {
+            // [FIX] HEADER TETAP MUNCUL JIKA KOSONG
+            $('#headTabelUnggah').show();
+            $('#bodyTabelUnggah').html('<tr><td colspan="12" class="text-center p-4 text-muted">Data tidak ditemukan.</td></tr>');
+            // Re-init DataTable agar header rapi
+            $('#tabelUnggah').DataTable({
+                "ordering": false,
+                "pageLength": 10,
+                "autoWidth": false,
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" }
+            });
+            return;
+        }
+
+        // [FIX] MUNCULKAN HEADER SEBELUM RENDER DATA
+        $('#headTabelUnggah').show();
+
+        var html = "";
+        ROW_DATA_UNGGAH = {}; 
+
+        filteredData.forEach(function(row) {
+            ROW_DATA_UNGGAH[row.rowBaris] = row;
+            
             var st = row.statusUnggah;
             var badgeClass = 'badge-sultan-light-dark'; 
             var badgeIcon = 'clock';
             if(st === "Diproses") { badgeClass = 'badge-sultan-light-warning'; badgeIcon = 'spinner'; }
             if(st === "Disetujui") { badgeClass = 'badge-sultan-light-success'; badgeIcon = 'check'; }
             if(st === "Ditolak") { badgeClass = 'badge-sultan-light-danger'; badgeIcon = 'times'; }
-            if(st === "Revisi") { badgeClass = 'badge-sultan-light-info'; badgeIcon = 'edit'; } // Badge Revisi
+            if(st === "Revisi") { badgeClass = 'badge-sultan-light-info'; badgeIcon = 'edit'; } 
             
             var badge = `<span class="badge badge-sultan ${badgeClass}"><i class="fas fa-${badgeIcon} mr-1"></i>${st || 'BELUM'}</span>`;
             if(row.ket) badge += ` <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="${row.ket}" style="cursor:pointer;"></i>`;
 
-            // --- TOMBOL PREVIEW ---
             var btnFile = row.fileUrl 
                 ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewFile('${row.fileUrl}')" title="Lihat File"><i class="fas fa-eye"></i></button>` 
                 : '<span class="text-muted small">-</span>';
 
-            // --- TOMBOL AKSI (TANPA HAPUS) ---
             var btnAction = "", btnVer = "";
-
             if (st !== "Disetujui") {
-                // Tombol UNGGAH/EDIT (Lingkaran Kuning)
-                // Tombol Hapus (btnDel) SUDAHDIHAPUS DARI SINI
-                btnAction = `<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="bukaModalUpload('${row.rowBaris}')" title="Unggah File">
-                    <i class="fas fa-file-upload"></i>
-                </button>`;
+                btnAction = `<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="bukaModalUpload('${row.rowBaris}')" title="Unggah File"><i class="fas fa-file-upload"></i></button>`;
             } else {
                 btnAction = `<i class="fas fa-check-circle text-success" title="Selesai"></i>`;
             }
 
-            // Tombol Verif (Admin)
             if ((USER_ROLE.includes("admin") || USER_ROLE.includes("super")) && row.fileUrl) {
-                btnVer = `<button class="btn-icon-sultan btn-icon-sultan-success" onclick="bukaModalVerif('${row.rowBaris}')" title="Verifikasi"><i class="fas fa-check"></i></button>`;
+                btnVer = `<button class="btn-icon-sultan btn-icon-sultan-success mr-1" onclick="bukaModalVerif('${row.rowBaris}')" title="Verifikasi"><i class="fas fa-check"></i></button>`;
             }
 
+            var metaKirim = `<div class="meta-cell"><span class="meta-date">${row.tglUnggah || '-'}</span><span class="meta-user">${row.userUnggah || '-'}</span></div>`;
+            var metaUbah = `<div class="meta-cell"><span class="meta-date">${row.tglEdit || '-'}</span><span class="meta-user">${row.userEdit || '-'}</span></div>`;
+            var metaVerif = `<div class="meta-cell"><span class="meta-date">${row.tglVerif || '-'}</span><span class="meta-user">${row.verifikator || '-'}</span></div>`;
+
             html += `<tr class="tr-animasi">
-                <td class="col-sticky-left font-weight-bold text-dark text-nowrap">${row.nama}</td>
-                <td>${row.nip}</td>
-                <td>${row.jenis}</td>
-                <td>${row.tglMulai}</td>
-                <td>${row.tglSelesai}</td>
-                <td class="text-center font-weight-bold">${row.jumlah}</td>
-                <td class="text-center">${btnFile}</td>
-                <td class="text-center">${badge}</td>
+                <td class="col-sticky-left font-weight-bold text-dark text-nowrap align-middle bg-white">${row.nama}</td>
+                <td class="align-middle">${row.nip}</td>
+                <td class="align-middle text-center">${row.jenis}</td>
+                <td class="align-middle text-nowrap">${row.tglMulai}</td>
+                <td class="align-middle text-nowrap">${row.tglSelesai}</td>
+                <td class="text-center font-weight-bold align-middle">${row.jumlah}</td>
+                <td class="text-center align-middle">${btnFile}</td>
+                <td class="text-center align-middle">${badge}</td>
+                <td class="text-center text-nowrap align-middle">${btnVer}${btnAction}</td>
                 
-                <td class="text-center text-nowrap"><div class="d-flex justify-content-center" style="gap:4px;">${btnVer}${btnAction}</div></td>
-                
-                <td class="text-muted small text-nowrap">${row.tglUnggah || '-'}</td>
-                <td class="text-muted small text-nowrap">${row.userUnggah || '-'}</td>
-                <td class="text-muted small text-nowrap">${row.tglEdit || '-'}</td>
-                <td class="text-muted small text-nowrap">${row.userEdit || '-'}</td>
-                <td class="text-muted small text-nowrap">${row.tglVerif || '-'}</td>
-                <td class="text-muted small text-nowrap">${row.verifikator || '-'}</td>
+                <td class="text-center align-middle">${metaKirim}</td>
+                <td class="text-center align-middle">${metaUbah}</td>
+                <td class="text-center align-middle">${metaVerif}</td>
             </tr>`;
         });
 
@@ -389,6 +492,21 @@
         });
     }
 
+    // =================================================================
+    // 4. HELPER FUNCTIONS
+    // =================================================================
+
+    function initDropdownUnit() {
+        google.script.run.withSuccessHandler(function(units) {
+            var el = $('#filterUnit');
+            el.empty().append('<option value="">- Semua Unit Kerja -</option>');
+            if(units && units.length > 0) {
+                units.forEach(u => el.append(`<option value="${u}">${u}</option>`));
+                el.prop('disabled', false);
+            }
+        }).getUnitOptionsUnggah();
+    }
+
     function previewFile(url) {
         if(!url) return;
         var cleanUrl = url;
@@ -397,21 +515,6 @@
         }
         $('#framePreviewFile').attr('src', cleanUrl);
         $('#modalPreviewFile').modal('show');
-    }
-
-    function bukaModalUpload(id) {
-        var d = DATA_UNGGAH[id];
-        if(!d) return;
-        $('#upRecId').val(id);
-        $('#upNama').val(d.nama);
-        $('#upJenis').val(d.jenis);
-        $('#lblNama').text(d.nama);
-        $('#lblInfo').text(`${d.jenis} | ${d.tglMulai} s.d ${d.tglSelesai}`);
-        $('#inputFile').val('');
-        $('#labelFile').text('Pilih file PDF...');
-        $('#pesanFile').addClass('d-none');
-        FILE_BLOB = null;
-        $('#modalUpload').modal('show');
     }
 
     function bacaFile(input) {
@@ -429,17 +532,40 @@
         }
     }
 
+    // =================================================================
+    // 5. CRUD FUNCTIONS (UPLOAD & VERIF)
+    // =================================================================
+
+    function bukaModalUpload(id) {
+        var d = ROW_DATA_UNGGAH[id];
+        if(!d) return;
+        $('#upRecId').val(id);
+        $('#upNama').val(d.nama);
+        $('#upJenis').val(d.jenis);
+        $('#lblNama').text(d.nama);
+        $('#lblInfo').text(`${d.jenis} | ${d.tglMulai} s.d ${d.tglSelesai}`);
+        $('#inputFile').val('');
+        $('#labelFile').text('Pilih file PDF...');
+        $('#pesanFile').addClass('d-none');
+        FILE_BLOB = null;
+        $('#modalUpload').modal('show');
+    }
+
     function submitUpload(e) {
         e.preventDefault();
         if(!FILE_BLOB) { Swal.fire("Gagal", "Pilih file dulu.", "warning"); return; }
+        
         var btn = $('#btnSimpanUpload');
         var txt = btn.html();
-        btn.prop('disabled', true).html('Sending...');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+        
         var form = { recId: $('#upRecId').val(), nama: $('#upNama').val(), jenis: $('#upJenis').val(), user_login: $('#hideUserLogin').val() };
+        
         google.script.run.withSuccessHandler(function() {
             btn.prop('disabled', false).html(txt);
             $('#modalUpload').modal('hide');
-            loadDataUnggah();
+            GLOBAL_CACHE_KEY = ""; 
+            applyFilterUnggah();
             Swal.fire("Sukses", "File terunggah.", "success");
         }).withFailureHandler(function(err) {
             btn.prop('disabled', false).html(txt);
@@ -448,27 +574,23 @@
     }
 
     function bukaModalVerif(id) {
-        var d = DATA_UNGGAH[id];
+        var d = ROW_DATA_UNGGAH[id];
         if(!d) return;
 
-        // 1. Isi Data Kanan
         $('#verRecId').val(id);
         $('#vNama').text(d.nama);
         $('#vNip').text(d.nip);
         $('#vJenis').text(d.jenis);
         $('#vTgl').text(`${d.tglMulai} s.d ${d.tglSelesai} (${d.jumlah} Hari)`);
         
-        // 2. Isi Form
         $('#verStatus').val(''); 
         if(d.statusUnggah === "Disetujui" || d.statusUnggah === "Ditolak" || d.statusUnggah === "Revisi") {
             $('#verStatus').val(d.statusUnggah);
         }
         $('#verKet').val(d.ket || '');
 
-        // 3. Reset Tampilan Preview (Spinner ON, Iframe OFF)
-        // Kita gunakan .show() dan .hide() jquery agar menimpa css class
         $('#loaderVerif').removeClass('d-none').addClass('d-flex').show(); 
-        $('#frameVerif').css('opacity', '0'); // Sembunyikan iframe secara visual dulu
+        $('#frameVerif').css('opacity', '0'); 
         $('#noFileVerif').addClass('d-none');
 
         if (d.fileUrl) {
@@ -477,26 +599,12 @@
                 cleanUrl = d.fileUrl.replace('/view', '/preview');
             }
             
-            // Set URL
             $('#frameVerif').attr('src', cleanUrl);
-            
-            // --- LOGIKA PAKSA HILANGKAN SPINNER ---
-            // Gunakan timer 1.5 detik. Kita asumsikan dalam waktu segitu file sudah mulai load.
-            // Kita gunakan fadeOut agar transisi halus dan pasti hilang.
-            
             setTimeout(function(){
-                // 1. Hilangkan Spinner
-                $('#loaderVerif').removeClass('d-flex').fadeOut(300, function() {
-                    $(this).addClass('d-none');
-                });
-                
-                // 2. Munculkan Iframe (Fade In)
+                $('#loaderVerif').removeClass('d-flex').fadeOut(300, function() { $(this).addClass('d-none'); });
                 $('#frameVerif').animate({ opacity: 1 }, 300);
-                
-            }, 1500); // 1.5 Detik
-
+            }, 1500);
         } else {
-            // Jika File Kosong
             $('#loaderVerif').hide().removeClass('d-flex').addClass('d-none');
             $('#frameVerif').css('opacity', '0');
             $('#noFileVerif').removeClass('d-none');
@@ -504,12 +612,6 @@
 
         $('#modalVerif').modal('show');
     }
-
-    // Reset iframe saat modal ditutup agar memori bersih
-    $('#modalVerif').on('hidden.bs.modal', function () {
-        $('#frameVerif').attr('src', '');
-        $('#loaderVerif').removeClass('d-none');
-    });
 
     function submitVerif(e) {
         e.preventDefault();
@@ -530,7 +632,8 @@
         google.script.run.withSuccessHandler(function() {
             btn.prop('disabled', false).html(txt);
             $('#modalVerif').modal('hide');
-            loadDataUnggah();
+            GLOBAL_CACHE_KEY = "";
+            applyFilterUnggah();
             
             if(st === "Disetujui") {
                 Swal.fire("Selesai", "Dokumen telah disetujui.", "success");
