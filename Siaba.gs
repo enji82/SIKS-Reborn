@@ -3491,106 +3491,149 @@ function verifikasiUnggahSurat(form) {
 }
 
 /* ======================================================================
-   DASHBOARD STATISTIK SIABA (V5 - FIXED COLUMN MAPPING)
+   DASHBOARD STATISTIK SIABA (FINAL - LIGHTWEIGHT & FAST)
+   Tanpa Timeline Aktivitas - Fokus Kecepatan & Akurasi Statistik
    ====================================================================== */
 function getSiabaDashboardData() {
-  var ID_SPREADSHEET = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo"; 
-  var ID_SS_TERLAMBAT = "1tQsQY1-Ny1ie66GOZPTLtvZ7BiYCgFdNrX-AVGCtaHA"; 
+  var cache = CacheService.getScriptCache();
+  var cachedResult = cache.get("dashboard_siaba_v1_user");
+  if (cachedResult != null) {
+    return cachedResult;
+  }
 
-  // INDEKS KOLOM STATUS (Sesuaikan jika perlu)
-  var IDX_CUTI_TGL = 5, IDX_CUTI_STATUS = 10, IDX_CUTI_NAMA = 1;
-  var IDX_DINAS_TGL = 3, IDX_DINAS_STATUS = 9, IDX_DINAS_NAMA = 1;
-  var IDX_LUPA_TGL = 3, IDX_LUPA_STATUS = 10, IDX_LUPA_NAMA = 1;
-  var IDX_SALAH_TGL = 3, IDX_SALAH_STATUS = 8, IDX_SALAH_NAMA = 1;
+  var ID_DB_CUTI  = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var ID_DB_DINAS = "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M"; 
+  var ID_DB_LUPA  = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var ID_DB_SALAH = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
+  var ID_DB_REKAP = "1tQsQY1-Ny1ie66GOZPTLtvZ7BiYCgFdNrX-AVGCtaHA"; 
 
-  var curYear = new Date().getFullYear().toString();
-
+  var now = new Date();
+  var curYear = now.getFullYear(); // 2026
+  var curMonth = now.getMonth();   // 0 = Januari
+  
   var result = {
     stats: {
-      cuti: { total:0, setuju:0, tolak:0, proses:0, revisi:0 },
-      dinas: { total:0, setuju:0, tolak:0, proses:0, revisi:0 },
-      lupa: { total:0, setuju:0, tolak:0, proses:0, revisi:0 },
-      salah: { total:0, setuju:0, tolak:0, proses:0, revisi:0 }
+      cuti:  { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 },
+      dinas: { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 },
+      lupa:  { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 },
+      salah: { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 }
     },
-    timeline: [],
+    // Timeline dihapus agar ringan
     chartBar: {
-      year: curYear,
+      year: curYear.toString(),
       labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"],
       terlambat: [0,0,0,0,0,0,0,0,0,0,0,0],
       pulangAwal: [0,0,0,0,0,0,0,0,0,0,0,0]
     }
   };
 
-  // 1. PROSES STATUS & TIMELINE
-  function processSheet(sheetName, type, idxTgl, idxStat, idxNama) {
+  // HELPER: PARSER TANGGAL KEJADIAN (Strict Mode untuk Statistik)
+  function parseEventDate(dateStr) {
+    if (!dateStr) return null;
+    var str = String(dateStr).trim().replace(/'/g, '');
+
+    // Cek format Angka (dd-mm-yyyy atau dd/mm/yyyy)
+    var matchNumeric = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if (matchNumeric) {
+       var yr = parseInt(matchNumeric[3], 10);
+       if (yr < 100) yr += 2000;
+       return new Date(yr, matchNumeric[2] - 1, matchNumeric[1]);
+    }
+
+    // Cek format Teks Indonesia
+    var monthMap = { "januari":0, "februari":1, "maret":2, "april":3, "mei":4, "juni":5, "juli":6, "agustus":7, "september":8, "oktober":9, "november":10, "desember":11, "jan":0, "feb":1, "mar":2, "apr":3, "jun":5, "jul":6, "agu":7, "sep":8, "okt":9, "nov":10, "des":11 };
+    var parts = str.split(' ');
+    if (parts.length >= 3) {
+        var day = parseInt(parts[0], 10);
+        var monthStr = parts[1].toLowerCase();
+        var year = parseInt(parts[2], 10);
+        if (monthMap.hasOwnProperty(monthStr)) {
+            return new Date(year, monthMap[monthStr], day);
+        }
+    }
+    // Fallback
+    var d = new Date(str);
+    return (d.toString() !== 'Invalid Date') ? d : null;
+  }
+
+  // CORE LOGIC (HANYA STATISTIK)
+  function processModule(idSS, sheetName, type, idxTglEvent, idxStat, idxNama) {
     try {
-      var ss = SpreadsheetApp.openById(ID_SPREADSHEET);
+      var ss = SpreadsheetApp.openById(idSS);
       var sheet = ss.getSheetByName(sheetName);
       if (!sheet) return;
       
-      var data = sheet.getDataRange().getDisplayValues();
+      // Ambil data mentah (getValues) agar lebih akurat membaca Tanggal Excel
+      var data = sheet.getDataRange().getValues();
       if (data.length < 2) return;
 
       for (var i = 1; i < data.length; i++) {
         var row = data[i];
-        var tgl = String(row[idxTgl] || "");
-        var status = String(row[idxStat] || "").toLowerCase();
-        
-        if (!tgl.includes(curYear)) continue;
+        if (!row[idxNama] || String(row[idxNama]).trim() === "") continue;
 
+        // Ambil Data Tanggal Kejadian (Bisa Object Date atau String)
+        var rawEvent = row[idxTglEvent];
+        var dateEvent = null;
+
+        if (rawEvent instanceof Date) {
+            dateEvent = rawEvent;
+        } else {
+            dateEvent = parseEventDate(rawEvent);
+        }
+        
+        // SYARAT MUTLAK: Wajib Tahun 2026
+        if (!dateEvent || dateEvent.getFullYear() !== curYear) continue;
+
+        var status = String(row[idxStat] || "").toLowerCase();
+
+        // Hitung Statistik
         result.stats[type].total++;
+        if (dateEvent.getMonth() === curMonth) {
+          result.stats[type].bulanIni++;
+        }
+
         if (status.includes("setuju") || status.includes("ok")) result.stats[type].setuju++;
         else if (status.includes("tolak")) result.stats[type].tolak++;
         else if (status.includes("revisi") || status.includes("ubah")) result.stats[type].revisi++;
         else result.stats[type].proses++;
-
-        result.timeline.push({ type: type, nama: row[idxNama], tgl: tgl, status: row[idxStat] });
       }
     } catch (e) { Logger.log("Error " + sheetName + ": " + e.message); }
   }
 
-  processSheet("Form Cuti", "cuti", IDX_CUTI_TGL, IDX_CUTI_STATUS, IDX_CUTI_NAMA);
-  processSheet("Perjalanan_Dinas", "dinas", IDX_DINAS_TGL, IDX_DINAS_STATUS, IDX_DINAS_NAMA);
-  processSheet("Lupa_Presensi", "lupa", IDX_LUPA_TGL, IDX_LUPA_STATUS, IDX_LUPA_NAMA);
-  processSheet("Salah_Presensi", "salah", IDX_SALAH_TGL, IDX_SALAH_STATUS, IDX_SALAH_NAMA);
+  // EKSEKUSI (Mapping Kolom tetap sama, tapi parameter Input Date dihapus)
+  processModule(ID_DB_CUTI, "Form Cuti", "cuti", 4, 10, 1);
+  processModule(ID_DB_DINAS, "Perjalanan_Dinas", "dinas", 3, 9, 1);
+  processModule(ID_DB_LUPA, "Lupa_Presensi", "lupa", 3, 10, 1);
+  processModule(ID_DB_SALAH, "Salah_Presensi", "salah", 3, 8, 1);
 
-  // 2. PROSES REKAP (TERLAMBAT & PULANG AWAL) - FIXED COLUMN MAPPING
+  // REKAP (Chart Bar)
   function processRekap(sheetName, targetArray) {
     try {
-      var ss = SpreadsheetApp.openById(ID_SS_TERLAMBAT);
+      var ss = SpreadsheetApp.openById(ID_DB_REKAP);
       var sheet = ss.getSheetByName(sheetName);
       if (!sheet) return;
-
-      var data = sheet.getDataRange().getDisplayValues();
-      
-      // Data mulai baris 3 (index 2)
+      var data = sheet.getDataRange().getDisplayValues(); 
       for (var i = 2; i < data.length; i++) {
         var row = data[i];
-        var rowTahun = String(row[0]).trim(); // Kolom A = Tahun
-        
-        if (rowTahun === curYear) {
-          // Loop 12 Bulan
+        if (String(row[0]).trim() === curYear.toString()) {
           for (var m = 0; m < 12; m++) {
-            // MAPPING KOLOM:
-            // Jan (m=0) => E (Index 4)
-            // Feb (m=1) => G (Index 6)
-            // ... dst (Lompati 1 kolom)
-            var colIndex = 4 + (m * 2);
-            
-            var val = row[colIndex]; 
-            
-            // Hitung jika ada isinya (angka > 0)
+            var val = row[4 + (m * 2)]; 
             if (val && val !== "0" && val !== "-" && val.trim() !== "") {
                result.chartBar[targetArray][m]++;
             }
           }
         }
       }
-    } catch (e) { Logger.log("Error Rekap " + sheetName + ": " + e.message); }
+    } catch (e) { }
   }
-
   processRekap("Rekap_Terlambat", "terlambat");
   processRekap("Rekap_Pulang_Awal", "pulangAwal");
 
-  return JSON.stringify(result);
+  var jsonOutput = JSON.stringify(result);
+
+  // 2. SIMPAN KE CACHE SEBELUM DIKIRIM
+  // Simpan selama 900 detik (15 Menit)->1 Menit aja
+  cache.put("dashboard_siaba_v1_user", jsonOutput, 60);
+
+  return jsonOutput;
 }
