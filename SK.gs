@@ -463,3 +463,148 @@ function restoreDataSK(form) {
     return { success: false, message: "Gagal Restore: " + e.toString() };
   }
 }
+
+/* ======================================================================
+   MODULE: STATUS PENGIRIMAN SK (SIMPLE HEADER)
+   ====================================================================== */
+function getSiabaStatusData() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    const sheet = ss.getSheetByName("Status_SK");
+    
+    // Ambil Data Mentah
+    var rawData = sheet.getDataRange().getDisplayValues();
+    
+    if (rawData.length < 2) return { error: "Data Status SK belum tersedia." };
+
+    // Baris 1: Header
+    var headers = rawData[0]; 
+    
+    // Baris 2 dst: Data
+    var rows = rawData.slice(1); 
+
+    // Ambil Sekolah untuk Filter (Kolom A)
+    var listSekolah = [];
+    rows.forEach(r => {
+      if(r[0] && r[0] !== "" && r[0] !== "NAMA SEKOLAH" && !r[0].includes("Sem ")) {
+         listSekolah.push(r[0]);
+      }
+    });
+    listSekolah = [...new Set(listSekolah)].sort();
+
+    return {
+       headers: headers,
+       rows: rows,
+       schools: listSekolah
+    };
+
+  } catch (e) {
+    return { error: "Gagal ambil data: " + e.toString() };
+  }
+}
+
+/* ======================================================================
+   MODULE: DASHBOARD SK (DENGAN LOGIC BELUM MENGIRIM)
+   ====================================================================== */
+function getDashboardSK(filterTahun, filterSemester) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    
+    // 1. AMBIL DATA SUDAH MASUK (Unggah_SK)
+    const sheetData = ss.getSheetByName("Unggah_SK");
+    var rawData = sheetData.getDataRange().getValues();
+    var rows = rawData.slice(1); // Skip Header
+
+    // 2. AMBIL DATA MASTER SEKOLAH (Wajib ada sheet 'Master_Sekolah')
+    var masterSekolah = [];
+    var sheetMaster = ss.getSheetByName("Master_Sekolah");
+    if (sheetMaster) {
+        var rawMaster = sheetMaster.getDataRange().getValues();
+        // Asumsi Nama Sekolah ada di Kolom A
+        rawMaster.forEach(r => { if(r[0]) masterSekolah.push(String(r[0]).trim()); });
+    }
+
+    // Init Stats
+    var stats = {
+      totalMasuk: 0,
+      diproses: 0,
+      revisi: 0,
+      disetujui: 0,
+      ditolak: 0,
+      progress: 0,
+      belumLaporCount: 0,
+      belumLaporList: [], // Array nama sekolah
+      recent: []
+    };
+
+    // Set Sekolah yang sudah lapor (Untuk Comparison)
+    var sekolahSudahLapor = new Set();
+
+    // 3. FILTER & HITUNG
+    var filteredRows = rows.filter(function(r) {
+      if (!r[1]) return false;
+      
+      var matchTahun = (filterTahun === "" || String(r[2]) === String(filterTahun));
+      var matchSmt = (filterSemester === "" || String(r[3]) === String(filterSemester));
+      
+      if (matchTahun && matchSmt) {
+          sekolahSudahLapor.add(String(r[1]).trim()); // Catat sekolah yg sudah lapor
+          return true;
+      }
+      return false;
+    });
+
+    stats.totalMasuk = filteredRows.length;
+
+    // Hitung Detail Status
+    filteredRows.forEach(function(r) {
+      var s = String(r[8] || "").toLowerCase(); // Kolom I/Status (Index 8 di array 0-based data slice?? Cek mapping)
+      // Cek mapping: A=0, B=1, C=2... I=8, J=9 (Status) di Unggah_SK biasanya Kolom J (Index 9)
+      // Mari kita pakai index 9 sesuai kode sebelumnya (Kolom J)
+      s = String(r[9] || "").toLowerCase();
+
+      if (s.includes("ok") || s.includes("setuju") || s.includes("valid")) {
+        stats.disetujui++;
+      } else if (s.includes("revisi")) {
+        stats.revisi++;
+      } else if (s.includes("tolak")) {
+        stats.ditolak++;
+      } else {
+        stats.diproses++;
+      }
+    });
+
+    // 4. HITUNG YANG BELUM LAPOR
+    if (masterSekolah.length > 0) {
+        // Filter Master yang TIDAK ADA di Set sekolahSudahLapor
+        stats.belumLaporList = masterSekolah.filter(x => !sekolahSudahLapor.has(x)).sort();
+        stats.belumLaporCount = stats.belumLaporList.length;
+        
+        // Hitung Progress Real (Disetujui / Total Master)
+        stats.progress = Math.round((stats.disetujui / masterSekolah.length) * 100);
+    } else {
+        // Fallback jika Master belum dibuat
+        stats.belumLaporCount = 0;
+        stats.belumLaporList = ["Sheet 'Master_Sekolah' belum dibuat di Database."];
+    }
+
+    // 5. RECENT ACTIVITY
+    // Sort by timestamp desc (Kolom A / Index 0)
+    var sorted = filteredRows.sort(function(a, b) {
+      return new Date(b[0]) - new Date(a[0]);
+    }).slice(0, 5);
+
+    stats.recent = sorted.map(function(r) {
+      return {
+        sekolah: r[1],
+        status: r[9], // Kolom J
+        waktu: (r[0] instanceof Date) ? Utilities.formatDate(r[0], Session.getScriptTimeZone(), "dd/MM HH:mm") : r[0]
+      };
+    });
+
+    return stats;
+
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}

@@ -604,9 +604,21 @@ function renderTabel(data) {
     var sesi = localStorage.getItem("siksUser"); 
     var isAdmin = sesi && sesi.toLowerCase().includes('admin');
 
+    // --- PERBAIKAN LOGIKA SORTING (LAST ACTIVITY) ---
+    // Memasukkan tglVerval sebagai salah satu parameter aktivitas terakhir
+    // Menggunakan parseDateTime yang sudah diperbaiki (include Time)
     data.sort(function(a, b) {
-        return Math.max(parseDateTime(b.tglUnggah), parseDateTime(b.tglUpdate)) - 
-               Math.max(parseDateTime(a.tglUnggah), parseDateTime(a.tglUpdate));
+        var timeA = Math.max(
+            parseDateTime(a.tglUnggah), 
+            parseDateTime(a.tglUpdate), 
+            parseDateTime(a.tglVerval)
+        );
+        var timeB = Math.max(
+            parseDateTime(b.tglUnggah), 
+            parseDateTime(b.tglUpdate), 
+            parseDateTime(b.tglVerval)
+        );
+        return timeB - timeA; // Descending (Terbaru di atas)
     });
 
     var html = "";
@@ -617,13 +629,12 @@ function renderTabel(data) {
         var safeId = String(row.rowBaris);
         var noSk = row.noSk || "-";
 
-        // BADGE STATUS (UI SULTAN: KOTAK, TEBAL, KAPITAL)
         var rawStatus = String(row.status || "Diproses").trim();
         var stLower = rawStatus.toLowerCase();
         
         var badgeStyle = 'badge-sultan-light-warning'; 
         var iconClass = 'clock'; 
-        var labelStatus = "DIPROSES"; // Default
+        var labelStatus = "DIPROSES"; 
 
         if (stLower.includes('ok') || stLower.includes('setuju') || stLower.includes('valid')) {
             badgeStyle = 'badge-sultan-light-success'; 
@@ -645,24 +656,20 @@ function renderTabel(data) {
              infoTooltip = `<i class="fas fa-info-circle text-dark ml-2" title="${safeKet}" data-toggle="tooltip" style="cursor:help; opacity:0.6;"></i>`;
         }
 
-        // HTML BADGE SULTAN
         var badgeHtml = `<span class="badge badge-sultan ${badgeStyle}">
                             <i class="fas fa-${iconClass} mr-1"></i>${rawStatus}
                          </span>${infoTooltip}`;
 
-        // LOCKING
         var isLocked = (labelStatus === "DISETUJUI");
         var attrDis = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
         var evtEdit = isLocked ? '' : `onclick="editSK('${safeId}')"`;
         var evtHapus = isLocked ? '' : `onclick="hapusSK('${safeId}','${noSk}')"`;
 
-        // BUTTONS
         var btnDoc = row.fileUrl ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewPDF('${row.fileUrl}')" title="Lihat"><i class="fas fa-eye"></i></button>` : '-';
         var btnVerif = isAdmin ? `<button class="btn-icon-sultan btn-icon-sultan-success" onclick="verifikasiSK('${safeId}')" title="Verif"><i class="fas fa-check"></i></button>` : '';
         var btnEdit = `<button class="btn-icon-sultan btn-icon-sultan-warning" ${evtEdit} ${attrDis} title="Edit"><i class="fas fa-pencil-alt"></i></button>`;
         var btnHapus = `<button class="btn-icon-sultan btn-icon-sultan-danger" ${evtHapus} ${attrDis} title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-        // METADATA
         function metaBlock(date, user) {
             return `<div style="line-height:1.2; font-size:11px;">
                         <span class="d-block font-weight-bold text-dark text-nowrap">${date||'-'}</span>
@@ -1069,7 +1076,31 @@ function checkUserRole() {
 function previewPDF(u){ $('#framePreview').attr('src',u.replace('/view','/preview')); $('#modalPreviewSK').modal('show'); }
 function initDataTableStandard(id, empty){ if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy(); $(id).DataTable({ ordering:false, pageLength:10, autoWidth:false, language:{url:"//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", emptyTable: empty?"Silakan cari data":"Data kosong"}, initComplete: function(){ if(!$(id).parent().hasClass('table-scroll-wrapper')) $(id).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width:100%"></div>'); setTimeout(()=>$(id).DataTable().columns.adjust(), 300); }}); }
 function formatDateForInput(s){ if(!s) return ""; if(typeof s==='string'&&s.match(/^\d{4}-\d{2}-\d{2}$/)) return s; var d=new Date(s); return isNaN(d)?s:d.toISOString().split('T')[0]; }
-function parseDateTime(str) { if (!str || str === '-' || str === '') return 0; try { var p = str.toString().split(' '); var d = p[0].split('-'); if(d[0].length === 4) return new Date(d[0], d[1]-1, d[2]).getTime(); return new Date(d[2], d[1]-1, d[0]).getTime(); } catch(e) { return 0; } }
+function parseDateTime(str) { 
+    if (!str || str === '-' || str === '') return 0; 
+    try { 
+        // Handle format standard: "YYYY-MM-DD HH:mm:ss" ATAU "DD-MM-YYYY HH:mm:ss"
+        // String mungkin hanya tanggal, atau tanggal+waktu
+        var p = str.toString().split(' '); 
+        var dateParts = p[0].split('-'); 
+        var timeParts = (p[1] || "00:00:00").split(':');
+
+        var y, m, d;
+        // Deteksi format: Jika bagian pertama length 4 (2024), berarti YYYY-MM-DD
+        if(dateParts[0].length === 4) {
+            y = parseInt(dateParts[0]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[2]);
+        } else {
+            // Asumsi DD-MM-YYYY
+            y = parseInt(dateParts[2]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[0]);
+        }
+        
+        var hr = parseInt(timeParts[0] || 0);
+        var mn = parseInt(timeParts[1] || 0);
+        var sc = parseInt(timeParts[2] || 0);
+
+        return new Date(y, m, d, hr, mn, sc).getTime(); 
+    } catch(e) { return 0; } 
+}
 
 function initFilterDefaults() {
     var now = new Date();

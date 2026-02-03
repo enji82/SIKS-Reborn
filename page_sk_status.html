@@ -3,9 +3,9 @@
     <div class="row mb-2">
       <div class="col-sm-12">
         <h5 class="m-0 font-weight-bold">
-          <i class="fas fa-chart-line text-maroon mr-2"></i>Status Pengiriman SK
+          <i class="fas fa-paper-plane text-maroon mr-2"></i>Status Pengiriman SK
         </h5>
-        <hr class="mt-2 mb-3" style="border-top: 2px solid #800000;">
+        <hr class="style-sultan-solid">
       </div>
     </div>
   </div>
@@ -15,36 +15,63 @@
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-12">
-        
-        <div class="control-bar mb-3 d-flex flex-wrap justify-content-between align-items-center bg-white p-3 shadow-sm rounded">
-          
-          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
-            <button type="button" class="btn border-tegas btn-square-sultan shadow-sm" onclick="refreshStatus()" title="Refresh Data">
-              <i class="fas fa-sync-alt text-maroon"></i>
-            </button>
-            <div style="height: 25px; width: 1px; background: #dee2e6; margin: 0 5px;"></div>
-            <select id="filterSD" class="form-control filter-select border-tegas shadow-sm" style="min-width: 250px;">
-              <option value="">- Semua Sekolah -</option>
-            </select>
-          </div>
 
-          <div class="mt-2 mt-xl-0 position-relative" style="flex-grow: 1; max-width: 300px;">
-            <input type="text" id="customSearch" class="form-control border-tegas shadow-sm" placeholder="Cari Sekolah..." style="padding-right: 35px;">
-            <i class="fas fa-search position-absolute text-muted" style="right: 12px; top: 11px;"></i>
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3 text-dark mt-2" style="font-size: 14px; line-height: 1.6;">
+                    <li>Halaman ini menampilkan progres pengiriman SK Pembagian Tugas.</li>
+                    <li>Gunakan fitur Cari atau Filter Sekolah untuk menemukan data spesifik.</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table id="tabelStatusSK" class="table table-hover table-premium table-sticky-first mb-0 nowrap" style="width:100%;">
-                <thead id="headTabelStatus">
-                  </thead>
-                <tbody id="bodyTabelStatus">
-                  </tbody>
-              </table>
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap align-items-center">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="initDataStatus(true)" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterSekolah" class="form-control form-control-sultan input-auto-width min-w-250">
+                    <option value="">- Semua Sekolah -</option>
+                </select>
+
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="filterLocalData()" title="Cari Data">
+                    <i class="fas fa-search text-white"></i>
+                </button>
             </div>
-          </div>
+        </div>
+
+        <div class="card-sultan">
+            <div class="card-body p-3">
+              
+              <table id="tabelStatus" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
+                <thead id="headTabelStatus" class="text-center" style="display:none;"></thead>
+                <tbody id="bodyTabelStatus">
+                    <tr>
+                        <td class="text-center p-5" colspan="100%">
+                            <div class="sultan-loading-container">
+                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                <h6 class="text-muted font-weight-bold">Mengambil Data Status...</h6>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+              </table>
+
+            </div>
         </div>
 
       </div>
@@ -53,178 +80,155 @@
 </section>
 
 <script>
-$(document).ready(function() {
-  muatDataStatus();
-  
-  $('#filterSD').on('change', function() { 
-      $('#tabelStatusSK').DataTable().column(0).search(this.value).draw(); 
-  });
+    var GLOBAL_DATA = []; 
+    var GLOBAL_HEADERS = [];
 
-  $('#customSearch').on('keyup', function() { 
-      $('#tabelStatusSK').DataTable().search(this.value).draw(); 
-  });
-});
-
-function refreshStatus() {
-  if ($.fn.DataTable.isDataTable('#tabelStatusSK')) { 
-      $('#tabelStatusSK').DataTable().destroy(); 
-      $('#headTabelStatus').empty(); 
-      $('#bodyTabelStatus').empty();
-  }
-  muatDataStatus();
-}
-
-function muatDataStatus() {
-  NotifSultan.loading("Memuat Status...");
-  google.script.run
-    .withSuccessHandler(function(data) {
-      Swal.close();
-      if (!data || !data.rows || data.rows.length === 0) {
-         NotifSultan.alert('error', 'DATA KOSONG', 'Belum ada data status.');
-         return;
-      }
-      renderTabelStatus(data);
-    })
-    .withFailureHandler(function(err) {
-      NotifSultan.alert('error', 'ERROR', err.message);
-    })
-    .getStatusPengiriman();
-}
-
-function renderTabelStatus(data) {
-  var headers = data.headers;
-  var rows = data.rows;
-
-  // 1. BANGUN HEADER (MENGGUNAKAN STYLE STANDARD TEMPLATE)
-  // Tidak ada inline style font/width lagi. Lebar diatur otomatis oleh 'nowrap'.
-  var trHead = '<tr>';
-  headers.forEach(function(colName, idx) {
-     var classAlign = idx === 0 ? 'text-left' : 'text-center';
-     trHead += `<th class="${classAlign}">${colName}</th>`;
-  });
-  trHead += '</tr>';
-  $('#headTabelStatus').html(trHead);
-
-  // 2. BANGUN BODY
-  var tbody = $('#bodyTabelStatus');
-  tbody.empty();
-  var setSD = new Set();
-
-  rows.forEach(function(row) {
-    var tr = '<tr>';
-    if(row[0]) setSD.add(row[0]);
-
-    row.forEach(function(cell, idx) {
-       // -- KOLOM 1: NAMA SEKOLAH --
-       if (idx === 0) {
-         tr += `<td class="font-weight-bold text-dark">${cell}</td>`;
-       } 
-       // -- KOLOM SELANJUTNYA: STATUS --
-       else {
-         var txt = String(cell || '').trim(); // Bersihkan teks
-         var lowerTxt = txt.toLowerCase();
-         var badgeClass = ''; // Default Kosong (Tanpa Badge)
-         
-         // Logika Pewarnaan (Sesuai Template)
-         // Jika kosong atau "-", biarkan badgeClass kosong
-         if (txt !== '' && txt !== '-' && txt !== '0') {
-             if (lowerTxt === 'sudah' || lowerTxt === 'ok' || lowerTxt === 'lengkap' || lowerTxt === 'v' || lowerTxt === 'valid') {
-                 badgeClass = 'badge-success'; // Hijau
-             } 
-             else if (lowerTxt === 'belum' || lowerTxt === 'x' || lowerTxt === 'kosong' || lowerTxt === 'ditolak') {
-                 badgeClass = 'badge-danger';  // Merah
-             } 
-             else if (lowerTxt === 'kurang' || lowerTxt === 'revisi' || lowerTxt === 'perbaikan') {
-                 badgeClass = 'badge-warning'; // Kuning
-             }
-             else if (lowerTxt === 'diproses' || lowerTxt === 'proses') {
-                 badgeClass = 'badge-primary'; // Biru
-             } else {
-                 // Jika ada isi tapi tidak dikenali, kasih warna abu (opsional)
-                 badgeClass = 'badge-secondary';
-             }
-         }
-
-         // Render Sel
-         if (badgeClass) {
-             // Jika punya status warna
-             tr += `<td class="text-center"><span class="badge ${badgeClass}" style="padding: 6px 12px; min-width: 80px;">${cell}</span></td>`;
-         } else {
-             // Jika kosong atau "-" (Teks Polos)
-             tr += `<td class="text-center text-muted">${cell || '-'}</td>`;
-         }
-       }
+    $(document).ready(function() {
+        initDataStatus();
     });
-    tr += '</tr>';
-    tbody.append(tr);
-  });
 
-  isiOpsi('filterSD', setSD);
+    function initDataStatus(isRefresh = false) {
+        if(isRefresh) {
+             if ($.fn.DataTable.isDataTable('#tabelStatus')) { $('#tabelStatus').DataTable().destroy(); }
+             $('#headTabelStatus').hide();
+             $('#bodyTabelStatus').html('<tr><td class="text-center p-5" colspan="100%"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Memuat ulang...</h6></div></td></tr>');
+             $('#btnCari').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        }
 
-  // 3. DATATABLES CONFIG (AUTO WIDTH)
-  $('#tabelStatusSK').DataTable({
-    "scrollX": true,
-    "responsive": false,
-    "ordering": false, 
-    "autoWidth": true, // Aktifkan Auto Width
-    "pageLength": 15,
-    "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
-    "dom": 't<"d-flex justify-content-between align-items-center mt-3 px-2 bg-white border-top py-2"ip>',
-    
-    "initComplete": function() { 
-        setTimeout(function() { 
-            $('#tabelStatusSK').DataTable().columns.adjust(); 
-            $(window).trigger('resize'); 
+        google.script.run
+            .withSuccessHandler(function(res) {
+                $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+                
+                if (res.error) {
+                    $('#bodyTabelStatus').html(`<tr><td class="text-center text-danger p-5 font-weight-bold">${res.error}</td></tr>`);
+                    return;
+                }
 
-            // --- AKTIFKAN DISINI ---
-            if (typeof enableDragScroll === "function") {
-               enableDragScroll('tabelStatusSK');
-            }
-        }, 500); 
-    },
-    "drawCallback": function() { 
-        $('.dataTables_scrollHead').css('border-bottom', 'none'); 
-        // Style Freeze Column
-        $('.table-sticky-first td:first-child, .table-sticky-first th:first-child').css({
-            'position': 'sticky', 'left': 0, 'background-color': '#fff', 'z-index': 2,
-            'border-right': '2px solid #dee2e6'
-        });
-        $('.table-sticky-first thead th:first-child').css({
-            'z-index': 5, 'background-color': '#dfe6e9' 
-        });
+                GLOBAL_HEADERS = res.headers;
+                GLOBAL_DATA = res.rows;
+                
+                populateDropdown(res.schools);
+                renderTabel(GLOBAL_DATA);
+            })
+            .withFailureHandler(function(err) {
+                $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
+                $('#bodyTabelStatus').html(`<tr><td class="text-center text-danger p-5">Error: ${err.message}</td></tr>`);
+            })
+            .getSiabaStatusData();
     }
-  });
-}
 
-function isiOpsi(id, set) {
-    const el = document.getElementById(id);
-    const first = el.options[0];
-    el.innerHTML = ''; el.appendChild(first);
-    Array.from(set).sort().forEach(item => {
-        const opt = document.createElement('option'); opt.value = item; opt.text = item; el.appendChild(opt);
-    });
-}
+    function populateDropdown(schools) {
+        var el = $('#filterSekolah');
+        var currentVal = el.val();
+        el.empty().append('<option value="">- Semua Sekolah -</option>');
+        schools.forEach(s => el.append(`<option value="${s}">${s}</option>`));
+        if(currentVal) el.val(currentVal);
+    }
+
+    function filterLocalData() {
+        var filterVal = $('#filterSekolah').val();
+        var rowsToShow = GLOBAL_DATA;
+        if (filterVal && filterVal !== "") {
+            rowsToShow = GLOBAL_DATA.filter(r => r[0] === filterVal);
+        }
+        renderTabel(rowsToShow);
+    }
+
+    function renderTabel(rows) {
+        if ($.fn.DataTable.isDataTable('#tabelStatus')) {
+            $('#tabelStatus').DataTable().clear().destroy();
+        }
+        $('#bodyTabelStatus').empty();
+
+        if (!rows || rows.length === 0) {
+            $('#headTabelStatus').show();
+            initDataTableStandard('#tabelStatus', true);
+            return;
+        }
+
+        // 1. BANGUN HEADER (Dinamis dari Baris 1 Spreadsheet)
+        // PERBAIKAN: Kembalikan class col-sticky-left untuk kolom pertama (Index 0)
+        var htmlHead = '<tr>';
+        GLOBAL_HEADERS.forEach(function(h, idx) {
+            var label = (h && h !== "") ? h : "Kolom " + (idx+1);
+            
+            // LOGIKA FREEZE COLUMN (KEMBALI KE ASALNYA)
+            var stickyClass = (idx === 0) ? 'col-sticky-left' : '';
+            var styleAttr = (idx === 0) ? 'style="min-width: 250px;"' : ''; // Menjaga lebar kolom nama sekolah
+            
+            htmlHead += `<th class="text-center align-middle text-nowrap ${stickyClass}" ${styleAttr}>${label}</th>`;
+        });
+        htmlHead += '</tr>';
+        $('#headTabelStatus').html(htmlHead);
+
+        // 2. BANGUN BODY
+        var htmlBody = '';
+        rows.forEach(function(row) {
+            // PERBAIKAN: ANIMASI TETAP ADA
+            htmlBody += '<tr class="tr-animasi">';
+            
+            // Kolom Nama Sekolah (Sticky, Bold & Background Putih agar tidak transparan)
+            htmlBody += `<td class="col-sticky-left font-weight-bold align-middle text-nowrap bg-white text-dark">${row[0]}</td>`;
+            
+            // Kolom Status (Badge Sultan dengan Ikon)
+            for (var i = 1; i < row.length; i++) {
+                htmlBody += `<td class="text-center align-middle">${getBadgeSultan(row[i])}</td>`;
+            }
+            htmlBody += '</tr>';
+        });
+        
+        $('#bodyTabelStatus').html(htmlBody);
+        $('#headTabelStatus').show();
+        
+        setTimeout(function() { initDataTableStandard('#tabelStatus'); }, 10);
+    }
+
+    // --- HELPER STANDARD (COPY DARI PAGE_SK_DATA) ---
+    function initDataTableStandard(id, empty){ 
+        if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy(); 
+        $(id).DataTable({ 
+            ordering:false, 
+            pageLength:10, 
+            autoWidth:false, 
+            language:{url:"//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", emptyTable: empty?"Silakan cari data":"Data kosong"}, 
+            initComplete: function(){ 
+                if(!$(id).parent().hasClass('table-scroll-wrapper')) $(id).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width:100%"></div>'); 
+                setTimeout(()=>$(id).DataTable().columns.adjust(), 300); 
+            },
+            dom: "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+        }); 
+    }
+
+    // --- BADGE SULTAN (KEMBALI MENGGUNAKAN IKON AGAR SAMA PERSIS) ---
+    function getBadgeSultan(status) {
+        if (!status || status === "-" || status === "") return '<span class="text-muted small">-</span>';
+        
+        var s = String(status).trim();
+        var stLower = s.toLowerCase();
+        
+        // Skip Badge untuk Header Semester
+        if (stLower.includes("sem 1") || stLower.includes("sem 2") || s.length < 3) {
+            return `<span class="font-weight-bold text-dark">${s}</span>`;
+        }
+
+        var badgeStyle = 'badge-sultan-light-warning'; 
+        var iconClass = 'clock'; // Default icon (Diproses)
+
+        if (stLower.includes('ok') || stLower.includes('setuju') || stLower.includes('valid') || stLower.includes('sudah') || stLower.includes('lengkap')) {
+            badgeStyle = 'badge-sultan-light-success'; 
+            iconClass = 'check-circle'; 
+        } else if (stLower.includes('revisi')) {
+            badgeStyle = 'badge-sultan-light-info'; 
+            iconClass = 'sync-alt'; 
+        } else if (stLower.includes('tolak') || stLower.includes('salah') || stLower.includes('kurang')) {
+            badgeStyle = 'badge-sultan-light-danger'; 
+            iconClass = 'times-circle'; 
+        }
+
+        return `<span class="badge badge-sultan ${badgeStyle}">
+                    <i class="fas fa-${iconClass} mr-1"></i>${s}
+                </span>`;
+    }
 </script>
-
-<style>
-  /* CSS PENTING: AUTO WIDTH KONTEN */
-  /* nowrap membuat sel melebar mengikuti teks terpanjang (misal nama sekolah panjang) */
-  table.nowrap th, table.nowrap td {
-      white-space: nowrap;
-      padding-left: 15px !important;
-      padding-right: 15px !important;
-  }
-  
-  /* Fix Header Style agar sama dengan template master */
-  #tabelStatusSK thead th {
-      vertical-align: middle !important;
-      height: 35px !important; /* Samakan tinggi header */
-  }
-
-  /* Style Freeze Column */
-  .table-sticky-first th:first-child,
-  .table-sticky-first td:first-child {
-      position: sticky; left: 0; background-color: #fff; z-index: 1;
-      box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);
-  }
-</style>
