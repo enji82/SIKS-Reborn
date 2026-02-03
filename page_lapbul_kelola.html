@@ -2206,42 +2206,72 @@
     }
 
     function hitungValidasiPAUD() {
-        // Hitung Usia
-        var uL=0, uP=0;
-        $('#gridUsia input[name$="_l"]').each(function(){ uL += Number($(this).val()) });
-        $('#gridUsia input[name$="_p"]').each(function(){ uP += Number($(this).val()) });
-        
-        $('#totUsia').text(uL+uP); $('#totUsiaL').text(uL); $('#totUsiaP').text(uP);
+    // 1. HITUNG DATA USIA (KIRI)
+    // Kita gunakan daftar nama field yang BENAR (sesuai generateGridMuridPAUD)
+    var listUsia = ['u01', 'u12', 'u23', 'u34', 'u45', 'u56', 'u6'];
+    
+    var uL = 0;
+    var uP = 0;
 
-        // Cek Logic
-        var el = $('#statusValPAUD');
-        var isTK = $('#boxRombelTK').is(':visible');
-        
-        if (isTK) {
-            // Logic TK: Total Usia HARUS SAMA DENGAN Total Kelompok
-            var rL=0, rP=0;
-            $('#gridRombelTK input[name$="_l"]').each(function(){ rL += Number($(this).val()) });
-            $('#gridRombelTK input[name$="_p"]').each(function(){ rP += Number($(this).val()) });
-            $('#totRom').text(rL+rP);
+    listUsia.forEach(function(kode) {
+        // Ambil value, jika kosong/NaN dianggap 0
+        uL += parseInt($(`#formPAUD [name="${kode}_l"]`).val()) || 0;
+        uP += parseInt($(`#formPAUD [name="${kode}_p"]`).val()) || 0;
+    });
 
-            if ((uL+uP) > 0 && uL == rL && uP == rP) {
-                el.removeClass('badge-warning badge-danger').addClass('badge-success').html('<i class="fas fa-check"></i> Sesuai');
-                return true;
-            } else {
-                el.removeClass('badge-success').addClass('badge-danger').text('Tidak Sama');
-                return false;
-            }
-        } else {
-            // Logic Non-TK: Asal > 0 Valid
-            if ((uL+uP) > 0) {
-                el.removeClass('badge-warning badge-danger').addClass('badge-success').html('<i class="fas fa-check"></i> OK');
-                return true;
-            } else {
-                el.removeClass('badge-success').addClass('badge-warning').text('Kosong');
-                return false;
-            }
-        }
+    var totUsia = uL + uP;
+
+    // 2. HITUNG DATA KELOMPOK TK (KANAN)
+    var kL = 0;
+    var kP = 0;
+
+    // Kelompok A
+    kL += parseInt($('#formPAUD [name="kel_a_l"]').val()) || 0;
+    kP += parseInt($('#formPAUD [name="kel_a_p"]').val()) || 0;
+    
+    // Kelompok B
+    kL += parseInt($('#formPAUD [name="kel_b_l"]').val()) || 0;
+    kP += parseInt($('#formPAUD [name="kel_b_p"]').val()) || 0;
+    
+    var totKel = kL + kP;
+
+    // 3. UPDATE TAMPILAN (UI)
+    
+    // Update Sisi Kiri (Usia)
+    $('#totUsia').text(totUsia);
+    $('#totUsiaL').text(uL);
+    $('#totUsiaP').text(uP);
+
+    // Update Sisi Kanan (Kelompok) - INI PERMINTAAN BAPAK (Tampil L & P)
+    // Kita ubah HTML span #txtTotRombel agar formatnya lengkap
+    var htmlKanan = ` | Total Kelompok: <span id="totRom" class="font-weight-bold">${totKel}</span> (L:${kL} P:${kP})`;
+    $('#txtTotRombel').html(htmlKanan);
+
+    // 4. CEK STATUS (Valid/Tidak)
+    var badge = $('#statusValPAUD');
+    var isTK = $('#boxRombelTK').is(':visible');
+    
+    var isValid = true; 
+    
+    if (isTK) {
+        // Jika TK: Total Kiri HARUS SAMA dengan Total Kanan
+        if (totUsia !== totKel) isValid = false;
+        
+        // (Opsional) Jika Bapak ingin L harus sama L, P harus sama P, aktifkan baris ini:
+        // if (uL !== kL || uP !== kP) isValid = false;
     }
+
+    // Update Warna Badge
+    if (isValid) {
+        badge.removeClass('badge-danger badge-warning').addClass('badge-success');
+        badge.html('<i class="fas fa-check-circle mr-1"></i>Sesuai');
+    } else {
+        badge.removeClass('badge-success badge-warning').addClass('badge-danger');
+        badge.html('<i class="fas fa-times-circle mr-1"></i>Tidak Sama');
+    }
+
+    return isValid;
+}
 
     function validateMuridPAUD() {
         if(hitungValidasiPAUD()) {
@@ -2476,13 +2506,13 @@
     });
 
     function populateFormPAUD(data) {
-    // 1. GENERATE FORM (Wajib di PAUD)
+    // 1. GENERATE FORM
     if (typeof generateDynamicFieldsPAUD === 'function') generateDynamicFieldsPAUD();
     if (typeof generateGridMuridPAUD === 'function') generateGridMuridPAUD();
 
-    console.log("=== POPULATE PAUD: METODE SD GLOBAL ===");
+    console.log("=== POPULATE PAUD: FINAL UI UPDATE ===");
 
-    // --- HELPER: CARI DATA ---
+    // --- HELPER ---
     var cariData = function(keywords) {
         if (!Array.isArray(keywords)) keywords = [keywords];
         for (var key in data) {
@@ -2499,84 +2529,97 @@
     };
 
     // ============================================================
-    // BAGIAN 1: PERIODE (TARGET ID GLOBAL SEPERTI SD)
+    // BAGIAN 1: PERIODE (Fix Name -> ID)
     // ============================================================
-    var valBulan = cariData("bulan"); // "Januari"
-    var valTahun = cariData("tahun"); // "2026"
+    var valBulan = cariData("bulan");
+    var valTahun = cariData("tahun");
 
-    // --- TAHUN (Fix Dropdown Kosong) ---
-    // Kita tembak #sel_tahun (ID Global)
-    var elTahun = $('#sel_tahun'); 
-    
-    // 1. Jika dropdown tahun kosong/opsi belum ada, kita buatkan!
-    if (valTahun && elTahun.find("option[value='" + valTahun + "']").length === 0) {
-        elTahun.append(new Option(valTahun, valTahun));
-    }
-    // 2. Pilih Tahun
-    elTahun.val(valTahun).trigger('change');
+    var fixElementPeriode = function(namaInput, idYangDiinginkan, nilai) {
+        var el = $('#formPAUD select[name="' + namaInput + '"]');
+        if (el.length > 0) {
+            el.attr('id', idYangDiinginkan); // Tempel ID
+            if (nilai) {
+                var opsiAda = el.find("option[value='" + nilai + "']").length > 0;
+                if (!opsiAda) {
+                    el.find('option').each(function() {
+                        if ($(this).text().trim().toLowerCase() === String(nilai).trim().toLowerCase()) {
+                            el.val($(this).val());
+                            opsiAda = true;
+                            return false;
+                        }
+                    });
+                }
+                if (!opsiAda) el.append(new Option(nilai, nilai, true, true));
+                else if (!el.val()) el.val(nilai);
+                el.trigger('change');
+            }
+        }
+    };
 
-
-    // --- BULAN (Fix Value vs Text) ---
-    // Kita tembak #sel_bulan (ID Global)
-    var elBulan = $('#sel_bulan'); 
-    
-    // 1. Coba set langsung
-    elBulan.val(valBulan);
-
-    // 2. Jika gagal (karena value HTML "01" tapi Data "Januari")
-    if (!elBulan.val() && valBulan) {
-        // Cari opsi yang TULISANNYA sama
-        elBulan.find('option').filter(function() {
-            return $(this).text().trim().toLowerCase() === String(valBulan).trim().toLowerCase();
-        }).prop('selected', true);
-    }
-    // 3. Trigger Change
-    elBulan.trigger('change');
-
-    console.log("SET PERIODE GLOBAL -> Bln:", elBulan.val(), "Thn:", elTahun.val());
+    fixElementPeriode('tahun', 'sel_tahun', valTahun);
+    fixElementPeriode('bulan', 'sel_bulan', valBulan);
 
 
     // ============================================================
-    // BAGIAN 2: ROW ID (WAJIB ADA UNTUK SIMPAN)
-    // ============================================================
-    // Pastikan input hidden ada di dalam form PAUD
-    if ($('#formPAUD input[name="EDIT_ROW_ID"]').length === 0) {
-        $('#formPAUD').append('<input type="hidden" name="EDIT_ROW_ID">');
-    }
-    var rowId = data.ROW_ID || data.row_id || cariData("row_id");
-    $('#formPAUD input[name="EDIT_ROW_ID"]').val(rowId);
-
-
-    // ============================================================
-    // BAGIAN 3: IDENTITAS & LAINNYA
+    // BAGIAN 2: DATA UMUM
     // ============================================================
     var npsn = cariData(["npsn", "nomor pokok"]);
     var nama = cariData(["nama sekolah", "nama lembaga"]);
     
-    // Tembak ID Global (#val_npsn) dan ID Lokal (#val_npsn_paud) untuk jaga-jaga
-    $('#val_npsn').val(npsn);       $('#val_npsn_paud').val(npsn);
-    $('#val_nama').val(nama);       $('#val_nama_paud').val(nama);
-    
-    if(npsn && nama) $('#inputSearchSekolah').val(npsn + " - " + nama);
+    // Set Identitas
+    $('#val_npsn_paud').val(npsn);
+    if(!$('#val_npsn_paud').val()) $('#formPAUD input[name="npsn"]').val(npsn);
 
-    // Mapping Field Otomatis (Menggunakan Selector Name)
+    $('#val_nama_paud').val(nama);
+    if(!$('#val_nama_paud').val()) $('#formPAUD input[name="nama_sekolah"]').val(nama);
+    
+    if(npsn && nama) $('input[id*="Search"]').val(npsn + " - " + nama);
+
+    // FIX TANGGAL PENDIRIAN
+    var valTglPendirian = cariData(["tanggal pendirian", "tgl pendirian", "pendirian"]);
+    if (valTglPendirian) {
+        $('#formPAUD [name="tgl_pendirian"]').val(valTglPendirian);
+        $('#formPAUD [name="tanggal_pendirian"]').val(valTglPendirian);
+    }
+
+    // ============================================================
+    // BAGIAN 3: FIX JENJANG (TK vs KB/SPS)
+    // ============================================================
+    var valJenjang = String(cariData("jenjang")).toUpperCase().trim();
+    
+    $('#val_jenjang').val(valJenjang);
+    $('#formPAUD input[name="jenjang"]').val(valJenjang);
+
+    // Show/Hide Kolom TK
+    var boxTK = $('#boxRombelTK');
+    var txtTot = $('#txtTotRombel');
+    
+    if (valJenjang.includes("TK")) {
+        boxTK.show().removeClass('d-none');
+        txtTot.show();
+        $('#gridRombelTK input[name^="kel_"]').addClass('hitung-paud-rombel');
+    } else {
+        boxTK.hide().addClass('d-none');
+        txtTot.hide();
+        $('#gridRombelTK input[name^="kel_"]').removeClass('hitung-paud-rombel');
+    }
+
+    // ============================================================
+    // BAGIAN 4: MAPPING DATA SISANYA
+    // ============================================================
     var fields = [
-        { name: "jenjang", keys: ["jenjang"] },
         { name: "status_sekolah", keys: ["status"] },
         { name: "yayasan", keys: ["yayasan"] },
         { name: "no_sk_pendirian", keys: ["sk pendirian", "no sk pendirian"] },
-        { name: "tgl_pendirian", keys: ["tgl pendirian"] },
         { name: "no_sk_ijin", keys: ["sk ijin", "sk operasional"] },
-        { name: "tgl_ijin", keys: ["tgl ijin"] },
+        { name: "tgl_ijin", keys: ["tgl ijin", "tanggal ijin"] },
         { name: "akreditasi", keys: ["akreditasi"] },
         { name: "no_sertifikat", keys: ["no sertifikat"] },
         { name: "skor", keys: ["skor", "nilai"] },
         { name: "alamat", keys: ["alamat"] },
         { name: "telepon", keys: ["telepon", "hp"] },
         { name: "email", keys: ["email"] },
-        
         { name: "jumlah_rombel", keys: ["rombel", "jumlah rombel"] },
-        
         { name: "u01_l", keys: ["0-1 l"] }, { name: "u01_p", keys: ["0-1 p"] },
         { name: "u12_l", keys: ["1-2 l"] }, { name: "u12_p", keys: ["1-2 p"] },
         { name: "u23_l", keys: ["2-3 l"] }, { name: "u23_p", keys: ["2-3 p"] },
@@ -2586,7 +2629,6 @@
         { name: "u6_l", keys: ["> 6 l"] },  { name: "u6_p", keys: ["> 6 p"] },
         { name: "kel_a_l", keys: ["a l"] }, { name: "kel_a_p", keys: ["a p"] },
         { name: "kel_b_l", keys: ["b l"] }, { name: "kel_b_p", keys: ["b p"] },
-        
         { name: "ks_gty", keys: ["ks gty"] }, { name: "ks_gtt", keys: ["ks gtt"] },
         { name: "ks_pns", keys: ["ks pns"] }, { name: "ks_pppk", keys: ["ks pppk"] },
         { name: "gk_gty", keys: ["gk gty"] }, { name: "gk_gtt", keys: ["gk gtt"] },
@@ -2605,20 +2647,47 @@
     });
 
     // ============================================================
-    // BAGIAN 4: FILE
+    // BAGIAN 5: ROW ID & FILE & HINT MESSAGE (YANG BARU)
     // ============================================================
+    if ($('#formPAUD input[name="EDIT_ROW_ID"]').length === 0) {
+        $('#formPAUD').append('<input type="hidden" name="EDIT_ROW_ID">');
+    }
+    var rowId = data.ROW_ID || data.row_id || cariData("row_id");
+    $('#formPAUD input[name="EDIT_ROW_ID"]').val(rowId);
+
+    // --- TAMBAHAN: PESAN HINT FILE ---
+    // Cari input file di form PAUD
+    var fileInput = $('#formPAUD input[type="file"]');
+    
+    // Hapus pesan lama jika ada (biar tidak dobel)
+    $('#hintEditFilePAUD').remove();
+    
+    // Sisipkan Pesan di ATAS input file
+    // Kita cari labelnya dulu, lalu taruh setelah label, sebelum input
+    var labelFile = fileInput.closest('.form-group').find('label').first();
+    
+    // HTML Pesan Info
+    var htmlPesan = '<id="hintEditFilePAUD" class="text-info font-italic mb-2 d-block">' + 
+                    '<i class="fas fa-info-circle mr-1"></i>Lewati bagian ini apabila tidak mengganti file.' + 
+                    '</small>';
+    
+    if (labelFile.length > 0) {
+        labelFile.after(htmlPesan);
+    } else {
+        // Fallback jika tidak ada label, taruh sebelum input
+        fileInput.parent().before(htmlPesan);
+    }
+
+    // --- PREVIEW FILE LAMA ---
     var urlFile = cariData(["dokumen", "file"]);
     URL_FILE_LAMA = urlFile;
 
     if (urlFile && urlFile.length > 5) {
-        $('#msgEditFilePAUD').removeClass('d-none');
+        $('.box-preview-file').removeClass('d-none');
         $('#boxFilePreviewPAUD').removeClass('d-none').html(`
             <div class="alert alert-info p-2 mb-2"><i class="fas fa-info-circle mr-1"></i> File tersedia.</div>
             <a href="${urlFile}" target="_blank" class="btn btn-sm btn-primary btn-block shadow-sm"><i class="fas fa-file-download mr-2"></i>Lihat File</a>
         `);
-    } else {
-        $('#boxFilePreviewPAUD').addClass('d-none');
-        $('#msgEditFilePAUD').addClass('d-none');
     }
 
     setTimeout(function() {
@@ -2628,120 +2697,116 @@
 }
 
     function submitUpdatePAUD() {
-        // A. VALIDASI PERIODE
-        var bln = $('#sel_bulan').val();
-        var thn = $('#sel_tahun').val();
-        if(!bln || !thn) { Sultan.notif.gagal("Periode error."); return; }
+    // A. VALIDASI PERIODE
+    var bln = $('#formPAUD select[name="bulan"]').val();
+    var thn = $('#formPAUD select[name="tahun"]').val();
+    
+    if(!bln || !thn) { 
+        Sultan.notif.gagal("Periode Laporan (Bulan/Tahun) masih kosong!"); 
+        return; 
+    }
 
-        // B. VALIDASI LOGIKA: ROMBEL VS SISWA (USIA 0-6 TAHUN)
-        // Kita loop dari Usia 0 sampai 6
-        for (var i = 0; i <= 6; i++) {
-            // 1. Ambil Jumlah Rombel (Asumsi name="rombel_0", "rombel_1", dst)
-            var rombel = parseInt($(`#formPAUD [name="rombel_${i}"]`).val()) || 0;
-            
-            // 2. Ambil Jumlah Siswa L+P (Asumsi name="u_0_l", "u_0_p", dst)
-            var l = parseInt($(`#formPAUD [name="u_${i}_l"]`).val()) || 0;
-            var p = parseInt($(`#formPAUD [name="u_${i}_p"]`).val()) || 0;
-            var totalSiswa = l + p;
+    // B. PANGGIL HITUNG VALIDASI (Hanya update angka, tanpa validasi ketat)
+    if(typeof hitungValidasiPAUD === 'function') hitungValidasiPAUD();
 
-            // Cek 1: Ada Rombel, tapi Siswa 0
-            if (rombel > 0 && totalSiswa === 0) {
-                handleTabClick('tp2'); // Pindah ke Tab Murid PAUD (sesuaikan ID Tab-nya)
-                Sultan.notif.gagal(`Usia ${i} Tahun: Rombel terisi ${rombel}, tapi data Siswa Kosong!`);
-                return;
-            }
+    // C. VALIDASI FILE
+    var f = document.getElementById('filePAUD');
+    if (!f) f = $('#formPAUD input[type="file"]')[0];
 
-            // Cek 2: Ada Siswa, tapi Rombel 0
-            if (totalSiswa > 0 && rombel === 0) {
-                handleTabClick('tp2');
-                Sultan.notif.gagal(`Usia ${i} Tahun: Data Siswa terisi, tapi Rombel masih 0!`);
-                return;
-            }
-        }
+    var hasFile = (f && f.files.length > 0);
+    if (hasFile && f.files[0].size > 200 * 1024) { 
+        Sultan.notif.gagal("Ukuran file terlalu besar! Maksimal 200 KB."); return; 
+    }
+
+    // D. PROSES KIRIM
+    var b = $('#btnSimpanPAUD');
+    if(b.length === 0) b = $('#formPAUD button[type="submit"]');
+
+    var txtAwal = b.html();
+    b.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i>Mengupdate...');
+
+    var runKirim = function(fileData) {
+        var d = {};
+        $('#formPAUD').serializeArray().forEach(i => d[i.name] = i.value);
         
-        // C. VALIDASI FILE (OPSIONAL SAAT EDIT)
-        var f = document.getElementById('filePAUD');
-        var hasFile = (f && f.files.length > 0);
+        d.bulan = bln;
+        d.tahun = thn;
+        d.total_rombel = parseInt($('#formPAUD [name="jumlah_rombel"]').val()) || 0;
         
-        if (hasFile && f.files[0].size > 200 * 1024) { 
-            Sultan.notif.gagal("Ukuran file terlalu besar! Maksimal 200 KB."); return; 
-        }
+        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+        d.user_login = user.nama; 
+        d.EDIT_ROW_ID = $('#formPAUD input[name="EDIT_ROW_ID"]').val();
 
-        // D. PROSES KIRIM
-        var b = $('#btnFinalPAUD');
-        var txtAwal = b.html();
-        b.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i>Mengupdate...');
-
-        var runKirim = function(fileData) {
-            var d = {};
-            // Serialize semua input di Form PAUD
-            $('#formPAUD').serializeArray().forEach(i => d[i.name] = i.value);
+        google.script.run.withSuccessHandler(function(res) {
+            b.prop('disabled', false).html(txtAwal);
             
-            // Hitung Total Rombel PAUD untuk Database
-            var tr = 0; 
-            $('#formPAUD .sel-rombel').each(function() { tr += parseInt($(this).val()) || 0; });
-            d.total_rombel = tr;
-            
-            // Info User
-            var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-            d.user_login = user.nama; 
+            if (res.success) {
+                $('#modalTambahData').modal('hide');
+                Sultan.notif.sukses(res.message);
 
-            google.script.run.withSuccessHandler(function(res) {
-                b.prop('disabled', false).html(txtAwal);
-                
-                if (res.success) {
-                    $('#modalTambahData').modal('hide');
-                    Sultan.notif.sukses(res.message);
-
-                    // --- E. UPDATE TABEL SECARA LOKAL (INSTANT UPDATE) ---
-                    var targetId = String(EDIT_ROW_ID);
+                // UPDATE CACHE LOKAL
+                if (typeof DATA_LAPBUL_CACHE !== 'undefined' && d.EDIT_ROW_ID) {
+                    var targetId = String(d.EDIT_ROW_ID);
                     var foundIndex = -1;
-
-                    // Cari index data di cache
+                    
+                    // 1. Cari Data Lama & Update
                     for(var k=0; k<DATA_LAPBUL_CACHE.length; k++) {
                         if(String(DATA_LAPBUL_CACHE[k].rowId) === targetId) {
-                            foundIndex = k;
-                            break;
+                            foundIndex = k; break;
                         }
                     }
 
-                    // Update data di cache
                     if (foundIndex > -1) {
                         DATA_LAPBUL_CACHE[foundIndex].tglEdit = res.newData.tglEdit;
                         DATA_LAPBUL_CACHE[foundIndex].userEdit = res.newData.userEdit;
                         DATA_LAPBUL_CACHE[foundIndex].statusData = res.newData.statusData;
-                        DATA_LAPBUL_CACHE[foundIndex].sortTime = res.newData.sortTime;
-                        DATA_LAPBUL_CACHE[foundIndex].fileUrl = res.newData.fileUrl;
-                        DATA_LAPBUL_CACHE[foundIndex].rombel = d.total_rombel; // Update rombel juga
+                        DATA_LAPBUL_CACHE[foundIndex].bulan = d.bulan;
+                        DATA_LAPBUL_CACHE[foundIndex].tahun = d.tahun;
+                        DATA_LAPBUL_CACHE[foundIndex].rombel = d.total_rombel;
+                        
+                        // Update Sort Time (PENTING BUAT SORTING)
+                        if (res.newData.sortTime) {
+                            DATA_LAPBUL_CACHE[foundIndex].sortTime = res.newData.sortTime;
+                        }
                     }
 
-                    // Render ulang tabel
-                    renderTabel(DATA_LAPBUL_CACHE);
-                    
-                    // Reset Mode
-                    IS_EDIT_MODE = false;
-                    EDIT_ROW_ID = null;
-                } else {
-                    Sultan.notif.gagal(res.message);
-                }
-            }).updateLapbulPAUD(d, fileData); // Panggil Backend PAUD
-        };
+                    // 2. SORTING ULANG (DATA TERBARU NAIK KE ATAS) -- INI YANG BARU
+                    DATA_LAPBUL_CACHE.sort(function(a, b) {
+                        // Urutkan berdasarkan sortTime dari Besar (Baru) ke Kecil (Lama)
+                        return (b.sortTime || 0) - (a.sortTime || 0);
+                    });
 
-        // E. HANDLING FILE READER
-        if (hasFile) {
-            var r = new FileReader();
-            r.onload = function(ev) {
-                runKirim({ 
-                    data: ev.target.result.split(',')[1], 
-                    mimeType: f.files[0].type, 
-                    name: f.files[0].name 
-                });
-            };
-            r.readAsDataURL(f.files[0]);
-        } else {
-            runKirim(null); // Kirim tanpa file baru
-        }
+                    // 3. Render Ulang Tabel
+                    if(typeof renderTabel === 'function') renderTabel(DATA_LAPBUL_CACHE);
+                }
+                
+                IS_EDIT_MODE = false;
+                EDIT_ROW_ID = null;
+            } else {
+                Sultan.notif.gagal(res.message);
+            }
+        })
+        .withFailureHandler(function(err) {
+                b.prop('disabled', false).html(txtAwal);
+                Sultan.notif.gagal("Gagal koneksi: " + err.message);
+        })
+        .updateLapbulPAUD(d, fileData);
+    };
+
+    if (hasFile) {
+        var r = new FileReader();
+        r.onload = function(ev) {
+            runKirim({ 
+                data: ev.target.result.split(',')[1], 
+                mimeType: f.files[0].type, 
+                name: f.files[0].name 
+            });
+        };
+        r.readAsDataURL(f.files[0]);
+    } else {
+        runKirim(null);
     }
+}
 
 
 
