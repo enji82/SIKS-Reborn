@@ -47,9 +47,9 @@ const FOLDER_CONFIG = {
   SIABA_PAK_DOCS: "1cvn-pOufs-OIbFQfqhmxc3fcmFuox4Sc",
 };
 
-/* ======================================================================
-   CORE WEB APP: DO GET & INCLUDE
-   ====================================================================== */
+// ==========================================
+// 2. CORE WEB APP (DoGet & Routing)
+// ==========================================
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
   return template.evaluate()
@@ -66,86 +66,270 @@ function getScriptUrl() {
   return ScriptApp.getService().getUrl();
 }
 
-/* ======================================================================
-   ROUTING HALAMAN
-   ====================================================================== */
+// Routing Halaman (KEMBALI KE NAMA ASLI 'getHalaman')
 function getHalaman(namaFile) {
   try {
     const prefix = "page_";
-    // Cek apakah nama file sudah ada prefix 'page_' atau belum
     const realName = namaFile.startsWith(prefix) ? namaFile : prefix + namaFile;
     return HtmlService.createTemplateFromFile(realName).evaluate().getContent();
   } catch (err) {
-    return '<div class="p-4"><div class="alert alert-warning">Halaman <b>' + namaFile + '</b> belum tersedia / file tidak ditemukan.</div></div>';
+    return '<div class="alert alert-danger p-3">Halaman <b>' + namaFile + '</b> belum dibuat atau nama file salah.</div>';
   }
 }
 
-/* ======================================================================
-   SISTEM LOGIN (AUTH)
-   ====================================================================== */
-function checkLogin(username, password) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
-  const sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
-  const data = sheet.getDataRange().getValues();
-  
-  for (let i = 1; i < data.length; i++) {
-    // Kolom A=Username, B=Password
-    if (String(data[i][0]).trim() == username && String(data[i][1]).trim() == password) {
-      const userObj = {
-        fullName: data[i][2], role: data[i][3], photo: data[i][4] || "", isLoggedIn: true
-      };
-      PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
-      return userObj;
-    }
-  }
-  return null;
-}
+// Alias untuk loadPage (jaga-jaga jika ada script lain yang memanggil)
+function loadPage(namaFile) { return getHalaman(namaFile); }
 
-function getCurrentUser() {
-  const user = PropertiesService.getUserProperties().getProperty('currentUser');
-  return user ? JSON.parse(user) : null;
-}
+// ==========================================
+// 3. AUTH SYSTEM (MANUAL LOGIN)
+// ==========================================
 
-function processLogin(formObject) {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER); 
-  var sheetName = SPREADSHEET_IDS.SHEET_USER_NAME; 
-  var sheet = ss.getSheetByName(sheetName);
-  
-  if (!sheet) {
-    return { status: "error", message: "Sheet '" + sheetName + "' tidak ditemukan!" };
-  }
-
-  var data = sheet.getDataRange().getValues();
-  var inputUser = formObject.username ? formObject.username.toString().trim() : "";
-  var inputPass = formObject.password ? formObject.password.toString().trim() : "";
-
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    var dbUser = row[0] ? row[0].toString().trim() : "";
-    var dbPass = row[1] ? row[1].toString().trim() : "";
+// A. PROSES CEK PASSWORD (SAAT TOMBOL LOGIN DITEKAN)
+function processLogin(formObj) {
+  try {
+    // Normalisasi input (bisa objek form atau parameter terpisah)
+    var inputUser = "";
+    var inputPass = "";
     
-    if (dbUser === inputUser && dbPass === inputPass) {
-      var userObj = {
-        fullName: row[2], 
-        role: row[3], 
-        photo: row[4] || "", 
-        isLoggedIn: true
-      };
-      PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
-
-      return {
-        status: "success",
-        username: dbUser,
-        nama: row[2], 
-        role: row[3], 
-        foto: row[4]  
-      };
+    if (typeof formObj === 'object' && formObj.username) {
+      inputUser = String(formObj.username).trim();
+      inputPass = String(formObj.password).trim();
+    } else {
+      // Jika dipanggil manual processLogin('admin', '123')
+      inputUser = String(arguments[0]).trim();
+      inputPass = String(arguments[1]).trim();
     }
-  }
 
-  return { status: "error", message: "Username atau Password salah" };
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER); 
+    var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    var data = sheet.getDataRange().getValues();
+
+    // Loop Database (Mulai baris 1)
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      // Kolom A (0) = Username, Kolom B (1) = Password
+      if (String(row[0]).trim() == inputUser && String(row[1]).trim() == inputPass) {
+        
+        // LOGIN SUKSES!
+        var userObj = {
+          username: row[0],
+          fullName: row[2], // Kolom C: Nama Lengkap
+          role: row[3],     // Kolom D: Role (Admin/User)
+          photo: row[4] || "", // Kolom E: Foto
+          isLoggedIn: true
+        };
+        
+        // SIMPAN SESI KE USER PROPERTIES (Aman per akun Google)
+        PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
+        
+        return { status: 'success', message: 'Login Berhasil' };
+      }
+    }
+
+    return { status: 'error', message: 'Username atau Password Salah.' };
+
+  } catch (e) {
+    return { status: 'error', message: 'Error Server: ' + e.toString() };
+  }
 }
 
+// B. AMBIL DATA USER (DIPANGGIL OLEH HOME)
+function getCurrentUser() {
+  try {
+    // Ambil data dari penyimpanan sementara (UserProperties)
+    var userStr = PropertiesService.getUserProperties().getProperty('currentUser');
+    if (userStr) {
+      return JSON.parse(userStr);
+    }
+    return null; // Belum login
+  } catch(e) {
+    return null;
+  }
+}
+
+// C. LOGOUT
 function processLogout() {
   PropertiesService.getUserProperties().deleteProperty('currentUser');
+  return { status: 'success' };
+}
+
+
+// ==========================================
+// 4. VISITOR COUNTER & SETTING
+// ==========================================
+function getVisitorStats() {
+  var props = PropertiesService.getScriptProperties();
+  var today = new Date().toLocaleDateString("id-ID"); 
+  
+  // Statistik
+  var totalHits = Number(props.getProperty('TOTAL_HITS')) || 0;
+  var lastDate = props.getProperty('LAST_DATE_HIT');
+  var todayHits = Number(props.getProperty('TODAY_HITS')) || 0;
+
+  if (lastDate !== today) {
+    todayHits = 0;
+    props.setProperty('LAST_DATE_HIT', today);
+  }
+
+  totalHits++;
+  todayHits++;
+  props.setProperty('TOTAL_HITS', totalHits.toString());
+  props.setProperty('TODAY_HITS', todayHits.toString());
+
+  // Running Text
+  var totalUsers = 0;
+  var infoText = "Selamat Datang di SIKS-REBORN";
+
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    // Hitung User
+    var sheetUser = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    if(sheetUser) totalUsers = sheetUser.getLastRow() - 1;
+
+    // Ambil Running Text
+    var sheetSetting = ss.getSheetByName("SETTING");
+    if (sheetSetting) infoText = sheetSetting.getRange("B1").getValue();
+
+  } catch (e) {
+    infoText = "Maintenance Mode";
+  }
+
+  return { total: totalHits, today: todayHits, users: totalUsers, info: infoText };
+}
+
+function saveRunningText(textBaru) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    var sheet = ss.getSheetByName("SETTING");
+    if (!sheet) {
+      sheet = ss.insertSheet("SETTING");
+      sheet.getRange("A1").setValue("RUNNING_TEXT");
+    }
+    sheet.getRange("B1").setValue(textBaru);
+    return { status: 'success', message: 'Berhasil disimpan!' };
+  } catch (e) {
+    return { status: 'error', message: 'Gagal: ' + e.message };
+  }
+}
+
+// Untuk memuat halaman Setting di Sidebar
+function loadPageSetting() {
+  return HtmlService.createTemplateFromFile('page_setting').evaluate().getContent();
+}
+
+// ==========================================
+// 5. MONITORING SYSTEM (CCTV)
+// ==========================================
+function logUserVisit(userData) {
+  if (!userData) return;
+
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    var sheet = ss.getSheetByName("LOG_ACCESS");
+    
+    var now = new Date();
+    var timestamp = Utilities.formatDate(now, "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
+    var tgalOnly  = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM-dd");
+    var blnOnly   = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
+    
+    // Cek Hari Libur
+    var dayIndex = now.getDay(); 
+    var jenisHari = "Hari Efektif";
+    var ketHari = "Reguler";
+
+    // 1. Cek Weekend
+    if (dayIndex === 0 || dayIndex === 6) {
+      jenisHari = "Hari Libur";
+      ketHari = (dayIndex === 0) ? "Minggu" : "Sabtu";
+    }
+
+    // 2. Cek Kalender Libur (DATA_LIBUR)
+    var sheetLibur = ss.getSheetByName("DATA_LIBUR");
+    if (sheetLibur && sheetLibur.getLastRow() > 1) {
+      var dataLibur = sheetLibur.getRange(2, 1, sheetLibur.getLastRow()-1, 2).getValues();
+      for (var i = 0; i < dataLibur.length; i++) {
+        var tglLibur = Utilities.formatDate(new Date(dataLibur[i][0]), "Asia/Jakarta", "yyyy-MM-dd");
+        if (tglLibur === tgalOnly) {
+          jenisHari = "Hari Libur";
+          ketHari = dataLibur[i][1];
+          break;
+        }
+      }
+    }
+
+    // 3. Simpan
+    if (sheet) {
+      sheet.appendRow([timestamp, tgalOnly, blnOnly, userData.fullName, userData.role, jenisHari + " (" + ketHari + ")"]);
+    }
+    
+  } catch (e) {
+    console.log("Log Error: " + e.message);
+  }
+}
+
+function getMonitoringStats() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+  
+  // Ambil Data Log
+  var sheetLog = ss.getSheetByName("LOG_ACCESS");
+  var dataLog = [];
+  if (sheetLog && sheetLog.getLastRow() > 1) {
+    dataLog = sheetLog.getRange(2, 1, sheetLog.getLastRow() - 1, 6).getValues();
+  }
+
+  var stats = {
+    total: dataLog.length,
+    kerja: 0,
+    libur: 0,
+    userCounts: {}, 
+    daily: {},
+    weekly: {},
+    monthly: {}
+  };
+
+  dataLog.forEach(function(row) {
+    var timestamp = row[0];
+    var tgal = row[1];
+    var nama = row[3];
+    var jenis = row[5];
+
+    if (String(jenis).includes("Libur")) stats.libur++;
+    else stats.kerja++;
+
+    stats.userCounts[nama] = (stats.userCounts[nama] || 0) + 1;
+    stats.daily[tgal] = (stats.daily[tgal] || 0) + 1;
+
+    var dateObj = new Date(timestamp);
+    var namaBulan = Utilities.formatDate(dateObj, "Asia/Jakarta", "MMMM yyyy");
+    stats.monthly[namaBulan] = (stats.monthly[namaBulan] || 0) + 1;
+
+    var weekNum = Utilities.formatDate(dateObj, "Asia/Jakarta", "w");
+    var weekLabel = "Minggu ke-" + weekNum;
+    stats.weekly[weekLabel] = (stats.weekly[weekLabel] || 0) + 1;
+  });
+
+  var rankingUser = [];
+  Object.keys(stats.userCounts).forEach(function(name){
+    rankingUser.push({ name: name, count: stats.userCounts[name] });
+  });
+  rankingUser.sort(function(a, b){ return b.count - a.count });
+
+  // Cari User Pasif
+  var sheetUser = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+  var userPasif = [];
+  if (sheetUser) {
+    // Ambil kolom Nama (C)
+    var allUsers = sheetUser.getRange(2, 3, sheetUser.getLastRow()-1, 1).getValues(); 
+    allUsers.forEach(function(u){
+      var uName = u[0];
+      if (uName && !stats.userCounts[uName]) userPasif.push(uName);
+    });
+  }
+
+  return {
+    summary: { total: stats.total, kerja: stats.kerja, libur: stats.libur },
+    topUsers: rankingUser.slice(0, 10),
+    passiveUsers: userPasif,
+    chartData: { daily: stats.daily, weekly: stats.weekly, monthly: stats.monthly }
+  };
 }

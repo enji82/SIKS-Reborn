@@ -725,6 +725,131 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog" style="z-index: 1080;">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white py-2">
+                <h6 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus</h6>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <div class="icon-circle bg-light-danger mx-auto text-danger">
+                        <i class="fas fa-trash-alt fa-2x"></i>
+                    </div>
+                </div>
+                <h5 class="font-weight-bold text-dark">Hapus Data Laporan?</h5>
+                <p class="text-muted small mb-3">
+                    Sekolah: <span id="lblHapusSekolah" class="font-weight-bold text-dark">-</span><br>
+                    Data akan dihapus dari database.
+                </p>
+                
+                <div class="bg-light p-3 rounded border mb-3">
+                    <label class="small font-weight-bold text-secondary mb-1">Kode Otorisasi Penghapusan:</label>
+                    
+                    <div class="alert alert-warning py-1 px-2 small mb-2" style="font-size: 11px; line-height: 1.2;">
+                        <i class="fas fa-lock mr-1"></i> Hubungi <b>Admin Korwil</b> untuk mendapatkan kode hapus hari ini.
+                    </div>
+
+                    <input type="text" id="inputKodeHapus" class="form-control text-center font-weight-bold letter-spacing-1" placeholder="_ _ _ _ _ _" maxlength="8" autocomplete="off">
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Batal</button>
+                    <button type="button" id="btnEksekusiHapus" class="btn btn-danger btn-sm px-4 font-weight-bold shadow-sm" onclick="submitHapus()">
+                        <i class="fas fa-trash mr-1"></i> YA, HAPUS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document" style="height: 95%;">
+        <div class="modal-content h-100">
+            <div class="modal-header bg-maroon text-white py-2">
+                <h6 class="modal-title font-weight-bold"><i class="fas fa-check-double mr-2"></i>Verifikasi Laporan</h6>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="row no-gutters h-100">
+                    
+                    <div class="col-lg-8 bg-dark h-100 border-right d-flex flex-column justify-content-center align-items-center" style="min-height: 400px;">
+                        <div id="loaderPreview" class="text-white">
+                            <i class="fas fa-circle-notch fa-spin fa-3x mb-3"></i><br>Memuat Dokumen...
+                        </div>
+                        <iframe id="frameFileVerif" class="d-none w-100 h-100 border-0" src=""></iframe>
+                        <div id="noFileVerif" class="d-none text-white text-center p-4">
+                            <i class="fas fa-file-excel fa-4x mb-3 text-muted"></i>
+                            <h5>Tidak Ada Lampiran File</h5>
+                            <p class="small text-white-50">Sekolah tidak mengunggah dokumen PDF.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 bg-white h-100 overflow-auto">
+                        <div class="p-4">
+                            <h6 class="font-weight-bold text-maroon border-bottom pb-2 mb-3">DATA SEKOLAH</h6>
+                            
+                            <div class="form-group mb-2">
+                                <label class="small font-weight-bold text-muted mb-0">Nama Sekolah</label>
+                                <div class="font-weight-bold text-dark" style="font-size:1.1rem;" id="vNamaSekolah">-</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-group mb-2">
+                                        <label class="small font-weight-bold text-muted mb-0">Bulan</label>
+                                        <div class="font-weight-bold" id="vBulan">-</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-group mb-2">
+                                        <label class="small font-weight-bold text-muted mb-0">Tahun</label>
+                                        <div class="font-weight-bold" id="vTahun">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h6 class="font-weight-bold text-maroon border-bottom pb-2 mb-3">HASIL VERIFIKASI</h6>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Status Keputusan <span class="text-danger">*</span></label>
+                                <select id="selStatusVerif" class="form-control form-control-sm shadow-sm" style="border-left: 4px solid maroon;">
+                                    <option value="" disabled selected>- Pilih Keputusan -</option>
+                                    <option value="Disetujui" class="text-success font-weight-bold">&#10003; Disetujui</option>
+                                    <option value="Revisi" class="text-warning font-weight-bold">&#9888; Revisi (Perbaiki)</option>
+                                    <option value="Ditolak" class="text-danger font-weight-bold">&#10005; Ditolak</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Catatan / Keterangan</label>
+                                <textarea id="txtKetVerif" class="form-control" rows="5" placeholder="Tuliskan alasan penolakan atau revisi di sini..."></textarea>
+                            </div>
+
+                            <div class="alert alert-info small py-2 mt-3">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                User verifikator akan tercatat otomatis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer py-2 bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
+                <button type="button" id="btnSimpanVerif" class="btn btn-maroon btn-sm px-4" onclick="submitVerifikasi()">
+                    <i class="fas fa-save mr-1"></i> SIMPAN KEPUTUSAN
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .icon-circle { width:80px; height:80px; font-size:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
     .card-jenjang { border: 2px solid transparent; transition: all 0.3s; }
@@ -952,6 +1077,13 @@
     var EDIT_ROW_ID = null;
     var URL_FILE_LAMA = "";
     var DATA_LAPBUL_CACHE = [];
+    var ID_HAPUS_TARGET = null;
+    var SOURCE_HAPUS_TARGET = null;
+    var KODE_HAPUS_HARI_INI = "";
+    var ID_HAPUS_TARGET = null;
+    var SOURCE_HAPUS_TARGET = null;
+    var V_TARGET_ID = null;
+    var V_TARGET_SOURCE = null;
 
     $(document).ready(function() {
         initDefaults(); 
@@ -1927,102 +2059,118 @@
     }
 
     function renderTabel(data) {
-        if (data) {
-            DATA_LAPBUL_CACHE = data; 
-        }
-        // 1. Reset
-        if ($.fn.DataTable.isDataTable('#tabelLapbul')) {
-            $('#tabelLapbul').DataTable().clear().destroy();
-        }
-        $('#bodyTabelLapbul').empty().hide();
+    if (data) { DATA_LAPBUL_CACHE = data; }
 
-        if (!data || data.length === 0) {
-            $('#headTabelLapbul').show();
-            $('#bodyTabelLapbul').show();
-            initDataTableStandard('#tabelLapbul', true);
-            return;
-        }
-
-        // 2. SORTING (LAST ACTIVITY) - KUNCI AGAR BARIS EDIT NAIK KE ATAS
-        // Kita urutkan berdasarkan 'sortTime' yang dibuat backend (Timestamp)
-        data.sort(function(a, b) {
-            return b.sortTime - a.sortTime; // Descending (Terbesar di atas)
-        });
-
-        // 3. User Info
-        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-        var isAdmin = (user.role && String(user.role).toLowerCase().includes('admin'));
-        var h = "";
-
-        data.forEach(function(row) {
-            // A. Status Badge
-            var st = String(row.statusData || "Diproses").toLowerCase();
-            var bs = 'badge-sultan-light-warning';
-            var ic = 'clock';
-            var ls = "DIPROSES"; // Default Label
-            
-            if (st.includes('ok') || st.includes('setuju')) {
-                bs = 'badge-sultan-light-success'; ic = 'check-circle'; ls = "DISETUJUI";
-            } else if (st.includes('revisi')) {
-                bs = 'badge-sultan-light-info'; ic = 'sync-alt'; ls = "REVISI";
-            } else if (st.includes('tolak')) {
-                bs = 'badge-sultan-light-danger'; ic = 'times-circle'; ls = "DITOLAK";
-            }
-            
-            var bst = `<span class="badge badge-sultan ${bs}"><i class="fas fa-${ic} mr-1"></i>${ls}</span>`;
-
-            // B. LOGIKA GEMBOK (LOCK)
-            // Edit & Hapus TERKUNCI JIKA: Status DISETUJUI DAN Saya BUKAN Admin
-            var isLocked = (ls === "DISETUJUI") && !isAdmin;
-
-            // Tombol Edit
-            var btnEdit = "";
-            if (isLocked) {
-                // Tampilan Gembok / Check untuk Disetujui
-                btnEdit = `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;" title="Data Sudah Disetujui"><i class="fas fa-lock"></i></button>`;
-            } else {
-                // Tombol Edit Aktif
-                btnEdit = `<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="editLapbul('${row.source}','${row.rowId}')" title="Edit Data"><i class="fas fa-pencil-alt"></i></button>`;
-            }
-
-            // Tombol Hapus
-            var btnHapus = "";
-            if (isLocked) {
-                 btnHapus = `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-trash"></i></button>`;
-            } else {
-                 btnHapus = `<button class="btn-icon-sultan btn-icon-sultan-danger" onclick="hapusLapbul('${row.source}','${row.rowId}','${row.namaSekolah}')" title="Hapus"><i class="fas fa-trash"></i></button>`;
-            }
-
-            // Metadata & File
-            var btnFile = row.fileUrl ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewPDF('${row.fileUrl}')" title="Lihat"><i class="fas fa-eye"></i></button>` : '<span class="text-muted small">-</span>';
-            var btnVerif = isAdmin ? `<button class="btn-icon-sultan btn-icon-sultan-success" onclick="verifikasiLapbul('${row.source}','${row.rowId}')"><i class="fas fa-check"></i></button>` : '';
-
-            var metaKirim = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglKirim || '-'}</span><span class="d-block text-muted text-nowrap">${row.userKirim || '-'}</span></div>`;
-            var metaEdit = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglEdit || '-'}</span><span class="d-block text-muted text-nowrap">${row.userEdit || '-'}</span></div>`;
-            var metaVerif = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglVerif || '-'}</span><span class="d-block text-muted text-nowrap">${row.verifikator || '-'}</span></div>`;
-
-            h += `<tr class="tr-animasi">
-                    <td class="col-sticky-left font-weight-bold text-dark bg-white align-middle">${row.namaSekolah}</td>
-                    <td class="text-center align-middle">${row.npsn || '-'}</td>
-                    <td class="text-center align-middle">${row.bulan}</td>
-                    <td class="text-center align-middle">${row.tahun}</td>
-                    <td class="text-center align-middle small">${row.statusSekolah || '-'}</td>
-                    <td class="text-center align-middle">${row.jenjang}</td>
-                    <td class="text-center align-middle">${row.rombel || '0'}</td>
-                    <td class="text-center align-middle">${btnFile}</td>
-                    <td class="text-center align-middle">${bst}</td>
-                    <td class="text-center align-middle"><div class="d-flex justify-content-center" style="gap:4px">${btnVerif} ${btnEdit} ${btnHapus}</div></td>
-                    <td class="text-center align-middle">${metaKirim}</td>
-                    <td class="text-center align-middle">${metaEdit}</td>
-                    <td class="text-center align-middle">${metaVerif}</td>
-                  </tr>`;
-        });
-
-        $('#bodyTabelLapbul').html(h);
-        $('#headTabelLapbul').show();
-        initDataTableStandard('#tabelLapbul');
-        $('#bodyTabelLapbul').show();
+    if ($.fn.DataTable.isDataTable('#tabelLapbul')) {
+        $('#tabelLapbul').DataTable().clear().destroy();
     }
+    $('#bodyTabelLapbul').empty().hide();
+
+    if (!data || data.length === 0) {
+        $('#headTabelLapbul').show();
+        $('#bodyTabelLapbul').show();
+        if(typeof initDataTableStandard === 'function') initDataTableStandard('#tabelLapbul', true);
+        return;
+    }
+
+    // SORTING (Terbaru di Atas)
+    data.sort(function(a, b) { return (b.sortTime || 0) - (a.sortTime || 0); });
+
+    var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+    var isAdmin = (user.role && String(user.role).toLowerCase().includes('admin'));
+    var h = "";
+
+    data.forEach(function(row) {
+        // --- A. LOGIKA STATUS DATA ---
+        var st = String(row.statusData || "Diproses").toLowerCase();
+        var bs = 'badge-sultan-light-warning';
+        var ic = 'clock';
+        var ls = "DIPROSES"; 
+        
+        if (st.includes('ok') || st.includes('setuju') || st.includes('terima')) {
+            bs = 'badge-sultan-light-success'; ic = 'check-circle'; ls = "DISETUJUI";
+        } else if (st.includes('revisi')) {
+            bs = 'badge-sultan-light-info'; ic = 'sync-alt'; ls = "REVISI";
+        } else if (st.includes('tolak')) {
+            bs = 'badge-sultan-light-danger'; ic = 'times-circle'; ls = "DITOLAK";
+        } else if (st.includes('hapus')) {
+            bs = 'badge-secondary'; ic = 'trash'; ls = "DIHAPUS";
+        }
+        
+        // --- B. ICON INFORMASI KETERANGAN ---
+        var infoIcon = "";
+        if (row.keterangan && row.keterangan.trim().length > 0) {
+            // Escape tanda kutip agar tooltip aman
+            var safeKet = row.keterangan.replace(/"/g, '&quot;');
+            infoIcon = `<i class="fas fa-info-circle text-info ml-1" style="cursor:help;" title="${safeKet}" data-toggle="tooltip"></i>`;
+        }
+        
+        var badgeStatusData = `<span class="badge badge-sultan ${bs}"><i class="fas fa-${ic} mr-1"></i>${ls}</span>${infoIcon}`;
+
+        // --- C. LOGIKA LOCK (GEMBOK) ---
+        var isLocked = (ls === "DISETUJUI") && !isAdmin;
+
+        // --- D. TOMBOL AKSI ---
+        var btnEdit = isLocked 
+            ? `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-lock"></i></button>`
+            : `<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="editLapbul('${row.source}','${row.rowId}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>`;
+
+        var safeNama = (row.namaSekolah || "").replace(/'/g, "\\'");
+        var btnHapus = isLocked
+            ? `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-trash"></i></button>`
+            : `<button class="btn-icon-sultan btn-icon-sultan-danger" onclick="hapusLapbul('${row.source}','${row.rowId}','${safeNama}')" title="Hapus"><i class="fas fa-trash"></i></button>`;
+
+        var btnFile = (row.fileUrl && row.fileUrl.length > 5) 
+            ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="window.open('${row.fileUrl}', '_blank')" title="Lihat PDF"><i class="fas fa-eye"></i></button>` 
+            : '<span class="text-muted small">-</span>';
+
+        var btnVerif = "";
+        if (isAdmin) {
+             var safeFile = row.fileUrl || "";
+             btnVerif = `<button class="btn-icon-sultan btn-icon-sultan-success mr-1" 
+                onclick="verifikasiLapbul('${row.source}', '${row.rowId}', '${safeNama}', '${row.bulan}', '${row.tahun}', '${safeFile}')" 
+                title="Verifikasi">
+                <i class="fas fa-check-double"></i>
+            </button>`;
+        }
+
+        // --- E. METADATA ---
+        var metaKirim = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglKirim || '-'}</span><span class="d-block text-muted text-nowrap">${row.userKirim || '-'}</span></div>`;
+        var metaEdit  = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglEdit || '-'}</span><span class="d-block text-muted text-nowrap">${row.userEdit || '-'}</span></div>`;
+        var metaVerif = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglVerif || '-'}</span><span class="d-block text-muted text-nowrap">${row.verifikator || '-'}</span></div>`;
+
+        // --- F. RENDER ROW ---
+        h += `<tr class="tr-animasi">
+                <td class="col-sticky-left font-weight-bold text-dark bg-white align-middle">${row.namaSekolah}</td>
+                <td class="text-center align-middle">${row.npsn || '-'}</td>
+                <td class="text-center align-middle font-weight-bold">${row.bulan}</td>
+                <td class="text-center align-middle">${row.tahun}</td>
+                <td class="text-center align-middle small">${row.statusSekolah || '-'}</td>
+                <td class="text-center align-middle">${row.jenjang}</td>
+                <td class="text-center align-middle">${row.rombel || row.totalRombel || '0'}</td>
+                <td class="text-center align-middle">${btnFile}</td>
+                <td class="text-center align-middle text-nowrap">${badgeStatusData}</td>
+                <td class="text-center align-middle">
+                    <div class="d-flex justify-content-center" style="gap:4px">
+                        ${btnVerif} ${btnEdit} ${btnHapus}
+                    </div>
+                </td>
+                <td class="text-center align-middle">${metaKirim}</td>
+                <td class="text-center align-middle">${metaEdit}</td>
+                <td class="text-center align-middle">${metaVerif}</td>
+              </tr>`;
+    });
+
+    $('#bodyTabelLapbul').html(h);
+    $('#headTabelLapbul').show();
+    
+    if(typeof initDataTableStandard === 'function') {
+        initDataTableStandard('#tabelLapbul');
+    }
+    // Aktifkan tooltip (Bootstrap)
+    $('[data-toggle="tooltip"]').tooltip();
+    $('#bodyTabelLapbul').show();
+}
 
     function initDataTableStandard(id, empty) {
         if($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy();
@@ -2808,8 +2956,186 @@
     }
 }
 
+function hapusLapbul(source, rowId, namaSekolah) {
+        // Tidak ada batasan source lagi, SD dan PAUD bisa masuk
+        
+        // 1. Set Target
+        ID_HAPUS_TARGET = rowId;
+        SOURCE_HAPUS_TARGET = source;
+        
+        // 2. Update UI Modal
+        $('#lblHapusSekolah').text(namaSekolah);
+        $('#inputKodeHapus').val(""); // Bersihkan input
+        
+        // 3. Buka Modal
+        $('#modalHapus').modal('show');
+        
+        // Auto focus ke input
+        setTimeout(function() { $('#inputKodeHapus').focus(); }, 500);
+    }
 
+    function submitHapus() {
+        var inputUser = $('#inputKodeHapus').val();
 
-    function hapusLapbul(s, i, n) { Sultan.notif.info("Fitur Hapus segera hadir."); }
-    function verifikasiLapbul(s, i) { Sultan.notif.info("Fitur Verifikasi segera hadir."); }
+        if (!inputUser) {
+            Sultan.notif.gagal("Masukkan kode hapus terlebih dahulu!");
+            $('#inputKodeHapus').focus();
+            return;
+        }
+
+        // 1. Kunci Tombol
+        var btn = $('#btnEksekusiHapus');
+        var txt = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+
+        // 2. Ambil User Login
+        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+        var userLogin = user.nama || "Admin";
+
+        // 3. Panggil Backend (Kirim kode user ke server untuk dicek)
+        google.script.run
+            .withSuccessHandler(function(res) {
+                btn.prop('disabled', false).html(txt);
+                
+                if (res.success) {
+                    $('#modalHapus').modal('hide');
+                    Sultan.notif.sukses(res.message);
+                    
+                    // --- REFRESH DATA ---
+                    // Karena baris dihapus, urutan ROW_ID di server berubah (geser naik).
+                    // Kita WAJIB refresh tabel dari server agar index sinkron kembali.
+                    handleTombolCari(); 
+                    
+                } else {
+                    Sultan.notif.gagal(res.message); // Pesan "Kode Salah" muncul disini
+                    $('#inputKodeHapus').addClass('is-invalid');
+                }
+            })
+            .withFailureHandler(function(err) {
+                btn.prop('disabled', false).html(txt);
+                Sultan.notif.gagal("Gagal koneksi: " + err.message);
+            })
+            .processDeleteData(SOURCE_HAPUS_TARGET, ID_HAPUS_TARGET, inputUser, userLogin);
+    }
+
+    function verifikasiLapbul(source, rowId, namaSekolah, bulan, tahun, fileUrl) {
+        // 1. Simpan Target
+        V_TARGET_ID = rowId;
+        V_TARGET_SOURCE = source;
+
+        // 2. Isi Data Kanan (Info Sekolah)
+        $('#vNamaSekolah').text(namaSekolah);
+        $('#vBulan').text(bulan);
+        $('#vTahun').text(tahun);
+
+        // Reset Inputan Form
+        $('#selStatusVerif').val("");
+        $('#txtKetVerif').val("");
+        
+        // 3. Handle Preview File (Bagian Kiri)
+        $('#loaderPreview').removeClass('d-none');
+        $('#frameFileVerif').addClass('d-none');
+        $('#noFileVerif').addClass('d-none');
+
+        if (fileUrl && fileUrl.length > 5 && fileUrl.includes('http')) {
+            // Trik Ubah Link Drive "view" menjadi "preview" agar bersih
+            var previewLink = fileUrl.replace('/view', '/preview');
+            
+            $('#frameFileVerif').attr('src', previewLink);
+            
+            // Tampilkan Iframe setelah loading sebentar
+            $('#frameFileVerif').on('load', function() {
+                $('#loaderPreview').addClass('d-none');
+                $(this).removeClass('d-none');
+            });
+            // Fallback timer jika load event ga jalan
+            setTimeout(function(){ 
+                 $('#loaderPreview').addClass('d-none');
+                 $('#frameFileVerif').removeClass('d-none');
+            }, 2000);
+
+        } else {
+            // Tidak ada file
+            $('#loaderPreview').addClass('d-none');
+            $('#noFileVerif').removeClass('d-none');
+        }
+
+        // 4. Buka Modal
+        $('#modalVerifikasi').modal('show');
+    }
+
+    // FUNGSI SIMPAN VERIFIKASI
+    function submitVerifikasi() {
+        var status = $('#selStatusVerif').val();
+        var ket = $('#txtKetVerif').val();
+
+        // Validasi
+        if (!status) {
+            Sultan.notif.gagal("Harap pilih Status Keputusan!");
+            $('#selStatusVerif').focus();
+            return;
+        }
+
+        if ((status === 'Revisi' || status === 'Ditolak') && ket.length < 5) {
+             Sultan.notif.warning("Untuk status Revisi/Ditolak, keterangan wajib diisi minimal 5 karakter.");
+             $('#txtKetVerif').focus();
+             return;
+        }
+
+        // Loading
+        var btn = $('#btnSimpanVerif');
+        var txt = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+        // User Login
+        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+        var userLogin = user.nama || "Admin";
+
+        google.script.run
+            .withSuccessHandler(function(res) {
+                btn.prop('disabled', false).html(txt);
+                
+                if (res.success) {
+                    $('#modalVerifikasi').modal('hide');
+                    Sultan.notif.sukses(res.message);
+
+                    // --- UPDATE CACHE LOKAL (FIXED) ---
+                    if (typeof DATA_LAPBUL_CACHE !== 'undefined') {
+                        var targetId = String(V_TARGET_ID);
+                        
+                        for(var k=0; k<DATA_LAPBUL_CACHE.length; k++) {
+                            // Cek RowID dan Source agar tidak salah update
+                            if(String(DATA_LAPBUL_CACHE[k].rowId) === targetId && DATA_LAPBUL_CACHE[k].source === V_TARGET_SOURCE) {
+                                
+                                // 1. Update Status
+                                DATA_LAPBUL_CACHE[k].statusData = res.newData.status;
+                                
+                                // 2. Update Metadata Verifikasi (INI YANG TADINYA HILANG)
+                                DATA_LAPBUL_CACHE[k].tglVerif = res.newData.tgl;
+                                DATA_LAPBUL_CACHE[k].verifikator = res.newData.user;
+                                DATA_LAPBUL_CACHE[k].keterangan = res.newData.ket;
+
+                                // 3. Update Sort Time (Agar naik ke atas karena baru diedit)
+                                DATA_LAPBUL_CACHE[k].sortTime = new Date().getTime();
+                                break;
+                            }
+                        }
+                        
+                        // Render Ulang
+                        renderTabel(DATA_LAPBUL_CACHE);
+                    } else {
+                        handleTombolCari(); 
+                    }
+
+                } else {
+                    Sultan.notif.gagal(res.message);
+                }
+            })
+            .withFailureHandler(function(err) {
+                btn.prop('disabled', false).html(txt);
+                Sultan.notif.gagal("Koneksi gagal: " + err.message);
+            })
+            .processVerifikasiLapbul(V_TARGET_SOURCE, V_TARGET_ID, status, ket, userLogin);
+    }
+
 </script>

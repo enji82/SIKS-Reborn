@@ -180,6 +180,37 @@
         $('#page-breadcrumb').html(fullPath);
     });
   });
+
+  /* ======================================================================
+     LOAD CONTENT MANAGER (FIXED)
+     ====================================================================== */
+  function loadContent(pageName) {
+    // 1. Tampilkan Loading
+    $('#app-content').html('<div class="text-center mt-5"><i class="fas fa-3x fa-circle-notch fa-spin text-maroon"></i><br><br>Memuat Halaman...</div>');
+    
+    // 2. Highlight Menu Aktif di Sidebar
+    $('.nav-link').removeClass('active'); // Hapus aktif di semua menu
+    
+    // Cari menu yang diklik dan aktifkan (Opsional, agar terlihat rapi)
+    // Kita cari link yang onclick-nya mengandung nama halaman ini
+    $('a[onclick*="' + pageName + '"]').addClass('active');
+
+    // 3. Panggil Server (Code.gs -> loadPage)
+    google.script.run
+      .withSuccessHandler(function(html) {
+        // Masukkan hasil HTML ke area konten utama
+        $('#app-content').html(html);
+        
+        // --- PENTING UNTUK HALAMAN SETTING ---
+        // Karena halaman Setting butuh load data awal (running text),
+        // kita tidak perlu trigger manual disini karena di dalam page_setting.html
+        // kita sudah pasang $(document).ready(...)
+      })
+      .withFailureHandler(function(err) {
+        $('#app-content').html('<div class="alert alert-danger">Gagal memuat halaman: ' + err.message + '</div>');
+      })
+      .loadPage(pageName); // Memanggil fungsi universal di Code.gs
+  }
 </script>
 
 </body>

@@ -3,19 +3,32 @@
    Update: Mapping SD Fixed Column & Auto-Sum Rombel
    ====================================================================== */
 
-/* ======================================================================
-   BAGIAN 1: GET DATA TABEL KELOLA (UPDATE MAPPING METADATA SD)
-   ====================================================================== */
 function getLapbulKelolaData(filterJenjang, filterBulan, filterTahun, filterStatus, keyword) {
   var result = [];
   
   if (typeof SPREADSHEET_IDS === 'undefined') return [];
 
+  // Filter Request (Huruf Kecil untuk Komparasi)
   var reqJenjang = String(filterJenjang || "").toUpperCase().trim();
   var reqBulan = String(filterBulan || "").toLowerCase().trim();
   var reqTahun = String(filterTahun || "").toLowerCase().trim();
   
-  // --- FUNGSI PENGAMBIL DATA ---
+  // --- FUNGSI FORMAT TANGGAL PINTAR ---
+  var formatDateFixed = function(val) {
+      if (!val || val === "" || val === "-") return "-";
+      var dateObj = null;
+      if (val instanceof Date) {
+          dateObj = val;
+      } else if (typeof val === 'string') {
+          var cleanVal = val.replace(/'/g, "").trim(); 
+          var d = new Date(cleanVal);
+          if (!isNaN(d.getTime())) dateObj = d;
+      }
+      if (dateObj) return Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+      return "-";
+  };
+
+  // --- FUNGSI FETCH DATA ---
   var fetchDataFromSource = function(spreadsheetId, sheetName, sourceLabel) {
       var sourceResult = [];
       try {
@@ -26,129 +39,113 @@ function getLapbulKelolaData(filterJenjang, filterBulan, filterTahun, filterStat
           var data = sheet.getDataRange().getValues();
           if (data.length < 2) return [];
 
-          var headers = data[0];
+          var headers = data[0].map(function(h) { return String(h).toLowerCase(); });
+          var findInc = function(k) { return headers.findIndex(h => h.includes(k)); };
 
-          // FINDER
-          var findIdx = function(keywords) {
-              if (!Array.isArray(keywords)) keywords = [keywords];
-              // Level 1: Persis
-              for (var h = 0; h < headers.length; h++) {
-                  var head = String(headers[h]).toLowerCase().trim();
-                  for (var k = 0; k < keywords.length; k++) {
-                      if (head === keywords[k].toLowerCase()) return h;
-                  }
-              }
-              // Level 2: Mirip
-              for (var h = 0; h < headers.length; h++) {
-                  var head = String(headers[h]).toLowerCase().trim();
-                  for (var k = 0; k < keywords.length; k++) {
-                      if (head.includes(keywords[k].toLowerCase())) return h;
-                  }
-              }
-              return -1;
-          };
+          // Index Dasar
+          var idxNama = findInc("nama sekolah");
+          var idxNpsn = findInc("npsn");
+          var idxBulan = findInc("bulan");
+          var idxTahun = findInc("tahun");
+          var idxJenjang = findInc("jenjang");
+          var idxStatSek = findInc("status"); 
+          var idxRombel = (sourceLabel === 'PAUD') ? findInc("jumlah rombel") : findInc("total rombel");
+          
+          var idxFile = -1; 
+          headers.forEach((h, i) => { if((h.includes("file") || h.includes("dokumen")) && idxFile < 0) idxFile = i; });
 
-          // MAPPING INDEX (UPDATE DI SINI)
-          var idx = {
-             npsn: findIdx(["npsn", "nomor pokok"]),
-             nama: findIdx(["nama sekolah", "nama_sekolah", "nama lembaga", "lembaga"]),
-             jenjang: findIdx(["jenjang", "bentuk"]),
-             statusSekolah: findIdx(["status sekolah", "status lembaga"]), 
-             bulan: findIdx(["bulan"]),
-             tahun: findIdx(["tahun"]),
-             rombel: findIdx(["rombel", "jumlah rombel", "kelompok"]),
-             status: findIdx(["status data", "status_data", "status laporan"]), 
-             userKirim: findIdx(["user kirim", "pengirim", "email"]),
-             
-             // --- UPDATE DISINI: TAMBAHKAN "TANGGAL UNGGAH" ---
-             tglKirim: findIdx(["tanggal unggah", "tgl unggah", "unggah", "timestamp", "waktu", "tanggal kirim", "tgl kirim"]), 
-             // -------------------------------------------------
-             
-             tglEdit: findIdx(["tanggal edit", "tgl edit", "update"]),
-             userEdit: findIdx(["user edit", "penyunting"]),
-             file: findIdx(["dokumen", "file", "link"])
-          };
-
-          // HELPER TIMESTAMP
-          var parseTS = function(v) {
-               if(v instanceof Date) return v.getTime();
-               if(typeof v === 'string') {
-                   try { v=v.replace(/'/g,""); var p=v.split(/[\s/:]/); 
-                   if(p.length>=3) return new Date(p[2],p[1]-1,p[0],p[3]||0,p[4]||0).getTime(); } catch(e){}
-               }
-               return 0;
-          };
+          // Mapping Kolom Activity
+          var col = {};
+          if (sourceLabel === 'PAUD') {
+              col.tglKirim=0; col.userKirim=43; col.tglEdit=44; col.userEdit=45;
+              col.tglVerif=46; col.userVerif=47; col.statusData=48; col.ket=49;
+          } else if (sourceLabel === 'SD') {
+              col.tglKirim=0; col.userKirim=219; col.tglEdit=220; col.userEdit=221;
+              col.tglVerif=222; col.userVerif=223; col.statusData=218; col.ket=224;
+          }
 
           // LOOPING BARIS
           for (var i = 1; i < data.length; i++) {
               var row = data[i];
               
-              // Filter
-              var valBulan = String(row[idx.bulan] || "").toLowerCase().trim();
-              var valTahun = String(row[idx.tahun] || "").toLowerCase().trim();
-              if (reqBulan && valBulan !== reqBulan) continue;
-              if (reqTahun && valTahun !== reqTahun) continue;
+              // 1. AMBIL DATA MENTAH (RAW)
+              var rawBulan = (idxBulan > -1) ? String(row[idxBulan] || "").trim() : "";
+              var rawTahun = (idxTahun > -1) ? String(row[idxTahun] || "").trim() : "";
+              var rawJenjang = (idxJenjang > -1) ? String(row[idxJenjang] || "").toUpperCase().trim() : "";
 
-              // Filter Jenjang Spesifik
-              var valJenjang = (idx.jenjang > -1) ? String(row[idx.jenjang]).toUpperCase() : sourceLabel;
-              if (reqJenjang && reqJenjang !== "SD" && reqJenjang !== "PAUD" && !valJenjang.includes(reqJenjang)) {
-                  if (!reqJenjang.includes("PAUD")) continue; 
-              }
+              // 2. FILTER (Gunakan versi lowercase untuk cek)
+              if (reqBulan && rawBulan.toLowerCase() !== reqBulan) continue;
+              if (reqTahun && rawTahun.toLowerCase() !== reqTahun) continue;
+              if (reqJenjang && rawJenjang !== reqJenjang) continue;
 
-              // Tanggal Logic
-              var tglKirimVal = (idx.tglKirim > -1) ? row[idx.tglKirim] : "";
-              var tglEditVal = (idx.tglEdit > -1) ? row[idx.tglEdit] : "";
+              // Filter Status
+              var valStatus = row[col.statusData] || "Diproses";
+              if (filterStatus && !String(valStatus).toLowerCase().includes(filterStatus.toLowerCase())) continue;
+              if (String(valStatus).toLowerCase().includes("hapus")) continue;
+
+              // Helper User
+              var usr = function(v) { return (v && v !== "") ? v : "-"; };
+
+              // Format Tanggal
+              var strTglKirim = formatDateFixed(row[col.tglKirim]);
+              var strTglEdit  = formatDateFixed(row[col.tglEdit]);
+              var strTglVerif = formatDateFixed(row[col.tglVerif]);
               
-              var tsKirim = parseTS(tglKirimVal);
-              var tsEdit = parseTS(tglEditVal);
-              var sortTime = (tsEdit > 0) ? tsEdit : tsKirim;
-              if (sortTime === 0) sortTime = i;
+              // Sort Time
+              var rawKirim = row[col.tglKirim];
+              var rawEdit = row[col.tglEdit];
+              var sortTime = 0;
+              if (rawEdit instanceof Date) sortTime = rawEdit.getTime();
+              else if (rawKirim instanceof Date) sortTime = rawKirim.getTime();
+              else sortTime = i;
 
-              // Format Tampilan Tanggal
-              var txtTglKirim = "-";
-              if (tglKirimVal instanceof Date) {
-                  txtTglKirim = Utilities.formatDate(tglKirimVal, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm");
-              } else if (tglKirimVal && String(tglKirimVal).length > 5) {
-                  txtTglKirim = String(tglKirimVal).replace(/'/g,""); // Jika text, tampilkan apa adanya
-              }
+              var item = {
+                  rowId: i + 1,
+                  source: sourceLabel,
+                  namaSekolah: (idxNama > -1) ? row[idxNama] : "Tanpa Nama",
+                  npsn: (idxNpsn > -1) ? row[idxNpsn] : "",
+                  
+                  // PERBAIKAN DI SINI: Gunakan rawBulan (Asli) bukan lowercase
+                  bulan: rawBulan, 
+                  tahun: rawTahun,
+                  
+                  jenjang: rawJenjang,
+                  statusSekolah: (idxStatSek > -1) ? row[idxStatSek] : "", 
+                  rombel: (idxRombel > -1) ? (parseInt(row[idxRombel]) || 0) : 0,
+                  fileUrl: (idxFile > -1) ? row[idxFile] : "",
 
-              var txtTglEdit = (tsEdit > 0) ? Utilities.formatDate(new Date(tsEdit), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm") : "-";
-
-              sourceResult.push({
-                  rowId: (i + 1).toString(),
-                  namaSekolah: (idx.nama > -1) ? row[idx.nama] : "Tanpa Nama",
-                  npsn: (idx.npsn > -1) ? row[idx.npsn] : "-",
-                  bulan: (idx.bulan > -1) ? row[idx.bulan] : "-",
-                  tahun: (idx.tahun > -1) ? row[idx.tahun] : "-",
-                  statusData: (idx.status > -1) ? row[idx.status] : "Diproses",
-                  jenjang: (idx.jenjang > -1 && row[idx.jenjang]) ? row[idx.jenjang] : sourceLabel,
-                  rombel: (idx.rombel > -1) ? row[idx.rombel] : "0",
-                  statusSekolah: (idx.statusSekolah > -1) ? row[idx.statusSekolah] : "-", 
-                  fileUrl: (idx.file > -1) ? row[idx.file] : "", 
-                  
-                  userKirim: (idx.userKirim > -1) ? row[idx.userKirim] : "-",
-                  tglKirim: txtTglKirim, // <--- Ini yang diperbaiki
-                  
-                  userEdit: (idx.userEdit > -1 && row[idx.userEdit]) ? String(row[idx.userEdit]).replace(/'/g,"") : "-",
-                  tglEdit: txtTglEdit,
-                  
-                  verifikator: "-", tglVerif: "-", 
-                  sortTime: sortTime,
-                  source: sourceLabel 
-              });
+                  tglKirim: strTglKirim,
+                  userKirim: usr(row[col.userKirim]),
+                  tglEdit: strTglEdit,
+                  userEdit: usr(row[col.userEdit]),
+                  tglVerif: strTglVerif,
+                  verifikator: usr(row[col.userVerif]),
+                  statusData: valStatus,
+                  keterangan: row[col.ket] || "",
+                  sortTime: sortTime
+              };
+              
+              sourceResult.push(item);
           }
       } catch (e) {
-          Logger.log("Error reading " + sourceLabel + ": " + e.toString());
+          console.log("Error fetch " + sourceLabel + ": " + e.toString());
       }
       return sourceResult;
   };
 
-  // EXECUTE
-  if (reqJenjang === "" || reqJenjang.includes("SD")) {
-      result = result.concat(fetchDataFromSource(SPREADSHEET_IDS.SD_DATA, "Input SD", "SD"));
-  }
-  if (reqJenjang === "" || reqJenjang.includes("PAUD") || reqJenjang.includes("TK") || reqJenjang.includes("KB")) {
-      result = result.concat(fetchDataFromSource(SPREADSHEET_IDS.PAUD_DATA, "Input PAUD", "PAUD"));
+  var dataPAUD = fetchDataFromSource(SPREADSHEET_IDS.PAUD_DATA, "Input PAUD", "PAUD");
+  var dataSD = fetchDataFromSource(SPREADSHEET_IDS.SD_DATA, "Input SD", "SD");
+  
+  result = dataPAUD.concat(dataSD);
+  
+  // Sorting (Terbaru diatas)
+  result.sort(function(a, b) { return b.sortTime - a.sortTime; });
+  
+  if (keyword) {
+      var k = keyword.toLowerCase();
+      result = result.filter(function(r) {
+          return String(r.namaSekolah).toLowerCase().includes(k) || String(r.npsn).includes(k);
+      });
   }
 
   return result;
@@ -838,4 +835,369 @@ function updateLapbulPAUD(form, fileData) {
         }
     };
   } catch (e) { return { success: false, message: "Gagal Update PAUD: " + e.toString() }; }
+}
+
+/* ======================================================================
+   FITUR HAPUS DATA (SOFT DELETE)
+   ====================================================================== */
+function softDeleteLapbulSD(rowId, userLogin) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SD_DATA);
+    var sheet = ss.getSheetByName("Input SD");
+    
+    // Validasi Baris (Pastikan rowId valid)
+    var r = parseInt(rowId);
+    if (isNaN(r) || r < 2) return { success: false, message: "ID Baris tidak valid" };
+
+    // Update Metadata Delete
+    // Kolom HK (Index 219) = Status Data -> Ubah jadi "Dihapus"
+    // Kolom HM (Index 221) = Tanggal Edit
+    // Kolom HN (Index 222) = User Edit (Siapa yang menghapus)
+    
+    var now = new Date();
+    var strTgl = Utilities.formatDate(now, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+
+    // Array update: [Status, User Kirim (skip), Tgl Edit, User Edit]
+    // Posisi di Sheet:
+    // HK (219) -> Status
+    // HM (221) -> Tgl Edit
+    // HN (222) -> User Edit
+    
+    // Kita tembak langsung sel-nya agar akurat
+    sheet.getRange(r, 219).setValue("Dihapus"); // HK
+    sheet.getRange(r, 221).setValue("'" + strTgl); // HM
+    sheet.getRange(r, 222).setValue("'" + userLogin); // HN
+    
+    return { success: true, message: "Data berhasil dihapus dari sistem." };
+    
+  } catch (e) {
+    return { success: false, message: "Gagal Hapus: " + e.toString() };
+  }
+}
+
+/* ======================================================================
+   FITUR HAPUS DATA (MOVE TO TRASH & ARCHIVE)
+   Update: SD & PAUD Support
+   ====================================================================== */
+function processDeleteData(source, rowId, inputCode, userLogin) {
+  try {
+    // 1. VALIDASI KODE KEAMANAN (Server Side)
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    var serverCode = y + m + d; // Pola: 20260203
+
+    if (String(inputCode).trim() !== serverCode) {
+      return { success: false, message: "Kode Hapus Salah! Hubungi Admin Korwil." };
+    }
+
+    // 2. KONFIGURASI SESUAI JENJANG
+    var config = {};
+    if (source === 'SD') {
+      config = {
+        ssId: SPREADSHEET_IDS.SD_DATA, // 1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s
+        sheetName: "Input SD",
+        trashSheetName: "Trash",
+        trashFolderId: "1MpEgpCDrTX-SHjdNIa3aUpKUyYZpejrb"
+      };
+    } else {
+      config = {
+        ssId: SPREADSHEET_IDS.PAUD_DATA, // 1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs
+        sheetName: "Input PAUD",
+        trashSheetName: "Trash",
+        trashFolderId: "1EUIOthRbotJQlSphxVZ-QAdewe17UCOU"
+      };
+    }
+
+    var ss = SpreadsheetApp.openById(config.ssId);
+    var sheetMain = ss.getSheetByName(config.sheetName);
+    var sheetTrash = ss.getSheetByName(config.trashSheetName);
+    
+    if (!sheetMain || !sheetTrash) {
+      return { success: false, message: "Sheet Database/Trash tidak ditemukan!" };
+    }
+
+    var r = parseInt(rowId);
+    var lastCol = sheetMain.getLastColumn();
+    
+    // 3. AMBIL DATA BARIS
+    var rowRange = sheetMain.getRange(r, 1, 1, lastCol);
+    var rowValues = rowRange.getValues()[0];
+    
+    // Cari URL File (Biasanya ada kata 'http') untuk dipindahkan
+    // Kita cari kolom yang isinya link drive
+    var fileUrl = "";
+    var colIndexFile = -1;
+    
+    // Header check untuk memastikan kolom file
+    var headers = sheetMain.getRange(1, 1, 1, lastCol).getValues()[0];
+    for(var h=0; h<headers.length; h++) {
+       var head = String(headers[h]).toLowerCase();
+       if(head.includes("dokumen") || head.includes("file") || head.includes("link")) {
+           fileUrl = rowValues[h];
+           colIndexFile = h;
+           break;
+       }
+    }
+
+    // 4. PINDAHKAN FILE KE FOLDER TRASH
+    var moveStatus = "File tidak ditemukan";
+    if (fileUrl && fileUrl.includes("drive.google.com")) {
+       try {
+         var fileId = fileUrl.match(/[-\w]{25,}/); // Regex ambil ID
+         if (fileId) {
+            var file = DriveApp.getFileById(fileId[0]);
+            var folderTrash = DriveApp.getFolderById(config.trashFolderId);
+            file.moveTo(folderTrash); // Pindah Folder
+            moveStatus = "File dipindahkan ke Trash";
+         }
+       } catch (errFile) {
+         moveStatus = "Gagal pindah file: " + errFile.message;
+       }
+    }
+
+    // 5. TAMBAHKAN METADATA PENGHAPUSAN (Di kolom paling belakang Trash)
+    // Format Trash Sheet sebaiknya sama kolomnya, lalu kita append info hapus
+    var trashData = rowValues.slice(); // Copy array
+    trashData.push("Dihapus oleh: " + userLogin);
+    trashData.push("Tgl Hapus: " + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss"));
+    trashData.push(moveStatus);
+
+    // 6. SIMPAN KE SHEET TRASH
+    sheetTrash.appendRow(trashData);
+
+    // 7. HAPUS DARI SHEET UTAMA
+    sheetMain.deleteRow(r);
+
+    return { success: true, message: "Data berhasil dihapus & diarsipkan." };
+
+  } catch (e) {
+    return { success: false, message: "Error System: " + e.toString() };
+  }
+}
+
+/* ======================================================================
+   FITUR VERIFIKASI DATA (SD & PAUD)
+   Update: Mapping Kolom Spesifik
+   ====================================================================== */
+function processVerifikasiLapbul(source, rowId, status, keterangan, userLogin) {
+  try {
+    var config = {};
+    
+    // 1. TENTUKAN KONFIGURASI KOLOM
+    if (source === 'SD') {
+      config = {
+        ssId: SPREADSHEET_IDS.SD_DATA,
+        sheetName: "Input SD",
+        // SD: HK(219), HQ(225), HO(223), HP(224)
+        colStatus: 219,    
+        colKet: 225,       
+        colTglVerif: 223,  
+        colUserVerif: 224  
+      };
+    } else {
+      config = {
+        ssId: SPREADSHEET_IDS.PAUD_DATA,
+        sheetName: "Input PAUD",
+        
+        // --- MAPPING KOLOM PAUD (PENTING!) ---
+        // Kolom E (5)  = Status Sekolah (JANGAN DIGANGGU)
+        // Kolom AW (49) = Status Data/Verifikasi (TARGET KITA)
+        
+        // Hitungan: A-Z(26) + AA-AV(22) = 48. Maka AW = 49.
+        colStatus: 49,     // AW (Status Data: Disetujui/Revisi/dll)
+        colKet: 50,        // AX (Keterangan)
+        colTglVerif: 47,   // AU (Tanggal Verif)
+        colUserVerif: 48   // AV (Verifikator)
+      };
+    }
+
+    var ss = SpreadsheetApp.openById(config.ssId);
+    var sheet = ss.getSheetByName(config.sheetName);
+    var r = parseInt(rowId);
+
+    if (!sheet || isNaN(r)) return { success: false, message: "Referensi Data Salah" };
+
+    // 2. SIAPKAN DATA
+    var now = new Date();
+    var strTgl = Utilities.formatDate(now, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm");
+
+    // 3. TULIS KE DATABASE
+    // Kita tembak spesifik ke kolom AW, AX, AU, AV
+    sheet.getRange(r, config.colStatus).setValue(status);           
+    sheet.getRange(r, config.colKet).setValue(keterangan);          
+    sheet.getRange(r, config.colTglVerif).setValue("'" + strTgl);   
+    sheet.getRange(r, config.colUserVerif).setValue(userLogin);     
+
+    return { 
+      success: true, 
+      message: "Data berhasil diverifikasi: " + status,
+      newData: {
+        status: status, // Ini akan mengupdate Status Data di Cache (AW)
+        ket: keterangan,
+        tgl: strTgl,
+        user: userLogin
+      }
+    };
+
+  } catch (e) {
+    return { success: false, message: "Gagal Verifikasi: " + e.toString() };
+  }
+}
+
+/* ======================================================================
+   REKAP STATUS LAPORAN BULAN (LOAD ALL DATA FOR CLIENT SIDE FILTER)
+   ====================================================================== */
+function getRekapLapbulStatus() {
+  // KITA TIDAK PAKAI PARAMETER FILTER LAGI, AMBIL SEMUA
+  var result = { headers: [], rows: [] };
+  
+  var ID_SD = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s";
+  var ID_PAUD = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs";
+
+  // HEADER: Kita tetapkan statis saja biar rapi, karena kolom dinamis
+  result.headers = [
+    "Nama Sekolah", "NPSN", "Jenjang", 
+    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", 
+    "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
+  ];
+
+  var fetchData = function(id, sheetName, defaultJenjang) {
+    var temp = [];
+    try {
+      var ss = SpreadsheetApp.openById(id);
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return [];
+      
+      var data = sheet.getDataRange().getValues();
+      if (data.length < 2) return [];
+
+      for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        
+        // A=0(Nama), B=1(NPSN), C=2(Jenjang), D=3(Tahun)
+        var rTahun = String(row[3] || "").trim(); 
+        var rJenjang = String(row[2] || defaultJenjang).toUpperCase().trim();
+
+        // KITA MASUKKAN TAHUN KE DALAM ARRAY (INDEX 3) UNTUK FILTER DI CLIENT
+        // Structure: [0:Nama, 1:NPSN, 2:Jenjang, 3:TAHUN, 4:Jan ... 15:Des]
+        var cleanRow = [
+          row[0], 
+          row[1], 
+          rJenjang, 
+          rTahun, // <--- PENTING: TAHUN DISIMPAN DI SINI
+          row[4], row[5], row[6], row[7], row[8], row[9],
+          row[10], row[11], row[12], row[13], row[14], row[15]
+        ];
+        temp.push(cleanRow);
+      }
+    } catch (e) {
+      // ignore
+    }
+    return temp;
+  };
+
+  var rowsSD = fetchData(ID_SD, "Status SD", "SD");
+  var rowsPAUD = fetchData(ID_PAUD, "Status PAUD", "PAUD");
+
+  result.rows = rowsSD.concat(rowsPAUD);
+
+  // Sorting default
+  result.rows.sort(function(a, b) {
+    if (a[2] === b[2]) return (a[0] < b[0]) ? -1 : 1;
+    return (a[2] < b[2]) ? -1 : 1;
+  });
+
+  return result;
+}
+
+/* ======================================================================
+   DASHBOARD LAPBUL (DATA AGREGAT)
+   ====================================================================== */
+function getDashboardLapbul(tahun, bulan) {
+  var ID_SD = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s";
+  var ID_PAUD = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs";
+  
+  var recentList = []; 
+
+  var hitungStatistik = function(id, sheetName, filterJenjang) {
+    // Inisialisasi Counter Lengkap
+    var stats = { 
+      total: 0, sudah: 0, belum: 0, persen: 0,
+      disetujui: 0, diproses: 0, revisi: 0, ditolak: 0
+    };
+
+    try {
+      var ss = SpreadsheetApp.openById(id);
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return stats;
+      
+      var data = sheet.getDataRange().getValues();
+      if (data.length < 2) return stats;
+
+      for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        var rTahun = String(row[3]).trim();     
+        var rJenjang = String(row[2]).trim().toUpperCase(); 
+        
+        if (rTahun !== String(tahun)) continue;
+        if (filterJenjang !== "SD" && filterJenjang !== rJenjang) continue; 
+        if (filterJenjang === "SD" && rJenjang !== "SD") continue;
+
+        stats.total++;
+        
+        // Ambil isi sel bulan (Index = Bulan + 3)
+        var rawStatus = String(row[parseInt(bulan) + 3] || "").trim();
+        var st = rawStatus.toLowerCase();
+
+        // LOGIKA KLASIFIKASI STATUS
+        if (st === "" || st === "-" || st === "0") {
+          // 1. BELUM LAPOR
+          stats.belum++;
+        } else {
+          // MASUK KATEGORI SUDAH ADA ISI (Activity)
+          stats.sudah++;
+
+          if (st.includes('revisi') || st.includes('perbaiki')) {
+            // 2. REVISI
+            stats.revisi++;
+          } else if (st.includes('tolak') || st.includes('x') || st.includes('salah')) {
+            // 3. DITOLAK
+            stats.ditolak++;
+          } else if (st.includes('ok') || st.includes('setuju') || st.includes('verif') || st.includes('valid')) {
+            // 4. DISETUJUI
+            stats.disetujui++;
+          } else {
+            // 5. DIPROSES (Biasanya berisi tanggal kirim, misal: "12 Jan 2025")
+            stats.diproses++;
+          }
+
+          // Tambahkan ke Recent Activity
+          if (recentList.length < 20) {
+             recentList.push({
+               sekolah: row[0],
+               jenjang: rJenjang,
+               status: rawStatus // Tampilkan teks aslinya
+             });
+          }
+        }
+      }
+      
+      // Hitung Persentase Kepatuhan (Total - Belum) / Total
+      stats.persen = stats.total === 0 ? 0 : Math.round((stats.sudah / stats.total) * 100);
+
+    } catch (e) { }
+    return stats;
+  };
+
+  var result = {
+    sd: hitungStatistik(ID_SD, "Status SD", "SD"),
+    tk: hitungStatistik(ID_PAUD, "Status PAUD", "TK"),
+    kb: hitungStatistik(ID_PAUD, "Status PAUD", "KB"),
+    sps: hitungStatistik(ID_PAUD, "Status PAUD", "SPS"),
+    recent: recentList
+  };
+
+  return result;
 }
