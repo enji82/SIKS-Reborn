@@ -1,130 +1,121 @@
 /* ======================================================================
-   LAPBUL.GS - BACKEND UTAMA
-   Update: Mapping SD Fixed Column & Auto-Sum Rombel
+   LAPBUL.GS - VERSI ULTRA LIGHT (PARTIAL FETCH)
+   Hanya mengambil potongan data terbawah agar loading super cepat.
    ====================================================================== */
 
 function getLapbulKelolaData(filterJenjang, filterBulan, filterTahun, filterStatus, keyword) {
   var result = [];
   
-  if (typeof SPREADSHEET_IDS === 'undefined') return [];
+  // KONFIGURASI LIMIT
+  // Jika loading awal (tanpa search), cukup ambil 300 data terbaru per sheet.
+  // Jika sedang search, kita perbesar jangkauan scan ke 2000 baris terakhir.
+  var isSearching = (keyword && keyword.length > 2);
+  var LIMIT_PER_SHEET = isSearching ? 2000 : 300; 
 
-  // Filter Request (Huruf Kecil untuk Komparasi)
+  var IDS = (typeof SPREADSHEET_IDS !== 'undefined') ? SPREADSHEET_IDS : {
+      PAUD_DATA: "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs", 
+      SD_DATA: "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s"    
+  };
+
+  // Normalisasi Filter
   var reqJenjang = String(filterJenjang || "").toUpperCase().trim();
   var reqBulan = String(filterBulan || "").toLowerCase().trim();
   var reqTahun = String(filterTahun || "").toLowerCase().trim();
-  
-  // --- FUNGSI FORMAT TANGGAL PINTAR ---
-  var formatDateFixed = function(val) {
+  var reqStatus = String(filterStatus || "").toLowerCase().trim();
+  var reqKey = String(keyword || "").toLowerCase().trim();
+
+  // Formatter Cepat (Native JS)
+  var fastFormat = function(val) {
       if (!val || val === "" || val === "-") return "-";
-      var dateObj = null;
-      if (val instanceof Date) {
-          dateObj = val;
-      } else if (typeof val === 'string') {
-          var cleanVal = val.replace(/'/g, "").trim(); 
-          var d = new Date(cleanVal);
-          if (!isNaN(d.getTime())) dateObj = d;
-      }
-      if (dateObj) return Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
-      return "-";
+      var d = (val instanceof Date) ? val : new Date(val);
+      if (isNaN(d.getTime())) return "-";
+      var pad = function(n) { return n < 10 ? '0' + n : n; };
+      return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + 
+             pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
   };
 
-  // --- FUNGSI FETCH DATA ---
-  var fetchDataFromSource = function(spreadsheetId, sheetName, sourceLabel) {
+  var fetchDataSmart = function(spreadsheetId, sheetName, sourceLabel) {
       var sourceResult = [];
       try {
           var ss = SpreadsheetApp.openById(spreadsheetId);
           var sheet = ss.getSheetByName(sheetName);
           if (!sheet) return [];
 
-          var data = sheet.getDataRange().getValues();
-          if (data.length < 2) return [];
+          var lastRow = sheet.getLastRow();
+          if (lastRow < 2) return []; // Hanya header atau kosong
 
-          var headers = data[0].map(function(h) { return String(h).toLowerCase(); });
-          var findInc = function(k) { return headers.findIndex(h => h.includes(k)); };
+          // --- LANGKAH 1: AMBIL HEADER SAJA (Sangat Ringan) ---
+          var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+          headers = headers.map(function(h) { return String(h).toLowerCase(); });
 
-          // Index Dasar
-          var idxNama = findInc("nama sekolah");
-          var idxNpsn = findInc("npsn");
-          var idxBulan = findInc("bulan");
-          var idxTahun = findInc("tahun");
-          var idxJenjang = findInc("jenjang");
-          var idxStatSek = findInc("status"); 
-          var idxRombel = (sourceLabel === 'PAUD') ? findInc("jumlah rombel") : findInc("total rombel");
+          // Mapping Index Kolom
+          var idx = {
+              nama: headers.indexOf("nama sekolah"),
+              npsn: headers.indexOf("npsn"),
+              bulan: headers.indexOf("bulan"),
+              tahun: headers.indexOf("tahun"),
+              jenjang: headers.indexOf("jenjang"),
+              statusSekolah: headers.findIndex(h => h.includes("status sekolah") || h === "status"),
+              rombel: (sourceLabel === 'PAUD') ? headers.indexOf("jumlah rombel") : headers.indexOf("total rombel"),
+              file: headers.findIndex(h => h.includes("file") || h.includes("dokumen"))
+          };
+
+          // Index Activity (Manual karena struktur fix)
+          var col = (sourceLabel === 'PAUD') ? 
+                    { tglKirim:0, userKirim:43, tglEdit:44, userEdit:45, tglVerif:46, userVerif:47, statusData:48, ket:49 } : 
+                    { tglKirim:0, userKirim:219, tglEdit:220, userEdit:221, tglVerif:222, userVerif:223, statusData:218, ket:224 };
+
+          // --- LANGKAH 2: HITUNG KOORDINAT POTONGAN DATA ---
+          // Kita hanya ambil 'LIMIT_PER_SHEET' baris dari bawah
+          var startRow = Math.max(2, lastRow - LIMIT_PER_SHEET + 1); 
+          var numRows = (lastRow - startRow + 1);
           
-          var idxFile = -1; 
-          headers.forEach((h, i) => { if((h.includes("file") || h.includes("dokumen")) && idxFile < 0) idxFile = i; });
+          if (numRows < 1) return [];
 
-          // Mapping Kolom Activity
-          var col = {};
-          if (sourceLabel === 'PAUD') {
-              col.tglKirim=0; col.userKirim=43; col.tglEdit=44; col.userEdit=45;
-              col.tglVerif=46; col.userVerif=47; col.statusData=48; col.ket=49;
-          } else if (sourceLabel === 'SD') {
-              col.tglKirim=0; col.userKirim=219; col.tglEdit=220; col.userEdit=221;
-              col.tglVerif=222; col.userVerif=223; col.statusData=218; col.ket=224;
-          }
+          // --- LANGKAH 3: AMBIL DATA POTONGAN SAJA (Cepat) ---
+          // Mengambil 300 baris jauh lebih cepat daripada 3000 baris
+          var data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getValues();
 
-          // LOOPING BARIS
-          for (var i = 1; i < data.length; i++) {
+          // --- LANGKAH 4: LOOPING MUNDUR (Dari data terbaru di potongan itu) ---
+          for (var i = data.length - 1; i >= 0; i--) {
               var row = data[i];
-              
-              // 1. AMBIL DATA MENTAH (RAW)
-              var rawBulan = (idxBulan > -1) ? String(row[idxBulan] || "").trim() : "";
-              var rawTahun = (idxTahun > -1) ? String(row[idxTahun] || "").trim() : "";
-              var rawJenjang = (idxJenjang > -1) ? String(row[idxJenjang] || "").toUpperCase().trim() : "";
+              var realRowNumber = startRow + i; // Nomor baris asli di Excel
 
-              // 2. FILTER (Gunakan versi lowercase untuk cek)
-              if (reqBulan && rawBulan.toLowerCase() !== reqBulan) continue;
-              if (reqTahun && rawTahun.toLowerCase() !== reqTahun) continue;
-              if (reqJenjang && rawJenjang !== reqJenjang) continue;
+              // Filter Cepat
+              if (reqBulan && String(row[idx.bulan]||"").toLowerCase() !== reqBulan) continue;
+              if (reqTahun && String(row[idx.tahun]||"").toLowerCase() !== reqTahun) continue;
+              if (reqJenjang && String(row[idx.jenjang]||"").toUpperCase() !== reqJenjang) continue;
 
-              // Filter Status
-              var valStatus = row[col.statusData] || "Diproses";
-              if (filterStatus && !String(valStatus).toLowerCase().includes(filterStatus.toLowerCase())) continue;
-              if (String(valStatus).toLowerCase().includes("hapus")) continue;
+              var rStatusData = String(row[col.statusData] || "Diproses");
+              if (rStatusData.toLowerCase().includes("hapus")) continue;
+              if (reqStatus && !rStatusData.toLowerCase().includes(reqStatus)) continue;
 
-              // Helper User
-              var usr = function(v) { return (v && v !== "") ? v : "-"; };
+              var rNama = (idx.nama > -1) ? String(row[idx.nama]) : "Tanpa Nama";
+              var rNpsn = (idx.npsn > -1) ? String(row[idx.npsn]) : "";
+              if (reqKey && !rNama.toLowerCase().includes(reqKey) && !rNpsn.includes(reqKey)) continue;
 
-              // Format Tanggal
-              var strTglKirim = formatDateFixed(row[col.tglKirim]);
-              var strTglEdit  = formatDateFixed(row[col.tglEdit]);
-              var strTglVerif = formatDateFixed(row[col.tglVerif]);
-              
-              // Sort Time
-              var rawKirim = row[col.tglKirim];
-              var rawEdit = row[col.tglEdit];
-              var sortTime = 0;
-              if (rawEdit instanceof Date) sortTime = rawEdit.getTime();
-              else if (rawKirim instanceof Date) sortTime = rawKirim.getTime();
-              else sortTime = i;
-
+              // Format Data
               var item = {
-                  rowId: i + 1,
+                  rowId: realRowNumber, // PENTING: ID baris harus sesuai aslinya untuk Edit/Hapus
                   source: sourceLabel,
-                  namaSekolah: (idxNama > -1) ? row[idxNama] : "Tanpa Nama",
-                  npsn: (idxNpsn > -1) ? row[idxNpsn] : "",
+                  namaSekolah: rNama,
+                  npsn: rNpsn,
+                  bulan: String(row[idx.bulan]||""),
+                  tahun: String(row[idx.tahun]||""),
+                  jenjang: String(row[idx.jenjang]||""),
+                  statusSekolah: (idx.statusSekolah > -1) ? row[idx.statusSekolah] : "",
+                  rombel: (idx.rombel > -1) ? (parseInt(row[idx.rombel]) || 0) : 0,
+                  fileUrl: (idx.file > -1) ? row[idx.file] : "",
                   
-                  // PERBAIKAN DI SINI: Gunakan rawBulan (Asli) bukan lowercase
-                  bulan: rawBulan, 
-                  tahun: rawTahun,
-                  
-                  jenjang: rawJenjang,
-                  statusSekolah: (idxStatSek > -1) ? row[idxStatSek] : "", 
-                  rombel: (idxRombel > -1) ? (parseInt(row[idxRombel]) || 0) : 0,
-                  fileUrl: (idxFile > -1) ? row[idxFile] : "",
-
-                  tglKirim: strTglKirim,
-                  userKirim: usr(row[col.userKirim]),
-                  tglEdit: strTglEdit,
-                  userEdit: usr(row[col.userEdit]),
-                  tglVerif: strTglVerif,
-                  verifikator: usr(row[col.userVerif]),
-                  statusData: valStatus,
-                  keterangan: row[col.ket] || "",
-                  sortTime: sortTime
+                  tglKirim: fastFormat(row[col.tglKirim]),
+                  userKirim: row[col.userKirim] || "-",
+                  tglEdit: fastFormat(row[col.tglEdit]),
+                  userEdit: row[col.userEdit] || "-",
+                  tglVerif: fastFormat(row[col.tglVerif]),
+                  verifikator: row[col.userVerif] || "-",
+                  statusData: rStatusData,
+                  keterangan: row[col.ket] || ""
               };
-              
               sourceResult.push(item);
           }
       } catch (e) {
@@ -133,21 +124,17 @@ function getLapbulKelolaData(filterJenjang, filterBulan, filterTahun, filterStat
       return sourceResult;
   };
 
-  var dataPAUD = fetchDataFromSource(SPREADSHEET_IDS.PAUD_DATA, "Input PAUD", "PAUD");
-  var dataSD = fetchDataFromSource(SPREADSHEET_IDS.SD_DATA, "Input SD", "SD");
+  // EKSEKUSI PARALEL (Pseudocode - tetap serial di GAS tapi optimized)
+  var dataPAUD = fetchDataSmart(IDS.PAUD_DATA, "Input PAUD", "PAUD");
+  var dataSD = fetchDataSmart(IDS.SD_DATA, "Input SD", "SD");
   
   result = dataPAUD.concat(dataSD);
   
-  // Sorting (Terbaru diatas)
-  result.sort(function(a, b) { return b.sortTime - a.sortTime; });
+  // Karena kita mengambil potongan dari 2 file berbeda, 
+  // kita perlu sort lagi sedikit agar gabungan PAUD & SD urut waktu secara sempurna
+  // (Opsional, tapi bagus untuk UX)
+  // result.sort(function(a, b) { ... }); 
   
-  if (keyword) {
-      var k = keyword.toLowerCase();
-      result = result.filter(function(r) {
-          return String(r.namaSekolah).toLowerCase().includes(k) || String(r.npsn).includes(k);
-      });
-  }
-
   return result;
 }
 
@@ -1199,5 +1186,114 @@ function getDashboardLapbul(tahun, bulan) {
     recent: recentList
   };
 
+  return result;
+}
+
+/* ======================================================================
+   1. FUNGSI KHUSUS PAUD (Hanya Buka Spreadsheet PAUD)
+   ====================================================================== */
+function getLapbulDataPAUD(filterBulan, filterTahun, filterStatus, keyword) {
+  // Config
+  var SPREADSHEET_ID = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs"; // ID PAUD
+  var SHEET_NAME = "Input PAUD";
+  var LIMIT = (keyword && keyword.length > 2) ? 1000 : 300; // Limit Data
+
+  // Panggil Fungsi Helper (Lihat Langkah 2 dibawah)
+  return fetchDataSpecific(SPREADSHEET_ID, SHEET_NAME, "PAUD", LIMIT, filterBulan, filterTahun, filterStatus, keyword);
+}
+
+/* ======================================================================
+   2. FUNGSI KHUSUS SD (Hanya Buka Spreadsheet SD)
+   ====================================================================== */
+function getLapbulDataSD(filterBulan, filterTahun, filterStatus, keyword) {
+  // Config
+  var SPREADSHEET_ID = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s"; // ID SD
+  var SHEET_NAME = "Input SD";
+  var LIMIT = (keyword && keyword.length > 2) ? 1000 : 300; // Limit Data
+
+  // Panggil Fungsi Helper (Lihat Langkah 2 dibawah)
+  return fetchDataSpecific(SPREADSHEET_ID, SHEET_NAME, "SD", LIMIT, filterBulan, filterTahun, filterStatus, keyword);
+}
+
+/* ======================================================================
+   3. HELPER FUNCTION (Logika Utama - Copy Paste ini juga)
+   ====================================================================== */
+function fetchDataSpecific(id, sheetName, sourceLabel, limit, reqBulan, reqTahun, reqStatus, reqKey) {
+  var result = [];
+  try {
+      var ss = SpreadsheetApp.openById(id);
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return [];
+
+      var lastRow = sheet.getLastRow();
+      if (lastRow < 2) return [];
+
+      // Ambil Header
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).toLowerCase());
+      
+      // Mapping Index
+      var idx = {
+          nama: headers.indexOf("nama sekolah"),
+          npsn: headers.indexOf("npsn"),
+          bulan: headers.indexOf("bulan"),
+          tahun: headers.indexOf("tahun"),
+          jenjang: headers.indexOf("jenjang"),
+          statusSekolah: headers.findIndex(h => h.includes("status sekolah") || h === "status"),
+          rombel: (sourceLabel === 'PAUD') ? headers.indexOf("jumlah rombel") : headers.indexOf("total rombel"),
+          file: headers.findIndex(h => h.includes("file") || h.includes("dokumen"))
+      };
+      
+      var col = (sourceLabel === 'PAUD') ? 
+                { tglKirim:0, userKirim:43, tglEdit:44, userEdit:45, tglVerif:46, userVerif:47, statusData:48, ket:49 } : 
+                { tglKirim:0, userKirim:219, tglEdit:220, userEdit:221, tglVerif:222, userVerif:223, statusData:218, ket:224 };
+
+      // Partial Fetch (Ambil Buntut)
+      var startRow = Math.max(2, lastRow - limit + 1);
+      var numRows = (lastRow - startRow + 1);
+      var data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getValues();
+
+      // Formatter
+      var fastFormat = function(v) {
+        if(!v || v === "" || v === "-") return "-";
+        var d = (v instanceof Date) ? v : new Date(v);
+        if(isNaN(d.getTime())) return "-";
+        var p = n => n<10?'0'+n:n;
+        return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+      };
+
+      // Loop Mundur
+      for (var i = data.length - 1; i >= 0; i--) {
+          var row = data[i];
+          
+          // Filter Logic
+          if (reqBulan && String(row[idx.bulan]||"").toLowerCase() !== reqBulan.toLowerCase()) continue;
+          if (reqTahun && String(row[idx.tahun]||"").toLowerCase() !== reqTahun.toLowerCase()) continue;
+          
+          var rStatus = String(row[col.statusData]||"Diproses");
+          if (rStatus.toLowerCase().includes("hapus")) continue;
+          if (reqStatus && !rStatus.toLowerCase().includes(reqStatus.toLowerCase())) continue;
+
+          var rNama = (idx.nama > -1) ? String(row[idx.nama]) : "";
+          if (reqKey && !rNama.toLowerCase().includes(reqKey.toLowerCase())) continue;
+
+          result.push({
+              rowId: startRow + i,
+              source: sourceLabel,
+              namaSekolah: rNama,
+              npsn: (idx.npsn > -1) ? row[idx.npsn] : "",
+              bulan: row[idx.bulan],
+              tahun: row[idx.tahun],
+              statusData: rStatus,
+              tglKirim: fastFormat(row[col.tglKirim]),
+              userKirim: row[col.userKirim] || "-",
+              tglVerif: fastFormat(row[col.tglVerif]),
+              verifikator: row[col.userVerif] || "-",
+              keterangan: row[col.ket] || "",
+              fileUrl: (idx.file > -1) ? row[idx.file] : ""
+          });
+      }
+  } catch (e) {
+      console.log("Error " + sourceLabel + ": " + e.message);
+  }
   return result;
 }
