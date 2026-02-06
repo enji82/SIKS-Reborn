@@ -277,8 +277,9 @@
 
       <div class="col-md-3 col-6">
         <div class="stat-item">
-          <i class="fas fa-server fa-2x text-success mb-2"></i> <h5 class="font-weight-bold text-white mb-0 mt-1">ONLINE</h5>
-          <small class="text-white-50">REBORN v1.0</small>
+          <i class="fas fa-server fa-2x text-success mb-2"></i> 
+          <h4 id="stat-online" class="font-weight-bold text-white mb-0 counter-anim">0</h4>
+          <small class="text-white-50 text-uppercase">User Online</small>
         </div>
       </div>
 
@@ -434,53 +435,49 @@
   }
 
   // ============================================
-  // 2. LOAD DATA USER & KEAMANAN (NAMA, FOTO, ROLE)
+  // 2. LOAD DATA USER DARI LOCALSTORAGE (SOLUSI BARU)
   // ============================================
-  google.script.run.withSuccessHandler(function(u){
-    if(u) { 
-        // A. Update Teks Nama
-        $('#user-fullname-home').text(u.fullName); 
-        $('.user-capsule span').text(u.fullName);
-        $('.user-panel .info a').text(u.fullName);
-        
-        var htmlInfo = u.fullName + '<small>' + (u.role || 'User') + '</small>';
-        $('.user-header p').html(htmlInfo);
+  function muatDataUserLocal() {
+    try {
+        // Ambil dari penyimpanan browser (bukan server)
+        var dataLocal = localStorage.getItem("siksUser");
+        if (!dataLocal) return;
 
-        // B. Update Foto Profil (Logic Thumbnail)
+        var u = JSON.parse(dataLocal);
+
+        // A. Update Teks Nama
+        var namaTampil = u.fullName || u.nama || u.username || "User";
+        $('#user-fullname-home').text(namaTampil); 
+        
+        // Update elemen lain jika ada di halaman home (opsional)
+        // $('.user-capsule span').text(namaTampil); // Sudah di handle sidebar
+
+        // B. Update Foto Profil
         if (u.photo && u.photo.trim() !== "") {
             var photoId = u.photo.trim();
             var photoUrl = "https://drive.google.com/thumbnail?id=" + photoId + "&sz=s200";
-            var images = $('.user-capsule img, .user-header img, .user-panel .image img');
-            
-            images.attr('src', photoUrl);
-            images.on('error', function(){
-                $(this).attr('src', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'); 
-            });
-        } else {
-            $('.user-capsule img, .user-header img, .user-panel .image img')
-                .attr('src', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png');
-        }
+            // Hanya update foto di area konten home saja (jika ada)
+            // Sidebar sudah dihandle oleh javascript.html utama
+        } 
 
-        // C. LOGIKA ADMIN (BUKA KUNCI MENU RAHASIA)
+        // C. LOGIKA ADMIN (Untuk Menu Home Widget)
         var roleUser = (u.role || "").toString().toLowerCase();
         
         if (roleUser.includes('admin')) {
-            // Jika Admin, Munculkan 2 Menu Ini:
-            $('#menu-setting-admin').removeClass('d-none').show();     // Menu Pengaturan
-            $('#menu-monitoring-admin').removeClass('d-none').show();  // Menu Monitoring
+            // Widget khusus admin di Home (jika ada)
+            $('.widget-admin-only').show();
         } else {
-            // Jika Bukan Admin, Sembunyikan
-            $('#menu-setting-admin').hide();
-            $('#menu-monitoring-admin').hide();
+            $('.widget-admin-only').hide();
         }
 
-        // D. REKAM JEJAK DIGITAL (CCTV)
-        // Kirim data user ini ke backend untuk dicatat di Sheet LOG_ACCESS
-        console.log("Mencatat kehadiran user...");
+        // D. REKAM JEJAK DIGITAL (CCTV) - Tetap lapor ke server
+        // Kita kirim data yang kita punya di browser ke server untuk dicatat
         google.script.run.logUserVisit(u);
-    }
-  }).getCurrentUser();
 
+    } catch (e) {
+        console.log("Gagal memuat data user lokal di Home: " + e.message);
+    }
+  }
 
   // ============================================
   // 3. LOAD STATISTIK & RUNNING TEXT
@@ -491,8 +488,12 @@
           animateValue("stat-total", 0, data.total, 2000);
           animateValue("stat-today", 0, data.today, 2000);
           animateValue("stat-users", 0, data.users, 2000);
+          
+          // BARU: Update Angka Online
+          // Pastikan Anda sudah memberi id="stat-online" di HTML-nya
+          animateValue("stat-online", 0, data.online, 2000); 
 
-          // B. Update Running Text (Info Berjalan)
+          // B. Update Running Text
           if(data.info && data.info !== "") {
              $('#dynamic-marquee-text').html(data.info);
           }
@@ -518,8 +519,9 @@
       }
   }
 
-  // Jalankan Jam saat halaman selesai dimuat
+  // Jalankan Saat Halaman Selesai Dimuat
   $(document).ready(function() {
       startTime();
+      muatDataUserLocal(); // <--- PANGGIL FUNGSI INI
   });
 </script>

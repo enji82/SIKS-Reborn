@@ -1606,6 +1606,10 @@
 
     function submitFormSD(e) {
         e.preventDefault();
+
+        $('input[type="date"], input[type="number"]').each(function() {
+            if ($(this).val() === "-") { $(this).val(""); }
+        });
         
         // 1. CEK MODE EDIT (Langsung lari ke Update)
         if (typeof IS_EDIT_MODE !== 'undefined' && IS_EDIT_MODE === true) {
@@ -1822,6 +1826,10 @@
     // --- PAUD & TABEL (DITULIS LENGKAP AGAR JELAS) ---
     function submitFormPAUD(e) {
         e.preventDefault();
+
+        $('input[type="date"], input[type="number"]').each(function() {
+            if ($(this).val() === "-") { $(this).val(""); }
+        });
         
         // --- 1. CEK: APAKAH INI MODE EDIT? ---
         if (typeof IS_EDIT_MODE !== 'undefined' && IS_EDIT_MODE === true) {

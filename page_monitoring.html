@@ -97,7 +97,7 @@
           <div class="card-header bg-secondary text-white">
             <h3 class="card-title"><i class="fas fa-user-clock mr-2"></i>User Belum Aktif</h3>
           </div>
-          <div class="card-body p-0 table-responsive" style="max-height: 300px;">
+          <div class="card-body p-0 table-responsive" style="max-height: 380px;">
             <table class="table table-head-fixed table-hover text-nowrap table-sm">
               <thead><tr><th>#</th><th>Nama User</th><th>Status</th></tr></thead>
               <tbody id="table-passive-users"><tr><td colspan="3" class="text-center p-3">Memuat...</td></tr></tbody>
@@ -146,10 +146,32 @@
             });
          }
 
-         // 2. RENDER CHART HARIAN
-         var dayKeys = Object.keys(data.chartData.daily).sort();
-         var dayVals = dayKeys.map(k => data.chartData.daily[k]);
-         renderChart('chartDaily', 'line', dayKeys, dayVals, '#800000', 'Pengunjung Harian');
+         // 2. RENDER CHART HARIAN (SOLUSI FIX: SORTING & LABEL PENDEK)
+         
+         // A. Ambil data & Urutkan Tanggal dengan Benar (Bukan Abjad, tapi Waktu)
+         var rawData = data.chartData.daily;
+         var sortedKeys = Object.keys(rawData).sort(function(a, b) {
+             return new Date(a) - new Date(b); // Urutkan dari tanggal lama ke baru
+         });
+
+         // B. Ambil Nilai (Jumlah User) sesuai urutan tanggal
+         var dayVals = sortedKeys.map(k => rawData[k]);
+         
+         // C. Format Label Jadi Pendek (DD/MM) menggunakan Objek Date
+         var dayLabels = sortedKeys.map(function(rawDate) {
+             var d = new Date(rawDate);
+             // Cek apakah data bisa dibaca sebagai tanggal?
+             if (!isNaN(d.getTime())) {
+                 var tgl = ("0" + d.getDate()).slice(-2);       // Ambil Tanggal (06)
+                 var bln = ("0" + (d.getMonth() + 1)).slice(-2); // Ambil Bulan (02)
+                 return tgl + '/' + bln;                         // Gabung (06/02)
+             }
+             // Jika gagal (bukan tanggal), potong 10 huruf saja
+             return rawDate.toString().substring(0, 10);
+         });
+
+         // Render Grafik
+         renderChart('chartDaily', 'line', dayLabels, dayVals, '#800000', 'Pengunjung Harian');
 
          // 3. RENDER CHART MINGGUAN (BARU)
          var weekKeys = Object.keys(data.chartData.weekly).sort();

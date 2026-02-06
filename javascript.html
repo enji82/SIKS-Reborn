@@ -166,25 +166,40 @@ function handleLoginV2(event) {
   var btn = document.getElementById("tombolLogin");
   var form = document.getElementById("formLogin");
 
-  btn.innerText = "Memverifikasi...";
+  // Ubah tombol jadi loading
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...';
   btn.disabled = true;
 
   google.script.run
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
-        localStorage.setItem("siksUser", JSON.stringify(response));
-        NotifSultan.toast('success', 'Login Berhasil!'); // Pakai Notif Baru
-        setTimeout(inisialisasiAplikasi, 500); // Jeda sedikit biar smooth
+        
+        // 1. Simpan Data User
+        var userBersih = response.userData ? response.userData : response;
+        localStorage.setItem("siksUser", JSON.stringify(userBersih));
+        
+        // 2. Tampilkan Notifikasi
+        NotifSultan.toast('success', 'Login Berhasil!');
+        
+        // 3. --- PERBAIKAN UTAMA DI SINI ---
+        // JANGAN RELOAD HALAMAN (window.location.reload / href).
+        // Cukup panggil inisialisasiAplikasi() untuk masuk ke menu utama.
+        setTimeout(function() {
+           inisialisasiAplikasi(); 
+        }, 500); // Jeda setengah detik biar transisi halus
+
       } else {
-        btn.innerText = "LOGIN";
+        // Jika Gagal Login
+        btn.innerText = "MASUK";
         btn.disabled = false;
         NotifSultan.alert('error', 'Login Gagal', response.message || "Username/Password salah.");
       }
     })
-    .withFailureHandler(function() {
-      btn.innerText = "LOGIN";
+    .withFailureHandler(function(err) {
+      // Jika Error Koneksi
+      btn.innerText = "MASUK";
       btn.disabled = false;
-      NotifSultan.alert('error', 'Koneksi Gagal', "Gagal menghubungi server.");
+      NotifSultan.alert('error', 'Koneksi Gagal', "Gagal menghubungi server: " + err.message);
     })
     .processLogin(form);
 }
@@ -267,15 +282,19 @@ function loadPage(page) {
 
 // --- FUNGSI UPDATE UI USER ---
 function updateUI(u) {
-  var name = u.nama || u.username || u.fullName || "User";
-  var photo = u.foto || u.photo || "";
+  // Prioritas Nama: Nama Lengkap -> Nama -> Username -> "User"
+  var name = u.fullName || u.nama || u.username || "User";
+  var photo = u.photo || u.foto || "";
+  var role = u.role || "User";
 
-  var f = photo ? 'https://drive.google.com/thumbnail?id=' + photo + '&sz=w200' : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name);
+  // Generate Avatar jika tidak ada foto
+  var f = photo ? 'https://drive.google.com/thumbnail?id=' + photo + '&sz=w200' : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random';
   
+  // Update Elemen HTML
   $('#nav-user-photo, #dropdown-user-photo').attr('src', f);
   $('#nav-user-name').text(name);
   $('#dropdown-user-name-big').text(name);
-  $('#dropdown-user-role').text(u.role || "User");
+  $('#dropdown-user-role').text(role);
 }
 
 function getSesiUser() {
@@ -285,13 +304,32 @@ function getSesiUser() {
 }
 
 function tampilkanMenuAdmin(user) {
-  var menu = document.getElementById("menuTrashSK");
-  if (!menu) return;
-  if (user.role === "Admin" || user.role === "Super Admin") {
-    menu.style.display = "block";
-  } else {
-    menu.style.display = "none";
-  }
+  // 1. Daftar ID Menu Khusus Admin
+  // Masukkan semua ID menu yang ingin disembunyikan dari user biasa di sini
+  var daftarMenuAdmin = [
+    "menuTrashSK",           // Menu Sampah SK (yang lama)
+    "menu-setting-admin",    // Menu Pengaturan (Baru)
+    "menu-monitoring-admin"  // Menu Monitoring (Baru)
+  ];
+
+  // 2. Cek Role User (Aman dari huruf besar/kecil)
+  var role = (user.role || "").toString().toLowerCase();
+  var isAdmin = role.includes("admin"); // Benar jika role mengandung kata "admin"
+
+  // 3. Loop Semua ID dan Atur Tampilan
+  daftarMenuAdmin.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      if (isAdmin) {
+        // JIKA ADMIN: Hapus class d-none (PENTING!)
+        el.classList.remove("d-none"); 
+        el.style.display = "block"; // Paksa tampil
+      } else {
+        // JIKA BUKAN ADMIN: Tambah class d-none
+        el.classList.add("d-none");
+      }
+    }
+  });
 }
 
 // --- UTILS DROPDOWN ---

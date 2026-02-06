@@ -87,15 +87,14 @@ function loadPage(namaFile) { return getHalaman(namaFile); }
 // A. PROSES CEK PASSWORD (SAAT TOMBOL LOGIN DITEKAN)
 function processLogin(formObj) {
   try {
-    // Normalisasi input (bisa objek form atau parameter terpisah)
     var inputUser = "";
     var inputPass = "";
     
+    // Menangani input baik dari Form Object maupun Parameter langsung
     if (typeof formObj === 'object' && formObj.username) {
       inputUser = String(formObj.username).trim();
       inputPass = String(formObj.password).trim();
     } else {
-      // Jika dipanggil manual processLogin('admin', '123')
       inputUser = String(arguments[0]).trim();
       inputPass = String(arguments[1]).trim();
     }
@@ -104,11 +103,12 @@ function processLogin(formObj) {
     var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
     var data = sheet.getDataRange().getValues();
 
-    // Loop Database (Mulai baris 1)
+    // Loop Database (Mulai baris 1, melewati header)
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
       // Kolom A (0) = Username, Kolom B (1) = Password
-      if (String(row[0]).trim() == inputUser && String(row[1]).trim() == inputPass) {
+      // CATATAN: Sebaiknya username tidak case-sensitive, jadi kita lowercase
+      if (String(row[0]).trim().toLowerCase() == inputUser.toLowerCase() && String(row[1]).trim() == inputPass) {
         
         // LOGIN SUKSES!
         var userObj = {
@@ -119,10 +119,16 @@ function processLogin(formObj) {
           isLoggedIn: true
         };
         
-        // SIMPAN SESI KE USER PROPERTIES (Aman per akun Google)
-        PropertiesService.getUserProperties().setProperty('currentUser', JSON.stringify(userObj));
+        // --- PERBAIKAN: JANGAN SIMPAN DI PROPERTIES SERVICE ---
+        // Kita langsung kembalikan data user ke Frontend.
+        // Biarkan Frontend (javascript.html) yang menyimpannya di localStorage.
         
-        return { status: 'success', message: 'Login Berhasil' };
+        return { 
+          status: 'success', 
+          message: 'Login Berhasil',
+          // Sertakan data user di sini agar frontend bisa menerimanya
+          userData: userObj 
+        };
       }
     }
 
@@ -133,23 +139,14 @@ function processLogin(formObj) {
   }
 }
 
-// B. AMBIL DATA USER (DIPANGGIL OLEH HOME)
+// FUNGSI INI SUDAH TIDAK DIPERLUKAN LAGI (BISA DIHAPUS ATAU BIARKAN KOSONG)
+// Karena pengecekan user sekarang dilakukan di sisi client (browser)
 function getCurrentUser() {
-  try {
-    // Ambil data dari penyimpanan sementara (UserProperties)
-    var userStr = PropertiesService.getUserProperties().getProperty('currentUser');
-    if (userStr) {
-      return JSON.parse(userStr);
-    }
-    return null; // Belum login
-  } catch(e) {
-    return null;
-  }
+  return null; 
 }
 
-// C. LOGOUT
 function processLogout() {
-  PropertiesService.getUserProperties().deleteProperty('currentUser');
+  // Tidak ada yang perlu dihapus di server
   return { status: 'success' };
 }
 
@@ -161,10 +158,13 @@ function getVisitorStats() {
   var props = PropertiesService.getScriptProperties();
   var today = new Date().toLocaleDateString("id-ID"); 
   
-  // Statistik
+  // Statistik Hits
   var totalHits = Number(props.getProperty('TOTAL_HITS')) || 0;
   var lastDate = props.getProperty('LAST_DATE_HIT');
   var todayHits = Number(props.getProperty('TODAY_HITS')) || 0;
+  
+  // Ambil Data Online Terupdate
+  var onlineCount = Number(props.getProperty('ONLINE_COUNT')) || 0;
 
   if (lastDate !== today) {
     todayHits = 0;
@@ -176,7 +176,7 @@ function getVisitorStats() {
   props.setProperty('TOTAL_HITS', totalHits.toString());
   props.setProperty('TODAY_HITS', todayHits.toString());
 
-  // Running Text
+  // Running Text & User Count
   var totalUsers = 0;
   var infoText = "Selamat Datang di SIKS-REBORN";
 
@@ -185,16 +185,20 @@ function getVisitorStats() {
     // Hitung User
     var sheetUser = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
     if(sheetUser) totalUsers = sheetUser.getLastRow() - 1;
-
     // Ambil Running Text
     var sheetSetting = ss.getSheetByName("SETTING");
     if (sheetSetting) infoText = sheetSetting.getRange("B1").getValue();
-
   } catch (e) {
     infoText = "Maintenance Mode";
   }
 
-  return { total: totalHits, today: todayHits, users: totalUsers, info: infoText };
+  return { 
+    total: totalHits, 
+    today: todayHits, 
+    users: totalUsers, 
+    online: onlineCount, // <--- Data Baru dikirim ke sini
+    info: infoText 
+  };
 }
 
 function saveRunningText(textBaru) {
@@ -218,11 +222,49 @@ function loadPageSetting() {
 }
 
 // ==========================================
-// 5. MONITORING SYSTEM (CCTV)
+// 5. MONITORING SYSTEM & ONLINE COUNTER
 // ==========================================
+
+// Helper: Update Status Online di Memori Server
+function updateOnlineStatus(username) {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var now = new Date().getTime();
+    var cutoff = now - (10 * 60 * 1000); // Batas Online: 10 Menit terakhir
+    
+    // 1. Ambil Data Lama
+    var json = props.getProperty('ONLINE_USERS_DB');
+    var activeUsers = json ? JSON.parse(json) : {};
+    
+    // 2. Masukkan User Ini
+    if (username) activeUsers[username] = now;
+    
+    // 3. Bersihkan User yang sudah offline (lebih dari 10 menit)
+    var cleanList = {};
+    var count = 0;
+    for (var u in activeUsers) {
+      if (activeUsers[u] > cutoff) {
+        cleanList[u] = activeUsers[u];
+        count++;
+      }
+    }
+    
+    // 4. Simpan Kembali
+    props.setProperty('ONLINE_USERS_DB', JSON.stringify(cleanList));
+    props.setProperty('ONLINE_COUNT', count.toString());
+    
+  } catch (e) {
+    console.log("Online Tracker Error: " + e.message);
+  }
+}
+
 function logUserVisit(userData) {
   if (!userData) return;
+  
+  // A. UPDATE STATUS ONLINE (Fitur Baru)
+  updateOnlineStatus(userData.username || userData.nama);
 
+  // B. SIMPAN LOG KE SPREADSHEET (Fitur Lama)
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
     var sheet = ss.getSheetByName("LOG_ACCESS");
@@ -233,7 +275,7 @@ function logUserVisit(userData) {
     var blnOnly   = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
     
     // Cek Hari Libur
-    var dayIndex = now.getDay(); 
+    var dayIndex = now.getDay();
     var jenisHari = "Hari Efektif";
     var ketHari = "Reguler";
 
@@ -257,7 +299,6 @@ function logUserVisit(userData) {
       }
     }
 
-    // 3. Simpan
     if (sheet) {
       sheet.appendRow([timestamp, tgalOnly, blnOnly, userData.fullName, userData.role, jenisHari + " (" + ketHari + ")"]);
     }
