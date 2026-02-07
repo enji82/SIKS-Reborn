@@ -227,19 +227,20 @@
             </ul>
         </div>
 
-        <div class="tab-content p-4 bg-light flex-grow-1" style="overflow-y: auto;">
+        <div class="tab-content p-3 bg-light flex-grow-1" style="overflow-y: auto;">
+            
             <div class="tab-pane fade show active" id="ts1">
                 <div class="card card-sultan shadow-sm p-3">
                     
-                    <div class="row border-bottom pb-3 mb-3 shadow-sm bg-white sticky-top" style="z-index:10;">
+                    <div class="row border-bottom pb-3 mb-3 shadow-sm bg-white sticky-top pt-2" style="z-index:10; margin-top:-10px;">
                         <div class="col-md-8 mb-2">
-                            <label class="small font-weight-bold">Cari Sekolah (Ketik NPSN/Nama)</label>
+                            <label class="small font-weight-bold text-dark">Cari Sekolah (Ketik NPSN/Nama)</label>
                             <div class="position-relative">
                                 <div class="input-group">
-                                    <div class="input-group-prepend"><span class="input-group-text bg-white"><i class="fas fa-search"></i></span></div>
+                                    <div class="input-group-prepend"><span class="input-group-text bg-white"><i class="fas fa-search text-maroon"></i></span></div>
                                     <input type="text" id="inputSearchSekolah" class="form-control" placeholder="Cari..." autocomplete="off" onkeyup="filterSekolah(this)">
                                 </div>
-                                <div id="suggestionBox" class="suggestion-box rounded-bottom" style="top:100%;"></div>
+                                <div id="suggestionBox" class="suggestion-box rounded-bottom shadow-lg" style="top:100%;"></div>
                                 
                                 <input type="hidden" name="npsn" id="val_npsn">
                                 <input type="hidden" name="nama_sekolah" id="val_nama">
@@ -248,91 +249,108 @@
                             </div>
                         </div>
                         <div class="col-md-4 mb-2">
-                            <label class="small font-weight-bold">Periode Laporan</label>
+                            <label class="small font-weight-bold text-dark">Periode Laporan</label>
                             <div class="d-flex">
-                                <select name="bulan" id="sel_bulan" class="form-control mr-2 form-control-sm" required>
+                                <select name="bulan" id="sel_bulan" class="form-control mr-2 form-control-sm border-maroon" required>
                                     <option value="">-Bulan-</option>
                                     <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
                                     <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
                                     <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
                                     <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
                                 </select>
-                                <select name="tahun" id="sel_tahun" class="form-control form-control-sm" style="width: 80px;" required></select>
+                                <select name="tahun" id="sel_tahun" class="form-control form-control-sm border-maroon" style="width: 80px;" required></select>
                             </div>
                         </div>
                     </div>
 
-                    <div style="max-height: 400px; overflow-y: auto; overflow-x: hidden; padding-right: 15px; margin-right: -5px;">
-                        
-                        <div class="group-box mb-3">
-                            <span class="group-title text-maroon"><i class="fas fa-building mr-2"></i>Legalitas</span>
-                            <div class="row">
-                                <div class="col-md-12 mb-2">
-                                    <label class="small text-muted mb-0">Nama Yayasan</label>
-                                    <input type="text" name="yayasan" id="in_yayasan" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">No. SK Pendirian</label>
-                                    <input type="text" name="no_sk_pendirian" id="in_no_sk_pendirian" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">Tgl Pendirian</label>
-                                    <input type="date" name="tgl_pendirian" id="in_tgl_pendirian" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">No. SK Ijin Ops</label>
-                                    <input type="text" name="no_sk_ijin" id="in_no_sk_ijin" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">Tgl Ijin Ops</label>
-                                    <input type="date" name="tgl_ijin" id="in_tgl_ijin" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                        </div>
+                    <div style="max-height: 60vh; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                        <div class="row">
+                            
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="group-box h-100">
+                                    <span class="group-title text-maroon"><i class="fas fa-building mr-2"></i>Legalitas</span>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Nama Yayasan</label>
+                                        <input type="text" name="yayasan" id="in_yayasan" class="form-control form-control-sm">
+                                    </div>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">No. SK Pendirian</label>
+                                        <input type="text" name="no_sk_pendirian" id="in_no_sk_pendirian" class="form-control form-control-sm">
+                                    </div>
 
-                        <div class="group-box mb-3">
-                            <span class="group-title text-maroon"><i class="fas fa-star mr-2"></i>Akreditasi</span>
-                            <div class="row">
-                                <div class="col-md-3 mb-2">
-                                    <label class="small text-muted mb-0">Akreditasi</label>
-                                    <select name="akreditasi" id="in_akreditasi" class="form-control form-control-sm">
-                                        <option value="-">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="Belum">Belum</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mb-2">
-                                    <label class="small text-muted mb-0">Skor</label>
-                                    <input type="number" name="skor" id="in_skor" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">No. Sertifikat</label>
-                                    <input type="text" name="no_sertifikat" id="in_no_sertifikat" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">Tgl Sertifikat</label>
-                                    <input type="date" name="tgl_sertifikat" id="in_tgl_sertifikat" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                        </div>
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Tgl Pendirian</label>
+                                        <input type="date" name="tgl_pendirian" id="in_tgl_pendirian" class="form-control form-control-sm">
+                                    </div>
 
-                        <div class="group-box">
-                            <span class="group-title text-maroon"><i class="fas fa-address-book mr-2"></i>Kontak</span>
-                            <div class="row">
-                                <div class="col-md-12 mb-2">
-                                    <label class="small text-muted mb-0">Alamat Sekolah</label>
-                                    <textarea name="alamat" id="in_alamat" class="form-control form-control-sm" rows="2"></textarea>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">Telepon</label>
-                                    <input type="text" name="telepon" id="in_telepon" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="small text-muted mb-0">Email</label>
-                                    <input type="text" name="email" id="in_email" class="form-control form-control-sm" placeholder="Contoh: sdn1@gmail.com atau -">
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">No. SK Ijin Operasional</label>
+                                        <input type="text" name="no_sk_ijin" id="in_no_sk_ijin" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Tgl Ijin Operasional</label>
+                                        <input type="date" name="tgl_ijin" id="in_tgl_ijin" class="form-control form-control-sm">
+                                    </div>
                                 </div>
                             </div>
+
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="group-box h-100">
+                                    <span class="group-title text-maroon"><i class="fas fa-star mr-2"></i>Akreditasi</span>
+                                    
+                                    <div class="row">
+                                        <div class="col-6 mb-2">
+                                            <label class="small text-muted mb-0">Akreditasi</label>
+                                            <select name="akreditasi" id="in_akreditasi" class="form-control form-control-sm">
+                                                <option value="-">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="Belum">Belum</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6 mb-2">
+                                            <label class="small text-muted mb-0">Skor Nilai</label>
+                                            <input type="number" name="skor" id="in_skor" class="form-control form-control-sm">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">No. Sertifikat</label>
+                                        <input type="text" name="no_sertifikat" id="in_no_sertifikat" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Tanggal Sertifikat</label>
+                                        <input type="date" name="tgl_sertifikat" id="in_tgl_sertifikat" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="group-box h-100">
+                                    <span class="group-title text-maroon"><i class="fas fa-address-book mr-2"></i>Kontak</span>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Alamat Sekolah</label>
+                                        <textarea name="alamat" id="in_alamat" class="form-control form-control-sm" rows="3" style="resize:none;"></textarea>
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Nomor Telepon / HP</label>
+                                        <input type="text" name="telepon" id="in_telepon" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Email Sekolah</label>
+                                        <input type="text" name="email" id="in_email" class="form-control form-control-sm" placeholder="Contoh: sdn1@gmail.com atau -">
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                    
-                    </div> <div class="text-right mt-3 border-top pt-2">
+                    </div>
+
+                    <div class="text-right mt-3 border-top pt-2">
                         <button type="button" class="btn btn-primary px-4 font-weight-bold shadow-sm" onclick="validateSekolahAndNext()">
                             DATA MURID <i class="fas fa-arrow-right ml-1"></i>
                         </button>
@@ -352,10 +370,8 @@
                             <li class="nav-item"><a class="nav-link py-2 rounded-0" data-toggle="pill" href="#tk6">Kelas 6</a></li>
                         </ul>
                     </div>
-                    
                     <div class="card-body p-3 tab-content" id="kelasContainer">
                         </div>
-                    
                 </div>
             </div>
 
@@ -392,32 +408,21 @@
 
             <div class="tab-pane fade" id="ts4">
                 <div class="card card-sultan shadow-sm p-4 text-center">
-                    
                     <div id="boxFilePreviewSD" class="card border-left-primary shadow-sm mb-4 d-none text-left">
                         <div class="card-body py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <div class="icon-circle bg-light-primary text-primary mr-3">
-                                        <i class="fas fa-file-pdf fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="font-weight-bold text-dark mb-0">File Tersimpan</h6>
-                                        <small class="text-muted">Klik tombol mata untuk melihat isi file.</small>
-                                    </div>
+                                    <div class="icon-circle bg-light-primary text-primary mr-3"><i class="fas fa-file-pdf fa-lg"></i></div>
+                                    <div><h6 class="font-weight-bold text-dark mb-0">File Tersimpan</h6><small class="text-muted">Klik tombol mata untuk melihat isi file.</small></div>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-info shadow-sm px-3" onclick="bukaModalPreview()">
-                                    <i class="fas fa-eye mr-1"></i> Lihat File
-                                </button>
+                                <button type="button" class="btn btn-sm btn-info shadow-sm px-3" onclick="bukaModalPreview()"><i class="fas fa-eye mr-1"></i> Lihat File</button>
                             </div>
                         </div>
                     </div>
 
                     <h5 class="font-weight-bold mt-2">Unggah Laporan SD</h5>
                     <p class="text-muted mb-1">Format PDF, Maksimal 200 KB.</p>
-                    
-                    <p class="text-info font-italic mb-3 d-none" id="msgEditFileSD">
-                        <i class="fas fa-info-circle mr-1"></i> Biarkan kosong jika tidak ingin mengganti file.
-                    </p>
+                    <p class="text-info font-italic mb-3 d-none" id="msgEditFileSD"><i class="fas fa-info-circle mr-1"></i> Biarkan kosong jika tidak ingin mengganti file.</p>
 
                     <div class="custom-file w-75 mx-auto text-left mb-4">
                         <input type="file" class="custom-file-input" id="fileSD" accept="application/pdf" onchange="$(this).next().text(this.files[0].name)">
@@ -476,43 +481,91 @@
                         </div>
                     </div>
 
-                    <div style="max-height: 400px; overflow-y: auto; overflow-x: hidden; padding-right: 15px; margin-right: -5px;">
-                        
-                        <div class="group-box mb-3">
-                            <span class="group-title text-maroon"><i class="fas fa-building mr-2"></i>Legalitas (Bisa Diedit)</span>
-                            <div class="row">
-                                <div class="col-md-12 mb-2"><label class="small text-muted mb-0">Nama Yayasan</label><input type="text" name="yayasan" id="in_yayasan" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">No. SK Pendirian</label><input type="text" name="no_sk_pendirian" id="in_no_sk_pendirian" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">Tgl Pendirian</label><input type="date" name="tgl_pendirian" id="in_tgl_pendirian" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">No. SK Ijin Ops</label><input type="text" name="no_sk_ijin" id="in_no_sk_ijin" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">Tgl Ijin Ops</label><input type="date" name="tgl_ijin" id="in_tgl_ijin" class="form-control form-control-sm"></div>
-                            </div>
-                        </div>
+                    <div style="max-height: 60vh; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                        <div class="row">
+                            
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="group-box h-100">
+                                    <span class="group-title text-maroon"><i class="fas fa-building mr-2"></i>Legalitas</span>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Nama Yayasan</label>
+                                        <input type="text" name="yayasan" id="in_yayasan" class="form-control form-control-sm">
+                                    </div>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">No. SK Pendirian</label>
+                                        <input type="text" name="no_sk_pendirian" id="in_no_sk_pendirian" class="form-control form-control-sm">
+                                    </div>
 
-                        <div class="group-box mb-3">
-                            <span class="group-title text-maroon"><i class="fas fa-star mr-2"></i>Akreditasi (Bisa Diedit)</span>
-                            <div class="row">
-                                <div class="col-md-3 mb-2">
-                                    <label class="small text-muted mb-0">Akreditasi</label>
-                                    <select name="akreditasi" id="in_akreditasi" class="form-control form-control-sm">
-                                        <option value="-">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="Belum">Belum</option>
-                                    </select>
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Tgl Pendirian</label>
+                                        <input type="date" name="tgl_pendirian" id="in_tgl_pendirian" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">No. SK Ijin Operasional</label>
+                                        <input type="text" name="no_sk_ijin" id="in_no_sk_ijin" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Tgl Ijin Operasional</label>
+                                        <input type="date" name="tgl_ijin" id="in_tgl_ijin" class="form-control form-control-sm">
+                                    </div>
                                 </div>
-                                <div class="col-md-3 mb-2"><label class="small text-muted mb-0">Skor</label><input type="number" name="skor" id="in_skor" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">No. Sertifikat</label><input type="text" name="no_sertifikat" id="in_no_sertifikat" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">Tgl Sertifikat</label><input type="date" name="tgl_sertifikat" id="in_tgl_sertifikat" class="form-control form-control-sm"></div>
                             </div>
-                        </div>
 
-                        <div class="group-box">
-                            <span class="group-title text-maroon"><i class="fas fa-address-book mr-2"></i>Kontak (Bisa Diedit)</span>
-                            <div class="row">
-                                <div class="col-md-12 mb-2"><label class="small text-muted mb-0">Alamat Sekolah</label><textarea name="alamat" id="in_alamat" class="form-control form-control-sm" rows="2"></textarea></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">Telepon</label><input type="text" name="telepon" id="in_telepon" class="form-control form-control-sm"></div>
-                                <div class="col-md-6 mb-2"><label class="small text-muted mb-0">Email</label><input type="text" name="email" id="in_email" class="form-control form-control-sm" placeholder="Contoh: paud@gmail.com atau -"></div>
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="group-box h-100">
+                                    <span class="group-title text-maroon"><i class="fas fa-star mr-2"></i>Akreditasi</span>
+                                    
+                                    <div class="row">
+                                        <div class="col-6 mb-2">
+                                            <label class="small text-muted mb-0">Akreditasi</label>
+                                            <select name="akreditasi" id="in_akreditasi" class="form-control form-control-sm">
+                                                <option value="-">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="Belum">Belum</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6 mb-2">
+                                            <label class="small text-muted mb-0">Skor</label>
+                                            <input type="number" name="skor" id="in_skor" class="form-control form-control-sm">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">No. Sertifikat</label>
+                                        <input type="text" name="no_sertifikat" id="in_no_sertifikat" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Tgl Sertifikat</label>
+                                        <input type="date" name="tgl_sertifikat" id="in_tgl_sertifikat" class="form-control form-control-sm">
+                                    </div>
+                                </div>
                             </div>
+
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="group-box h-100">
+                                    <span class="group-title text-maroon"><i class="fas fa-address-book mr-2"></i>Kontak</span>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Alamat Sekolah</label>
+                                        <textarea name="alamat" id="in_alamat" class="form-control form-control-sm" rows="3" style="resize:none;"></textarea>
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Nomor Telepon / HP</label>
+                                        <input type="text" name="telepon" id="in_telepon" class="form-control form-control-sm">
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small text-muted mb-0">Email Sekolah</label>
+                                        <input type="text" name="email" id="in_email_paud" class="form-control form-control-sm" placeholder="Contoh: paud@gmail.com atau -">
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                    
                     </div>
 
                     <div class="text-right mt-3 border-top pt-2">
@@ -1104,6 +1157,10 @@
         $('#modalPreview').on('hidden.bs.modal', function () { 
             $('iframe').attr('src', ''); 
         });
+
+        if(typeof setSidebarActive === 'function') {
+          setSidebarActive("Kelola Data"); 
+      }
     });
 
     // EVENT LISTENER: SAAT MODAL DITUTUP
@@ -1648,6 +1705,15 @@
             d.total_rombel = tr;
             
             d.user_login = JSON.parse(localStorage.getItem("siksUser") || "{}").nama;
+            var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+
+            // Prioritaskan Nama Lengkap
+            var namaAsli = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin";
+
+            d.user_login = namaAsli;
+
+            // Debugging: Cek di console browser (F12) saat simpan
+            console.log("USER YANG DIKIRIM:", d.user_login);
             
             google.script.run.withSuccessHandler(function(res) {
                 b.prop('disabled', false).html(t);
@@ -1758,7 +1824,9 @@
             d.total_rombel = tr;
             
             var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-            d.user_login = user.nama; 
+            // Prioritaskan nama_lengkap, lalu fullname, baru username
+            var namaAsli = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin";
+            d.user_login = namaAsli;
 
             google.script.run.withSuccessHandler(function(res) {
                 b.prop('disabled', false).html(t);
@@ -1863,6 +1931,12 @@
             $('#formPAUD').serializeArray().forEach(function(item){ d[item.name] = item.value; });
             
             d.user_login = JSON.parse(localStorage.getItem("siksUser") || "{}").nama;
+            var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+
+            // Prioritaskan Nama Lengkap
+            var namaAsli = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin";
+
+            d.user_login = namaAsli;
             
             google.script.run.withSuccessHandler(function(res){
                 b.prop('disabled', false).html(t);
@@ -2066,119 +2140,155 @@
         renderTabel(res);
     }
 
+    // --- HELPER: KONVERSI TANGGAL INDO KE ANGKA (UNTUK SORTING) ---
+    function parseIndoDate(str) {
+        if (!str || str === "-" || str === "") return 0;
+        try {
+            // Format diharapkan: "dd/MM/yyyy HH:mm:ss"
+            // Contoh: "07/02/2026 14:30:00"
+            var parts = str.split(' ');
+            var dateParts = parts[0].split('/');
+            var timeParts = (parts[1] || "00:00:00").split(':');
+            
+            // new Date(year, monthIndex, day, hours, minutes, seconds)
+            // monthIndex dimulai dari 0 (Januari = 0)
+            return new Date(dateParts[2], dateParts[1]-1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]).getTime();
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    // --- FUNGSI RENDER TABEL (FIX SORTING LOAD AWAL) ---
     function renderTabel(data) {
-    if (data) { DATA_LAPBUL_CACHE = data; }
+        // 1. Simpan ke Cache
+        if (data) { DATA_LAPBUL_CACHE = data; }
 
-    if ($.fn.DataTable.isDataTable('#tabelLapbul')) {
-        $('#tabelLapbul').DataTable().clear().destroy();
-    }
-    $('#bodyTabelLapbul').empty().hide();
+        // 2. Reset Tabel HTML
+        if ($.fn.DataTable.isDataTable('#tabelLapbul')) {
+            $('#tabelLapbul').DataTable().clear().destroy();
+        }
+        $('#bodyTabelLapbul').empty().hide();
 
-    if (!data || data.length === 0) {
+        // 3. Cek Data Kosong
+        if (!data || data.length === 0) {
+            $('#headTabelLapbul').show();
+            $('#bodyTabelLapbul').show();
+            if(typeof initDataTableStandard === 'function') initDataTableStandard('#tabelLapbul', true);
+            return;
+        }
+
+        // --- FIX UTAMA: HITUNG SORT TIME JIKA BELUM ADA ---
+        data.forEach(function(row) {
+            // Jika row belum punya sortTime (data baru dari server), kita hitung manual
+            if (!row.sortTime) {
+                var tKirim = parseIndoDate(row.tglKirim);
+                var tEdit  = parseIndoDate(row.tglEdit);
+                var tVerif = parseIndoDate(row.tglVerif);
+                
+                // Ambil waktu yang PALING BARU (Max) dari ketiga aktivitas tersebut
+                row.sortTime = Math.max(tKirim, tEdit, tVerif);
+            }
+        });
+
+        // 4. LAKUKAN SORTING (Terbaru di Atas)
+        data.sort(function(a, b) { 
+            return (b.sortTime || 0) - (a.sortTime || 0); 
+        });
+
+        // 5. RENDER BARIS TABEL
+        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
+        var isAdmin = (user.role && String(user.role).toLowerCase().includes('admin'));
+        var h = "";
+
+        data.forEach(function(row) {
+            // --- A. LOGIKA STATUS ---
+            var st = String(row.statusData || "Diproses").toLowerCase();
+            var bs = 'badge-sultan-light-warning';
+            var ic = 'clock';
+            var ls = "DIPROSES"; 
+            
+            if (st.includes('ok') || st.includes('setuju') || st.includes('terima')) {
+                bs = 'badge-sultan-light-success'; ic = 'check-circle'; ls = "DISETUJUI";
+            } else if (st.includes('revisi')) {
+                bs = 'badge-sultan-light-info'; ic = 'sync-alt'; ls = "REVISI";
+            } else if (st.includes('tolak')) {
+                bs = 'badge-sultan-light-danger'; ic = 'times-circle'; ls = "DITOLAK";
+            } else if (st.includes('hapus')) {
+                bs = 'badge-secondary'; ic = 'trash'; ls = "DIHAPUS";
+            }
+            
+            // --- B. KETERANGAN ICON ---
+            var infoIcon = "";
+            if (row.keterangan && row.keterangan.trim().length > 0) {
+                var safeKet = row.keterangan.replace(/"/g, '&quot;');
+                infoIcon = `<i class="fas fa-info-circle text-info ml-1" style="cursor:help;" title="${safeKet}" data-toggle="tooltip"></i>`;
+            }
+            
+            var badgeStatusData = `<span class="badge badge-sultan ${bs}"><i class="fas fa-${ic} mr-1"></i>${ls}</span>${infoIcon}`;
+
+            // --- C. LOGIKA LOCK ---
+            var isLocked = (ls === "DISETUJUI") && !isAdmin;
+
+            // --- D. TOMBOL AKSI ---
+            var btnEdit = isLocked 
+                ? `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-lock"></i></button>`
+                : `<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="editLapbul('${row.source}','${row.rowId}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>`;
+
+            var safeNama = (row.namaSekolah || "").replace(/'/g, "\\'");
+            var btnHapus = isLocked
+                ? `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-trash"></i></button>`
+                : `<button class="btn-icon-sultan btn-icon-sultan-danger" onclick="hapusLapbul('${row.source}','${row.rowId}','${safeNama}')" title="Hapus"><i class="fas fa-trash"></i></button>`;
+
+            var btnFile = (row.fileUrl && row.fileUrl.length > 5) 
+                ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewPDF('${row.fileUrl}')" title="Lihat PDF"><i class="fas fa-eye"></i></button>` 
+                : '<span class="text-muted small">-</span>';
+
+            var btnVerif = "";
+            if (isAdmin) {
+                 var safeFile = row.fileUrl || "";
+                 btnVerif = `<button class="btn-icon-sultan btn-icon-sultan-success mr-1" 
+                    onclick="verifikasiLapbul('${row.source}', '${row.rowId}', '${safeNama}', '${row.bulan}', '${row.tahun}', '${safeFile}')" 
+                    title="Verifikasi">
+                    <i class="fas fa-check-double"></i>
+                </button>`;
+            }
+
+            // --- E. METADATA ---
+            var metaKirim = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglKirim || '-'}</span><span class="d-block text-muted text-nowrap">${row.userKirim || '-'}</span></div>`;
+            var metaEdit  = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglEdit || '-'}</span><span class="d-block text-muted text-nowrap">${row.userEdit || '-'}</span></div>`;
+            var metaVerif = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglVerif || '-'}</span><span class="d-block text-muted text-nowrap">${row.verifikator || '-'}</span></div>`;
+
+            // --- F. RENDER ROW ---
+            h += `<tr class="tr-animasi">
+                    <td class="col-sticky-left font-weight-bold text-dark bg-white align-middle">${row.namaSekolah}</td>
+                    <td class="text-center align-middle">${row.npsn || '-'}</td>
+                    <td class="text-center align-middle font-weight-bold">${row.bulan}</td>
+                    <td class="text-center align-middle">${row.tahun}</td>
+                    <td class="text-center align-middle small">${row.statusSekolah || '-'}</td>
+                    <td class="text-center align-middle">${row.jenjang}</td>
+                    <td class="text-center align-middle">${row.rombel || row.totalRombel || '0'}</td>
+                    <td class="text-center align-middle">${btnFile}</td>
+                    <td class="text-center align-middle text-nowrap">${badgeStatusData}</td>
+                    <td class="text-center align-middle">
+                        <div class="d-flex justify-content-center" style="gap:4px">
+                            ${btnVerif} ${btnEdit} ${btnHapus}
+                        </div>
+                    </td>
+                    <td class="text-center align-middle">${metaKirim}</td>
+                    <td class="text-center align-middle">${metaEdit}</td>
+                    <td class="text-center align-middle">${metaVerif}</td>
+                  </tr>`;
+        });
+
+        $('#bodyTabelLapbul').html(h);
         $('#headTabelLapbul').show();
+        
+        if(typeof initDataTableStandard === 'function') {
+            initDataTableStandard('#tabelLapbul');
+        }
+        $('[data-toggle="tooltip"]').tooltip();
         $('#bodyTabelLapbul').show();
-        if(typeof initDataTableStandard === 'function') initDataTableStandard('#tabelLapbul', true);
-        return;
     }
-
-    // SORTING (Terbaru di Atas)
-    data.sort(function(a, b) { return (b.sortTime || 0) - (a.sortTime || 0); });
-
-    var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-    var isAdmin = (user.role && String(user.role).toLowerCase().includes('admin'));
-    var h = "";
-
-    data.forEach(function(row) {
-        // --- A. LOGIKA STATUS DATA ---
-        var st = String(row.statusData || "Diproses").toLowerCase();
-        var bs = 'badge-sultan-light-warning';
-        var ic = 'clock';
-        var ls = "DIPROSES"; 
-        
-        if (st.includes('ok') || st.includes('setuju') || st.includes('terima')) {
-            bs = 'badge-sultan-light-success'; ic = 'check-circle'; ls = "DISETUJUI";
-        } else if (st.includes('revisi')) {
-            bs = 'badge-sultan-light-info'; ic = 'sync-alt'; ls = "REVISI";
-        } else if (st.includes('tolak')) {
-            bs = 'badge-sultan-light-danger'; ic = 'times-circle'; ls = "DITOLAK";
-        } else if (st.includes('hapus')) {
-            bs = 'badge-secondary'; ic = 'trash'; ls = "DIHAPUS";
-        }
-        
-        // --- B. ICON INFORMASI KETERANGAN ---
-        var infoIcon = "";
-        if (row.keterangan && row.keterangan.trim().length > 0) {
-            // Escape tanda kutip agar tooltip aman
-            var safeKet = row.keterangan.replace(/"/g, '&quot;');
-            infoIcon = `<i class="fas fa-info-circle text-info ml-1" style="cursor:help;" title="${safeKet}" data-toggle="tooltip"></i>`;
-        }
-        
-        var badgeStatusData = `<span class="badge badge-sultan ${bs}"><i class="fas fa-${ic} mr-1"></i>${ls}</span>${infoIcon}`;
-
-        // --- C. LOGIKA LOCK (GEMBOK) ---
-        var isLocked = (ls === "DISETUJUI") && !isAdmin;
-
-        // --- D. TOMBOL AKSI ---
-        var btnEdit = isLocked 
-            ? `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-lock"></i></button>`
-            : `<button class="btn-icon-sultan btn-icon-sultan-warning" onclick="editLapbul('${row.source}','${row.rowId}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>`;
-
-        var safeNama = (row.namaSekolah || "").replace(/'/g, "\\'");
-        var btnHapus = isLocked
-            ? `<button class="btn-icon-sultan btn-light text-muted" disabled style="opacity:0.5; cursor:not-allowed;"><i class="fas fa-trash"></i></button>`
-            : `<button class="btn-icon-sultan btn-icon-sultan-danger" onclick="hapusLapbul('${row.source}','${row.rowId}','${safeNama}')" title="Hapus"><i class="fas fa-trash"></i></button>`;
-
-        var btnFile = (row.fileUrl && row.fileUrl.length > 5) 
-            ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="window.open('${row.fileUrl}', '_blank')" title="Lihat PDF"><i class="fas fa-eye"></i></button>` 
-            : '<span class="text-muted small">-</span>';
-
-        var btnVerif = "";
-        if (isAdmin) {
-             var safeFile = row.fileUrl || "";
-             btnVerif = `<button class="btn-icon-sultan btn-icon-sultan-success mr-1" 
-                onclick="verifikasiLapbul('${row.source}', '${row.rowId}', '${safeNama}', '${row.bulan}', '${row.tahun}', '${safeFile}')" 
-                title="Verifikasi">
-                <i class="fas fa-check-double"></i>
-            </button>`;
-        }
-
-        // --- E. METADATA ---
-        var metaKirim = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglKirim || '-'}</span><span class="d-block text-muted text-nowrap">${row.userKirim || '-'}</span></div>`;
-        var metaEdit  = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglEdit || '-'}</span><span class="d-block text-muted text-nowrap">${row.userEdit || '-'}</span></div>`;
-        var metaVerif = `<div style="line-height:1.2;font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglVerif || '-'}</span><span class="d-block text-muted text-nowrap">${row.verifikator || '-'}</span></div>`;
-
-        // --- F. RENDER ROW ---
-        h += `<tr class="tr-animasi">
-                <td class="col-sticky-left font-weight-bold text-dark bg-white align-middle">${row.namaSekolah}</td>
-                <td class="text-center align-middle">${row.npsn || '-'}</td>
-                <td class="text-center align-middle font-weight-bold">${row.bulan}</td>
-                <td class="text-center align-middle">${row.tahun}</td>
-                <td class="text-center align-middle small">${row.statusSekolah || '-'}</td>
-                <td class="text-center align-middle">${row.jenjang}</td>
-                <td class="text-center align-middle">${row.rombel || row.totalRombel || '0'}</td>
-                <td class="text-center align-middle">${btnFile}</td>
-                <td class="text-center align-middle text-nowrap">${badgeStatusData}</td>
-                <td class="text-center align-middle">
-                    <div class="d-flex justify-content-center" style="gap:4px">
-                        ${btnVerif} ${btnEdit} ${btnHapus}
-                    </div>
-                </td>
-                <td class="text-center align-middle">${metaKirim}</td>
-                <td class="text-center align-middle">${metaEdit}</td>
-                <td class="text-center align-middle">${metaVerif}</td>
-              </tr>`;
-    });
-
-    $('#bodyTabelLapbul').html(h);
-    $('#headTabelLapbul').show();
-    
-    if(typeof initDataTableStandard === 'function') {
-        initDataTableStandard('#tabelLapbul');
-    }
-    // Aktifkan tooltip (Bootstrap)
-    $('[data-toggle="tooltip"]').tooltip();
-    $('#bodyTabelLapbul').show();
-}
 
     function initDataTableStandard(id, empty) {
         if($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy();
@@ -2198,13 +2308,27 @@
         });
     }
 
-    function previewPDF(u) {
-        if(!u) return;
-        var c = u.replace('/view', '/preview');
-        $('#framePreview').attr('src', c);
-        $('#btnUnduh').attr('href', u);
+    // --- FUNGSI BUKA MODAL PREVIEW (DARI TABEL) ---
+    function previewPDF(url) {
+        if (!url) { Sultan.notif.gagal("Link file rusak/kosong."); return; }
+        
+        // Trik Google Drive: Ubah '/view' menjadi '/preview' agar tampilan bersih (tanpa menu Google)
+        var cleanUrl = url.replace('/view', '/preview');
+        
+        // 1. Set SRC Iframe
+        $('#framePreview').attr('src', cleanUrl);
+        
+        // 2. Set Link Download (Tombol Unduh di Modal)
+        $('#btnUnduh').attr('href', url);
+        
+        // 3. Tampilkan Modal
         $('#modalPreview').modal('show');
     }
+
+    // Listener: Reset Iframe saat modal ditutup (Supaya memori bersih)
+    $('#modalPreview').on('hidden.bs.modal', function () {
+        $('#framePreview').attr('src', '');
+    });
 
     // =================================================================
     // 4. LOGIKA FORM PAUD (NEW)
@@ -2550,78 +2674,144 @@
         }
     }
 
-    // 2. FUNGSI MENGISI FORM (AUTO POPULATE)
+    // 2. FUNGSI MENGISI FORM (AUTO POPULATE SD) - FIX DATA MURID DINAMIS
     function populateFormSD(data) {
-        // --- 1. HELPER: FUNGSI PENCARI DATA CERDAS ---
-        // Fungsi ini mencari nilai di 'data' yang key-nya mirip dengan kata kunci
+        
+        // --- HELPER: PENCARI DATA ---
         var cariData = function(keywords) {
-            // keywords bisa array ["no sk", "nomor sk"] atau string tunggal
             if (!Array.isArray(keywords)) keywords = [keywords];
-            
-            // Loop semua key di data server
             for (var key in data) {
-                var k = key.toLowerCase();
-                // Cek apakah key mengandung salah satu keyword
+                var k = String(key).toLowerCase();
                 for (var i = 0; i < keywords.length; i++) {
-                    if (k.includes(keywords[i].toLowerCase())) {
-                        return data[key]; // Ketemu! Kembalikan nilainya
+                    if (k === keywords[i].toLowerCase() || k.includes(keywords[i].toLowerCase())) {
+                        return data[key]; 
                     }
                 }
             }
-            return ""; // Tidak ketemu
+            return "";
         };
-        // ---------------------------------------------
 
-        // A. LOOPING OTOMATIS (Untuk Data Umum & Rombel/Murid)
+        // --- A. AUTO FILL (Input Statis) ---
         $.each(data, function(rawKey, value) {
             var cleanKey = String(rawKey).trim().toLowerCase().replace(/\s+/g, '_');
             var input = $(`#formSD [name="${cleanKey}"], #formSD [name="${rawKey}"]`);
             
+            // Hanya isi jika inputnya SUDAH ADA di layar (Statis)
             if (input.length > 0) {
-                if(value === 0 || value === "0") input.val(0);
-                else if (input.attr('type') === 'radio') input.filter(`[value="${value}"]`).prop('checked', true);
-                else input.val(value);
+                var type = input.attr('type');
+                if ((type === 'date' || type === 'number') && (value === "-" || value === "")) {
+                    input.val("");
+                } else if (type === 'radio') {
+                    input.filter(`[value="${value}"]`).prop('checked', true);
+                } else {
+                    input.val(value);
+                }
             }
         });
 
-        // B. MAPPING DATA TAB 1 (LEGALITAS, AKREDITASI, KONTAK)
-        // Kita gunakan cariData() agar tidak peduli nama kolom di Excel seperti apa
-        
-        // 1. Identitas Utama
+        // --- B. MAPPING IDENTITAS ---
         $('#val_npsn').val(cariData(["npsn"])); 
-        $('#val_nama').val(cariData(["nama sekolah", "nama_sekolah"]));
+        $('#val_nama').val(cariData(["nama sekolah"]));
         $('#inputSearchSekolah').val(cariData(["npsn"]) + " - " + cariData(["nama sekolah"]));
 
-        // 2. Legalitas (Yayasan & Ijin)
-        // Mencari kolom yang mengandung kata "yayasan", "pendirian", dll
         $('#in_yayasan').val(cariData(["yayasan"])); 
         $('#in_no_sk_pendirian').val(cariData(["sk pendirian", "no. sk pendirian"]));
-        $('#in_tgl_pendirian').val(cariData(["tgl pendirian", "tanggal pendirian"]));
-        $('#in_no_sk_ijin').val(cariData(["sk ijin", "sk izin", "no. sk operasional"]));
-        $('#in_tgl_ijin').val(cariData(["tgl ijin", "tgl izin", "tanggal operasional"]));
-
-        // 3. Akreditasi
+        $('#in_tgl_pendirian').val(cariData(["tgl pendirian"]));
+        $('#in_no_sk_ijin').val(cariData(["sk ijin", "sk izin"]));
+        $('#in_tgl_ijin').val(cariData(["tgl ijin", "tgl izin"]));
+        
         $('#in_akreditasi').val(cariData(["akreditasi"])); 
-        $('#in_skor').val(cariData(["skor", "nilai akreditasi"]));
-        $('#in_no_sertifikat').val(cariData(["no sertifikat", "nomor sertifikat"])); 
-        $('#in_tgl_sertifikat').val(cariData(["tgl sertifikat", "tanggal sertifikat"])); // Pastikan format YYYY-MM-DD dari backend
+        $('#in_skor').val(cariData(["skor", "nilai"]));
+        $('#in_no_sertifikat').val(cariData(["no sertifikat"])); 
+        $('#in_tgl_sertifikat').val(cariData(["tgl sertifikat"])); 
+        
+        $('#in_alamat').val(cariData(["alamat"])); 
+        $('#in_telepon').val(cariData(["telepon", "hp"])); 
+        $('#in_email').val(cariData(["email"])); 
 
-        // 4. Kontak & Lokasi
-        $('#in_alamat').val(cariData(["alamat", "jalan"])); 
-        $('#in_telepon').val(cariData(["telepon", "no hp", "nomor hp"])); 
-        $('#in_email').val(cariData(["email", "surel"])); 
-        $('#in_kelurahan').val(cariData(["kelurahan", "desa"]));
-        $('#in_kecamatan').val(cariData(["kecamatan"]));
-
-        // C. RENDER ROMBEL (Wajib Trigger Change)
+        // --- C. MAPPING ROMBEL & MURID DINAMIS (SOLUSI MASALAH TAB 2) ---
         for(var i=1; i<=6; i++) {
-            // Cari data Rombel 1, rombel_1, atau Rombel Kelas 1
+            // 1. Set Dropdown Jumlah Rombel & Trigger Change
             var valRom = cariData(["rombel " + i, "rombel_" + i]);
-            if(valRom) $(`[name="rombel_${i}"]`).val(valRom).trigger('change');
+            
+            // Kita paksa trigger change agar input L/P (K1 L, K1A L, dll) muncul
+            if(valRom !== "") {
+                $(`[name="rombel_${i}"]`).val(valRom).trigger('change');
+            }
+
+            // 2. ISI DATA MURID (SETELAH INPUT MUNCUL)
+            // Pola: k1_l, k1a_l, k1b_l, k1c_l
+            var suffixes = ['', 'a', 'b', 'c']; // Induk, Pararel A, B, C
+            
+            suffixes.forEach(function(suf) {
+                // Cari Header Excel: "K1 L", "K1A L", "K1B L"
+                // Nama Input HTML: "k1_l", "k1a_l", "k1b_l"
+                
+                // Laki-Laki
+                var keyL_Excel = `k${i}${suf} l`; // k1 l
+                var keyL_Input = `k${i}${suf}_l`; // k1_l
+                var valL = cariData([keyL_Excel, keyL_Input]);
+                if(valL !== "") $(`input[name="${keyL_Input}"]`).val(valL);
+
+                // Perempuan
+                var keyP_Excel = `k${i}${suf} p`; // k1 p
+                var keyP_Input = `k${i}${suf}_p`; // k1_p
+                var valP = cariData([keyP_Excel, keyP_Input]);
+                if(valP !== "") $(`input[name="${keyP_Input}"]`).val(valP);
+            });
+
+            // 3. ISI DATA AGAMA (Karena nama inputnya juga unik)
+            var agamas = ['islam', 'kristen', 'katolik', 'hindu', 'buddha', 'konghucu'];
+            agamas.forEach(function(agm) {
+                // Header Excel: "K1 Islam L"
+                // Input HTML: "k1_islam_l"
+                
+                var valAgmL = cariData([`k${i} ${agm} l`, `k${i}_${agm}_l`]);
+                if(valAgmL !== "") {
+                    // Pastikan dropdown "Ada/Tidak" terpilih "Ada" (Value 1) dulu
+                    $(`select[onchange*="'${agm}${i}'"]`).val("1").trigger('change');
+                    $(`input[name="k${i}_${agm}_l"]`).val(valAgmL);
+                }
+
+                var valAgmP = cariData([`k${i} ${agm} p`, `k${i}_${agm}_p`]);
+                if(valAgmP !== "") {
+                    $(`input[name="k${i}_${agm}_p"]`).val(valAgmP);
+                }
+            });
         }
 
-        // D. PREVIEW FILE
-        var urlFile = cariData(["dokumen", "file", "upload", "laporan bulan"]);
+        // --- D. MAPPING MANUAL PTK ---
+        var mapPTK = [
+            { id: 'ks_nonasn',     keys: ['ks non asn'] },
+            { id: 'gkris_pns',     keys: ['gpa kris pns'] },
+            { id: 'gkris_pppk',    keys: ['gpa kris pppk'] },
+            { id: 'gkris_pppk_pw', keys: ['gpa kris pppk pw'] },
+            { id: 'gkris_gty',     keys: ['gpa kris gty'] },
+            { id: 'gkris_gtt',     keys: ['gpa kris gtt'] },
+            { id: 'gkat_pns',      keys: ['gpa kat pns'] },
+            { id: 'gkat_pppk',     keys: ['gpa kat pppk'] },
+            { id: 'gkat_pppk_pw',  keys: ['gpa kat pppk pw'] },
+            { id: 'gkat_gty',      keys: ['gpa kat gty'] },
+            { id: 'gkat_gtt',      keys: ['gpa kat gtt'] },
+            { id: 'adm_pns',       keys: ['adm kan pns'] },
+            { id: 'adm_pppk',      keys: ['adm kan pppk'] },
+            { id: 'adm_pppk_pw',   keys: ['adm kan pppk pw'] },
+            { id: 'adm_pty',       keys: ['adm kan pty'] },
+            { id: 'adm_ptt',       keys: ['adm kan ptt'] },
+            { id: 'lain_pns',      keys: ['tdklain pns'] },
+            { id: 'lain_pppk',     keys: ['tdklain pppk'] },
+            { id: 'lain_pppk_pw',  keys: ['tdklain pppk pw'] },
+            { id: 'lain_pty',      keys: ['tdklain pty'] },
+            { id: 'lain_ptt',      keys: ['tdklain ptt'] }
+        ];
+
+        mapPTK.forEach(function(m) {
+            var hasil = cariData(m.keys);
+            if (hasil !== "") $(`#formSD input[name="${m.id}"]`).val(hasil);
+        });
+
+        // --- E. FILE & FINALISASI ---
+        var urlFile = cariData(["dokumen", "file"]);
         URL_FILE_LAMA = urlFile;
 
         if (urlFile && urlFile.length > 5) {
@@ -2632,16 +2822,10 @@
             $('#msgEditFileSD').addClass('d-none');
         }
 
-        // E. ISI DETAIL ANGKA (Delayed)
         setTimeout(function() {
-            $.each(data, function(rawKey, value) {
-                var cleanKey = String(rawKey).trim().toLowerCase().replace(/\s+/g, '_');
-                var inputDin = $(`#formSD input[name="${cleanKey}"]`);
-                if(inputDin.length > 0) inputDin.val((value === 0 || value === "0") ? 0 : value);
-            });
             for(var k=1; k<=6; k++) { hitungValidasiKelas(k); }
-            if(typeof hitungTotalPTK_SD === 'function') hitungTotalPTK_SD();
-        }, 500);
+            $('.val-ks').first().trigger('change');
+        }, 800);
     }
 
     // --- FUNGSI BUKA MODAL PREVIEW ---
@@ -2890,7 +3074,9 @@
         d.total_rombel = parseInt($('#formPAUD [name="jumlah_rombel"]').val()) || 0;
         
         var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-        d.user_login = user.nama; 
+        var namaAsli = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin";
+        d.user_login = namaAsli; 
+
         d.EDIT_ROW_ID = $('#formPAUD input[name="EDIT_ROW_ID"]').val();
 
         google.script.run.withSuccessHandler(function(res) {
@@ -3072,12 +3258,12 @@ function hapusLapbul(source, rowId, namaSekolah) {
         $('#modalVerifikasi').modal('show');
     }
 
-    // FUNGSI SIMPAN VERIFIKASI
+    // FUNGSI SIMPAN VERIFIKASI (FIX NAMA ADMIN)
     function submitVerifikasi() {
         var status = $('#selStatusVerif').val();
         var ket = $('#txtKetVerif').val();
 
-        // Validasi
+        // 1. Validasi Input
         if (!status) {
             Sultan.notif.gagal("Harap pilih Status Keputusan!");
             $('#selStatusVerif').focus();
@@ -3090,15 +3276,21 @@ function hapusLapbul(source, rowId, namaSekolah) {
              return;
         }
 
-        // Loading
+        // 2. Loading State
         var btn = $('#btnSimpanVerif');
         var txt = btn.html();
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
 
-        // User Login
+        // 3. AMBIL DATA USER (PERBAIKAN DI SINI)
         var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-        var userLogin = user.nama || "Admin";
+        
+        // Gunakan logika prioritas agar yang terambil adalah Nama Lengkap
+        var userLogin = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin";
 
+        // Debugging (Cek di Console F12)
+        console.log("ADMIN VERIFIKATOR:", userLogin);
+
+        // 4. Kirim ke Server
         google.script.run
             .withSuccessHandler(function(res) {
                 btn.prop('disabled', false).html(txt);
@@ -3107,29 +3299,24 @@ function hapusLapbul(source, rowId, namaSekolah) {
                     $('#modalVerifikasi').modal('hide');
                     Sultan.notif.sukses(res.message);
 
-                    // --- UPDATE CACHE LOKAL (FIXED) ---
+                    // --- UPDATE CACHE LOKAL (Agar tabel langsung berubah) ---
                     if (typeof DATA_LAPBUL_CACHE !== 'undefined') {
                         var targetId = String(V_TARGET_ID);
                         
                         for(var k=0; k<DATA_LAPBUL_CACHE.length; k++) {
-                            // Cek RowID dan Source agar tidak salah update
                             if(String(DATA_LAPBUL_CACHE[k].rowId) === targetId && DATA_LAPBUL_CACHE[k].source === V_TARGET_SOURCE) {
                                 
-                                // 1. Update Status
+                                // Update Data di Tabel Lokal
                                 DATA_LAPBUL_CACHE[k].statusData = res.newData.status;
-                                
-                                // 2. Update Metadata Verifikasi (INI YANG TADINYA HILANG)
                                 DATA_LAPBUL_CACHE[k].tglVerif = res.newData.tgl;
-                                DATA_LAPBUL_CACHE[k].verifikator = res.newData.user;
+                                DATA_LAPBUL_CACHE[k].verifikator = userLogin; // Pakai nama yang sudah diperbaiki
                                 DATA_LAPBUL_CACHE[k].keterangan = res.newData.ket;
-
-                                // 3. Update Sort Time (Agar naik ke atas karena baru diedit)
-                                DATA_LAPBUL_CACHE[k].sortTime = new Date().getTime();
+                                DATA_LAPBUL_CACHE[k].sortTime = new Date().getTime(); // Naikkan ke atas
                                 break;
                             }
                         }
                         
-                        // Render Ulang
+                        // Render Ulang Tabel
                         renderTabel(DATA_LAPBUL_CACHE);
                     } else {
                         handleTombolCari(); 

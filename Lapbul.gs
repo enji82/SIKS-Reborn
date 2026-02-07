@@ -56,7 +56,7 @@ function getLapbulKelolaData(filterJenjang, filterBulan, filterTahun, filterStat
               tahun: headers.indexOf("tahun"),
               jenjang: headers.indexOf("jenjang"),
               statusSekolah: headers.findIndex(h => h.includes("status sekolah") || h === "status"),
-              rombel: (sourceLabel === 'PAUD') ? headers.indexOf("jumlah rombel") : headers.indexOf("total rombel"),
+              rombel: headers.findIndex(function(h) { return h.includes("rombel") || h.includes("jml") || h.includes("total"); }),
               file: headers.findIndex(h => h.includes("file") || h.includes("dokumen"))
           };
 
@@ -169,131 +169,178 @@ function getSekolahByNPSN(npsn) {
   } catch (e) { return { error: e.toString() }; }
 }
 
-// --- 3. SIMPAN DATA SD (AUTO SUM ROMBEL) ---
-function simpanLapbulSD_Complex(form, fileData) {
-  try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SD_DATA);
-    const sheet = ss.getSheetByName("Input SD");
-    
-    // Validasi Ukuran 200KB
-    if (fileData && fileData.data.length > 280000) {
-         return { success: false, message: "Ukuran file terlalu besar (Max 200KB)!" };
-    }
+/* ======================================================================
+   LAPBUL.GS - VERSI FINAL (SMART MAPPING)
+   Menangani SD & PAUD dengan logika pencarian kolom otomatis.
+   ====================================================================== */
 
+// --- 1. FUNGSI PEMANGGIL UTAMA (SD) ---
+function simpanLapbulSD_Complex(form, fileData) {
+  // Pastikan ID ini benar milik Spreadsheet SD Anda
+  var ID_SD = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s"; 
+  return prosesSimpanLengkap(ID_SD, "Input SD", "SD", form, fileData);
+}
+
+// --- 2. FUNGSI PEMANGGIL UTAMA (PAUD) ---
+function simpanLapbulPAUD(form, fileData) {
+  // Pastikan ID ini benar milik Spreadsheet PAUD Anda
+  var ID_PAUD = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs"; 
+  return prosesSimpanLengkap(ID_PAUD, "Input PAUD", "PAUD", form, fileData);
+}
+
+// --- 3. MESIN PINTAR (CORE ENGINE) ---
+/* ======================================================================
+   MESIN PENYIMPANAN PINTAR - VERSI LENGKAP (SD & PAUD)
+   Update: Menambahkan Mapping Khusus untuk Kolom PAUD
+   ====================================================================== */
+function prosesSimpanLengkap(idSpreadsheet, namaSheet, source, form, fileData) {
+  try {
+    var ss = SpreadsheetApp.openById(idSpreadsheet);
+    var sheet = ss.getSheetByName(namaSheet);
+    
+    // 1. UPLOAD FILE
     var fileUrl = "";
     if (fileData && fileData.data) {
-       var folderId = "1I8DRQYpBbTt1mJwtD1WXVD6UK51TC8El"; 
-       var fileName = "Laporan Bulan - " + form.nama_sekolah + " - " + form.bulan + " - " + form.tahun;
-       fileUrl = uploadFileToDrive(fileData, folderId, fileName);
+      // ID Folder Drive (Sesuaikan jika perlu)
+      var folderId = "1I8DRQYpBbTt1mJwtD1WXVD6UK51TC8El"; 
+      var blob = Utilities.newBlob(Utilities.base64Decode(fileData.data), fileData.mimeType, fileData.name);
+      var file = (folderId) ? DriveApp.getFolderById(folderId).createFile(blob) : DriveApp.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrl = file.getUrl();
     }
 
-    var timestamp = new Date();
+    // 2. BACA HEADER & SIAPKAN ARRAY
+    // Baca sampai kolom 300 agar kolom jauh (User Kirim) terjangkau
+    var headers = sheet.getRange(1, 1, 1, 300).getValues()[0].map(function(h) { 
+      return String(h).toLowerCase().trim(); 
+    });
     
-    // Helper ambil value angka
-    const val = (key) => parseInt(form[key]) || 0;
+    var rowData = new Array(headers.length).fill(""); 
 
-    // --- LOGIKA HITUNG TOTAL ROMBEL (AUTOMATIC) ---
-    // Dijumlahkan dari Rombel 1 (Col I) + Rombel 2 (Col AD) + ... + Rombel 6 (Col DJ)
-    // Sesuai input name di form: rombel_1, rombel_2, ...
-    var totalRombelHitung = val('rombel_1') + val('rombel_2') + val('rombel_3') + val('rombel_4') + val('rombel_5') + val('rombel_6');
-
-    // MAPPING DATA KE ARRAY (A - HP)
-    var rowData = [
-      timestamp,          // A: Tanggal Kirim
-      form.bulan,         // B: Bulan
-      form.tahun,         // C: Tahun
-      form.npsn,          // D: NPSN
-      form.status_sekolah,// E: Status Sekolah
-      totalRombelHitung,  // F: Rombel (HASIL PENJUMLAHAN OTOMATIS)
-      form.jenjang,       // G: Jenjang
-      form.nama_sekolah,  // H: Nama Sekolah
+    // Helper: Fungsi Pengisi Kolom (Bisa terima 1 nama atau Array nama)
+    var isi = function(daftarNama, nilai) {
+      if (!Array.isArray(daftarNama)) daftarNama = [daftarNama];
       
-      // --- KELAS 1 (I - AC) ---
-      val('rombel_1'),    // I: Rombel 1
-      val('k1_l'), val('k1_p'), 
-      val('k1a_l'), val('k1a_p'), val('k1b_l'), val('k1b_p'), val('k1c_l'), val('k1c_p'), 
-      val('k1_islam_l'), val('k1_islam_p'), val('k1_kristen_l'), val('k1_kristen_p'), 
-      val('k1_katolik_l'), val('k1_katolik_p'), val('k1_hindu_l'), val('k1_hindu_p'), 
-      val('k1_buddha_l'), val('k1_buddha_p'), val('k1_konghucu_l'), val('k1_konghucu_p'),
-
-      // --- KELAS 2 (AD - AX) ---
-      val('rombel_2'),    // AD: Rombel 2
-      val('k2_l'), val('k2_p'), 
-      val('k2a_l'), val('k2a_p'), val('k2b_l'), val('k2b_p'), val('k2c_l'), val('k2c_p'),
-      val('k2_islam_l'), val('k2_islam_p'), val('k2_kristen_l'), val('k2_kristen_p'), 
-      val('k2_katolik_l'), val('k2_katolik_p'), val('k2_hindu_l'), val('k2_hindu_p'), 
-      val('k2_buddha_l'), val('k2_buddha_p'), val('k2_konghucu_l'), val('k2_konghucu_p'),
-
-      // --- KELAS 3 (AY - BS) ---
-      val('rombel_3'),    // AY: Rombel 3
-      val('k3_l'), val('k3_p'), 
-      val('k3a_l'), val('k3a_p'), val('k3b_l'), val('k3b_p'), val('k3c_l'), val('k3c_p'),
-      val('k3_islam_l'), val('k3_islam_p'), val('k3_kristen_l'), val('k3_kristen_p'), 
-      val('k3_katolik_l'), val('k3_katolik_p'), val('k3_hindu_l'), val('k3_hindu_p'), 
-      val('k3_buddha_l'), val('k3_buddha_p'), val('k3_konghucu_l'), val('k3_konghucu_p'),
-
-      // --- KELAS 4 (BT - CN) ---
-      val('rombel_4'),    // BT: Rombel 4
-      val('k4_l'), val('k4_p'), 
-      val('k4a_l'), val('k4a_p'), val('k4b_l'), val('k4b_p'), val('k4c_l'), val('k4c_p'),
-      val('k4_islam_l'), val('k4_islam_p'), val('k4_kristen_l'), val('k4_kristen_p'), 
-      val('k4_katolik_l'), val('k4_katolik_p'), val('k4_hindu_l'), val('k4_hindu_p'), 
-      val('k4_buddha_l'), val('k4_buddha_p'), val('k4_konghucu_l'), val('k4_konghucu_p'),
-
-      // --- KELAS 5 (CO - DI) ---
-      val('rombel_5'),    // CO: Rombel 5
-      val('k5_l'), val('k5_p'), 
-      val('k5a_l'), val('k5a_p'), val('k5b_l'), val('k5b_p'), val('k5c_l'), val('k5c_p'),
-      val('k5_islam_l'), val('k5_islam_p'), val('k5_kristen_l'), val('k5_kristen_p'), 
-      val('k5_katolik_l'), val('k5_katolik_p'), val('k5_hindu_l'), val('k5_hindu_p'), 
-      val('k5_buddha_l'), val('k5_buddha_p'), val('k5_konghucu_l'), val('k5_konghucu_p'),
-
-      // --- KELAS 6 (DJ - ED) ---
-      val('rombel_6'),    // DJ: Rombel 6
-      val('k6_l'), val('k6_p'), 
-      val('k6a_l'), val('k6a_p'), val('k6b_l'), val('k6b_p'), val('k6c_l'), val('k6c_p'),
-      val('k6_islam_l'), val('k6_islam_p'), val('k6_kristen_l'), val('k6_kristen_p'), 
-      val('k6_katolik_l'), val('k6_katolik_p'), val('k6_hindu_l'), val('k6_hindu_p'), 
-      val('k6_buddha_l'), val('k6_buddha_p'), val('k6_konghucu_l'), val('k6_konghucu_p'),
-
-      // --- PTK (EE - HI) ---
-      val('ks_pns'), val('ks_pppk'), val('ks_nonasn'), 
+      var nilaiFinal = (nilai === null || nilai === undefined) ? "" : String(nilai);
       
-      val('gk_pns'), val('gk_pppk'), val('gk_pppk_pw'), val('gk_gty'), val('gk_gtt'), 
-      val('gpai_pns'), val('gpai_pppk'), val('gpai_pppk_pw'), val('gpai_gty'), val('gpai_gtt'), 
-      val('gpjok_pns'), val('gpjok_pppk'), val('gpjok_pppk_pw'), val('gpjok_gty'), val('gpjok_gtt'), 
-      val('gkris_pns'), val('gkris_pppk'), val('gkris_pppk_pw'), val('gkris_gty'), val('gkris_gtt'), 
-      val('gkat_pns'), val('gkat_pppk'), val('gkat_pppk_pw'), val('gkat_gty'), val('gkat_gtt'), 
-      
-      val('gbing_pns'), val('gbing_pppk'), val('gbing_pppk_pw'), val('gbing_gty'), val('gbing_gtt'), 
-      val('gmap_pns'), val('gmap_pppk'), val('gmap_pppk_pw'), val('gmap_gty'), val('gmap_gtt'), 
-      
-      val('puo_pns'), val('puo_pppk'), val('puo_pppk_pw'), val('puo_pty'), val('puo_ptt'), 
-      val('olo_pns'), val('olo_pppk'), val('olo_pppk_pw'), val('olo_pty'), val('olo_ptt'), 
-      val('plo_pns'), val('plo_pppk'), val('plo_pppk_pw'), val('plo_pty'), val('plo_ptt'), 
-      val('ptlo_pns'), val('ptlo_pppk'), val('ptlo_pppk_pw'), val('ptlo_pty'), val('ptlo_ptt'), 
-      val('adm_pns'), val('adm_pppk'), val('adm_pppk_pw'), val('adm_pty'), val('adm_ptt'), 
-      val('pjg_pns'), val('pjg_pppk'), val('pjg_pppk_pw'), val('pjg_pty'), val('pjg_ptt'), 
-      val('tas_pns'), val('tas_pppk'), val('tas_pppk_pw'), val('tas_pty'), val('tas_ptt'), 
-      val('pust_pns'), val('pust_pppk'), val('pust_pppk_pw'), val('pust_pty'), val('pust_ptt'), 
-      val('lain_pns'), val('lain_pppk'), val('lain_pppk_pw'), val('lain_pty'), val('lain_ptt'), 
+      // Cek satu per satu kemungkinan nama header
+      for (var i = 0; i < daftarNama.length; i++) {
+        var keyword = daftarNama[i].toLowerCase();
+        var idx = headers.indexOf(keyword);
+        
+        if (idx > -1) {
+          rowData[idx] = nilaiFinal;
+          return; // Stop jika sudah ketemu
+        }
+      }
+    };
 
-      // --- METADATA (HJ - HP) ---
-      fileUrl,          // HJ: Dokumen (Index 217)
-      "Diproses",       // HK: Status (Index 218)
-      form.user_login,  // HL: User Kirim (Index 219)
-      "",               // HM: Tanggal Edit (Index 220)
-      "",               // HN: User Edit (Index 221)
-      "",               // HO: Tanggal Verif (Index 222)
-      ""                // HP: Admin Verif (Index 223)
-    ];
+    // 3. MAPPING DATA UMUM (SD & PAUD)
+    isi(["nama sekolah", "nama"], form.nama_sekolah);
+    isi(["npsn"], form.npsn);
+    isi(["bulan"], form.bulan);
+    isi(["tahun"], form.tahun);
+    isi(["jenjang"], form.jenjang);
+    isi(["status sekolah", "status"], form.status_sekolah);
+    isi(["rombel", "total rombel", "jumlah rombel"], form.total_rombel || form.jumlah_rombel);
 
+    // --- MAPPING KHUSUS PAUD (SOLUSI MASALAH ANDA) ---
+    if (source === "PAUD") {
+        // A. DATA MURID (USIA)
+        isi("0-1 L", form.u01_l); isi("0-1 P", form.u01_p);
+        isi("1-2 L", form.u12_l); isi("1-2 P", form.u12_p);
+        isi("2-3 L", form.u23_l); isi("2-3 P", form.u23_p);
+        isi("3-4 L", form.u34_l); isi("3-4 P", form.u34_p);
+        isi("4-5 L", form.u45_l); isi("4-5 P", form.u45_p);
+        isi("5-6 L", form.u56_l); isi("5-6 P", form.u56_p);
+        isi(["> 6 L", ">6 l"], form.u6_l);  
+        isi(["> 6 P", ">6 p"], form.u6_p);
+
+        // B. DATA KELOMPOK (TK)
+        isi("A L", form.kel_a_l); isi("A P", form.kel_a_p);
+        isi("B L", form.kel_b_l); isi("B P", form.kel_b_p);
+
+        // C. DATA PTK (KEPALA SEKOLAH)
+        isi("KS GTY", form.ks_gty);
+        isi("KS GTT", form.ks_gtt);
+        isi("KS PNS", form.ks_pns);
+        isi("KS PPPK", form.ks_pppk);
+
+        // D. DATA PTK (GURU KELAS)
+        isi("GK GTY", form.gk_gty);
+        isi("GK GTT", form.gk_gtt);
+        isi("GK PNS", form.gk_pns);
+        isi("GK PPPK", form.gk_pppk);
+
+        // E. DATA PTK (GURU PENDAMPING)
+        isi("GP GTY", form.gp_gty);
+        isi("GP GTT", form.gp_gtt);
+        isi("GP PNS", form.gp_pns);
+        isi("GP PPPK", form.gp_pppk);
+
+        // F. DATA TENDIK (NAMA KOLOM BEDA DIKIT)
+        isi(["Penjaga", "Penjaga Sekolah"], form.td_penjaga);
+        isi(["TAS", "Tenaga Administrasi", "Adm"], form.td_adm);
+        isi(["Pustakawan", "Tenaga Perpustakaan"], form.td_perpus);
+        isi(["Tendik Lain", "Tendik Lainnya"], form.td_lain);
+    } 
+    else {
+        // --- JIKA SD (Tetap gunakan Looping Otomatis) ---
+        for (var key in form) {
+           isi([key, key.replace(/_/g, " ")], form[key]);
+        }
+    }
+
+    // 4. METADATA SYSTEM & FILE
+    isi(["dokumen", "file laporan", "link file"], fileUrl);
+    
+    var now = Utilities.formatDate(new Date(), "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
+    isi(["waktu kirim", "tgl kirim", "tanggal kirim", "timestamp"], now);
+    isi(["status data", "status"], "Diproses");
+
+    // 5. USER KIRIM (DENGAN FALLBACK)
+    var userLogin = form.user_login || "Admin";
+    // Cari kolom User Kirim, User Input, atau Pengirim
+    isi(["user kirim", "user input", "pengirim"], userLogin);
+
+    // 6. SIMPAN
     sheet.appendRow(rowData);
-    updateDataSekolahMaster(form);
+    
+    // Update Data Master jika perlu
+    if (typeof updateDataSekolahMaster === 'function') {
+        updateDataSekolahMaster(form);
+    }
 
-    return { success: true, message: "Laporan Disimpan & Data Sekolah Diperbarui" };
+    return { success: true, message: "Laporan berhasil disimpan! (" + userLogin + ")" };
 
-  } catch (e) { return { success: false, message: "Gagal Simpan SD: " + e.toString() }; }
+  } catch (e) {
+    return { success: false, message: "Error Server: " + e.toString() };
+  }
+}
+
+// --- 4. FUNGSI UPDATE MASTER (Tetap Pertahankan yang Lama) ---
+function updateDataSekolahMaster(form) {
+  try {
+    // GANTI ID SPREADSHEET MASTER DATA ANDA
+    const ss = SpreadsheetApp.openById("1wiDKez4rL5UYnpP2-OZjYowvmt1nRx-fIMy9trJlhBA");
+    const sheet = ss.getSheetByName("Data_Sekolah");
+    const data = sheet.getDataRange().getValues();
+    
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(form.npsn).trim()) {
+        // Update Kolom E (4) s.d P (15)
+        var updateRange = sheet.getRange(i + 1, 5, 1, 12); 
+        var updateValues = [[
+          form.yayasan, form.no_sk_pendirian, form.tgl_pendirian, 
+          form.no_sk_ijin, form.tgl_ijin, form.akreditasi, 
+          form.skor, form.no_sertifikat, form.tgl_sertifikat, 
+          form.alamat, form.telepon, form.email
+        ]];
+        updateRange.setValues(updateValues);
+        break;
+      }
+    }
+  } catch(e) { Logger.log("Update Master Error: " + e); }
 }
 
 function updateDataSekolahMaster(form) {
@@ -333,89 +380,6 @@ function updateDataSekolahMaster(form) {
     // Silent fail (jangan gagalkan laporan jika update master error, atau bisa di log)
     Logger.log("Update Master Error: " + e.toString());
   }
-}
-
-// --- 4. SIMPAN DATA PAUD (MAPPING FIXED) ---
-function simpanLapbulPAUD(form, fileData) {
-  try {
-    const ss = SpreadsheetApp.openById("1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs"); // ID Sesuai Request
-    const sheet = ss.getSheetByName("Input PAUD");
-    
-    // 1. Upload File
-    if (fileData && fileData.data.length > 280000) {
-         return { success: false, message: "Ukuran file terlalu besar (Max 200KB)!" };
-    }
-    
-    // Tentukan Folder berdasarkan Jenjang (Opsional, bisa disatukan)
-    var folderId = "18CxRT-eledBGRtHW1lFd2AZ8Bub6q5ra"; // Default Folder PAUD
-    
-    var fileUrl = "";
-    if (fileData && fileData.data) {
-       var fileName = "Laporan Bulan - " + form.nama_sekolah + " - " + form.bulan + " - " + form.tahun;
-       fileUrl = uploadFileToDrive(fileData, folderId, fileName);
-    }
-
-    var timestamp = new Date();
-    const val = (key) => parseInt(form[key]) || 0;
-
-    // 2. Mapping Data ke Kolom A - AW (Index 0 - 48)
-    // A=0, B=1, ... AW=48
-    var rowData = [
-      timestamp,          // A: Tanggal Kirim
-      form.bulan,         // B: Bulan
-      form.tahun,         // C: Tahun
-      form.npsn,          // D: NPSN
-      form.status_sekolah,// E: Status Sekolah
-      val('jumlah_rombel'),// F: Rombel
-      form.jenjang,       // G: Jenjang
-      form.nama_sekolah,  // H: Nama Sekolah
-      
-      // --- MENURUT USIA (I - V) ---
-      val('u01_l'), val('u01_p'), // I, J
-      val('u12_l'), val('u12_p'), // K, L
-      val('u23_l'), val('u23_p'), // M, N
-      val('u34_l'), val('u34_p'), // O, P
-      val('u45_l'), val('u45_p'), // Q, R
-      val('u56_l'), val('u56_p'), // S, T
-      val('u6_l'), val('u6_p'),   // U, V
-
-      // --- MENURUT ROMBEL (TK) (W - Z) ---
-      val('kel_a_l'), val('kel_a_p'), // W, X
-      val('kel_b_l'), val('kel_b_p'), // Y, Z
-
-      // --- KEPALA SEKOLAH (AA - AD) ---
-      val('ks_gty'), val('ks_gtt'), val('ks_pns'), val('ks_pppk'),
-
-      // --- GURU KELAS (AE - AH) ---
-      val('gk_gty'), val('gk_gtt'), val('gk_pns'), val('gk_pppk'),
-
-      // --- GURU PENDAMPING (AI - AL) ---
-      val('gp_gty'), val('gp_gtt'), val('gp_pns'), val('gp_pppk'),
-
-      // --- TENDIK (AM - AP) ---
-      val('td_penjaga'), // AM
-      val('td_adm'),     // AN
-      val('td_perpus'),  // AO
-      val('td_lain'),    // AP
-
-      // --- METADATA (AQ - AW) ---
-      fileUrl,           // AQ: Dokumen
-      form.user_login,   // AR: User Kirim
-      "",                // AS: Update (Tgl Edit)
-      "",                // AT: User Edit
-      "",                // AU: Verif
-      "",                // AV: Admin
-      "Diproses"         // AW: Status
-    ];
-
-    sheet.appendRow(rowData);
-
-    // 3. Update Master Data (Fungsi Global yang sudah dibuat sebelumnya)
-    updateDataSekolahMaster(form);
-
-    return { success: true, message: "Laporan PAUD Berhasil Disimpan" };
-
-  } catch (e) { return { success: false, message: "Gagal Simpan PAUD: " + e.toString() }; }
 }
 
 function uploadFileToDrive(fileData, folderId, fileName) {
@@ -855,7 +819,7 @@ function softDeleteLapbulSD(rowId, userLogin) {
     sheet.getRange(r, 221).setValue("'" + strTgl); // HM
     sheet.getRange(r, 222).setValue("'" + userLogin); // HN
     
-    return { success: true, message: "Data berhasil dihapus dari sistem." };
+    return { success: true, message: "Data berhasil dihapus dari database." };
     
   } catch (e) {
     return { success: false, message: "Gagal Hapus: " + e.toString() };
@@ -957,7 +921,7 @@ function processDeleteData(source, rowId, inputCode, userLogin) {
     // 7. HAPUS DARI SHEET UTAMA
     sheetMain.deleteRow(r);
 
-    return { success: true, message: "Data berhasil dihapus & diarsipkan." };
+    return { success: true, message: "Data berhasil dihapus dari database." };
 
   } catch (e) {
     return { success: false, message: "Error System: " + e.toString() };
@@ -1190,110 +1154,137 @@ function getDashboardLapbul(tahun, bulan) {
 }
 
 /* ======================================================================
-   1. FUNGSI KHUSUS PAUD (Hanya Buka Spreadsheet PAUD)
+   LAPBUL.GS - VERSI TEXT-ONLY (GET DISPLAY VALUES)
+   Mengambil tampilan teks layar agar aman dari error Date/Formula.
    ====================================================================== */
-function getLapbulDataPAUD(filterBulan, filterTahun, filterStatus, keyword) {
-  // Config
-  var SPREADSHEET_ID = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs"; // ID PAUD
-  var SHEET_NAME = "Input PAUD";
-  var LIMIT = (keyword && keyword.length > 2) ? 1000 : 300; // Limit Data
 
-  // Panggil Fungsi Helper (Lihat Langkah 2 dibawah)
-  return fetchDataSpecific(SPREADSHEET_ID, SHEET_NAME, "PAUD", LIMIT, filterBulan, filterTahun, filterStatus, keyword);
+function getLapbulDataSD(bulan, tahun, status, keyword) {
+  // CONFIG
+  var ID_SD = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s"; 
+  var NAMA_SHEET = "Input SD";
+
+  // SANITASI INPUT
+  var qBulan = (bulan) ? String(bulan).toLowerCase() : "";
+  var qTahun = (tahun) ? String(tahun) : "";
+  var qStatus = (status) ? String(status).toLowerCase() : "";
+  var qKey = (keyword) ? String(keyword).toLowerCase() : "";
+  var LIMIT = (qKey.length > 2) ? 1000 : 300; 
+
+  return fetchDataDisplay(ID_SD, NAMA_SHEET, "SD", LIMIT, qBulan, qTahun, qStatus, qKey);
 }
 
-/* ======================================================================
-   2. FUNGSI KHUSUS SD (Hanya Buka Spreadsheet SD)
-   ====================================================================== */
-function getLapbulDataSD(filterBulan, filterTahun, filterStatus, keyword) {
-  // Config
-  var SPREADSHEET_ID = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s"; // ID SD
-  var SHEET_NAME = "Input SD";
-  var LIMIT = (keyword && keyword.length > 2) ? 1000 : 300; // Limit Data
+function getLapbulDataPAUD(bulan, tahun, status, keyword) {
+  var ID_PAUD = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs"; 
+  var NAMA_SHEET = "Input PAUD"; 
 
-  // Panggil Fungsi Helper (Lihat Langkah 2 dibawah)
-  return fetchDataSpecific(SPREADSHEET_ID, SHEET_NAME, "SD", LIMIT, filterBulan, filterTahun, filterStatus, keyword);
+  var qBulan = (bulan) ? String(bulan).toLowerCase() : "";
+  var qTahun = (tahun) ? String(tahun) : "";
+  var qStatus = (status) ? String(status).toLowerCase() : "";
+  var qKey = (keyword) ? String(keyword).toLowerCase() : "";
+  var LIMIT = (qKey.length > 2) ? 1000 : 300;
+
+  return fetchDataDisplay(ID_PAUD, NAMA_SHEET, "PAUD", LIMIT, qBulan, qTahun, qStatus, qKey);
 }
 
-/* ======================================================================
-   3. HELPER FUNCTION (Logika Utama - Copy Paste ini juga)
-   ====================================================================== */
-function fetchDataSpecific(id, sheetName, sourceLabel, limit, reqBulan, reqTahun, reqStatus, reqKey) {
+// --- ENGINE: MENGGUNAKAN getDisplayValues() ---
+function fetchDataDisplay(id, sheetName, sourceLabel, limit, reqBulan, reqTahun, reqStatus, reqKey) {
   var result = [];
+  
   try {
-      var ss = SpreadsheetApp.openById(id);
-      var sheet = ss.getSheetByName(sheetName);
-      if (!sheet) return [];
+    var ss = SpreadsheetApp.openById(id);
+    var sheet = ss.getSheetByName(sheetName);
+    
+    // ERROR CHECKING
+    if (!sheet) return [{ error: "Sheet '" + sheetName + "' tidak ditemukan!" }];
 
-      var lastRow = sheet.getLastRow();
-      if (lastRow < 2) return [];
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return []; // Kosong
 
-      // Ambil Header
-      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).toLowerCase());
-      
-      // Mapping Index
-      var idx = {
-          nama: headers.indexOf("nama sekolah"),
-          npsn: headers.indexOf("npsn"),
-          bulan: headers.indexOf("bulan"),
-          tahun: headers.indexOf("tahun"),
-          jenjang: headers.indexOf("jenjang"),
-          statusSekolah: headers.findIndex(h => h.includes("status sekolah") || h === "status"),
-          rombel: (sourceLabel === 'PAUD') ? headers.indexOf("jumlah rombel") : headers.indexOf("total rombel"),
-          file: headers.findIndex(h => h.includes("file") || h.includes("dokumen"))
-      };
-      
-      var col = (sourceLabel === 'PAUD') ? 
-                { tglKirim:0, userKirim:43, tglEdit:44, userEdit:45, tglVerif:46, userVerif:47, statusData:48, ket:49 } : 
-                { tglKirim:0, userKirim:219, tglEdit:220, userEdit:221, tglVerif:222, userVerif:223, statusData:218, ket:224 };
+    // 1. TENTUKAN RANGE (Potong Data)
+    var startRow = Math.max(2, lastRow - limit + 1);
+    var numRows = (lastRow - startRow + 1);
+    
+    // 2. AMBIL HEADER (Baris 1)
+    // getValues() aman untuk header karena biasanya string
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function(h) { return String(h).toLowerCase(); });
+    
+    // 3. MAPPING KOLOM
+    var idx = {
+        nama: headers.indexOf("nama sekolah"),
+        npsn: headers.indexOf("npsn"),
+        bulan: headers.indexOf("bulan"),
+        tahun: headers.indexOf("tahun"),
+        jenjang: headers.indexOf("jenjang"),
+        status: headers.findIndex(function(h) { return h.includes("status sekolah") || h === "status"; }),
+        rombel: (sourceLabel === 'PAUD') ? headers.indexOf("jumlah rombel") : headers.indexOf("total rombel"),
+        file: headers.findIndex(function(h) { return h.includes("file") || h.includes("dokumen"); })
+    };
 
-      // Partial Fetch (Ambil Buntut)
-      var startRow = Math.max(2, lastRow - limit + 1);
-      var numRows = (lastRow - startRow + 1);
-      var data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getValues();
+    if (idx.nama === -1) return [{ error: "Kolom 'Nama Sekolah' tidak ditemukan di baris 1." }];
 
-      // Formatter
-      var fastFormat = function(v) {
-        if(!v || v === "" || v === "-") return "-";
-        var d = (v instanceof Date) ? v : new Date(v);
-        if(isNaN(d.getTime())) return "-";
-        var p = n => n<10?'0'+n:n;
-        return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
-      };
+    // Index Activity (Manual - Sesuaikan jika geser)
+    // PAUD: Col 43 (AR) start | SD: Col 219 (HM) start
+    // Ingat: Array index dimulai dari 0. Jadi Col A = 0.
+    var col = (sourceLabel === 'PAUD') ? 
+              { tglKirim:0, userKirim:43, tglEdit:44, userEdit:45, tglVerif:46, userVerif:47, statusData:48, ket:49 } : 
+              { tglKirim:0, userKirim:219, tglEdit:220, userEdit:221, tglVerif:222, userVerif:223, statusData:218, ket:224 };
 
-      // Loop Mundur
-      for (var i = data.length - 1; i >= 0; i--) {
-          var row = data[i];
-          
-          // Filter Logic
-          if (reqBulan && String(row[idx.bulan]||"").toLowerCase() !== reqBulan.toLowerCase()) continue;
-          if (reqTahun && String(row[idx.tahun]||"").toLowerCase() !== reqTahun.toLowerCase()) continue;
-          
-          var rStatus = String(row[col.statusData]||"Diproses");
-          if (rStatus.toLowerCase().includes("hapus")) continue;
-          if (reqStatus && !rStatus.toLowerCase().includes(reqStatus.toLowerCase())) continue;
+    // 4. AMBIL DATA UTAMA SEBAGAI STRING (The Fix!)
+    // getDisplayValues() mengubah semua tanggal/angka/error menjadi String persis tampilan excel
+    var data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getDisplayValues();
 
-          var rNama = (idx.nama > -1) ? String(row[idx.nama]) : "";
-          if (reqKey && !rNama.toLowerCase().includes(reqKey.toLowerCase())) continue;
+    // 5. LOOPING
+    // Data diambil dari array 'data', index 0 adalah baris 'startRow'
+    for (var i = data.length - 1; i >= 0; i--) {
+        var row = data[i]; // row isinya sudah PASTI string semua
+        
+        // Filter
+        var rBulan = row[idx.bulan].toLowerCase();
+        var rTahun = row[idx.tahun];
+        
+        if (reqBulan && rBulan !== reqBulan) continue;
+        if (reqTahun && rTahun !== reqTahun) continue;
 
-          result.push({
-              rowId: startRow + i,
-              source: sourceLabel,
-              namaSekolah: rNama,
-              npsn: (idx.npsn > -1) ? row[idx.npsn] : "",
-              bulan: row[idx.bulan],
-              tahun: row[idx.tahun],
-              statusData: rStatus,
-              tglKirim: fastFormat(row[col.tglKirim]),
-              userKirim: row[col.userKirim] || "-",
-              tglVerif: fastFormat(row[col.tglVerif]),
-              verifikator: row[col.userVerif] || "-",
-              keterangan: row[col.ket] || "",
-              fileUrl: (idx.file > -1) ? row[idx.file] : ""
-          });
-      }
+        var rStatusData = row[col.statusData];
+        if (rStatusData.toLowerCase().includes("hapus")) continue;
+        if (reqStatus && !rStatusData.toLowerCase().includes(reqStatus)) continue;
+
+        var rNama = row[idx.nama];
+        var rNpsn = row[idx.npsn];
+        if (reqKey && !rNama.toLowerCase().includes(reqKey) && !rNpsn.includes(reqKey)) continue;
+
+        // Masukkan Data
+        result.push({
+            rowId: startRow + i, // ID Asli baris Excel
+            source: sourceLabel,
+            namaSekolah: rNama || "Tanpa Nama",
+            npsn: rNpsn,
+            bulan: row[idx.bulan],
+            tahun: row[idx.tahun],
+            jenjang: row[idx.jenjang],
+            statusSekolah: row[idx.status],
+            rombel: row[idx.rombel] || "0",
+            fileUrl: row[idx.file], // URL File
+            
+            statusData: rStatusData || "Diproses",
+            keterangan: row[col.ket],
+            
+            // Tanggal sudah jadi string (misal "06/02/2026"), aman dikirim
+            tglKirim: row[col.tglKirim], 
+            userKirim: row[col.userKirim],
+            tglEdit: row[col.tglEdit],
+            userEdit: row[col.userEdit],
+            tglVerif: row[col.tglVerif],
+            verifikator: row[col.userVerif],
+            
+            // Untuk sorting, kita pakai index saja biar cepat
+            sortTime: i 
+        });
+    }
+
   } catch (e) {
-      console.log("Error " + sourceLabel + ": " + e.message);
+    return [{ error: "SERVER ERROR: " + e.message }];
   }
+  
   return result;
 }

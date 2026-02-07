@@ -251,10 +251,18 @@
         // Cek Respon dari Server
         if (res && res.status === 'success') {
           // --- KONDISI BERHASIL ---
+          
+          // 1. SIMPAN DATA KE LOCALSTORAGE (INI FIX UTAMANYA!) 
+          // Kita simpan objek user (termasuk nama_lengkap) ke browser
+          if (res.userData) {
+             localStorage.setItem("siksUser", JSON.stringify(res.userData));
+          }
+
+          // 2. Ubah Tampilan Tombol
           btn.removeClass('btn-login').addClass('btn-success');
           btn.html('<i class="fas fa-check mr-2"></i> BERHASIL MASUK');
           
-          // Redirect setelah 1 detik
+          // 3. Redirect setelah 1 detik
           setTimeout(function(){
             google.script.host.editor.focus();
             window.top.location.reload(); 

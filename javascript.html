@@ -219,39 +219,6 @@ function handleLogout() {
   });
 }
 
-// --- FUNGSI SIDEBAR HIGHLIGHT ---
-function highlightSidebar(pageName) {
-  // 1. Reset Semua
-  $('.nav-sidebar .nav-link').removeClass('active').css({
-    'background-color': 'transparent',
-    'color': '#fff'
-  });
-  $('.nav-sidebar .nav-link i').css('color', '#fff');
-
-  // 2. Cari Target
-  var target = $('.nav-sidebar .nav-link[data-page="' + pageName + '"]');
-
-  if (target.length > 0) {
-    // 3. Warnai Anak
-    target.addClass('active').css({
-      'background-color': '#28a745', 
-      'color': '#fff'
-    });
-
-    // 4. Warnai Bapak/Induk
-    target.parents('.nav-item').each(function() {
-      var parentLink = $(this).children('.nav-link');
-      parentLink.addClass('active').css({
-        'background-color': 'rgba(255,255,255,0.1)', 
-        'color': '#fff'
-      });
-      parentLink.find('i').css('color', '#fff');
-      $(this).addClass('menu-open');
-      $(this).children('.nav-treeview').show();
-    });
-  }
-}
-
 // --- FUNGSI LOAD PAGE ---
 function loadPage(page) {
   const area = $('#main-content');
@@ -481,4 +448,183 @@ function initTabelSultan(selectorId) {
     // Ini membuat Search Bar diluar scroll, tapi tabel bisa digeser
     $(selectorId).wrap('<div style="overflow-x: auto; width: 100%; border-top: 1px solid #dee2e6;"></div>');
 }
+
+/* =================================================================
+   FIX FINAL: BRUTE FORCE UI UPDATE
+   Memaksa update nama berkali-kali untuk memastikan tidak ada yang terlewat.
+   ================================================================= */
+$(document).ready(function() {
+    // Panggil langsung saat siap
+    updateTampilanNamaUser();
+
+    // JURUS KUNCI: Ulangi terus setiap 0.5 detik selama 10 detik pertama
+    // Ini menjamin walaupun loading lambat, nama akan tetap terganti.
+    var percobaan = 0;
+    var intervalNama = setInterval(function() {
+        updateTampilanNamaUser();
+        percobaan++;
+        
+        // Hentikan paksa setelah 20x percobaan (10 detik) agar tidak memberatkan browser
+        if (percobaan > 20) clearInterval(intervalNama);
+        
+    }, 500); // 500ms = Setengah detik
+});
+
+function updateTampilanNamaUser() {
+    try {
+        var dataLocal = localStorage.getItem("siksUser");
+        if (!dataLocal) return;
+
+        var u = JSON.parse(dataLocal);
+
+        // 1. PRIORITAS NAMA
+        var namaPaten = (u.nama_lengkap && u.nama_lengkap.trim() !== "") 
+                        ? u.nama_lengkap 
+                        : (u.fullName || u.username || "User");
+
+        // --- PERBAIKAN: JANGAN UBAH HURUF KECIL ---
+        // Kita biarkan apa adanya (SDN tetap SDN)
+        // Jika Boss ingin dipaksa HURUF BESAR SEMUA, aktifkan baris di bawah ini:
+        // namaPaten = namaPaten.toUpperCase(); 
+
+        // --- UPDATE ELEMEN UI ---
+        
+        // A. Sidebar
+        $('.user-panel .info a').text(namaPaten);
+
+        // B. Navbar Capsule
+        var cap1 = $('.user-capsule span');
+        var cap2 = $('.user-menu .nav-link span');
+        var cap3 = $('.dropdown-user .dropdown-toggle span');
+        
+        if (cap1.length) cap1.text(namaPaten);
+        if (cap2.length) cap2.text(namaPaten);
+        if (cap3.length) cap3.text(namaPaten);
+
+        // C. Dropdown Header
+        var dropdownHeader = $('.user-header p');
+        if(dropdownHeader.length) {
+             var roleShow = u.role || "User";
+             dropdownHeader.first().text(namaPaten + ' - ' + roleShow);
+        }
+
+    } catch (e) {
+        console.log("Gagal update UI User: " + e.message);
+    }
+}
+
+/* =================================================================
+   1. KAMUS NAVIGASI (SULTAN MAP)
+   Cukup daftarkan: 'nama_file_page' : 'Teks Menu di Sidebar'
+   ================================================================= */
+const MENU_MAPPING = {
+    // 1. Beranda
+    'home'              : 'Beranda',
+
+    // 2. SK Pembagian Tugas
+    'sk_dashboard'      : 'Dashboard SK',
+    'sk_data'           : 'Data SK',
+    'sk_status'         : 'Status Pengiriman',
+
+    // 3. Laporan Bulan
+    'lapbul_dashboard'  : 'Dashboard Laporan Bulan',
+    'lapbul_kelola'     : 'Kelola Data',
+    'lapbul_status'     : 'Status Laporan',
+
+    // 4. Siaba
+    'siaba_dashboard'   : 'Dashboard Siaba',
+    
+    // 4b. Presensi (Sub-Sub Menu / Cucu)
+    'siaba_presensi_harian'      : 'Harian',
+    'siaba_presensi_apel'        : 'Apel dan Upacara',
+    'siaba_presensi_tidak'       : 'Tidak Presensi',
+    'siaba_presensi_terlambat'   : 'Terlambat',
+    'siaba_presensi_pulang'         : 'Pulang Awal',
+    'siaba_presensi_unduh'       : 'Unduh Rekap Bulanan',
+
+    // 4c - 4e
+    'siaba_presensi_lupa'        : 'Lupa Presensi',
+    'siaba_presensi_salah'       : 'Salah Presensi',
+    'siaba_perjalanan_dinas'       : 'Perjalanan Dinas',
+
+    // 4f. Cuti (Sub-Sub Menu / Cucu)
+    'siaba_cuti_data'        : 'Pengajuan',
+    'siaba_cuti_sisa'         : 'Sisa Cuti Tahunan',
+    'siaba_cuti_rekap'        : 'Rekap Cuti',
+    'siaba_cuti_unggah'        : 'Unggah Surat Cuti',
+    'siaba_cuti_informasi'         : 'Informasi',
+
+    // 4g. Format
+    'siaba_format_panduan'     : 'Format dan Panduan',
+
+    // 5. Pengaturan
+    'setting'        : 'Pengaturan',
+
+    // 6. Monitoring
+    'monitoring'        : 'Monitoring Aktivitas'
+};
+
+/* =================================================================
+   2. FUNGSI UTAMA: HIGHLIGHT SIDEBAR
+   Dipanggil OTOMATIS oleh loadPage() setiap halaman berganti.
+   ================================================================= */
+function highlightSidebar(pageName) {
+    try {
+        // A. Cari Teks Menu dari Kamus
+        var textMenu = MENU_MAPPING[pageName];
+
+        // B. Jika tidak ada di kamus, coba tebak dari nama file (Auto-Fallback)
+        if (!textMenu) {
+            textMenu = pageName
+                .replace(/_/g, ' ') 
+                .replace(/\b\w/g, function(l){ return l.toUpperCase() });
+        }
+
+        // C. Eksekusi Pewarnaan
+        if (textMenu) {
+            activekanMenuBerdasarkanTeks(textMenu);
+        }
+
+    } catch (e) {
+        console.log("Gagal highlight sidebar: " + e.message);
+    }
+}
+
+/* =================================================================
+   3. MESIN PEWARNA MENU (LOGIKA SULTAN)
+   Hanya dijalankan saat loadPage, tidak mengganggu klik manual.
+   ================================================================= */
+function activekanMenuBerdasarkanTeks(namaMenu) {
+    // 1. Reset Status Active Saja (JANGAN TUTUP PAKSA TREEVIEW)
+    // Kita hanya hapus kelas 'active' dari link, tapi biarkan struktur menu terbuka apa adanya
+    $('.nav-sidebar .nav-link').removeClass('active');
+
+    // 2. Cari link target berdasarkan Teks
+    var target = $('.nav-sidebar .nav-link').filter(function() {
+        // Trim spasi dan samakan persis
+        return $(this).text().trim() === namaMenu;
+    });
+
+    // 3. Jika ketemu...
+    if (target.length > 0) {
+        
+        // A. Nyalakan Si Anak (Target Akhir)
+        target.addClass('active');
+
+        // B. Nyalakan Leluhurnya (Bapak, Kakek, dst)
+        // Kita cari semua .nav-item di atasnya
+        target.parents('.nav-item').each(function() {
+            
+            // Nyalakan Link Bapaknya (supaya terlihat putih/terang)
+            $(this).children('.nav-link').addClass('active');
+            
+            // Buka Dropdown Bapaknya (Jika belum terbuka)
+            if (!$(this).hasClass('menu-open')) {
+                $(this).addClass('menu-open');
+                $(this).children('.nav-treeview').slideDown(); // Animasi buka halus
+            }
+        });
+    }
+}
+
 </script>

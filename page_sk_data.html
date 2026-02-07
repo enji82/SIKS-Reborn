@@ -739,8 +739,15 @@ function handleSimpanEdit(e) {
         nomorSk: cleanNoSk,
         tanggalSk: valTgl, 
         status: 'Diproses', // Flagging Frontend
-        userInput: (JSON.parse(localStorage.getItem("siksUser") || "{}").nama || "User"),
-        userUpdate: (JSON.parse(localStorage.getItem("siksUser") || "{}").nama || "Admin"),
+        userInput: (function() {
+            var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
+            return u.nama_lengkap || u.fullname || u.nama || u.username || "User";
+        })(),
+        
+        userUpdate: (function() {
+            var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
+            return u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
+        })(),
         // Redundansi
         editNoSk: cleanNoSk, editTglSk: valTgl, editKriteria: $('#editKriteria').val()
     };
@@ -865,9 +872,7 @@ function tambahDataSK() {
 
 // HELPER LAINNYA
 function hapusSK(id,no){ $('#hapusRowId').val(id); $('#infoHapusNoSk').text(no); $('#hapusKode').val(''); $('#modalHapusSK').modal('show'); }
-function handleSimpanHapus(e){ e.preventDefault(); var d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); if($('#hapusKode').val()!==y+m+dd){ Sultan.notif.gagal('Kode Salah! Gunakan format YYYYMMDD hari ini.'); return; } 
-    var btn=$('#btnEksekusiHapus'); var txt=btn.html(); btn.prop('disabled',true).html('Proses...');
-    var u=JSON.parse(localStorage.getItem("siksUser")||"{}").nama||"Admin"; google.script.run.withSuccessHandler(()=>{ $('#modalHapusSK').modal('hide'); refreshDataServer(); Sultan.notif.sukses('Data dihapus'); }).hapusDataSK({hapusRowId:$('#hapusRowId').val(), hapusAlasan:$('#hapusAlasan').val(), hapusKode:$('#hapusKode').val(), userDelete:u}); }
+
 function verifikasiSK(id) {
     var d = GLOBAL_DATA_MAP[id];
     if (!d) return;
@@ -935,7 +940,8 @@ function handleSimpanVerifikasi(e) {
     var rowId = $('#verifRowId').val();
     var status = $('#verifStatus').val();
     var ket = $('#verifKeterangan').val().trim();
-    var admin = (JSON.parse(localStorage.getItem("siksUser") || "{}").nama || "Admin");
+    var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
+    var admin = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
 
     if (!status) { Sultan.notif.gagal('Pilih status keputusan!'); return; }
     
@@ -1046,6 +1052,25 @@ function cekNomorSK(val) {
 
     }).cekDuplikatSK(val);
 }
+
+function checkUserRoleIsAdmin() {
+    try {
+        var userStr = localStorage.getItem("siksUser");
+        if (!userStr) return false;
+        
+        var user = JSON.parse(userStr);
+        var role = (user.role || "").toLowerCase();
+        
+        // Daftar role yang dianggap Admin/Boleh edit sekolah
+        if (role.includes('admin') || role.includes('operator') || role.includes('verifikator')) {
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
+}
+
 function checkUserRole() {
     // 1. Ambil Data User dari LocalStorage
     var userStr = localStorage.getItem("siksUser");
@@ -1175,7 +1200,8 @@ function handleSimpanHapus(e) {
     var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...');
     
-    var userLogin = (JSON.parse(localStorage.getItem("siksUser") || "{}").nama || "User");
+    var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
+    var userLogin = u.nama_lengkap || u.fullname || u.nama || u.username || "User";
 
     var formData = {
         hapusRowId: $('#hapusRowId').val(),
@@ -1277,7 +1303,8 @@ function restoreSK(rowId, namaSd) {
             
             Swal.fire({title: 'Memulihkan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             
-            var userLogin = (JSON.parse(localStorage.getItem("siksUser") || "{}").nama || "User");
+            var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
+            var userLogin = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res.success) {

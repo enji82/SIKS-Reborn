@@ -91,11 +91,14 @@
     $(document).ready(function() {
         var thn = new Date().getFullYear();
         var $sel = $('#filterTahun').empty();
-        for(var i = thn - 2; i <= thn + 1; i++){ 
+        for(var i = thn - 5; i <= thn + 1; i++){ 
             $sel.append('<option value="'+i+'">'+i+'</option>'); 
         }
         $sel.val(thn);
         loadServerData();
+        if(typeof setSidebarActive === 'function') {
+          setSidebarActive("Status Laporan"); 
+      }
     });
 
     function loadServerData() {

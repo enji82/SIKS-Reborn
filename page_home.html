@@ -446,7 +446,7 @@
         var u = JSON.parse(dataLocal);
 
         // A. Update Teks Nama
-        var namaTampil = u.fullName || u.nama || u.username || "User";
+        var namaTampil = u.nama_lengkap || u.fullName || u.nama || u.username || "User";
         $('#user-fullname-home').text(namaTampil); 
         
         // Update elemen lain jika ada di halaman home (opsional)
@@ -522,6 +522,9 @@
   // Jalankan Saat Halaman Selesai Dimuat
   $(document).ready(function() {
       startTime();
-      muatDataUserLocal(); // <--- PANGGIL FUNGSI INI
+      muatDataUserLocal();
+      if(typeof setSidebarActive === 'function') {
+          setSidebarActive("Beranda"); 
+      }
   });
 </script>

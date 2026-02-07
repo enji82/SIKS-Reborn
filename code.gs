@@ -113,7 +113,7 @@ function processLogin(formObj) {
         // LOGIN SUKSES!
         var userObj = {
           username: row[0],
-          fullName: row[2], // Kolom C: Nama Lengkap
+          nama_lengkap: row[2], // Kolom C: Nama Lengkap
           role: row[3],     // Kolom D: Role (Admin/User)
           photo: row[4] || "", // Kolom E: Foto
           isLoggedIn: true
