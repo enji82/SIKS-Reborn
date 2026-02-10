@@ -33,12 +33,9 @@
       </a>
       <ul class="nav nav-treeview">
         <li class="nav-item"><a href="#" class="nav-link" data-page="lapbul_dashboard"><i class="far fa-circle nav-icon"></i><p>Dashboard Laporan Bulan</p></a></li>
-        <li class="nav-item">
-            <a href="#" class="nav-link" onclick="loadPage('page_lapbul_kelola')">
-                <i class="nav-icon fas fa-calendar-alt text-maroon"></i>
-                <p>
-                    Kelola Data
-                </p>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="lapbul_kelola">
+          <i class="nav-icon fas fa-calendar-alt text-maroon"></i>
+              <p>Kelola Data</p>
             </a>
         </li>
         <li class="nav-item"><a href="#" class="nav-link" data-page="lapbul_status"><i class="far fa-circle nav-icon"></i><p>Status Laporan</p></a></li>
@@ -184,6 +181,43 @@
       </ul>
     </li>
 
+        <li class="nav-item">
+      <a href="#" class="nav-link">
+        <i class="nav-icon fas fa-users text-maroon"></i>
+        <p>Data PTK <i class="right fas fa-angle-left"></i></p>
+      </a>
+      <ul class="nav nav-treeview">
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-child nav-icon"></i>
+            <p>PAUD <i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_keadaan_paud"><i class="far fa-circle nav-icon"></i><p>Keadaan PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_jumlah_bulanan_paud"><i class="far fa-circle nav-icon"></i><p>Jumlah Bulanan</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_daftar_paud"><i class="far fa-circle nav-icon"></i><p>Daftar PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kelola_paud"><i class="far fa-circle nav-icon"></i><p>Kelola Data PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_non_aktif_paud" style="color:#ef4444;"><i class="far fa-circle nav-icon"></i><p>Non Aktif (Arsip)</p></a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+             <i class="fas fa-school nav-icon"></i>
+             <p>SD <i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_keadaan_sd"><i class="far fa-circle nav-icon"></i><p>Keadaan PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_jumlah_bulanan_sd"><i class="far fa-circle nav-icon"></i><p>Jumlah Bulanan</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_daftar_sd_negeri"><i class="far fa-circle nav-icon"></i><p>SD Negeri</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_daftar_sd_swasta"><i class="far fa-circle nav-icon"></i><p>SD Swasta</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kelola_sd"><i class="far fa-circle nav-icon"></i><p>Kelola Data PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kebutuhan_sd_negeri"><i class="far fa-circle nav-icon"></i><p>Kebutuhan Guru</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_bezetting_sd_negeri"><i class="far fa-circle nav-icon"></i><p>Bezetting Guru</p></a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+
     
 
     <li class="nav-item d-none" id="menu-setting-admin">
@@ -193,7 +227,7 @@
       </a>
     </li>
 
-    <li class="nav-item d-none" id="menu-monitoring-admin">
+    <li class="nav-item" id="menu-monitoring">
       <a href="#" class="nav-link" data-page="page_monitoring">
         <i class="nav-icon fas fa-chart-pie text-info"></i>
         <p>Monitoring Aktivitas</p>

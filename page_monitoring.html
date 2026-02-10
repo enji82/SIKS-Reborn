@@ -1,10 +1,9 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<div class="content-header">
+<div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
-      <div class="col-sm-6">
-        <h1 class="m-0 text-maroon font-weight-bold"><i class="fas fa-chart-line mr-2"></i>Monitoring Aktivitas</h1>
+      <div class="col-sm-12">
+        <h5 class="m-0 text-maroon font-weight-bold"><i class="fas fa-chart-line mr-2"></i>Monitoring Aktivitas</h5>
+        <hr class="style-sultan-solid">
       </div>
     </div>
   </div>
@@ -15,29 +14,29 @@
     
     <div class="row">
       <div class="col-md-4">
-        <div class="info-box shadow-sm">
-          <span class="info-box-icon bg-maroon"><i class="fas fa-eye"></i></span>
+        <div class="info-box shadow-sm hover-zoom">
+          <span class="info-box-icon bg-maroon"><i class="fas fa-users"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">Total Akses</span>
-            <span class="info-box-number" id="lbl-total">Loading...</span>
+            <span class="info-box-text">Total Kunjungan</span>
+            <span class="info-box-number count-up" id="valTotal">0</span>
           </div>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="info-box shadow-sm">
+        <div class="info-box shadow-sm hover-zoom">
           <span class="info-box-icon bg-success"><i class="fas fa-briefcase"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">Akses Hari Efektif</span>
-            <span class="info-box-number" id="lbl-kerja">...</span>
+            <span class="info-box-text">Hari Efektif</span>
+            <span class="info-box-number count-up" id="valKerja">0</span>
           </div>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="info-box shadow-sm">
+        <div class="info-box shadow-sm hover-zoom">
           <span class="info-box-icon bg-warning"><i class="fas fa-umbrella-beach"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">Akses Hari Libur</span>
-            <span class="info-box-number" id="lbl-libur">...</span>
+            <span class="info-box-text">Hari Libur</span>
+            <span class="info-box-number count-up" id="valLibur">0</span>
           </div>
         </div>
       </div>
@@ -45,14 +44,18 @@
 
     <div class="row mt-2">
       <div class="col-12">
-        <div class="card card-maroon card-outline">
-          <div class="card-header border-0">
-            <div class="d-flex justify-content-between">
-              <h3 class="card-title font-weight-bold">Tren Kunjungan Harian</h3>
+        <div class="card card-maroon card-outline shadow-sm">
+          <div class="card-header border-0 bg-white">
+            <h3 class="card-title font-weight-bold text-dark"><i class="fas fa-chart-area mr-2 text-maroon"></i>Tren Harian</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
             </div>
           </div>
           <div class="card-body">
-            <canvas id="chartDaily" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+            <div class="chart-container" style="position: relative; height:300px; width:100%">
+                <canvas id="chartDaily"></canvas>
+                <div id="loaderChart1" class="overlay-loader"><i class="fas fa-spinner fa-spin fa-2x text-maroon"></i></div>
+            </div>
           </div>
         </div>
       </div>
@@ -60,47 +63,57 @@
 
     <div class="row">
       <div class="col-md-6">
-        <div class="card card-info card-outline">
-          <div class="card-header"><h3 class="card-title">Statistik Mingguan</h3></div>
+        <div class="card card-outline card-info shadow-sm h-100">
+          <div class="card-header bg-white border-bottom-0"><h3 class="card-title font-weight-bold">Statistik Mingguan</h3></div>
           <div class="card-body">
-            <canvas id="chartWeekly" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+            <div class="chart-container" style="position: relative; height:250px;">
+                <canvas id="chartWeekly"></canvas>
+                <div id="loaderChart2" class="overlay-loader"><i class="fas fa-spinner fa-spin text-info"></i></div>
+            </div>
           </div>
         </div>
       </div>
       <div class="col-md-6">
-        <div class="card card-success card-outline">
-          <div class="card-header"><h3 class="card-title">Statistik Bulanan</h3></div>
+        <div class="card card-outline card-success shadow-sm h-100">
+          <div class="card-header bg-white border-bottom-0"><h3 class="card-title font-weight-bold">Statistik Bulanan</h3></div>
           <div class="card-body">
-            <canvas id="chartMonthly" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+            <div class="chart-container" style="position: relative; height:250px;">
+                <canvas id="chartMonthly"></canvas>
+                <div id="loaderChart3" class="overlay-loader"><i class="fas fa-spinner fa-spin text-success"></i></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row mt-2">
+    <div class="row mt-3 mb-4">
       <div class="col-md-6">
-        <div class="card">
+        <div class="card shadow-sm h-100">
           <div class="card-header bg-maroon text-white">
             <h3 class="card-title"><i class="fas fa-medal mr-2"></i>Top 10 User Rajin</h3>
           </div>
-          <div class="card-body p-0 table-responsive">
-            <table class="table table-striped table-sm">
-              <thead><tr><th>#</th><th>Nama User</th><th class="text-center">Total</th></tr></thead>
-              <tbody id="table-top-users"><tr><td colspan="3" class="text-center p-3">Memuat...</td></tr></tbody>
+          <div class="card-body p-0 table-responsive" style="max-height: 400px;">
+            <table class="table table-striped table-hover mb-0">
+              <thead class="bg-light"><tr><th style="width: 10px">#</th><th>Nama User</th><th class="text-center">Akses</th></tr></thead>
+              <tbody id="tableTopUsers">
+                  <tr><td colspan="3" class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> Menganalisa Log...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
       </div>
 
       <div class="col-md-6">
-        <div class="card">
+        <div class="card shadow-sm h-100">
           <div class="card-header bg-secondary text-white">
-            <h3 class="card-title"><i class="fas fa-user-clock mr-2"></i>User Belum Aktif</h3>
+            <h3 class="card-title"><i class="fas fa-user-clock mr-2"></i>User Belum Pernah Login</h3>
           </div>
-          <div class="card-body p-0 table-responsive" style="max-height: 380px;">
-            <table class="table table-head-fixed table-hover text-nowrap table-sm">
-              <thead><tr><th>#</th><th>Nama User</th><th>Status</th></tr></thead>
-              <tbody id="table-passive-users"><tr><td colspan="3" class="text-center p-3">Memuat...</td></tr></tbody>
+          <div class="card-body p-0 table-responsive" style="max-height: 400px;">
+            <table class="table table-head-fixed table-hover text-nowrap mb-0">
+              <thead class="bg-light"><tr><th style="width: 10px">#</th><th>Nama User</th><th class="text-center">Status</th></tr></thead>
+              <tbody id="tablePassiveUsers">
+                  <tr><td colspan="3" class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> Membandingkan Database...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -110,97 +123,165 @@
   </div>
 </section>
 
+<style>
+    .hover-zoom:hover { transform: translateY(-3px); transition: transform 0.3s; }
+    .overlay-loader { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; justify-content:center; align-items:center; z-index:10; }
+</style>
+
 <script>
-  $(document).ready(function(){
-    loadMonitoringData();
-  });
+$(document).ready(function(){
+    // Smart Loader Chart.js V3
+    if (typeof Chart === 'undefined') {
+        $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js").done(function() {
+            startMonitoringEngine();
+        });
+    } else {
+        startMonitoringEngine();
+    }
+});
 
-  function loadMonitoringData() {
-    google.script.run.withSuccessHandler(function(data){
-       if(data) {
-         // 1. ISI LABEL ANGKA
-         $('#lbl-total').text(data.summary.total);
-         $('#lbl-kerja').text(data.summary.kerja);
-         $('#lbl-libur').text(data.summary.libur);
+function startMonitoringEngine() {
+    // Jalankan 2 Request Paralel
+    loadChartsAndStats(); // Request 1: Grafik & Angka Total
+    loadUserAnalysis();   // Request 2: Analisa User (Lebih Berat)
+}
 
-         // --- HELPER FUNCTION UNTUK CHART ---
-         function renderChart(canvasId, type, labels, values, color, labelName) {
-            new Chart(document.getElementById(canvasId), {
-                type: type,
-                data: {
-                  labels: labels,
-                  datasets: [{
-                    label: labelName,
-                    backgroundColor: color,
-                    borderColor: color,
-                    borderWidth: 1,
-                    data: values,
-                    fill: false
-                  }]
-                },
-                options: { 
-                    maintainAspectRatio: false, 
-                    responsive: true,
-                    scales: { y: { beginAtZero: true } }
-                }
+// --- JALUR 1: STATS & GRAFIK ---
+function loadChartsAndStats() {
+    google.script.run.withSuccessHandler(function(json){
+        var data = JSON.parse(json);
+        
+        // 1. Isi Angka (Animasi)
+        animateValue('valTotal', data.total);
+        animateValue('valKerja', data.kerja);
+        animateValue('valLibur', data.libur);
+
+        // 2. Render Charts
+        
+        // A. Daily (Sort Tanggal)
+        var dKeys = Object.keys(data.daily).sort();
+        var dVals = dKeys.map(k => data.daily[k]);
+        var dLabels = dKeys.map(k => {
+            var p = k.split('-'); return p[2]+'/'+p[1]; // dd/mm
+        });
+        
+        renderChart('chartDaily', 'line', dLabels, dVals, 'rgba(128, 0, 0, 0.2)', '#800000', 'Kunjungan Harian');
+        $('#loaderChart1').fadeOut();
+
+        // B. Weekly
+        var wKeys = Object.keys(data.weekly).sort();
+        var wVals = wKeys.map(k => data.weekly[k]);
+        renderChart('chartWeekly', 'bar', wKeys, wVals, '#17a2b8', '#17a2b8', 'Per Minggu');
+        $('#loaderChart2').fadeOut();
+
+        // C. Monthly
+        // Sort Bulan Manual (Januari, Februari...)
+        var monthOrder = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        var mKeys = Object.keys(data.monthly).sort((a,b) => {
+             // Extract nama bulan (ex: "Januari 2026")
+             var ma = a.split(' ')[0]; var mb = b.split(' ')[0];
+             return monthOrder.indexOf(ma) - monthOrder.indexOf(mb);
+        });
+        var mVals = mKeys.map(k => data.monthly[k]);
+        
+        renderChart('chartMonthly', 'bar', mKeys, mVals, '#28a745', '#28a745', 'Per Bulan');
+        $('#loaderChart3').fadeOut();
+
+    }).getMonitoring_Charts();
+}
+
+// --- JALUR 2: ANALISA USER ---
+function loadUserAnalysis() {
+    google.script.run.withSuccessHandler(function(json){
+        var data = JSON.parse(json);
+        
+        // 1. Top Users
+        var elTop = $('#tableTopUsers');
+        elTop.empty();
+        if (data.topUsers.length > 0) {
+            data.topUsers.forEach((u, i) => {
+                var medal = '';
+                if(i===0) medal = '🥇 '; else if(i===1) medal = '🥈 '; else if(i===2) medal = '🥉 ';
+                
+                elTop.append(`
+                    <tr class="animated fadeIn">
+                        <td>${i+1}</td>
+                        <td class="font-weight-bold text-dark">${medal}${u.name}</td>
+                        <td class="text-center"><span class="badge badge-maroon px-2">${u.count}</span></td>
+                    </tr>
+                `);
             });
-         }
+        } else {
+            elTop.html('<tr><td colspan="3" class="text-center p-3">Belum ada aktivitas.</td></tr>');
+        }
 
-         // 2. RENDER CHART HARIAN (SOLUSI FIX: SORTING & LABEL PENDEK)
-         
-         // A. Ambil data & Urutkan Tanggal dengan Benar (Bukan Abjad, tapi Waktu)
-         var rawData = data.chartData.daily;
-         var sortedKeys = Object.keys(rawData).sort(function(a, b) {
-             return new Date(a) - new Date(b); // Urutkan dari tanggal lama ke baru
-         });
+        // 2. Passive Users
+        var elPas = $('#tablePassiveUsers');
+        elPas.empty();
+        if (data.passiveUsers.length > 0) {
+            data.passiveUsers.forEach((name, i) => {
+                elPas.append(`
+                    <tr class="animated fadeIn">
+                        <td>${i+1}</td>
+                        <td class="text-muted">${name}</td>
+                        <td class="text-center"><span class="badge badge-secondary">Belum Login</span></td>
+                    </tr>
+                `);
+            });
+        } else {
+            elPas.html('<tr><td colspan="3" class="text-center p-3 text-success font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Semua User Aktif!</td></tr>');
+        }
 
-         // B. Ambil Nilai (Jumlah User) sesuai urutan tanggal
-         var dayVals = sortedKeys.map(k => rawData[k]);
-         
-         // C. Format Label Jadi Pendek (DD/MM) menggunakan Objek Date
-         var dayLabels = sortedKeys.map(function(rawDate) {
-             var d = new Date(rawDate);
-             // Cek apakah data bisa dibaca sebagai tanggal?
-             if (!isNaN(d.getTime())) {
-                 var tgl = ("0" + d.getDate()).slice(-2);       // Ambil Tanggal (06)
-                 var bln = ("0" + (d.getMonth() + 1)).slice(-2); // Ambil Bulan (02)
-                 return tgl + '/' + bln;                         // Gabung (06/02)
-             }
-             // Jika gagal (bukan tanggal), potong 10 huruf saja
-             return rawDate.toString().substring(0, 10);
-         });
+    }).getMonitoring_Users();
+}
 
-         // Render Grafik
-         renderChart('chartDaily', 'line', dayLabels, dayVals, '#800000', 'Pengunjung Harian');
+// --- HELPER FUNCTIONS ---
 
-         // 3. RENDER CHART MINGGUAN (BARU)
-         var weekKeys = Object.keys(data.chartData.weekly).sort();
-         var weekVals = weekKeys.map(k => data.chartData.weekly[k]);
-         renderChart('chartWeekly', 'bar', weekKeys, weekVals, '#17a2b8', 'Pengunjung Mingguan');
+function renderChart(canvasId, type, labels, dataVal, bgColor, borderColor, labelName) {
+    var ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: labelName,
+                data: dataVal,
+                backgroundColor: bgColor,
+                borderColor: borderColor,
+                borderWidth: 2,
+                fill: (type === 'line'), // Area fill untuk Line Chart
+                tension: 0.3, // Garis melengkung halus
+                pointRadius: 3
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                legend: { display: false }, // Sembunyikan legenda agar bersih
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision:0 } },
+                x: { grid: { display: false } }
+            },
+            animation: { duration: 1000 }
+        }
+    });
+}
 
-         // 4. RENDER CHART BULANAN (BARU)
-         var monthKeys = Object.keys(data.chartData.monthly).sort();
-         var monthVals = monthKeys.map(k => data.chartData.monthly[k]);
-         renderChart('chartMonthly', 'bar', monthKeys, monthVals, '#28a745', 'Pengunjung Bulanan');
-
-
-         // 5. ISI TABEL
-         var htmlTop = '';
-         if (data.topUsers.length > 0) {
-           data.topUsers.forEach((u, i) => {
-             htmlTop += `<tr><td>${i+1}</td><td>${u.name}</td><td class="text-center font-weight-bold">${u.count}</td></tr>`;
-           });
-         } else { htmlTop = '<tr><td colspan="3" class="text-center">Belum ada data.</td></tr>'; }
-         $('#table-top-users').html(htmlTop);
-
-         var htmlPasif = '';
-         if (data.passiveUsers.length > 0) {
-           data.passiveUsers.forEach((name, i) => {
-             htmlPasif += `<tr><td>${i+1}</td><td>${name}</td><td><span class="badge badge-danger">Belum Login</span></td></tr>`;
-           });
-         } else { htmlPasif = '<tr><td colspan="3" class="text-center text-success">Semua Aktif!</td></tr>'; }
-         $('#table-passive-users').html(htmlPasif);
-       }
-    }).getMonitoringStats();
-  }
+function animateValue(id, endValue) {
+    var obj = document.getElementById(id);
+    if(!obj) return;
+    var start = 0; var end = parseInt(endValue);
+    if (isNaN(end)) end = 0; if (end === 0) { obj.innerHTML = "0"; return; }
+    var duration = 1500; var range = end - start; var current = start; 
+    var stepTime = Math.abs(Math.floor(duration / range));
+    if(stepTime < 10) stepTime = 10; 
+    var stepVal = Math.ceil(range / (duration / stepTime));
+    var timer = setInterval(function() {
+        current += stepVal; if (current >= end) { current = end; clearInterval(timer); }
+        obj.innerHTML = current;
+    }, stepTime);
+}
 </script>

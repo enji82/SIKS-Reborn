@@ -378,7 +378,10 @@
     }
 
     function renderTableUnggah() {
-        if ($.fn.DataTable.isDataTable('#tabelUnggah')) { $('#tabelUnggah').DataTable().destroy(); }
+        // 1. Bersihkan DataTable Lama (Reset ke HTML biasa)
+        if ($.fn.DataTable.isDataTable('#tabelUnggah')) { 
+            $('#tabelUnggah').DataTable().destroy(); 
+        }
         $('#bodyTabelUnggah').empty();
 
         var fUnit = $('#filterUnit').val();
@@ -387,7 +390,7 @@
         var data = GLOBAL_UNGGAH_DATA;
         var filteredData = [];
 
-        // Filter Lokal
+        // 2. Filter Lokal
         for(var i=0; i<data.length; i++) {
             var row = data[i];
             
@@ -403,11 +406,13 @@
             filteredData.push(row);
         }
 
+        // 3. Pastikan Header Muncul Dulu
+        $('#headTabelUnggah').show();
+
+        // 4. Cek Jika Data Kosong
         if (filteredData.length === 0) {
-            // [FIX] HEADER TETAP MUNCUL JIKA KOSONG
-            $('#headTabelUnggah').show();
             $('#bodyTabelUnggah').html('<tr><td colspan="12" class="text-center p-4 text-muted">Data tidak ditemukan.</td></tr>');
-            // Re-init DataTable agar header rapi
+            
             $('#tabelUnggah').DataTable({
                 "ordering": false,
                 "pageLength": 10,
@@ -417,9 +422,7 @@
             return;
         }
 
-        // [FIX] MUNCULKAN HEADER SEBELUM RENDER DATA
-        $('#headTabelUnggah').show();
-
+        // 5. Render Data Baris
         var html = "";
         ROW_DATA_UNGGAH = {}; 
 
@@ -475,16 +478,14 @@
 
         $('#bodyTabelUnggah').html(html);
 
+        // 6. Init DataTables (VERSI BERSIH)
         $('#tabelUnggah').DataTable({
             "ordering": false,
             "pageLength": 10,
             "autoWidth": false,
             "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
             "initComplete": function() {
-                 var table = $(this);
-                 if (!table.parent().hasClass('table-responsive')) {
-                     table.wrap('<div class="table-responsive" style="overflow-x: auto; width: 100%;"></div>');
-                 }
+                 // HAPUS LOGIKA TABLE.WRAP() DISINI KARENA HTML SUDAH PUNYA .table-responsive
                  $('[data-toggle="tooltip"]').tooltip();
             }
         });

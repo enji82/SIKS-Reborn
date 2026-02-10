@@ -819,86 +819,87 @@
 </div>
 
 <div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" data-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document" style="height: 95%;">
-        <div class="modal-content h-100">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 98%; width: 98%; margin: auto;">
+        <div class="modal-content border-0 shadow-lg" style="height: 95vh;">
+            
             <div class="modal-header bg-maroon text-white py-2">
-                <h6 class="modal-title font-weight-bold"><i class="fas fa-check-double mr-2"></i>Verifikasi Laporan</h6>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <h5 class="modal-title font-weight-bold" style="font-size: 16px;">
+                    <i class="fas fa-check-double mr-2"></i>Verifikasi Laporan Bulan
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
 
-            <div class="modal-body p-0">
-                <div class="row no-gutters h-100">
-                    
-                    <div class="col-lg-8 bg-dark h-100 border-right d-flex flex-column justify-content-center align-items-center" style="min-height: 400px;">
-                        <div id="loaderPreview" class="text-white">
-                            <i class="fas fa-circle-notch fa-spin fa-3x mb-3"></i><br>Memuat Dokumen...
-                        </div>
-                        <iframe id="frameFileVerif" class="d-none w-100 h-100 border-0" src=""></iframe>
-                        <div id="noFileVerif" class="d-none text-white text-center p-4">
-                            <i class="fas fa-file-excel fa-4x mb-3 text-muted"></i>
-                            <h5>Tidak Ada Lampiran File</h5>
-                            <p class="small text-white-50">Sekolah tidak mengunggah dokumen PDF.</p>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4 bg-white h-100 overflow-auto">
-                        <div class="p-4">
-                            <h6 class="font-weight-bold text-maroon border-bottom pb-2 mb-3">DATA SEKOLAH</h6>
+            <form id="formVerifLapbul" onsubmit="return false;" class="h-100 p-0 m-0">
+                <div class="modal-body p-0 bg-light h-100">
+                    <div class="row no-gutters h-100">
+                        
+                        <div class="col-lg-8 bg-dark d-flex align-items-center justify-content-center position-relative border-right">
                             
-                            <div class="form-group mb-2">
-                                <label class="small font-weight-bold text-muted mb-0">Nama Sekolah</label>
-                                <div class="font-weight-bold text-dark" style="font-size:1.1rem;" id="vNamaSekolah">-</div>
+                            <div id="loaderPreview" class="text-white text-center">
+                                <i class="fas fa-circle-notch fa-spin fa-3x mb-3"></i>
+                                <p class="mb-0">Memuat Dokumen...</p>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="form-group mb-2">
-                                        <label class="small font-weight-bold text-muted mb-0">Bulan</label>
-                                        <div class="font-weight-bold" id="vBulan">-</div>
+                            <iframe id="frameFileVerif" class="d-none" style="width:100%; height:100%; border:none;"></iframe>
+                            
+                            <div id="noFileVerif" class="d-none text-center text-white-50">
+                                <i class="fas fa-file-excel fa-4x mb-3 opacity-50"></i>
+                                <p class="mb-0">Tidak ada lampiran dokumen PDF.</p>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 bg-white d-flex flex-column h-100">
+                            
+                            <div class="p-3 overflow-auto" style="flex: 1;">
+                                
+                                <h6 class="text-maroon font-weight-bold border-bottom pb-2 mb-3">
+                                    <i class="fas fa-school mr-1"></i> Data Sekolah
+                                </h6>
+                                
+                                <table class="table table-sm table-borderless small mb-3 text-dark" style="font-size: 14px;">
+                                    <tr>
+                                        <td class="text-muted font-weight-bold" width="35%">Nama Sekolah</td>
+                                        <td class="font-weight-bold text-dark" id="vNamaSekolah">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted font-weight-bold">Periode</td>
+                                        <td><span class="font-weight-bold" id="vBulan">-</span> <span id="vTahun">-</span></td>
+                                    </tr>
+                                </table>
+
+                                <div class="card bg-light border-0 shadow-sm mt-3">
+                                    <div class="card-body p-3">
+                                        <div class="form-group mb-3">
+                                            <label class="font-weight-bold text-maroon small mb-1">Keputusan Verifikasi <span class="text-danger">*</span></label>
+                                            <select class="form-control form-control-sultan font-weight-bold text-dark" id="selStatusVerif" required>
+                                                <option value="">-- Pilih Status --</option>
+                                                <option value="Disetujui" class="text-success font-weight-bold">&#xf00c; Disetujui</option>
+                                                <option value="Revisi" class="text-warning font-weight-bold">&#xf021; Revisi</option>
+                                                <option value="Ditolak" class="text-danger font-weight-bold">&#xf00d; Ditolak</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <label class="font-weight-bold text-dark small mb-1">Catatan Admin</label>
+                                            <textarea class="form-control form-control-sultan" id="txtKetVerif" rows="4" placeholder="Wajib diisi jika Ditolak/Revisi..."></textarea>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="form-group mb-2">
-                                        <label class="small font-weight-bold text-muted mb-0">Tahun</label>
-                                        <div class="font-weight-bold" id="vTahun">-</div>
-                                    </div>
-                                </div>
                             </div>
 
-                            <hr class="my-4">
-
-                            <h6 class="font-weight-bold text-maroon border-bottom pb-2 mb-3">HASIL VERIFIKASI</h6>
-
-                            <div class="form-group">
-                                <label class="font-weight-bold small">Status Keputusan <span class="text-danger">*</span></label>
-                                <select id="selStatusVerif" class="form-control form-control-sm shadow-sm" style="border-left: 4px solid maroon;">
-                                    <option value="" disabled selected>- Pilih Keputusan -</option>
-                                    <option value="Disetujui" class="text-success font-weight-bold">&#10003; Disetujui</option>
-                                    <option value="Revisi" class="text-warning font-weight-bold">&#9888; Revisi (Perbaiki)</option>
-                                    <option value="Ditolak" class="text-danger font-weight-bold">&#10005; Ditolak</option>
-                                </select>
+                            <div class="p-3 bg-white border-top shadow-lg d-flex justify-content-between" style="z-index: 10;">
+                                <button type="button" class="btn btn-secondary px-4 font-weight-bold shadow-sm" data-dismiss="modal">Batal</button>
+                                <button type="button" id="btnSimpanVerif" class="btn btn-maroon px-4 font-weight-bold shadow" onclick="submitVerifikasi()">
+                                    <i class="fas fa-save mr-2"></i> SIMPAN
+                                </button>
                             </div>
 
-                            <div class="form-group">
-                                <label class="font-weight-bold small">Catatan / Keterangan</label>
-                                <textarea id="txtKetVerif" class="form-control" rows="5" placeholder="Tuliskan alasan penolakan atau revisi di sini..."></textarea>
-                            </div>
-
-                            <div class="alert alert-info small py-2 mt-3">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                User verifikator akan tercatat otomatis.
-                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="modal-footer py-2 bg-light">
-                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
-                <button type="button" id="btnSimpanVerif" class="btn btn-maroon btn-sm px-4" onclick="submitVerifikasi()">
-                    <i class="fas fa-save mr-1"></i> SIMPAN KEPUTUSAN
-                </button>
-            </div>
+            </form>
         </div>
     </div>
 </div>

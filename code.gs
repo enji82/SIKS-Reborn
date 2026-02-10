@@ -221,60 +221,175 @@ function loadPageSetting() {
   return HtmlService.createTemplateFromFile('page_setting').evaluate().getContent();
 }
 
-// ==========================================
-// 5. MONITORING SYSTEM & ONLINE COUNTER
-// ==========================================
+/* ======================================================================
+   MODUL: MONITORING AKTIVITAS (TURBO SPLIT)
+   ====================================================================== */
 
-// Helper: Update Status Online di Memori Server
-function updateOnlineStatus(username) {
+// JALUR 1: STATISTIK & GRAFIK (Cepat)
+function getMonitoring_Charts() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    var sheetLog = ss.getSheetByName("LOG_ACCESS");
+    if (!sheetLog) return { error: "Sheet LOG_ACCESS tidak ditemukan" };
+
+    // Ambil Data: Kolom A (Timestamp) & F (Jenis Hari)
+    // Kita tidak butuh nama user disini, jadi lebih ringan
+    var lastRow = sheetLog.getLastRow();
+    if (lastRow < 2) return { empty: true };
+    
+    // Ambil A sampai F
+    var data = sheetLog.getRange(2, 1, lastRow - 1, 6).getValues();
+
+    var stats = {
+      total: data.length, kerja: 0, libur: 0,
+      daily: {}, weekly: {}, monthly: {}
+    };
+
+    var months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      var rawTime = row[0]; // Timestamp
+      var jenis = String(row[5] || "").toLowerCase(); // Jenis Hari
+
+      // 1. Hitung Kerja vs Libur
+      if (jenis.includes("libur") || jenis.includes("minggu") || jenis.includes("sabtu")) {
+        stats.libur++;
+      } else {
+        stats.kerja++;
+      }
+
+      // 2. Olah Tanggal
+      var d = new Date(rawTime);
+      if (isNaN(d.getTime())) continue; // Skip jika tanggal error
+
+      // Harian (yyyy-mm-dd)
+      var tglKey = Utilities.formatDate(d, "Asia/Jakarta", "yyyy-MM-dd");
+      stats.daily[tglKey] = (stats.daily[tglKey] || 0) + 1;
+
+      // Bulanan (Nama Bulan)
+      var blnKey = months[d.getMonth()] + " " + d.getFullYear();
+      stats.monthly[blnKey] = (stats.monthly[blnKey] || 0) + 1;
+
+      // Mingguan (Week Number)
+      var weekNum = Utilities.formatDate(d, "Asia/Jakarta", "w");
+      var weekKey = "Minggu " + weekNum;
+      stats.weekly[weekKey] = (stats.weekly[weekKey] || 0) + 1;
+    }
+
+    return JSON.stringify(stats);
+
+  } catch (e) { return JSON.stringify({ error: e.toString() }); }
+}
+
+// JALUR 2: ANALISA USER (Ranking & Pasif)
+function getMonitoring_Users() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    
+    // 1. Ambil Log User (Kolom D = Nama User)
+    var sheetLog = ss.getSheetByName("LOG_ACCESS");
+    var userActivityMap = {}; // Menghitung frekuensi login
+    
+    if (sheetLog && sheetLog.getLastRow() > 1) {
+      // Ambil hanya kolom D (Index 4)
+      var dataLog = sheetLog.getRange(2, 4, sheetLog.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < dataLog.length; i++) {
+        var uName = String(dataLog[i][0]).trim();
+        if (uName) {
+          userActivityMap[uName] = (userActivityMap[uName] || 0) + 1;
+        }
+      }
+    }
+
+    // 2. Hitung Top 10
+    var ranking = [];
+    for (var key in userActivityMap) {
+      ranking.push({ name: key, count: userActivityMap[key] });
+    }
+    // Sort Descending
+    ranking.sort(function(a, b) { return b.count - a.count; });
+    var top10 = ranking.slice(0, 10);
+
+    // 3. Cari User Pasif (Bandingkan dengan Database User)
+    var userPasif = [];
+    var sheetUser = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME); // Pastikan variable global ini benar
+    if (sheetUser && sheetUser.getLastRow() > 1) {
+      // Asumsi Nama User ada di Kolom C (Index 3) di sheet USER_DATA
+      // Sesuaikan index kolom ini dengan database user Anda!
+      var dataUser = sheetUser.getRange(2, 3, sheetUser.getLastRow() - 1, 1).getValues();
+      
+      for (var j = 0; j < dataUser.length; j++) {
+        var dbName = String(dataUser[j][0]).trim();
+        if (dbName && !userActivityMap[dbName]) {
+           userPasif.push(dbName);
+        }
+      }
+    }
+
+    return JSON.stringify({
+      topUsers: top10,
+      passiveUsers: userPasif
+    });
+
+  } catch (e) { return JSON.stringify({ error: e.toString() }); }
+}
+
+/* ======================================================================
+   MODUL: LOGGER PENGUNJUNG (REQUIRED FOR HOME & MONITORING)
+   ====================================================================== */
+
+function logUserVisit(userData) {
+  // Cegah error jika userData kosong
+  if (!userData) return;
+  
+  // 1. UPDATE STATUS ONLINE (Untuk fitur "Sedang Online")
   try {
     var props = PropertiesService.getScriptProperties();
     var now = new Date().getTime();
-    var cutoff = now - (10 * 60 * 1000); // Batas Online: 10 Menit terakhir
+    var cutoff = now - (10 * 60 * 1000); // Batas aktif: 10 Menit terakhir
     
-    // 1. Ambil Data Lama
+    // Ambil database user online
     var json = props.getProperty('ONLINE_USERS_DB');
     var activeUsers = json ? JSON.parse(json) : {};
     
-    // 2. Masukkan User Ini
-    if (username) activeUsers[username] = now;
+    // Masukkan user ini (Nama sebagai Key)
+    var userName = userData.nama || userData.username || "Unknown";
+    activeUsers[userName] = now;
     
-    // 3. Bersihkan User yang sudah offline (lebih dari 10 menit)
+    // Bersihkan user yang sudah offline (lebih dari 10 menit)
     var cleanList = {};
-    var count = 0;
     for (var u in activeUsers) {
       if (activeUsers[u] > cutoff) {
         cleanList[u] = activeUsers[u];
-        count++;
       }
     }
     
-    // 4. Simpan Kembali
+    // Simpan Kembali
     props.setProperty('ONLINE_USERS_DB', JSON.stringify(cleanList));
-    props.setProperty('ONLINE_COUNT', count.toString());
     
   } catch (e) {
     console.log("Online Tracker Error: " + e.message);
   }
-}
 
-function logUserVisit(userData) {
-  if (!userData) return;
-  
-  // A. UPDATE STATUS ONLINE (Fitur Baru)
-  updateOnlineStatus(userData.username || userData.nama);
-
-  // B. SIMPAN LOG KE SPREADSHEET (Fitur Lama)
+  // 2. SIMPAN LOG PERMANEN KE SPREADSHEET (Untuk Dashboard Monitoring)
   try {
+    // Pastikan ID_SS_DATABASE_USER sudah benar di Global Variables Anda
     var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
     var sheet = ss.getSheetByName("LOG_ACCESS");
+    
+    // Jika sheet belum ada, buat baru (Safety mechanism)
+    if (!sheet) {
+        sheet = ss.insertSheet("LOG_ACCESS");
+        sheet.appendRow(["Timestamp", "Tanggal", "Bulan", "Nama User", "Role", "Jenis Hari"]);
+    }
     
     var now = new Date();
     var timestamp = Utilities.formatDate(now, "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
     var tgalOnly  = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM-dd");
     var blnOnly   = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
     
-    // Cek Hari Libur
+    // Cek Hari Libur (Sabtu/Minggu)
     var dayIndex = now.getDay();
     var jenisHari = "Hari Efektif";
     var ketHari = "Reguler";
@@ -285,7 +400,7 @@ function logUserVisit(userData) {
       ketHari = (dayIndex === 0) ? "Minggu" : "Sabtu";
     }
 
-    // 2. Cek Kalender Libur (DATA_LIBUR)
+    // 2. Cek Kalender Libur (Jika Anda punya sheet DATA_LIBUR)
     var sheetLibur = ss.getSheetByName("DATA_LIBUR");
     if (sheetLibur && sheetLibur.getLastRow() > 1) {
       var dataLibur = sheetLibur.getRange(2, 1, sheetLibur.getLastRow()-1, 2).getValues();
@@ -299,78 +414,144 @@ function logUserVisit(userData) {
       }
     }
 
-    if (sheet) {
-      sheet.appendRow([timestamp, tgalOnly, blnOnly, userData.fullName, userData.role, jenisHari + " (" + ketHari + ")"]);
-    }
+    // Simpan Baris Log
+    sheet.appendRow([
+        timestamp, 
+        tgalOnly, 
+        blnOnly, 
+        userData.nama || userData.username, 
+        userData.role, 
+        jenisHari + " (" + ketHari + ")"
+    ]);
     
   } catch (e) {
     console.log("Log Error: " + e.message);
   }
 }
 
-function getMonitoringStats() {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+/* ======================================================================
+   MODUL: LOGGER PENGUNJUNG & ONLINE TRACKER (WAJIB ADA)
+   ====================================================================== */
+
+// 1. UPDATE STATUS ONLINE (Untuk menghitung User Online Realtime)
+function updateOnlineStatus(username) {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var now = new Date().getTime();
+    var cutoff = now - (10 * 60 * 1000); // Batas aktif: 10 Menit terakhir
+    
+    // Ambil database user online dari memori script
+    var json = props.getProperty('ONLINE_USERS_DB');
+    var activeUsers = json ? JSON.parse(json) : {};
+    
+    // Masukkan user ini (Update waktu terakhir akses)
+    if (username) activeUsers[username] = now;
+    
+    // Bersihkan user yang sudah offline (lebih dari 10 menit tidak aktif)
+    var cleanList = {};
+    var count = 0;
+    for (var u in activeUsers) {
+      if (activeUsers[u] > cutoff) {
+        cleanList[u] = activeUsers[u];
+        count++;
+      }
+    }
+    
+    // Simpan Kembali ke Properti Script
+    props.setProperty('ONLINE_USERS_DB', JSON.stringify(cleanList));
+    props.setProperty('ONLINE_COUNT', count.toString());
+    
+  } catch (e) {
+    console.log("Online Tracker Error: " + e.message);
+  }
+}
+
+// 2. LOG VISITOR KE SPREADSHEET (Untuk Data Historis & Grafik)
+function logUserVisit(userData) {
+  // Cegah error jika data user kosong
+  if (!userData) return;
   
-  // Ambil Data Log
-  var sheetLog = ss.getSheetByName("LOG_ACCESS");
-  var dataLog = [];
-  if (sheetLog && sheetLog.getLastRow() > 1) {
-    dataLog = sheetLog.getRange(2, 1, sheetLog.getLastRow() - 1, 6).getValues();
+  // A. Update Status Online (Realtime)
+  updateOnlineStatus(userData.username || userData.nama);
+
+  // B. Simpan Log Permanen ke Spreadsheet
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    var sheet = ss.getSheetByName("LOG_ACCESS");
+    
+    // Jika sheet belum ada, buat baru otomatis
+    if (!sheet) {
+        sheet = ss.insertSheet("LOG_ACCESS");
+        sheet.appendRow(["Timestamp", "Tanggal", "Bulan", "Nama User", "Role", "Jenis Hari"]);
+    }
+    
+    var now = new Date();
+    var timestamp = Utilities.formatDate(now, "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
+    var tgalOnly  = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM-dd");
+    var blnOnly   = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
+    
+    // Cek Hari Libur (Sabtu/Minggu)
+    var dayIndex = now.getDay();
+    var jenisHari = "Hari Efektif";
+    var ketHari = "Reguler";
+
+    // 1. Cek Weekend
+    if (dayIndex === 0 || dayIndex === 6) {
+      jenisHari = "Hari Libur";
+      ketHari = (dayIndex === 0) ? "Minggu" : "Sabtu";
+    }
+
+    // 2. Cek Kalender Libur (Jika Anda punya sheet DATA_LIBUR)
+    var sheetLibur = ss.getSheetByName("DATA_LIBUR");
+    if (sheetLibur && sheetLibur.getLastRow() > 1) {
+      var dataLibur = sheetLibur.getRange(2, 1, sheetLibur.getLastRow()-1, 2).getValues();
+      for (var i = 0; i < dataLibur.length; i++) {
+        var tglLibur = Utilities.formatDate(new Date(dataLibur[i][0]), "Asia/Jakarta", "yyyy-MM-dd");
+        if (tglLibur === tgalOnly) {
+          jenisHari = "Hari Libur";
+          ketHari = dataLibur[i][1];
+          break;
+        }
+      }
+    }
+
+    // Simpan Baris Log
+    sheet.appendRow([
+        timestamp, 
+        tgalOnly, 
+        blnOnly, 
+        userData.nama || userData.username, 
+        userData.role, 
+        jenisHari + " (" + ketHari + ")"
+    ]);
+    
+  } catch (e) {
+    console.log("Log Error: " + e.message);
   }
+}
 
-  var stats = {
-    total: dataLog.length,
-    kerja: 0,
-    libur: 0,
-    userCounts: {}, 
-    daily: {},
-    weekly: {},
-    monthly: {}
-  };
+/* ======================================================================
+   MODUL: SELF-HEALING (PERBAIKAN NAMA OTOMATIS)
+   ====================================================================== */
+function getUserProfileByName(username) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    var data = sheet.getDataRange().getValues();
 
-  dataLog.forEach(function(row) {
-    var timestamp = row[0];
-    var tgal = row[1];
-    var nama = row[3];
-    var jenis = row[5];
-
-    if (String(jenis).includes("Libur")) stats.libur++;
-    else stats.kerja++;
-
-    stats.userCounts[nama] = (stats.userCounts[nama] || 0) + 1;
-    stats.daily[tgal] = (stats.daily[tgal] || 0) + 1;
-
-    var dateObj = new Date(timestamp);
-    var namaBulan = Utilities.formatDate(dateObj, "Asia/Jakarta", "MMMM yyyy");
-    stats.monthly[namaBulan] = (stats.monthly[namaBulan] || 0) + 1;
-
-    var weekNum = Utilities.formatDate(dateObj, "Asia/Jakarta", "w");
-    var weekLabel = "Minggu ke-" + weekNum;
-    stats.weekly[weekLabel] = (stats.weekly[weekLabel] || 0) + 1;
-  });
-
-  var rankingUser = [];
-  Object.keys(stats.userCounts).forEach(function(name){
-    rankingUser.push({ name: name, count: stats.userCounts[name] });
-  });
-  rankingUser.sort(function(a, b){ return b.count - a.count });
-
-  // Cari User Pasif
-  var sheetUser = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
-  var userPasif = [];
-  if (sheetUser) {
-    // Ambil kolom Nama (C)
-    var allUsers = sheetUser.getRange(2, 3, sheetUser.getLastRow()-1, 1).getValues(); 
-    allUsers.forEach(function(u){
-      var uName = u[0];
-      if (uName && !stats.userCounts[uName]) userPasif.push(uName);
-    });
+    // Loop cari username (Kolom A)
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim().toLowerCase() === String(username).trim().toLowerCase()) {
+        return {
+          found: true,
+          nama_lengkap: data[i][2], // Kolom C: Nama Lengkap
+          role: data[i][3],         // Kolom D: Role
+          unit: data[i][4]          // Kolom E: Unit
+        };
+      }
+    }
+    return { found: false };
+  } catch (e) {
+    return { found: false, error: e.toString() };
   }
-
-  return {
-    summary: { total: stats.total, kerja: stats.kerja, libur: stats.libur },
-    topUsers: rankingUser.slice(0, 10),
-    passiveUsers: userPasif,
-    chartData: { daily: stats.daily, weekly: stats.weekly, monthly: stats.monthly }
-  };
 }

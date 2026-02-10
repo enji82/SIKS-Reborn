@@ -2356,31 +2356,30 @@ function toHtmlDate(textDate) {
 }
 
 /* ======================================================================
-   MODUL: PENGAJUAN CUTI (BACKEND)
+   MODUL: PENGAJUAN CUTI (BACKEND) - FIXED
    ====================================================================== */
+
+var ID_SS_CUTI = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo"; // Ganti dengan ID Spreadsheet Cuti Anda
 
 /* 1. AMBIL DATABASE REFERENSI (Optimized) */
 function getDatabaseCutiOptions() {
   try {
-    var ss = SpreadsheetApp.openById(ID_SS_CUTI); // ID Spreadsheet Cuti
+    var ss = SpreadsheetApp.openById(ID_SS_CUTI);
     var sheet = ss.getSheetByName("Database Cuti");
     if (!sheet) return JSON.stringify([]);
 
-    // Ambil semua data sekaligus (Cache friendly)
-    // Kolom A=NIP, B=Unit, C=Nama, D=Status, ..., I=Alamat, J=HP
     var data = sheet.getDataRange().getValues();
     var result = [];
 
-    for (var i = 1; i < data.length; i++) { // Skip Header
-      // Pastikan ada NIP dan Nama
+    for (var i = 1; i < data.length; i++) { 
       if (data[i][0] && data[i][2]) {
         result.push({
-          nip: String(data[i][0]),      // Kolom A
-          unit: String(data[i][1]),     // Kolom B
-          nama: String(data[i][2]),     // Kolom C
-          status: String(data[i][3]),   // Kolom D (Status Kepegawaian)
-          alamat: String(data[i][8]),   // Kolom I (Index 8)
-          hp: String(data[i][9])        // Kolom J (Index 9)
+          nip: String(data[i][0]),
+          unit: String(data[i][1]),
+          nama: String(data[i][2]),
+          status: String(data[i][3]),
+          alamat: String(data[i][8]),
+          hp: String(data[i][9])
         });
       }
     }
@@ -2402,25 +2401,21 @@ function simpanPengajuanCuti(payload) {
     // 1. FORMAT TANGGAL
     var tglMulaiIndo   = formatIndoText(payload.tglMulai);
     var tglSelesaiIndo = formatIndoText(payload.tglSelesai);
-    var tglSuratIndo   = formatIndoText(Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd"));
+    
+    // --- PERBAIKAN: Gunakan payload.tglPengajuan ---
+    var tglPengajuanFormat = formatTglIndo(payload.tglPengajuan);
 
     // 2. AMBIL DATA DETIL PEGAWAI
-    // Kita gunakan dbData.jabatan dan dbData.golongan yang sudah pasti benar mappingnya
     var dbData = getDetailPegawaiByNip(payload.nip); 
-    
-    // --- PERBAIKAN DI SINI (AMBIL DARI PROPERTI OBJECT, JANGAN FULLROW MANUAL) ---
-    // Pastikan getDetailPegawaiByNip mappingnya: jabatan = data[i][5] (Kolom F)
     var empGol = dbData ? dbData.golongan : ""; 
-    var empJab = dbData ? dbData.jabatan : "";  // INI KUNCI PERBAIKAN KEPALA SD
+    var empJab = dbData ? dbData.jabatan : ""; 
     
     // 3. LOOKUP PEJABAT STRUKTURAL
-    // Kirim jabatan yang benar (Col F) ke fungsi lookup
     var pejabat = lookupPejabatStruktural(payload.jenisCuti, payload.unit, empGol, empJab);
     
-    var final_kepada, final_nm_ats, final_nip_ats, final_jab_ats, final_nm_stj, final_nip_stj, final_jab_stj;
+    var final_kepada, final_nama_atasan, final_nip_atasan, final_jab_atasan, final_nama_setuju, final_nip_setuju, final_jab_setuju;
 
     if (pejabat) {
-        // KASUS 1: Ditemukan Aturan Khusus di Sheet "Data Atasan"
         final_kepada      = pejabat.kepada;
         final_nama_atasan = pejabat.nama_atasan;
         final_nip_atasan  = pejabat.nip_atasan;
@@ -2429,8 +2424,6 @@ function simpanPengajuanCuti(payload) {
         final_nip_setuju  = pejabat.nip_setuju;
         final_jab_setuju  = pejabat.jabatan_setuju;
     } else {
-        // KASUS 2: Default (Ambil Atasan Langsung dari Database Cuti)
-        // Col 20(T), 14(N), 15(O), 16(P), 17(Q), 18(R), 19(S)
         final_kepada      = dbData ? dbData.fullRow[19] : ""; 
         final_nama_atasan = dbData ? dbData.fullRow[13] : ""; 
         final_nip_atasan  = dbData ? dbData.fullRow[14] : ""; 
@@ -2450,14 +2443,12 @@ function simpanPengajuanCuti(payload) {
         else if (thnMulai === 2026) { sisaN2 = dbData.fullRow[62]||"0"; sisaN1 = dbData.fullRow[64]||"0"; sisaN = dbData.fullRow[66]||"0"; }
     }
 
-    // 5. CHECKLIST JENIS CUTI (UPDATE: UMROH JUGA CENTANG CT)
+    // 5. CHECKLIST JENIS CUTI
     var j = String(payload.jenisCuti).toLowerCase();
     var c = { ct:"", cs:"", cap:"", cb:"", cm:"", cltn:"" }; 
     var CHECK = "✓"; 
     
-    // Logika CT: Jika Tahunan ATAU Umroh -> Centang CT
     if (j.includes("tahunan") || j.includes("umroh")) c.ct = CHECK;
-    
     if (j.includes("sakit")) c.cs = CHECK;
     else if (j.includes("penting")) c.cap = CHECK;
     else if (j.includes("besar")) c.cb = CHECK;
@@ -2466,7 +2457,8 @@ function simpanPengajuanCuti(payload) {
 
     // 6. SUSUN DATA PDF
     var pdfData = {
-        tanggal: tglSuratIndo,
+        // Gunakan Tanggal Pengajuan dari User untuk Tanggal Surat
+        tanggal: tglPengajuanFormat, 
         kepada: final_kepada,
         
         asn: payload.nama,
@@ -2495,8 +2487,8 @@ function simpanPengajuanCuti(payload) {
         
         ct: c.ct, cs: c.cs, cap: c.cap, cb: c.cb, cm: c.cm, cltn: c.cltn,
 
-        jenisCutiRaw: payload.jenisCuti, // Contoh: "Cuti Tahunan"
-        tglMulaiRaw: payload.tglMulai    // Contoh: "2026-01-21" (Format yyyy-mm-dd)
+        jenisCutiRaw: payload.jenisCuti, 
+        tglMulaiRaw: payload.tglMulai    
     };
     
     // GENERATE PDF
@@ -2512,10 +2504,10 @@ function simpanPengajuanCuti(payload) {
       
       ...spacer, 
 
-      tglSuratIndo,      // V
-      pdfData.jabatan,   // W
-      pdfData.masa_kerja,// X
-      pdfData.unit,      // Y (Gunakan Unit Lengkap)
+      tglPengajuanFormat, // Kolom V
+      pdfData.jabatan,    // W
+      pdfData.masa_kerja, // X
+      pdfData.unit,       // Y
       c.ct, c.cb, c.cs, c.cm, c.cap, c.cltn, 
       sisaN2, sisaN1, sisaN,
       final_jab_atasan, final_nama_atasan, final_nip_atasan,
@@ -2530,11 +2522,10 @@ function simpanPengajuanCuti(payload) {
   } catch (e) { return "Error: " + e.toString(); }
 }
 
-/* 2. UPDATE FUNGSI INI (Folder & Filename Logic) */
+/* 3. GENERATE PDF */
 function generatePdfCuti(data) {
-  // --- KONFIGURASI ---
   var ID_TEMPLATE = "1k5KmEZj5nikuUV-MLnY4c6Tn-jFIhmOMGwhjvqaUSzk"; 
-  var ID_FOLDER_INDUK = "1suNhGklZ931kT6Y5wbp5x_92ZCtlWfQz"; // Folder Induk Anda
+  var ID_FOLDER_INDUK = "1suNhGklZ931kT6Y5wbp5x_92ZCtlWfQz"; 
   var ID_IMAGE_CHECK = "1AbFps5ZiyeBH9hVa_XTYvfnoO77DxFle";
 
   try {
@@ -2542,36 +2533,24 @@ function generatePdfCuti(data) {
     var indukFolder = DriveApp.getFolderById(ID_FOLDER_INDUK);
     var checkImgBlob = DriveApp.getFileById(ID_IMAGE_CHECK).getBlob();
 
-    // --- LOGIKA SUBFOLDER (TAHUN > BULAN) ---
-    // 1. Ambil Tahun dan Bulan dari tglMulaiRaw (yyyy-mm-dd)
-    var parts = data.tglMulaiRaw.split("-"); // ["2026", "01", "21"]
+    var parts = data.tglMulaiRaw.split("-");
     var year = parts[0]; 
-    var monthIndex = parseInt(parts[1]) - 1; // 0-11
+    var monthIndex = parseInt(parts[1]) - 1; 
     var monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     var monthName = monthNames[monthIndex];
 
-    // 2. Cek/Buat Folder Tahun di dalam Folder Induk
     var yearFolder = getOrCreateSubfolder(indukFolder, year);
-
-    // 3. Cek/Buat Folder Bulan di dalam Folder Tahun
     var targetFolder = getOrCreateSubfolder(yearFolder, monthName);
 
-    // --- LOGIKA NAMA FILE BARU ---
-    // Format: <Jenis Cuti> - <Nama ASN> - <Tanggal Mulai Indo>
-    // Contoh: Cuti Tahunan - Budi - 21 Januari 2026.pdf
     var fileName = data.jenisCutiRaw + " - " + data.asn + " - " + data.tmc + ".pdf";
 
-    // --- PROSES PEMBUATAN PDF ---
     var tempFile = templateFile.makeCopy(fileName, targetFolder);
     var tempDoc = DocumentApp.openById(tempFile.getId());
     var body = tempDoc.getBody();
     
-    // Loop Replace Data
     for (var key in data) {
       if (data.hasOwnProperty(key)) {
         var val = data[key];
-
-        // Replace Centang dengan Gambar
         if (["ct","cs","cb","cm","cap","cltn"].indexOf(key) > -1) {
             if (val === "✓") {
                 replaceTextWithImage(body, "{{" + key + "}}", checkImgBlob);
@@ -2579,7 +2558,6 @@ function generatePdfCuti(data) {
                 body.replaceText("{{" + key + "}}", ""); 
             }
         } 
-        // Jangan replace key raw (hanya internal script)
         else if (key !== "jenisCutiRaw" && key !== "tglMulaiRaw") {
             var txt = val == null ? "" : String(val);
             body.replaceText("{{" + key + "}}", txt);
@@ -2598,26 +2576,14 @@ function generatePdfCuti(data) {
 }
 
 function replaceTextWithImage(body, placeholder, imgBlob) {
-  // Cari penemuan pertama
   var next = body.findText(placeholder);
-  
-  // Lakukan Loop selama placeholder masih ditemukan di dokumen
   while (next) {
     var element = next.getElement();
     var start = next.getStartOffset();
     var end = next.getEndOffsetInclusive();
-    
-    // 1. Hapus Teks Placeholder {{ct}} / {{cs}} dll
     element.deleteText(start, end);
-    
-    // 2. Sisipkan Gambar di posisi tersebut
     var img = element.getParent().asParagraph().insertInlineImage(start, imgBlob);
-    
-    // 3. ATUR UKURAN LEBIH KECIL (Revisi User)
-    // Ukuran 11x11 atau 12x12 biasanya pas untuk kotak centang
     img.setWidth(11).setHeight(11); 
-    
-    // 4. Cari lagi placeholder berikutnya (agar bagian V juga kena)
     next = body.findText(placeholder);
   }
 }
@@ -2632,11 +2598,10 @@ function getDetailPegawaiByNip(targetNip) {
     var rowNip = String(data[i][0]).trim(); 
     if (rowNip === String(targetNip).trim()) {
       return {
-        // Mapping: A=0, ..., F=5 (Jabatan), G=6 (Unit Lengkap)
-        golongan:  data[i][4],  // Col E
-        jabatan:   data[i][5],  // Col F (JABATAN YANG BENAR)
-        unitLengkap: data[i][6], // Col G
-        masaKerja: data[i][7],  // Col H
+        golongan:  data[i][4],  
+        jabatan:   data[i][5],  
+        unitLengkap: data[i][6], 
+        masaKerja: data[i][7],  
         fullRow: data[i]        
       };
     }
@@ -2651,110 +2616,71 @@ function lookupPejabatStruktural(jenisCuti, unitUser, golUser, tugasUser) {
 
   var data = sheet.getDataRange().getValues();
   
-  // Normalisasi Input User
   var j = String(jenisCuti).toLowerCase().trim();
-  var t = String(tugasUser).toLowerCase().trim(); // Jabatan dari DB Cuti Col F
+  var t = String(tugasUser).toLowerCase().trim(); 
   var g = String(golUser).toLowerCase().trim();
   var u = String(unitUser).toLowerCase().trim();
 
-  // --- LOGIKA PRIORITAS (SESUAI REQUEST) ---
-
-  // 1. CEK CUTI UMROH (Prioritas Tertinggi)
+  // 1. UMROH
   if (j === "cuti umroh") {
-    // Cari baris yang Kolom A = "Cuti Umroh"
     for (var i = 1; i < data.length; i++) {
        if (String(data[i][0]).toLowerCase().trim() === "cuti umroh") return mapRow(data[i]);
     }
   }
 
-  // 2. CEK GOLONGAN IV (IV/a, IV/b, IV/c)
-  // Syarat: Bukan Umroh (sudah lewat di atas) & Golongan mengandung "iv/"
+  // 2. GOLONGAN IV
   if (g.includes("iv/") || g === "iv") {
-    // Cari baris di Excel yang Kolom C-nya diisi "IV" atau "IV/"
-    // Kita cari baris yang Kolom C-nya cocok dengan golongan user
     for (var i = 1; i < data.length; i++) {
        var ruleGol = String(data[i][2]).toLowerCase().trim();
-       // Jika Excel C="iv" dan User="iv/a" -> COCOK (User includes Rule)
        if (ruleGol !== "" && g.includes(ruleGol)) return mapRow(data[i]);
     }
   }
 
-  // 3. CEK TUGAS "KEPALA SD" (Prioritas Ketiga)
-  // Syarat: Bukan Gol IV (sudah lewat) & Jabatan mengandung "Kepala"
-  // Logika: Kita cari baris di Excel yg Kolom B-nya tidak kosong.
-  // Jika Jabatan User MENGANDUNG apa yang tertulis di Kolom B, maka MATCH.
+  // 3. KEPALA SD
   for (var i = 1; i < data.length; i++) {
-     var ruleTugas = String(data[i][1]).toLowerCase().trim(); // Kolom B
-     
-     // Contoh: Rule="kepala sd", User="kepala sd negeri 1" -> MATCH
-     if (ruleTugas !== "" && t.includes(ruleTugas)) {
-        return mapRow(data[i]);
-     }
+     var ruleTugas = String(data[i][1]).toLowerCase().trim(); 
+     if (ruleTugas !== "" && t.includes(ruleTugas)) return mapRow(data[i]);
   }
 
-  // 4. CEK UNIT KERJA (Default)
-  // Syarat: Unit User cocok dengan Kolom D
+  // 4. UNIT KERJA
   for (var i = 1; i < data.length; i++) {
-     var ruleUnit = String(data[i][3]).toLowerCase().trim(); // Kolom D
+     var ruleUnit = String(data[i][3]).toLowerCase().trim();
      if (ruleUnit !== "" && ruleUnit === u) return mapRow(data[i]);
   }
 
-  return null; // Fallback ke Atasan Langsung (Database Cuti)
+  return null; 
 }
 
-// Helper Mapping (Tetap sama, pastikan ada di bawah)
 function mapRow(row) {
   return {
-     nama_atasan:    row[4], // E
-     nip_atasan:     row[5], // F
-     jabatan_atasan: row[6], // G
-     nama_setuju:    row[7], // H
-     nip_setuju:     row[8], // I
-     jabatan_setuju: row[9], // J
-     kepada:         row[10] // K
+     nama_atasan:    row[4], 
+     nip_atasan:     row[5], 
+     jabatan_atasan: row[6], 
+     nama_setuju:    row[7], 
+     nip_setuju:     row[8], 
+     jabatan_setuju: row[9], 
+     kepada:         row[10] 
   };
 }
 
-// Helper Pencarian Baris di Data Atasan
-function cariBarisDataAtasan(allData, kriteria, value) {
-  for (var i = 1; i < allData.length; i++) { // Skip Header
-    var r = allData[i];
-    // A=0(Jenis), B=1(Tugas), C=2(Gol), D=3(Unit)
-    
-    if (kriteria === "jenis" && String(r[0]).toLowerCase().includes(value)) return mapRow(r);
-    if (kriteria === "gol"   && String(r[2]).toLowerCase() !== "" && value.includes(String(r[2]).toLowerCase())) return mapRow(r);
-    if (kriteria === "tugas" && String(r[1]).toLowerCase().includes(value)) return mapRow(r);
-    if (kriteria === "unit"  && String(r[3]).toLowerCase() === value) return mapRow(r);
-  }
-  return null;
-}
-
-/* HELPER: KONVERSI TANGGAL "YYYY-MM-DD" KE "d MMMM yyyy" (Indo) */
 function formatIndoText(isoDate) {
   if (!isoDate) return "";
-  var parts = isoDate.split("-"); // [2026, 01, 20]
+  var parts = isoDate.split("-");
   if (parts.length !== 3) return isoDate;
-  
   var months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
   var y = parts[0];
   var m = parseInt(parts[1], 10) - 1;
   var d = parseInt(parts[2], 10);
-  
   return d + " " + months[m] + " " + y;
 }
 
 function getOrCreateSubfolder(parentFolder, folderName) {
   var folders = parentFolder.getFoldersByName(folderName);
-  
-  if (folders.hasNext()) {
-    return folders.next(); // Folder sudah ada, pakai yang itu
-  } else {
-    return parentFolder.createFolder(folderName); // Belum ada, buat baru
-  }
+  return folders.hasNext() ? folders.next() : parentFolder.createFolder(folderName);
 }
 
 /* ======================================================================
-   MODUL: UPDATE / EDIT CUTI
+   MODUL: UPDATE / EDIT CUTI - FIXED
    ====================================================================== */
 
 function updatePengajuanCuti(payload) {
@@ -2773,7 +2699,9 @@ function updatePengajuanCuti(payload) {
     // 1. FORMAT TANGGAL
     var tglMulaiIndo   = formatIndoText(payload.tglMulai);
     var tglSelesaiIndo = formatIndoText(payload.tglSelesai);
-    var tglSuratIndo   = formatIndoText(Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd"));
+    
+    // --- PERBAIKAN: Gunakan payload.tglPengajuan ---
+    var tglPengajuanFormat = formatTglIndo(payload.tglPengajuan);
 
     // 2. AMBIL DATA DETIL PEGAWAI
     var dbData = getDetailPegawaiByNip(payload.nip); 
@@ -2783,7 +2711,7 @@ function updatePengajuanCuti(payload) {
     // 3. LOOKUP PEJABAT
     var pejabat = lookupPejabatStruktural(payload.jenisCuti, payload.unit, empGol, empJab);
     
-    var final_kepada, final_nm_ats, final_nip_ats, final_jab_ats, final_nm_stj, final_nip_stj, final_jab_stj;
+    var final_kepada, final_nama_atasan, final_nip_atasan, final_jab_atasan, final_nama_setuju, final_nip_setuju, final_jab_setuju;
 
     if (pejabat) {
         final_kepada      = pejabat.kepada;
@@ -2813,31 +2741,22 @@ function updatePengajuanCuti(payload) {
         else if (thnMulai === 2026) { sisaN2 = dbData.fullRow[62]||"0"; sisaN1 = dbData.fullRow[64]||"0"; sisaN = dbData.fullRow[66]||"0"; }
     }
 
-    // 5. CHECKLIST JENIS CUTI (PERBAIKAN LOGIKA MUTLAK/STRICT)
-    // Pastikan string bersih dari spasi
+    // 5. CHECKLIST JENIS CUTI
     var j = String(payload.jenisCuti).toLowerCase().trim();
     var c = { ct:"", cs:"", cap:"", cb:"", cm:"", cltn:"" }; 
     var CHECK = "✓"; 
     
-    // Gunakan ELSE IF agar hanya SATU kondisi yang terpenuhi
-    if (j.includes("sakit")) {
-        c.cs = CHECK;
-    } else if (j.includes("penting")) {
-        c.cap = CHECK;
-    } else if (j.includes("besar")) {
-        c.cb = CHECK;
-    } else if (j.includes("melahirkan")) {
-        c.cm = CHECK;
-    } else if (j.includes("luar") || j.includes("tanggungan")) {
-        c.cltn = CHECK;
-    } else {
-        // Default / Fallback: Jika mengandung "tahunan" atau "umroh", atau sisanya
-        c.ct = CHECK;
-    }
+    if (j.includes("sakit")) c.cs = CHECK;
+    else if (j.includes("penting")) c.cap = CHECK;
+    else if (j.includes("besar")) c.cb = CHECK;
+    else if (j.includes("melahirkan")) c.cm = CHECK;
+    else if (j.includes("luar") || j.includes("tanggungan")) c.cltn = CHECK;
+    else c.ct = CHECK;
 
     // 6. SUSUN DATA PDF
     var pdfData = {
-        tanggal: tglSuratIndo,
+        // Gunakan Tanggal Pengajuan dari User untuk Tanggal Surat
+        tanggal: tglPengajuanFormat, 
         kepada: final_kepada,
         
         asn: payload.nama,
@@ -2866,17 +2785,14 @@ function updatePengajuanCuti(payload) {
         
         ct: c.ct, cs: c.cs, cap: c.cap, cb: c.cb, cm: c.cm, cltn: c.cltn,
         
-        // Data Raw untuk Penamaan File
         jenisCutiRaw: payload.jenisCuti, 
         tglMulaiRaw: payload.tglMulai    
     };
     
-    // GENERATE PDF BARU
+    // GENERATE PDF
     var linkPdf = generatePdfCuti(pdfData); 
 
     // 7. UPDATE SPREADSHEET
-    
-    // A. Update Data Utama
     var rangeUtama = sheet.getRange(rowIndex, 1, 1, 10);
     rangeUtama.setValues([[
         payload.unit, payload.nama, "'" + payload.nip, payload.jenisCuti, 
@@ -2884,24 +2800,20 @@ function updatePengajuanCuti(payload) {
         payload.alamat, "'" + payload.hp
     ]]);
 
-    // B. Update Status & Link PDF (Mereset Status jadi Diproses)
     sheet.getRange(rowIndex, 11, 1, 3).setValues([["Diproses", "", linkPdf]]);
-
-    // C. Update Log Edit
     sheet.getRange(rowIndex, 16, 1, 2).setValues([[tglEditStr, userEdit]]);
 
-    // D. Update Data Kolom Belakang (V - AO)
     var rangeExtra = sheet.getRange(rowIndex, 22, 1, 20);
     rangeExtra.setValues([[
-      tglSuratIndo,      // V
-      pdfData.jabatan,   // W
-      pdfData.masa_kerja,// X
-      pdfData.unit,      // Y
-      c.ct, c.cb, c.cs, c.cm, c.cap, c.cltn, // Z - AE
+      tglPengajuanFormat, // Kolom V
+      pdfData.jabatan,    // W
+      pdfData.masa_kerja, // X
+      pdfData.unit,       // Y
+      c.ct, c.cb, c.cs, c.cm, c.cap, c.cltn, 
       sisaN2, sisaN1, sisaN,
       final_jab_atasan, final_nama_atasan, final_nip_atasan,
       final_jab_setuju, final_nama_setuju, final_nip_setuju,
-      final_kepada       // AO
+      final_kepada       
     ]]);
 
     SpreadsheetApp.flush();
@@ -2910,28 +2822,19 @@ function updatePengajuanCuti(payload) {
   } catch (e) { return "Error Update: " + e.toString(); }
 }
 
-/* ======================================================================
-   MODUL: HAPUS DATA (DENGAN KODE KEAMANAN HARIAN)
-   ====================================================================== */
-
-function hapusPengajuanCuti(rowBaris, kodeInput) {
+function hapusPengajuanCuti(rowBaris, kodeInput, userDelete) {
   try {
-    // 1. GENERATE KODE RAHASIA HARI INI (YYYYMMDD)
     var now = new Date();
     var validCode = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyyMMdd");
     
-    // 2. VALIDASI INPUT USER
-    // Pastikan input string dan bersih dari spasi
     if (String(kodeInput).trim() !== validCode) {
       return "KODE_SALAH";
     }
 
-    // 3. PROSES HAPUS
     var ss = SpreadsheetApp.openById(ID_SS_CUTI);
     var sheet = ss.getSheetByName("Form Cuti");
     if (!sheet) return "Error: Sheet tidak ditemukan.";
     
-    // Validasi Baris (Jangan sampai menghapus Header di baris 1)
     var row = parseInt(rowBaris);
     if (isNaN(row) || row < 2) return "Error: Baris data tidak valid.";
     
@@ -2939,14 +2842,8 @@ function hapusPengajuanCuti(rowBaris, kodeInput) {
     
     return "Sukses";
     
-  } catch (e) {
-    return "Error Hapus: " + e.toString();
-  }
+  } catch (e) { return "Error Hapus: " + e.toString(); }
 }
-
-/* ======================================================================
-   MODUL: VERIFIKASI ADMIN (UBAH STATUS)
-   ====================================================================== */
 
 function verifikasiPengajuan(rowBaris, status, catatan, adminName) {
   try {
@@ -2957,15 +2854,9 @@ function verifikasiPengajuan(rowBaris, status, catatan, adminName) {
     var row = parseInt(rowBaris);
     if (isNaN(row) || row < 2) return "Error: Baris tidak valid.";
 
-    // Update Data
-    // Kolom K (11) = Status
-    // Kolom L (12) = Catatan (Keterangan)
     sheet.getRange(row, 11).setValue(status);
     sheet.getRange(row, 12).setValue(catatan);
     
-    // Update Metadata Verifikasi
-    // Kolom R (18) = Tgl Verif
-    // Kolom S (19) = Verifikator
     var now = new Date();
     var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
     
@@ -2977,18 +2868,15 @@ function verifikasiPengajuan(rowBaris, status, catatan, adminName) {
   } catch (e) { return "Error Verif: " + e.toString(); }
 }
 
-/* 1. UPDATE FUNGSI OPSI UNIT (SUMBER: DATABASE CUTI KOLOM B) */
 function getUnitOptions() {
   var ss = SpreadsheetApp.openById(ID_SS_CUTI);
-  var sheet = ss.getSheetByName("Database Cuti"); // GANTI SHEET
+  var sheet = ss.getSheetByName("Database Cuti"); 
   if (!sheet) return [];
   
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
   
-  // AMBIL KOLOM B (Index 1) sesuai permintaan
   var data = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
-  
   var uniqueUnits = [];
   var seen = {};
   
@@ -3004,33 +2892,26 @@ function getUnitOptions() {
   return uniqueUnits;
 }
 
-/* 2. UPDATE FUNGSI GET DATA (LOGIKA FILTER LEBIH AMAN) */
 function getDataCuti(tahun, bulan, unitFilter) { 
   var ss = SpreadsheetApp.openById(ID_SS_CUTI);
   var sheet = ss.getSheetByName("Form Cuti");
   if (!sheet) return JSON.stringify([]);
   
-  // Ambil Data Tampilan (Display Values) agar format tanggal konsisten "dd-MM-yyyy HH:mm:ss"
   var dataRaw = sheet.getDataRange().getValues();
   var dataDisplay = sheet.getDataRange().getDisplayValues(); 
-  
   var result = [];
   
-  // Normalisasi Filter
   var fTahun = tahun ? String(tahun).trim() : "";
   var fBulan = bulan ? String(bulan).toLowerCase().trim() : "";
   var fUnit  = unitFilter ? String(unitFilter).toLowerCase().trim() : "";
 
-  // Loop Data (Mulai Baris 2)
   for (var i = 1; i < dataRaw.length; i++) {
-    var row = dataRaw[i];       // Raw data (untuk cek tanggal object)
-    var rowTxt = dataDisplay[i];// Display data (untuk teks konsisten)
+    var row = dataRaw[i];       
+    var rowTxt = dataDisplay[i];
     
-    // Index Kolom: A=0(Unit), E=4(TglMulai)
     var rowUnitRaw = String(row[0]).toLowerCase();
     var tglMulaiTxt = String(rowTxt[4]).trim(); 
     
-    // Deteksi Tahun & Bulan (Logic Toleran)
     var rTahun = "";
     var rBulan = "";
     var parts = tglMulaiTxt.split(" ");
@@ -3043,7 +2924,6 @@ function getDataCuti(tahun, bulan, unitFilter) {
        rBulan = mNames[row[4].getMonth()];
     }
 
-    // LOGIKA FILTER
     var matchTahun = (fTahun === "") || (rTahun === fTahun);
     var matchBulan = (fBulan === "") || (rBulan === fBulan);
     var matchUnit  = (fUnit === "")  || (rowUnitRaw.indexOf(fUnit) > -1);
@@ -3065,47 +2945,42 @@ function getDataCuti(tahun, bulan, unitFilter) {
         ket: rowTxt[11],
         fileUrl: rowTxt[12],
         
-        // Tanggal-tanggal Aktivitas (Penting untuk Sorting)
-        tglInput: rowTxt[13], // Col N
+        tglInput: rowTxt[13], 
         userInput: rowTxt[14],
-        tglEdit: rowTxt[15],  // Col P
+        tglEdit: rowTxt[15],  
         userEdit: rowTxt[16],
-        tglVerif: rowTxt[17], // Col R
-        verifikator: rowTxt[18]
+        tglVerif: rowTxt[17], 
+        verifikator: rowTxt[18],
+        // Tambahkan Kolom V (Tanggal Pengajuan) ke response jika perlu ditampilkan di tabel
+        tanggal: rowTxt[21] 
       });
     }
   }
   
-  // --- SMART SORTING: LAST ACTIVITY ---
-  // Kita cari tanggal paling baru di antara Input, Edit, atau Verif
   result.sort(function(a, b) {
-      // Helper: Parse "dd-MM-yyyy HH:mm:ss" ke Milliseconds
       function getMs(str) {
           if (!str || str.length < 10) return 0;
           try {
-            var parts = str.split(" ");     // Pisah Tanggal & Jam
-            var d = parts[0].split("-");    // [dd, MM, yyyy]
-            var t = parts[1].split(":");    // [HH, mm, ss]
-            // New Date(yyyy, mm-1, dd, hh, mm, ss)
+            var parts = str.split(" ");     
+            var d = parts[0].split("-");    
+            var t = parts[1].split(":");    
             return new Date(d[2], d[1]-1, d[0], t[0], t[1], t[2]).getTime();
           } catch(e) { return 0; }
       }
-      
-      // Cari momen terakhir aktivitas masing-masing baris
       var maxA = Math.max(getMs(a.tglInput), getMs(a.tglEdit), getMs(a.tglVerif));
       var maxB = Math.max(getMs(b.tglInput), getMs(b.tglEdit), getMs(b.tglVerif));
-      
-      // Urutkan Descending (Paling Besar/Baru di Atas)
       return maxB - maxA;
   });
   
   return JSON.stringify(result);
 }
 
-// Helper Format Tanggal Pendek (dd/MM/yy HH:mm)
-function formatDateShort(dateObj) {
-  if (!dateObj) return "";
-  return Utilities.formatDate(new Date(dateObj), Session.getScriptTimeZone(), "dd/MM/yy HH:mm");
+// --- HELPER FORMAT TANGGAL INDO (FINAL) ---
+function formatTglIndo(strDate) {
+  if(!strDate) return "";
+  var d = new Date(strDate);
+  var months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
 }
 
 /* ======================================================================
@@ -3449,6 +3324,7 @@ function simpanUnggahSurat(form, fileData) {
         // Kosongkan Verif
         sheet.getRange(row, 48).setValue("");           // AV
         sheet.getRange(row, 49).setValue("");           // AW
+        sheet.getRange(row, 50).setValue(""); // AX (Hapus Keterangan Lama)
     } else {
         // NEW MODE: Update File (AP), Status (AQ), Log Unggah (AR, AS)
         sheet.getRange(row, 42).setValue(fileUrl);      // AP
@@ -3491,149 +3367,135 @@ function verifikasiUnggahSurat(form) {
 }
 
 /* ======================================================================
-   DASHBOARD STATISTIK SIABA (FINAL - LIGHTWEIGHT & FAST)
-   Tanpa Timeline Aktivitas - Fokus Kecepatan & Akurasi Statistik
+   DASHBOARD SIABA: MODULAR & PARALLEL (FAST LOAD)
    ====================================================================== */
-function getSiabaDashboardData() {
+
+// Helper Configuration
+function getConfigSiaba() {
+  return {
+    cuti:  { id: "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo", sheet: "Form Cuti",      dateCol: 4, statCol: 10, nameCol: 1 },
+    dinas: { id: "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M", sheet: "Perjalanan_Dinas", dateCol: 3, statCol: 9,  nameCol: 1 },
+    lupa:  { id: "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU", sheet: "Lupa_Presensi",    dateCol: 3, statCol: 10, nameCol: 1 },
+    salah: { id: "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY", sheet: "Salah_Presensi",   dateCol: 3, statCol: 8,  nameCol: 1 },
+    rekap: { id: "1tQsQY1-Ny1ie66GOZPTLtvZ7BiYCgFdNrX-AVGCtaHA" }
+  };
+}
+
+// 1. FUNGSI GET METRIC (Dipanggil 4x secara paralel oleh Frontend)
+function getSiabaMetric(type) {
+  var conf = getConfigSiaba()[type];
+  if (!conf) return JSON.stringify({ error: "Invalid Type" });
+
   var cache = CacheService.getScriptCache();
-  var cachedResult = cache.get("dashboard_siaba_v1_user");
-  if (cachedResult != null) {
-    return cachedResult;
-  }
+  var cacheKey = "dash_metric_v2_" + type;
+  var cached = cache.get(cacheKey);
+  if (cached) return cached;
 
-  var ID_DB_CUTI  = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
-  var ID_DB_DINAS = "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M"; 
-  var ID_DB_LUPA  = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
-  var ID_DB_SALAH = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
-  var ID_DB_REKAP = "1tQsQY1-Ny1ie66GOZPTLtvZ7BiYCgFdNrX-AVGCtaHA"; 
-
-  var now = new Date();
-  var curYear = now.getFullYear(); // 2026
-  var curMonth = now.getMonth();   // 0 = Januari
-  
-  var result = {
-    stats: {
-      cuti:  { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 },
-      dinas: { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 },
-      lupa:  { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 },
-      salah: { total:0, bulanIni:0, setuju:0, tolak:0, proses:0, revisi:0 }
-    },
-    // Timeline dihapus agar ringan
-    chartBar: {
-      year: curYear.toString(),
-      labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"],
-      terlambat: [0,0,0,0,0,0,0,0,0,0,0,0],
-      pulangAwal: [0,0,0,0,0,0,0,0,0,0,0,0]
-    }
+  var result = { 
+    type: type,
+    total: 0, bulanIni: 0, setuju: 0, tolak: 0, proses: 0, revisi: 0 
   };
 
-  // HELPER: PARSER TANGGAL KEJADIAN (Strict Mode untuk Statistik)
-  function parseEventDate(dateStr) {
-    if (!dateStr) return null;
-    var str = String(dateStr).trim().replace(/'/g, '');
+  try {
+    var ss = SpreadsheetApp.openById(conf.id);
+    var sheet = ss.getSheetByName(conf.sheet);
+    if (!sheet) return JSON.stringify(result);
 
-    // Cek format Angka (dd-mm-yyyy atau dd/mm/yyyy)
-    var matchNumeric = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-    if (matchNumeric) {
-       var yr = parseInt(matchNumeric[3], 10);
-       if (yr < 100) yr += 2000;
-       return new Date(yr, matchNumeric[2] - 1, matchNumeric[1]);
-    }
+    var data = sheet.getDataRange().getValues();
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var curMonth = now.getMonth();
 
-    // Cek format Teks Indonesia
-    var monthMap = { "januari":0, "februari":1, "maret":2, "april":3, "mei":4, "juni":5, "juli":6, "agustus":7, "september":8, "oktober":9, "november":10, "desember":11, "jan":0, "feb":1, "mar":2, "apr":3, "jun":5, "jul":6, "agu":7, "sep":8, "okt":9, "nov":10, "des":11 };
-    var parts = str.split(' ');
-    if (parts.length >= 3) {
-        var day = parseInt(parts[0], 10);
-        var monthStr = parts[1].toLowerCase();
-        var year = parseInt(parts[2], 10);
-        if (monthMap.hasOwnProperty(monthStr)) {
-            return new Date(year, monthMap[monthStr], day);
-        }
-    }
-    // Fallback
-    var d = new Date(str);
-    return (d.toString() !== 'Invalid Date') ? d : null;
-  }
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row[conf.nameCol]) continue; // Skip nama kosong
 
-  // CORE LOGIC (HANYA STATISTIK)
-  function processModule(idSS, sheetName, type, idxTglEvent, idxStat, idxNama) {
-    try {
-      var ss = SpreadsheetApp.openById(idSS);
-      var sheet = ss.getSheetByName(sheetName);
-      if (!sheet) return;
-      
-      // Ambil data mentah (getValues) agar lebih akurat membaca Tanggal Excel
-      var data = sheet.getDataRange().getValues();
-      if (data.length < 2) return;
+      var rawDate = row[conf.dateCol];
+      var eventDate = parseEventDateSimple(rawDate); // Gunakan parser ringan
 
-      for (var i = 1; i < data.length; i++) {
-        var row = data[i];
-        if (!row[idxNama] || String(row[idxNama]).trim() === "") continue;
+      if (!eventDate || eventDate.getFullYear() !== curYear) continue;
 
-        // Ambil Data Tanggal Kejadian (Bisa Object Date atau String)
-        var rawEvent = row[idxTglEvent];
-        var dateEvent = null;
+      var status = String(row[conf.statCol] || "").toLowerCase();
 
-        if (rawEvent instanceof Date) {
-            dateEvent = rawEvent;
-        } else {
-            dateEvent = parseEventDate(rawEvent);
-        }
-        
-        // SYARAT MUTLAK: Wajib Tahun 2026
-        if (!dateEvent || dateEvent.getFullYear() !== curYear) continue;
-
-        var status = String(row[idxStat] || "").toLowerCase();
-
-        // Hitung Statistik
-        result.stats[type].total++;
-        if (dateEvent.getMonth() === curMonth) {
-          result.stats[type].bulanIni++;
-        }
-
-        if (status.includes("setuju") || status.includes("ok")) result.stats[type].setuju++;
-        else if (status.includes("tolak")) result.stats[type].tolak++;
-        else if (status.includes("revisi") || status.includes("ubah")) result.stats[type].revisi++;
-        else result.stats[type].proses++;
+      result.total++;
+      if (eventDate.getMonth() === curMonth) {
+        result.bulanIni++;
       }
-    } catch (e) { Logger.log("Error " + sheetName + ": " + e.message); }
-  }
 
-  // EKSEKUSI (Mapping Kolom tetap sama, tapi parameter Input Date dihapus)
-  processModule(ID_DB_CUTI, "Form Cuti", "cuti", 4, 10, 1);
-  processModule(ID_DB_DINAS, "Perjalanan_Dinas", "dinas", 3, 9, 1);
-  processModule(ID_DB_LUPA, "Lupa_Presensi", "lupa", 3, 10, 1);
-  processModule(ID_DB_SALAH, "Salah_Presensi", "salah", 3, 8, 1);
+      if (status.includes("setuju") || status.includes("ok") || status.includes("acc")) result.setuju++;
+      else if (status.includes("tolak")) result.tolak++;
+      else if (status.includes("revisi") || status.includes("ubah")) result.revisi++;
+      else result.proses++;
+    }
+  } catch (e) { result.error = e.toString(); }
 
-  // REKAP (Chart Bar)
-  function processRekap(sheetName, targetArray) {
-    try {
-      var ss = SpreadsheetApp.openById(ID_DB_REKAP);
+  var json = JSON.stringify(result);
+  cache.put(cacheKey, json, 120); // Cache 2 menit
+  return json;
+}
+
+// 2. FUNGSI GET CHART TREN (Dipanggil terpisah)
+function getSiabaChartTrend() {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = "dash_chart_trend_v2";
+  var cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  var conf = getConfigSiaba()['rekap'];
+  var result = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"],
+    terlambat: [0,0,0,0,0,0,0,0,0,0,0,0],
+    pulangAwal: [0,0,0,0,0,0,0,0,0,0,0,0]
+  };
+
+  try {
+    var ss = SpreadsheetApp.openById(conf.id);
+    var curYearStr = new Date().getFullYear().toString();
+
+    function processSheet(sheetName, targetKey) {
       var sheet = ss.getSheetByName(sheetName);
-      if (!sheet) return;
-      var data = sheet.getDataRange().getDisplayValues(); 
+      if(!sheet) return;
+      var data = sheet.getDataRange().getDisplayValues();
       for (var i = 2; i < data.length; i++) {
-        var row = data[i];
-        if (String(row[0]).trim() === curYear.toString()) {
+        if (String(data[i][0]).trim() === curYearStr) {
           for (var m = 0; m < 12; m++) {
-            var val = row[4 + (m * 2)]; 
+            var val = data[i][4 + (m * 2)];
             if (val && val !== "0" && val !== "-" && val.trim() !== "") {
-               result.chartBar[targetArray][m]++;
+               result[targetKey][m]++;
             }
           }
         }
       }
-    } catch (e) { }
+    }
+
+    processSheet("Rekap_Terlambat", "terlambat");
+    processSheet("Rekap_Pulang_Awal", "pulangAwal");
+
+  } catch (e) { result.error = e.toString(); }
+
+  var json = JSON.stringify(result);
+  cache.put(cacheKey, json, 300); // Cache 5 menit
+  return json;
+}
+
+// Helper Parser Ringan (Tanpa Regex Berat)
+function parseEventDateSimple(raw) {
+  if (raw instanceof Date) return raw;
+  if (!raw) return null;
+  var str = String(raw).trim();
+  
+  // Deteksi Format: "21 Januari 2026"
+  var months = ["januari","februari","maret","april","mei","juni","juli","agustus","september","oktober","november","desember"];
+  var parts = str.split(' ');
+  if (parts.length >= 3) {
+    var d = parseInt(parts[0]);
+    var mStr = parts[1].toLowerCase();
+    var y = parseInt(parts[2]);
+    var m = months.indexOf(mStr);
+    if (m > -1 && !isNaN(d) && !isNaN(y)) return new Date(y, m, d);
   }
-  processRekap("Rekap_Terlambat", "terlambat");
-  processRekap("Rekap_Pulang_Awal", "pulangAwal");
-
-  var jsonOutput = JSON.stringify(result);
-
-  // 2. SIMPAN KE CACHE SEBELUM DIKIRIM
-  // Simpan selama 900 detik (15 Menit)->1 Menit aja
-  cache.put("dashboard_siaba_v1_user", jsonOutput, 60);
-
-  return jsonOutput;
+  
+  // Fallback ke standard date
+  var dObj = new Date(raw);
+  return isNaN(dObj.getTime()) ? null : dObj;
 }

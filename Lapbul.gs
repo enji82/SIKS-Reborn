@@ -1064,93 +1064,95 @@ function getRekapLapbulStatus() {
 }
 
 /* ======================================================================
-   DASHBOARD LAPBUL (DATA AGREGAT)
+   DASHBOARD LAPBUL (OPTIMIZED SINGLE PASS)
    ====================================================================== */
-function getDashboardLapbul(tahun, bulan) {
-  var ID_SD = "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s";
-  var ID_PAUD = "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs";
-  
-  var recentList = []; 
 
-  var hitungStatistik = function(id, sheetName, filterJenjang) {
-    // Inisialisasi Counter Lengkap
-    var stats = { 
-      total: 0, sudah: 0, belum: 0, persen: 0,
-      disetujui: 0, diproses: 0, revisi: 0, ditolak: 0
-    };
+// Konfigurasi ID Spreadsheet
+var CONF_LAPBUL = {
+  sd:   "1u4tNL3uqt5xHITXYwHnytK6Kul9Siam-vNYuzmdZB4s",
+  paud: "1an0oQQPdMh6wrUJIAzTGYk3DKFvYprK5SU7RmRXjIgs"
+};
 
-    try {
-      var ss = SpreadsheetApp.openById(id);
-      var sheet = ss.getSheetByName(sheetName);
-      if (!sheet) return stats;
+// 1. FUNGSI KHUSUS SD (Cepat)
+function getLapbulMetric_SD(tahun, bulan) {
+  return processSheet(CONF_LAPBUL.sd, "Status SD", tahun, bulan, ["SD"]);
+}
+
+// 2. FUNGSI KHUSUS PAUD (Single Pass Loop untuk TK, KB, SPS)
+function getLapbulMetric_PAUD(tahun, bulan) {
+  // Kita ambil sekaligus TK, KB, dan SPS dalam satu kali buka file
+  return processSheet(CONF_LAPBUL.paud, "Status PAUD", tahun, bulan, ["TK", "KB", "SPS"]);
+}
+
+// CORE PROCESSOR
+function processSheet(idSS, sheetName, tahun, bulan, targetJenjangArray) {
+  // Struktur Result Dinamis sesuai target jenjang
+  var result = { recent: [] };
+  targetJenjangArray.forEach(function(j) {
+    result[j.toLowerCase()] = { total:0, sudah:0, belum:0, persen:0, disetujui:0, diproses:0, revisi:0, ditolak:0 };
+  });
+
+  try {
+    var ss = SpreadsheetApp.openById(idSS);
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) return JSON.stringify(result);
+
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) return JSON.stringify(result);
+
+    var idxStatus = parseInt(bulan) + 3; // Jan(1) = Col 4 (Index 3 + 1) -> Index Array dimulai dari 0, jadi +3 pas.
+
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var rTahun = String(row[3]).trim(); 
+      var rJenjang = String(row[2]).trim().toUpperCase();
+
+      // Filter Tahun
+      if (rTahun !== String(tahun)) continue;
       
-      var data = sheet.getDataRange().getValues();
-      if (data.length < 2) return stats;
+      // Filter Jenjang (Cek apakah jenjang baris ini ada di targetArray)
+      if (targetJenjangArray.indexOf(rJenjang) === -1) continue;
 
-      for (var i = 1; i < data.length; i++) {
-        var row = data[i];
-        var rTahun = String(row[3]).trim();     
-        var rJenjang = String(row[2]).trim().toUpperCase(); 
+      var key = rJenjang.toLowerCase(); // 'tk', 'kb', 'sps', 'sd'
+      var stats = result[key];
+      
+      stats.total++;
+
+      var rawStatus = String(row[idxStatus] || "").trim();
+      var st = rawStatus.toLowerCase();
+
+      // LOGIKA STATUS
+      if (st === "" || st === "-" || st === "0") {
+        stats.belum++;
+      } else {
+        stats.sudah++;
         
-        if (rTahun !== String(tahun)) continue;
-        if (filterJenjang !== "SD" && filterJenjang !== rJenjang) continue; 
-        if (filterJenjang === "SD" && rJenjang !== "SD") continue;
+        if (st.includes('revisi') || st.includes('perbaiki')) stats.revisi++;
+        else if (st.includes('tolak') || st.includes('x') || st.includes('salah')) stats.ditolak++;
+        else if (st.includes('ok') || st.includes('setuju') || st.includes('valid')) stats.disetujui++;
+        else stats.diproses++;
 
-        stats.total++;
-        
-        // Ambil isi sel bulan (Index = Bulan + 3)
-        var rawStatus = String(row[parseInt(bulan) + 3] || "").trim();
-        var st = rawStatus.toLowerCase();
-
-        // LOGIKA KLASIFIKASI STATUS
-        if (st === "" || st === "-" || st === "0") {
-          // 1. BELUM LAPOR
-          stats.belum++;
-        } else {
-          // MASUK KATEGORI SUDAH ADA ISI (Activity)
-          stats.sudah++;
-
-          if (st.includes('revisi') || st.includes('perbaiki')) {
-            // 2. REVISI
-            stats.revisi++;
-          } else if (st.includes('tolak') || st.includes('x') || st.includes('salah')) {
-            // 3. DITOLAK
-            stats.ditolak++;
-          } else if (st.includes('ok') || st.includes('setuju') || st.includes('verif') || st.includes('valid')) {
-            // 4. DISETUJUI
-            stats.disetujui++;
-          } else {
-            // 5. DIPROSES (Biasanya berisi tanggal kirim, misal: "12 Jan 2025")
-            stats.diproses++;
-          }
-
-          // Tambahkan ke Recent Activity
-          if (recentList.length < 20) {
-             recentList.push({
-               sekolah: row[0],
-               jenjang: rJenjang,
-               status: rawStatus // Tampilkan teks aslinya
-             });
-          }
+        // Push ke Recent (Max 10 per request biar ringan)
+        if (result.recent.length < 10) {
+           result.recent.push({
+             sekolah: row[0],
+             jenjang: rJenjang,
+             status: rawStatus
+           });
         }
       }
-      
-      // Hitung Persentase Kepatuhan (Total - Belum) / Total
-      stats.persen = stats.total === 0 ? 0 : Math.round((stats.sudah / stats.total) * 100);
+    }
 
-    } catch (e) { }
-    return stats;
-  };
+    // Hitung Persentase Final
+    targetJenjangArray.forEach(function(j) {
+       var k = j.toLowerCase();
+       var s = result[k];
+       s.persen = s.total === 0 ? 0 : Math.round((s.sudah / s.total) * 100);
+    });
 
-  var result = {
-    sd: hitungStatistik(ID_SD, "Status SD", "SD"),
-    tk: hitungStatistik(ID_PAUD, "Status PAUD", "TK"),
-    kb: hitungStatistik(ID_PAUD, "Status PAUD", "KB"),
-    sps: hitungStatistik(ID_PAUD, "Status PAUD", "SPS"),
-    recent: recentList
-  };
+  } catch (e) { result.error = e.toString(); }
 
-  return result;
+  return JSON.stringify(result);
 }
 
 /* ======================================================================

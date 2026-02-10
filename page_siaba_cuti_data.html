@@ -187,12 +187,18 @@
             </div>
           </div>
           <hr>
-          <div class="form-group">
-            <label class="form-label-sultan">Jenis Cuti</label>
-            <select id="inputJenisCuti" class="form-control form-control-sultan">
-               <option value="">- Pilih Jenis Cuti -</option>
-            </select>
-            <small class="text-muted font-italic">Pilihan cuti menyesuaikan status kepegawaian.</small>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+                <label class="form-label-sultan">Jenis Cuti</label>
+                <select id="inputJenisCuti" class="form-control form-control-sultan">
+                   <option value="">- Pilih Jenis Cuti -</option>
+                </select>
+                <small class="text-muted font-italic">Pilihan cuti menyesuaikan status kepegawaian.</small>
+            </div>
+            <div class="form-group col-md-6">
+                <label class="form-label-sultan">Tanggal Pengajuan</label>
+                <input type="date" id="inputTglPengajuan" class="form-control form-control-sultan">
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group col-md-4">
@@ -236,11 +242,11 @@
 </div>
 
 <div class="modal fade" id="modalVerifikasi" tabindex="-1" role="dialog" data-backdrop="static">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content border-0 shadow-lg">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 98%; width: 98%; margin: auto;">
+        <div class="modal-content border-0 shadow-lg" style="height: 95vh;">
             
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title font-weight-bold" id="titleVerifikasi">
+            <div class="modal-header bg-success text-white py-2">
+                <h5 class="modal-title font-weight-bold" style="font-size: 16px;">
                     <i class="fas fa-check-double mr-2"></i>Verifikasi Pengajuan Cuti
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal">
@@ -248,10 +254,10 @@
                 </button>
             </div>
 
-            <div class="modal-body p-0">
-                <div class="row no-gutters" style="min-height: 500px;">
+            <div class="modal-body p-0 bg-light">
+                <div class="row no-gutters h-100">
                     
-                    <div class="col-lg-7 bg-dark d-flex align-items-center justify-content-center position-relative">
+                    <div class="col-lg-8 bg-dark d-flex align-items-center justify-content-center position-relative border-right">
                         <iframe id="iframePreview" style="width:100%; height:100%; border:none; display:none;"></iframe>
                         <div id="noFilePreview" class="text-center text-white-50">
                             <i class="fas fa-file-pdf fa-4x mb-3"></i>
@@ -259,59 +265,73 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-5 bg-white p-4" style="overflow-y: auto; max-height: 80vh;">
-                        <input type="hidden" id="verifRowId">
-                        
-                        <div class="alert alert-light border-left-success shadow-sm mb-4">
-                            <table class="table table-sm table-borderless mb-0" style="font-size: 14px;">
+                    <div class="col-lg-4 bg-white d-flex flex-column h-100">
+                        <div class="p-3 overflow-auto" style="flex: 1;">
+                            <input type="hidden" id="verifRowId">
+                            
+                            <h6 class="text-success font-weight-bold border-bottom pb-2 mb-3">
+                                <i class="fas fa-user-circle mr-1"></i> Detail Pegawai
+                            </h6>
+                            <table class="table table-sm table-borderless small mb-3 text-dark">
                                 <tr>
-                                    <td class="text-muted" width="30%" style="vertical-align: middle;">Nama</td>
-                                    <td class="font-weight-bold text-dark" id="verifNama" style="font-size: 15px;">-</td>
+                                    <td class="text-muted font-weight-bold" width="35%">Nama ASN</td>
+                                    <td class="font-weight-bold" id="verifNama">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">NIP</td>
-                                    <td id="verifNip">-</td>
+                                    <td class="text-muted font-weight-bold">Jenis Cuti</td>
+                                    <td class="font-weight-bold text-primary" id="verifJenis">-</td>
+                                </tr>
+                                <tr><td colspan="2"><hr class="my-1 dashed"></td></tr>
+                                <tr>
+                                    <td class="text-muted font-weight-bold">Tgl. Pengajuan</td>
+                                    <td class="font-weight-bold" id="verifTglAjuan">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Unit</td>
-                                    <td id="verifUnit">-</td>
+                                    <td class="text-muted font-weight-bold">Tgl. Mulai</td>
+                                    <td id="verifTglMulai">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Jenis</td>
-                                    <td class="font-weight-bold" id="verifJenis">-</td>
+                                    <td class="text-muted font-weight-bold">Tgl. Selesai</td>
+                                    <td id="verifTglSelesai">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Tanggal</td>
-                                    <td class="font-weight-bold text-danger" id="verifTanggal" style="font-size: 15px;">-</td>
+                                    <td class="text-muted font-weight-bold">Lama Cuti</td>
+                                    <td><span class="badge badge-sultan badge-sultan-light-info" id="verifLama">- Hari</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted font-weight-bold" style="vertical-align: top;">Alasan</td>
+                                    <td class="font-italic text-muted" id="verifAlasan" style="white-space: pre-wrap;">-</td>
                                 </tr>
                             </table>
+
+                            <a id="btnDownloadManual" href="#" target="_blank" class="btn btn-outline-primary btn-sm btn-block mb-4 shadow-sm font-weight-bold">
+                                <i class="fas fa-download mr-2"></i>Unduh Dokumen PDF
+                            </a>
+
+                            <div class="card bg-light border-0 shadow-sm">
+                                <div class="card-body p-3">
+                                    <div class="form-group mb-2">
+                                        <label class="font-weight-bold text-success small mb-1">Keputusan Admin <span class="text-danger">*</span></label>
+                                        <select class="form-control form-control-sultan font-weight-bold text-dark" id="verifStatus">
+                                            <option value="">-- Pilih Status --</option>
+                                            <option value="Disetujui">✅ Disetujui (ACC)</option>
+                                            <option value="Revisi">📝 Revisi</option>
+                                            <option value="Ditolak">❌ Ditolak</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <label class="font-weight-bold text-dark small mb-1">Catatan Admin</label>
+                                        <textarea class="form-control form-control-sultan" id="verifCatatan" rows="3" placeholder="Wajib diisi jika Ditolak/Revisi..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <a id="btnDownloadManual" href="#" target="_blank" class="btn btn-outline-success btn-sm btn-block mb-4 shadow-sm font-weight-bold">
-                            <i class="fas fa-download mr-2"></i>Unduh Dokumen Asli
-                        </a>
-
-                        <hr>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold text-success" style="font-size: 15px;">Hasil Verifikasi <span class="text-danger">*</span></label>
-                            <select class="form-control form-control-sultan" id="verifStatus" style="font-size: 15px; height: auto; padding: 10px;">
-                                <option value="">-- Pilih Status --</option>
-                                <option value="Disetujui">✅ Disetujui</option>
-                                <option value="Perubahan">📝 Revisi</option>
-                                <option value="Ditolak">❌ Ditolak</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold" style="font-size: 15px;">Catatan Admin</label>
-                            <textarea class="form-control" id="verifCatatan" rows="4" placeholder="Berikan catatan jika ditolak atau revisi..." style="font-size: 14px;"></textarea>
-                        </div>
-
-                        <div class="mt-4 pt-3 border-top d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary px-4 font-weight-bold" data-dismiss="modal">Batal</button>
+                        <div class="p-3 bg-white border-top shadow-lg d-flex justify-content-between" style="z-index: 10;">
+                            <button type="button" class="btn btn-secondary px-4 font-weight-bold shadow-sm" data-dismiss="modal">Tutup</button>
                             <button type="button" class="btn btn-success px-4 font-weight-bold shadow" onclick="simpanVerifikasi()">
-                                <i class="fas fa-save mr-2"></i> SIMPAN
+                                <i class="fas fa-save mr-2"></i> SIMPAN KEPUTUSAN
                             </button>
                         </div>
                     </div>
@@ -612,7 +632,9 @@ function tambahDataCuti() {
     $('#editRowId').val(""); 
     $('.modal-title').html('<i class="fas fa-plus-circle mr-2"></i>Form Pengajuan Cuti'); 
     $('#btnKirimCuti').html('<i class="fas fa-paper-plane mr-2"></i>Kirim Pengajuan');
-    $('#formCuti')[0].reset(); 
+    $('#formCuti')[0].reset();
+    var today = new Date().toISOString().split('T')[0];
+    $('#inputTglPengajuan').val(today); 
     $('#inputNama, #inputNIP, #inputJenisCuti').prop('disabled', true).html('<option value="">- Pilih -</option>');
     $('#inputUnit').prop('disabled', false); 
     $('#inputStatusPegawai').val(''); 
@@ -658,6 +680,7 @@ function tambahDataCutiWithVal(rowIdx) {
     populateJenisCuti(statusPeg); 
     
     $('#inputJenisCuti').val(data.jenis); 
+    $('#inputTglPengajuan').val(indoDateToIso(data.tanggal));
     $('#inputTglMulai').val(indoDateToIso(data.tglMulai)); 
     $('#inputTglSelesai').val(indoDateToIso(data.tglSelesai));
     $('#inputJumlahHari').val(data.jumlah); 
@@ -670,15 +693,31 @@ function tambahDataCutiWithVal(rowIdx) {
 function kirimPengajuanCuti() {
     if (!$('#inputNIP').val()) { Swal.fire('Gagal', 'Data Pegawai belum terisi!', 'warning'); return; }
     if (!$('#inputTglMulai').val()) { Swal.fire('Gagal', 'Tanggal Cuti wajib diisi!', 'warning'); return; }
+    if (!$('#inputTglPengajuan').val()) { Swal.fire('Gagal', 'Tanggal Pengajuan wajib diisi!', 'warning'); return; }
     
     var btn = $('#btnKirimCuti'); var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
-    var myName = "User Web"; try { var user = JSON.parse(localStorage.getItem("siksUser")); if(user && user.nama) myName = user.nama; } catch(e){}
+    var myName = "User Web"; 
+    try { 
+        var user = JSON.parse(localStorage.getItem("siksUser") || "{}"); 
+        // Prioritas Nama Lengkap
+        myName = user.nama_lengkap || user.fullname || user.nama || user.username || "User Web"; 
+    } catch(e){}
     
     var payload = {
-        rowBaris: $('#editRowId').val(), unit: $('#inputUnit').val(), nama: $('#inputNama').val(), nip: $('#inputNIP').val(),
-        jenisCuti: $('#inputJenisCuti').val(), tglMulai: $('#inputTglMulai').val(), tglSelesai: $('#inputTglSelesai').val(),
-        jumlahHari: $('#inputJumlahHari').val(), alasan: $('#inputAlasan').val(), alamat: $('#inputAlamat').val(), hp: $('#inputHP').val(), userInput: myName
+        rowBaris: $('#editRowId').val(), 
+        unit: $('#inputUnit').val(), 
+        nama: $('#inputNama').val(), 
+        nip: $('#inputNIP').val(),
+        jenisCuti: $('#inputJenisCuti').val(), 
+        tglPengajuan: $('#inputTglPengajuan').val(),
+        tglMulai: $('#inputTglMulai').val(), 
+        tglSelesai: $('#inputTglSelesai').val(),
+        jumlahHari: $('#inputJumlahHari').val(), 
+        alasan: $('#inputAlasan').val(), 
+        alamat: $('#inputAlamat').val(), 
+        hp: $('#inputHP').val(), 
+        userInput: myName
     };
     
     var runner = google.script.run.withSuccessHandler(function(res){
@@ -715,7 +754,16 @@ function hapusDataCuti(rowIdx) {
         preConfirm: (kode) => { if (!kode) Swal.showValidationMessage('Wajib isi kode!'); return kode; }
     }).then((result) => {
         if (result.isConfirmed) {
+            
+            // --- AMBIL NAMA LENGKAP PENGHAPUS ---
+            var userDelete = "Admin";
+            try {
+                var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
+                userDelete = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
+            } catch(e){}
+
             Swal.fire({ title: 'Menghapus...', didOpen: () => { Swal.showLoading() } });
+            
             google.script.run.withSuccessHandler(function(res) {
                 if (res === "Sukses") { 
                     Swal.fire('Terhapus!', 'Berhasil dihapus.', 'success'); 
@@ -723,24 +771,37 @@ function hapusDataCuti(rowIdx) {
                 } 
                 else if (res === "KODE_SALAH") { Swal.fire('Gagal!', 'Kode SALAH.', 'error'); } 
                 else { Swal.fire('Error', res, 'error'); }
-            }).hapusPengajuanCuti(rowIdx, result.value);
+            })
+            // Kirim Nama User sebagai parameter ke-3
+            .hapusPengajuanCuti(rowIdx, result.value, userDelete);
         }
     });
 }
 
 function bukaVerifikasi(rowIdx) {
-    var data = ROW_DATA[rowIdx]; if (!data) return;
+    var data = ROW_DATA[rowIdx]; 
+    if (!data) return;
     
+    // 1. Reset & Isi ID
     $('#verifRowId').val(rowIdx);
-    $('#verifNama').text(data.nama);
-    $('#verifNip').text(data.nip);
-    $('#verifUnit').text(data.unit);
-    $('#verifJenis').text(data.jenis);
-    $('#verifTanggal').text(data.tglMulai + " s.d " + data.tglSelesai);
     $('#verifStatus').val(""); 
     $('#verifCatatan').val(data.ket || ""); 
+
+    // 2. Isi Data Tampilan (Sesuai Request)
+    $('#verifNama').text(data.nama || '-');
+    $('#verifJenis').text(data.jenis || '-');
     
-    // Logic Preview
+    // Pastikan data.tanggal (Tgl Pengajuan) ada. (Kolom V dari backend)
+    // Jika masih kosong, ambil dari tglInput (Kolom N) sebagai fallback
+    var tglAjuanDisplay = data.tanggal ? data.tanggal : (data.tglInput ? data.tglInput.split(' ')[0] : '-');
+    $('#verifTglAjuan').text(tglAjuanDisplay);
+
+    $('#verifTglMulai').text(data.tglMulai || '-');
+    $('#verifTglSelesai').text(data.tglSelesai || '-');
+    $('#verifLama').text((data.jumlah || '0') + ' Hari');
+    $('#verifAlasan').text(data.alasan || '-');
+    
+    // 3. Logic Preview Dokumen
     var url = data.fileUrl || "";
     $('#iframePreview').hide().attr('src', '');
     $('#noFilePreview').show();
@@ -748,14 +809,17 @@ function bukaVerifikasi(rowIdx) {
 
     if (url && url.length > 5) {
         $('#btnDownloadManual').attr('href', url).removeClass('disabled');
+        
         var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
         var fileId = match ? match[1] : null;
 
         if (fileId) {
+            // Pakai mode preview agar bersih
             var previewLink = 'https://drive.google.com/file/d/' + fileId + '/preview';
             $('#iframePreview').attr('src', previewLink).show();
             $('#noFilePreview').hide();
         } else {
+            // Fallback URL biasa
             $('#iframePreview').attr('src', url).show();
             $('#noFilePreview').hide();
         }
@@ -765,23 +829,79 @@ function bukaVerifikasi(rowIdx) {
 }
 
 function simpanVerifikasi() {
-    var rowId = $('#verifRowId').val(); var status = $('#verifStatus').val(); var catatan = $('#verifCatatan').val(); if(!rowId) return;
+    var rowId = $('#verifRowId').val(); 
+    var status = $('#verifStatus').val(); 
+    var catatan = $('#verifCatatan').val(); 
     
-    if(!status || status === "") { Swal.fire('Peringatan', 'Mohon pilih Status Keputusan terlebih dahulu!', 'warning'); return; }
-    if ((status === 'Ditolak' || status === 'Perubahan') && !catatan.trim()) { Swal.fire('Peringatan', 'Catatan wajib diisi untuk status Ditolak/Revisi.', 'warning'); return; }
+    if(!rowId) return;
+    
+    // Validasi Input
+    if(!status || status === "") { 
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pilih Status',
+            text: 'Mohon tentukan status keputusan (Disetujui/Revisi/Ditolak).',
+            confirmButtonColor: '#d33' 
+        }); 
+        return; 
+    }
 
-    var btn = $('button[onclick="simpanVerifikasi()"]'); var txt = btn.html(); 
+    if ((status === 'Ditolak' || status === 'Revisi') && !catatan.trim()) { 
+        Swal.fire({
+            icon: 'warning',
+            title: 'Catatan Wajib',
+            text: 'Anda wajib mengisi catatan alasan jika statusnya Ditolak atau Revisi.',
+            confirmButtonColor: '#d33'
+        }); 
+        return; 
+    }
+
+    // Tampilan Loading Awal
+    var btn = $('button[onclick="simpanVerifikasi()"]'); 
+    var txt = btn.html(); 
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
-    var adminName = "Admin"; try { var u = JSON.parse(localStorage.getItem("siksUser")); if(u) adminName = u.nama; } catch(e){}
+    
+    var adminName = "Admin"; 
+    try { 
+        var u = JSON.parse(localStorage.getItem("siksUser") || "{}"); 
+        adminName = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
+    } catch(e){}
     
     google.script.run.withSuccessHandler(function(res){
         btn.prop('disabled', false).html(txt);
+        
         if (res === "Sukses") { 
             $('#modalVerifikasi').modal('hide'); 
-            Swal.fire({ icon: 'success', title: 'Terverifikasi!', text: 'Status pengajuan telah diperbarui menjadi: ' + status, timer: 1500, showConfirmButton: false }); 
+            
+            // --- POPUP SULTAN LUXURY (AUTO CLOSE) ---
+            Swal.fire({ 
+                title: 'Verifikasi Berhasil',
+                html: `Data pengajuan telah diperbarui menjadi <b class="text-maroon">${status}</b>.<br><small class="text-muted">Memuat ulang tabel data...</small>`,
+                icon: 'success',
+                
+                // HILANGKAN TOMBOL OK
+                showConfirmButton: false, 
+                
+                // PERLAMBAT DURASI (3 Detik / 3000ms)
+                // Ini memberi waktu mata user membaca & tabel di belakang selesai loading
+                timer: 3000, 
+                timerProgressBar: true,
+                
+                background: '#fff', 
+                backdrop: `rgba(0,0,0,0.5)`
+            }); 
+            
+            // Refresh Tabel (Berjalan di balik layar saat popup tampil)
             loadDataServer(); 
         } 
-        else { Swal.fire('Gagal', res, 'error'); }
+        else { 
+            Swal.fire({
+                title: 'Gagal',
+                text: res,
+                icon: 'error',
+                confirmButtonColor: '#d33'
+            }); 
+        }
     }).verifikasiPengajuan(rowId, status, catatan, adminName);
 }
 
@@ -870,4 +990,7 @@ function indoDateToIso(str) {
     var mIndex = months.indexOf(mName); if (mIndex < 0) return "";
     var m = mIndex + 1; if(m < 10) m = "0"+m; return y + "-" + m + "-" + d;
 }
+
+
+
 </script>

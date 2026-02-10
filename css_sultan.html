@@ -512,6 +512,13 @@ thead th.col-sticky-center {
     border: none;
 }
 
+/* Perkecil padding kolom status agar ikon rapat */
+.table-sultan-compact td:not(:first-child) {
+    padding: 8px 4px !important; /* Atas-Bawah 8px, Kiri-Kanan 4px */
+    width: 60px !important;      /* Lebar paksa kecil */
+    text-align: center;
+}
+
 /* =========================================
    OVERRIDE: MODAL VERIFIKASI LUPA PRESENSI
    (Menggunakan ID #modalVerif agar tidak merusak halaman lain)

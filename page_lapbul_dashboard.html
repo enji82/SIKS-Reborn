@@ -1,5 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -21,24 +19,13 @@
             <div class="card-sultan p-3">
                 <div class="d-flex-gap align-items-center justify-content-center flex-wrap">
                     <label class="mb-0 mr-2 font-weight-bold text-maroon">Periode Data:</label>
-                    
                     <select id="dashTahun" class="form-control form-control-sultan input-auto-width" style="min-width: 100px;"></select>
-                    
                     <select id="dashBulan" class="form-control form-control-sultan input-auto-width" style="min-width: 150px;">
-                        <option value="1">Januari</option>
-                        <option value="2">Februari</option>
-                        <option value="3">Maret</option>
-                        <option value="4">April</option>
-                        <option value="5">Mei</option>
-                        <option value="6">Juni</option>
-                        <option value="7">Juli</option>
-                        <option value="8">Agustus</option>
-                        <option value="9">September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11">November</option>
-                        <option value="12">Desember</option>
+                        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                        <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                        <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
                     </select>
-
                     <button type="button" class="btn btn-maroon shadow-sm ml-2" onclick="loadDashboard()">
                         <i class="fas fa-sync-alt mr-1"></i> TAMPILKAN
                     </button>
@@ -47,31 +34,19 @@
         </div>
     </div>
 
-    <div id="loadingDash" class="row" style="display:none;">
-        <div class="col-12 text-center p-5">
-            <div class="sultan-loading-container">
-                <i class="fas fa-circle-notch fa-spin fa-3x text-maroon mb-3"></i>
-                <h6 class="text-muted font-weight-bold">Menghitung Statistik...</h6>
-            </div>
-        </div>
-    </div>
-
-    <div id="contentDash" class="row" style="display:none;">
+    <div id="contentDash" class="row">
         
         <div class="col-lg-3 col-6">
             <div class="card-sultan mb-3 border-left-info shadow-sm h-100">
-                <div class="card-body">
+                <div class="card-body position-relative">
+                    <div class="overlay-spinner" id="loadSd"><i class="fas fa-spinner fa-spin text-info"></i></div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="font-weight-bold text-info m-0">JENJANG SD</h6>
-                        <i class="fas fa-school text-black-50 fa-2x"></i>
+                        <h6 class="font-weight-bold text-info m-0">JENJANG SD</h6><i class="fas fa-school text-black-50 fa-2x"></i>
                     </div>
                     <h3 class="font-weight-bold text-dark mb-1" id="valSdPersen">0%</h3>
-                    <div class="progress mb-2" style="height: 6px;">
-                        <div id="progSd" class="progress-bar bg-info" style="width: 0%"></div>
-                    </div>
+                    <div class="progress mb-2" style="height: 6px;"><div id="progSd" class="progress-bar bg-info" style="width: 0%"></div></div>
                     <div class="d-flex justify-content-between small text-muted">
-                        <span>Sudah: <b id="valSdSudah" class="text-success">0</b></span>
-                        <span>Total: <b id="valSdTotal">0</b></span>
+                        <span>Sudah: <b id="valSdSudah" class="text-success">0</b></span><span>Total: <b id="valSdTotal">0</b></span>
                     </div>
                 </div>
             </div>
@@ -79,18 +54,15 @@
 
         <div class="col-lg-3 col-6">
             <div class="card-sultan mb-3 border-left-warning shadow-sm h-100">
-                <div class="card-body">
+                <div class="card-body position-relative">
+                    <div class="overlay-spinner" id="loadPaud1"><i class="fas fa-spinner fa-spin text-warning"></i></div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="font-weight-bold text-warning m-0">JENJANG TK</h6>
-                        <i class="fas fa-child text-black-50 fa-2x"></i>
+                        <h6 class="font-weight-bold text-warning m-0">JENJANG TK</h6><i class="fas fa-child text-black-50 fa-2x"></i>
                     </div>
                     <h3 class="font-weight-bold text-dark mb-1" id="valTkPersen">0%</h3>
-                    <div class="progress mb-2" style="height: 6px;">
-                        <div id="progTk" class="progress-bar bg-warning" style="width: 0%"></div>
-                    </div>
+                    <div class="progress mb-2" style="height: 6px;"><div id="progTk" class="progress-bar bg-warning" style="width: 0%"></div></div>
                     <div class="d-flex justify-content-between small text-muted">
-                        <span>Sudah: <b id="valTkSudah" class="text-success">0</b></span>
-                        <span>Total: <b id="valTkTotal">0</b></span>
+                        <span>Sudah: <b id="valTkSudah" class="text-success">0</b></span><span>Total: <b id="valTkTotal">0</b></span>
                     </div>
                 </div>
             </div>
@@ -98,18 +70,15 @@
 
         <div class="col-lg-3 col-6">
             <div class="card-sultan mb-3 border-left-success shadow-sm h-100">
-                <div class="card-body">
+                <div class="card-body position-relative">
+                    <div class="overlay-spinner" id="loadPaud2"><i class="fas fa-spinner fa-spin text-success"></i></div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="font-weight-bold text-success m-0">JENJANG KB</h6>
-                        <i class="fas fa-shapes text-black-50 fa-2x"></i>
+                        <h6 class="font-weight-bold text-success m-0">JENJANG KB</h6><i class="fas fa-shapes text-black-50 fa-2x"></i>
                     </div>
                     <h3 class="font-weight-bold text-dark mb-1" id="valKbPersen">0%</h3>
-                    <div class="progress mb-2" style="height: 6px;">
-                        <div id="progKb" class="progress-bar bg-success" style="width: 0%"></div>
-                    </div>
+                    <div class="progress mb-2" style="height: 6px;"><div id="progKb" class="progress-bar bg-success" style="width: 0%"></div></div>
                     <div class="d-flex justify-content-between small text-muted">
-                        <span>Sudah: <b id="valKbSudah" class="text-success">0</b></span>
-                        <span>Total: <b id="valKbTotal">0</b></span>
+                        <span>Sudah: <b id="valKbSudah" class="text-success">0</b></span><span>Total: <b id="valKbTotal">0</b></span>
                     </div>
                 </div>
             </div>
@@ -117,18 +86,15 @@
 
         <div class="col-lg-3 col-6">
             <div class="card-sultan mb-3 border-left-primary shadow-sm h-100">
-                <div class="card-body">
+                <div class="card-body position-relative">
+                    <div class="overlay-spinner" id="loadPaud3"><i class="fas fa-spinner fa-spin text-primary"></i></div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="font-weight-bold text-primary m-0">JENJANG SPS</h6>
-                        <i class="fas fa-home text-black-50 fa-2x"></i>
+                        <h6 class="font-weight-bold text-primary m-0">JENJANG SPS</h6><i class="fas fa-home text-black-50 fa-2x"></i>
                     </div>
                     <h3 class="font-weight-bold text-dark mb-1" id="valSpsPersen">0%</h3>
-                    <div class="progress mb-2" style="height: 6px;">
-                        <div id="progSps" class="progress-bar bg-primary" style="width: 0%"></div>
-                    </div>
+                    <div class="progress mb-2" style="height: 6px;"><div id="progSps" class="progress-bar bg-primary" style="width: 0%"></div></div>
                     <div class="d-flex justify-content-between small text-muted">
-                        <span>Sudah: <b id="valSpsSudah" class="text-success">0</b></span>
-                        <span>Total: <b id="valSpsTotal">0</b></span>
+                        <span>Sudah: <b id="valSpsSudah" class="text-success">0</b></span><span>Total: <b id="valSpsTotal">0</b></span>
                     </div>
                 </div>
             </div>
@@ -139,9 +105,7 @@
                 <div class="col-lg-8">
                     <div class="card-sultan mb-3 h-100">
                         <div class="card-header bg-white border-bottom-0">
-                            <h6 class="card-title font-weight-bold text-maroon">
-                                <i class="fas fa-chart-bar mr-2"></i>Komparasi Detail Status
-                            </h6>
+                            <h6 class="card-title font-weight-bold text-maroon"><i class="fas fa-chart-bar mr-2"></i>Komparasi Status</h6>
                         </div>
                         <div class="card-body">
                             <div style="height: 350px; width: 100%;">
@@ -154,16 +118,12 @@
                 <div class="col-lg-4">
                     <div class="card-sultan mb-3 h-100">
                         <div class="card-header bg-white border-bottom-0">
-                            <h6 class="card-title font-weight-bold text-maroon">
-                                <i class="fas fa-history mr-2"></i>Laporan Masuk
-                            </h6>
+                            <h6 class="card-title font-weight-bold text-maroon"><i class="fas fa-history mr-2"></i>Laporan Masuk</h6>
                         </div>
                         <div class="card-body p-0">
                             <div id="listActivity" class="list-group list-group-flush" style="max-height: 380px; overflow-y: auto;">
-                                </div>
-                        </div>
-                        <div class="card-footer bg-white text-center small text-muted">
-                            *Menampilkan 7 data terbaru
+                                <div class="text-center p-4 text-muted small" id="activityPlaceholder">Menunggu data...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -174,142 +134,159 @@
   </div>
 </section>
 
+<style>
+    .overlay-spinner {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255,255,255,0.8);
+        display: none; justify-content: center; align-items: center; z-index: 5;
+        border-radius: 10px; font-size: 1.5rem;
+    }
+</style>
+
 <script>
     var CHART_INSTANCE = null;
+    // Data Store Global untuk Chart (SD, TK, KB, SPS)
+    var DASH_DATA = {
+        sd:  { ok:0, pro:0, rev:0, no:0, blm:0 },
+        tk:  { ok:0, pro:0, rev:0, no:0, blm:0 },
+        kb:  { ok:0, pro:0, rev:0, no:0, blm:0 },
+        sps: { ok:0, pro:0, rev:0, no:0, blm:0 }
+    };
+    var ACTIVITY_POOL = []; // Penampung aktivitas gabungan
 
     $(document).ready(function() {
-        // Default: Bulan Lalu
-        var d = new Date();
-        d.setMonth(d.getMonth() - 1); 
-        var thn = d.getFullYear(); 
-        var bln = d.getMonth() + 1;
-
+        // Init Filter
+        var d = new Date(); d.setMonth(d.getMonth() - 1); 
+        var thn = d.getFullYear(); var bln = d.getMonth() + 1;
         var $sel = $('#dashTahun').empty();
-        for(var i = thn - 4; i <= thn + 1; i++){ 
-            $sel.append('<option value="'+i+'">'+i+'</option>'); 
-        }
-        $sel.val(thn);
-        $('#dashBulan').val(bln);
+        for(var i = thn - 4; i <= thn + 1; i++){ $sel.append('<option value="'+i+'">'+i+'</option>'); }
+        $sel.val(thn); $('#dashBulan').val(bln);
 
-        loadDashboard();
+        // Smart Loader Chart.js v3
+        if (typeof Chart === 'undefined') {
+            $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js").done(function() {
+                initChart(); loadDashboard();
+            });
+        } else {
+            initChart(); loadDashboard();
+        }
     });
 
     function loadDashboard() {
         var t = $('#dashTahun').val();
         var b = $('#dashBulan').val();
 
-        $('#contentDash').hide();
-        $('#loadingDash').show();
+        // Reset UI & Data
+        resetDataStore();
+        if(CHART_INSTANCE) updateChart(); 
+        $('#listActivity').empty(); 
+        ACTIVITY_POOL = [];
 
+        // Show Spinners
+        $('.overlay-spinner').css('display', 'flex');
+
+        // PARALLEL FETCHING: 2 JALUR
+        // 1. Ambil SD
         google.script.run
-            .withSuccessHandler(renderDashboard)
-            .withFailureHandler(function(e){
-                $('#loadingDash').hide();
-                alert("Gagal memuat: " + e.message);
-            })
-            .getDashboardLapbul(t, b);
+            .withSuccessHandler(function(json) { handleResponse('sd', json); })
+            .withFailureHandler(function(e){ console.error(e); $('#loadSd').hide(); })
+            .getLapbulMetric_SD(t, b);
+
+        // 2. Ambil PAUD (TK, KB, SPS) sekaligus
+        google.script.run
+            .withSuccessHandler(function(json) { handleResponse('paud', json); })
+            .withFailureHandler(function(e){ console.error(e); $('#loadPaud1,#loadPaud2,#loadPaud3').hide(); })
+            .getLapbulMetric_PAUD(t, b);
     }
 
-    function renderDashboard(data) {
-        $('#loadingDash').hide();
-        $('#contentDash').fadeIn();
-
-        // 1. Update Kartu
-        updateCard('Sd', data.sd);
-        updateCard('Tk', data.tk);
-        updateCard('Kb', data.kb);
-        updateCard('Sps', data.sps);
-
-        // 2. Render Chart Detail 5 Dataset
-        renderChart(data);
-
-        // 3. Render List
-        renderActivity(data.recent);
+    function handleResponse(source, json) {
+        var data = JSON.parse(json);
+        
+        if (source === 'sd') {
+            $('#loadSd').fadeOut();
+            updateCard('Sd', data.sd);
+            updateStore('sd', data.sd);
+            addActivities(data.recent);
+        } 
+        else if (source === 'paud') {
+            $('#loadPaud1, #loadPaud2, #loadPaud3').fadeOut();
+            updateCard('Tk', data.tk); updateStore('tk', data.tk);
+            updateCard('Kb', data.kb); updateStore('kb', data.kb);
+            updateCard('Sps', data.sps); updateStore('sps', data.sps);
+            addActivities(data.recent);
+        }
+        
+        updateChart(); // Refresh Chart setiap kali ada data masuk
     }
 
     function updateCard(jenjang, stats) {
+        if(!stats) return;
         $('#val' + jenjang + 'Persen').text(stats.persen + "%");
         $('#val' + jenjang + 'Sudah').text(stats.sudah);
         $('#val' + jenjang + 'Total').text(stats.total);
         $('#prog' + jenjang).css('width', stats.persen + "%");
     }
 
-    function renderChart(data) {
+    function updateStore(key, s) {
+        if(!s) return;
+        DASH_DATA[key] = {
+            ok: s.disetujui, pro: s.diproses, rev: s.revisi, no: s.ditolak, blm: s.belum
+        };
+    }
+
+    function addActivities(list) {
+        if(list && list.length > 0) {
+            ACTIVITY_POOL = ACTIVITY_POOL.concat(list);
+            renderActivity(ACTIVITY_POOL);
+        } else if (ACTIVITY_POOL.length === 0) {
+            $('#listActivity').html('<div class="text-center p-4 text-muted small">Belum ada data.</div>');
+        }
+    }
+
+    function initChart() {
         var ctx = document.getElementById('chartLapbul').getContext('2d');
-        if (CHART_INSTANCE) CHART_INSTANCE.destroy();
-
-        // Siapkan Data Array per Kategori
-        var jenjangs = ['SD', 'TK', 'KB', 'SPS'];
-        var dDisetujui = [data.sd.disetujui, data.tk.disetujui, data.kb.disetujui, data.sps.disetujui];
-        var dDiproses  = [data.sd.diproses, data.tk.diproses, data.kb.diproses, data.sps.diproses];
-        var dRevisi    = [data.sd.revisi, data.tk.revisi, data.kb.revisi, data.sps.revisi];
-        var dDitolak   = [data.sd.ditolak, data.tk.ditolak, data.kb.ditolak, data.sps.ditolak];
-        var dBelum     = [data.sd.belum, data.tk.belum, data.kb.belum, data.sps.belum];
-
         CHART_INSTANCE = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: jenjangs,
+                labels: ['SD', 'TK', 'KB', 'SPS'],
                 datasets: [
-                    {
-                        label: 'Disetujui',
-                        data: dDisetujui,
-                        backgroundColor: '#28a745', // Hijau
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Diproses',
-                        data: dDiproses,
-                        backgroundColor: '#17a2b8', // Biru Langit
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Revisi',
-                        data: dRevisi,
-                        backgroundColor: '#ffc107', // Kuning
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Ditolak',
-                        data: dDitolak,
-                        backgroundColor: '#dc3545', // Merah
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Belum Lapor',
-                        data: dBelum,
-                        backgroundColor: '#6c757d', // Abu-abu
-                        borderWidth: 1
-                    }
+                    { label: 'Disetujui', backgroundColor: '#28a745', data: [0,0,0,0] },
+                    { label: 'Diproses', backgroundColor: '#17a2b8', data: [0,0,0,0] },
+                    { label: 'Revisi', backgroundColor: '#ffc107', data: [0,0,0,0] },
+                    { label: 'Ditolak', backgroundColor: '#dc3545', data: [0,0,0,0] },
+                    { label: 'Belum', backgroundColor: '#6c757d', data: [0,0,0,0] }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
-                    x: { stacked: false }, // Ubah ke 'true' jika ingin model tumpuk
-                    y: { 
-                        stacked: false, 
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 }
-                    }
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
                 },
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: { mode: 'index', intersect: false }
-                }
+                plugins: { legend: { position: 'bottom' } },
+                animation: { duration: 500 }
             }
         });
+    }
+
+    function updateChart() {
+        if(!CHART_INSTANCE) return;
+        var d = DASH_DATA;
+        // Map data store ke dataset chart (Urutan: SD, TK, KB, SPS)
+        CHART_INSTANCE.data.datasets[0].data = [d.sd.ok, d.tk.ok, d.kb.ok, d.sps.ok];
+        CHART_INSTANCE.data.datasets[1].data = [d.sd.pro, d.tk.pro, d.kb.pro, d.sps.pro];
+        CHART_INSTANCE.data.datasets[2].data = [d.sd.rev, d.tk.rev, d.kb.rev, d.sps.rev];
+        CHART_INSTANCE.data.datasets[3].data = [d.sd.no, d.tk.no, d.kb.no, d.sps.no];
+        CHART_INSTANCE.data.datasets[4].data = [d.sd.blm, d.tk.blm, d.kb.blm, d.sps.blm];
+        CHART_INSTANCE.update();
     }
 
     function renderActivity(list) {
         var el = $('#listActivity');
         el.empty();
-        if (!list || list.length === 0) {
-            el.html('<div class="text-center p-4 text-muted small">Belum ada data laporan masuk.</div>');
-            return;
-        }
-        var limitList = list.slice(0, 7);
+        // Ambil 10 data terakhir saja
+        var limitList = list.slice(0, 10);
+        
         limitList.forEach(function(item) {
             var badgeClass = 'bg-secondary';
             if(item.jenjang === 'SD') badgeClass = 'bg-info';
@@ -318,18 +295,27 @@
             if(item.jenjang === 'SPS') badgeClass = 'bg-primary';
 
             var html = `
-                <div class="list-group-item px-3 py-2 border-bottom-light">
+                <div class="list-group-item px-3 py-2 border-bottom-light animated fadeIn">
                     <div class="d-flex align-items-center">
                         <div class="d-inline-flex align-items-center justify-content-center rounded-circle text-white shadow-sm mr-3 ${badgeClass}" style="width:35px; height:35px; flex-shrink:0;">
                             <small class="font-weight-bold" style="font-size:10px;">${item.jenjang}</small>
                         </div>
                         <div style="overflow:hidden;">
                             <div class="text-dark font-weight-bold text-truncate" style="font-size:13px;">${item.sekolah}</div>
-                            <div class="text-muted small text-truncate"><i class="fas fa-check-circle text-success mr-1"></i>${item.status}</div>
+                            <div class="text-muted small text-truncate"><i class="fas fa-info-circle mr-1"></i>${item.status}</div>
                         </div>
                     </div>
                 </div>`;
             el.append(html);
         });
+    }
+
+    function resetDataStore() {
+        DASH_DATA = {
+            sd:  { ok:0, pro:0, rev:0, no:0, blm:0 },
+            tk:  { ok:0, pro:0, rev:0, no:0, blm:0 },
+            kb:  { ok:0, pro:0, rev:0, no:0, blm:0 },
+            sps: { ok:0, pro:0, rev:0, no:0, blm:0 }
+        };
     }
 </script>

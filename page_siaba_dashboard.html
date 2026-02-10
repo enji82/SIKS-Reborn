@@ -1,5 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-
 <div class="content-header pb-0">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -175,139 +173,156 @@
 </section>
 
 <script>
+// =================================================================
+// 1. GLOBAL VARIABLES
+// =================================================================
+var GLOBAL_STATS = {
+    proses: 0, revisi: 0, setuju: 0, tolak: 0,
+    done: { cuti: false, dinas: false, lupa: false, salah: false }
+};
+var pieChartInstance = null;
+
+// =================================================================
+// 2. INITIALIZATION (SMART LOADER V3)
+// =================================================================
 $(document).ready(function() {
-    loadDashboardData();
+    // Cek apakah Library Chart.js sudah ada?
+    if (typeof Chart === 'undefined') {
+        // Jika belum, Load Versi 3.9.1 (Versi Stabil Modern)
+        console.log("⏳ Memuat Library Chart.js v3...");
+        $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js")
+            .done(function() {
+                console.log("✅ Chart.js Siap.");
+                startDashboardEngine();
+            })
+            .fail(function() {
+                $('#rincianContainer').html('<div class="text-danger text-center">Gagal memuat Grafik.</div>');
+            });
+    } else {
+        // Jika sudah ada (bawaan AdminLTE), langsung gas
+        console.log("✅ Menggunakan Chart.js Bawaan.");
+        startDashboardEngine();
+    }
 });
 
-function loadDashboardData() {
-    // 1. Tampilkan Toast "Sedang Memuat" (Agar user tidak bingung menunggu)
-    if (typeof Swal !== 'undefined') {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 10000, // Hilang otomatis setelah 10 detik
-            timerProgressBar: true
-        });
-        Toast.fire({
-            icon: 'info',
-            title: 'Sedang menyingkronkan data...'
-        });
-    }
-
-    // 2. Request Data ke Server
-    google.script.run
-        .withSuccessHandler(function(jsonStr) {
-            // Tutup Toast jika sudah selesai lebih cepat
-            if (typeof Swal !== 'undefined') { Swal.close(); }
-            renderDashboard(jsonStr);
-        })
-        .withFailureHandler(function(e){
-            console.log(e);
-            $('#rincianContainer').html('<div class="text-danger text-center">Gagal memuat data.</div>');
-        })
-        .getSiabaDashboardData();
+function startDashboardEngine() {
+    initPieChart();     // Siapkan Kanvas Grafik (Format V3)
+    loadAllMetrics();   // Tarik Data 4 Modul (Paralel)
+    loadChartTrend();   // Tarik Data Grafik Bar (Format V3)
 }
 
-function renderDashboard(jsonStr) {
-    var data = JSON.parse(jsonStr);
-    var s = data.stats;
+// =================================================================
+// 3. CORE FUNCTIONS (PARALLEL FETCH)
+// =================================================================
 
-    // 1. HITUNG TOTAL KESELURUHAN
-    var p = s.cuti.proses + s.dinas.proses + s.lupa.proses + s.salah.proses;
-    var r = s.cuti.revisi + s.dinas.revisi + s.lupa.revisi + s.salah.revisi;
-    var ok = s.cuti.setuju + s.dinas.setuju + s.lupa.setuju + s.salah.setuju;
-    var no = s.cuti.tolak + s.dinas.tolak + s.lupa.tolak + s.salah.tolak;
-    var total = p + r + ok + no; 
+function loadAllMetrics() {
+    fetchMetric('cuti', 'totalCuti', 'bulanCuti', 'fa-calendar-alt');
+    fetchMetric('dinas', 'totalDinas', 'bulanDinas', 'fa-car');
+    fetchMetric('lupa', 'totalLupa', 'bulanLupa', 'fa-question-circle');
+    fetchMetric('salah', 'totalSalah', 'bulanSalah', 'fa-times-circle');
+}
 
-    // 2. ISI KARTU ATAS (SMALL BOX)
-    // Update Text Angka
-    $('#totalCuti').text(s.cuti.total); $('#bulanCuti').text(s.cuti.bulanIni);
-    $('#totalDinas').text(s.dinas.total); $('#bulanDinas').text(s.dinas.bulanIni);
-    $('#totalLupa').text(s.lupa.total); $('#bulanLupa').text(s.lupa.bulanIni);
-    $('#totalSalah').text(s.salah.total); $('#bulanSalah').text(s.salah.bulanIni);
+function fetchMetric(type, idTotal, idBulan, icon) {
+    google.script.run
+        .withSuccessHandler(function(json) {
+            var data = JSON.parse(json);
+            
+            // A. Update Kartu Atas
+            $('#' + idTotal).text(data.total).hide().fadeIn();
+            $('#' + idBulan).text(data.bulanIni);
 
-    // 3. RENDER RINCIAN STATUS (VISUAL CARD)
-    var container = $('#rincianContainer');
-    container.empty();
+            // B. Update List Rincian
+            var html = createSlimVisualRow(capitalize(type), icon, data);
+            $('#rincianContainer').find('.loading-placeholder').remove(); 
+            $('#rincianContainer').append(html);
 
-    // --- FUNGSI HELPER PEMBUAT BARIS ---
-    function createSlimVisualRow(label, icon, data) {
-        return `
-        <div class="mb-2 pb-2 border-bottom">
-            <div class="d-flex align-items-center mb-1">
-                <i class="fas ${icon} text-secondary mr-2" style="font-size: 0.9rem;"></i>
-                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">${label}</span>
-            </div>
+            // C. Akumulasi Data untuk Pie Chart
+            GLOBAL_STATS.proses += (data.proses || 0);
+            GLOBAL_STATS.revisi += (data.revisi || 0);
+            GLOBAL_STATS.setuju += (data.setuju || 0);
+            GLOBAL_STATS.tolak  += (data.tolak || 0);
+            GLOBAL_STATS.done[type] = true;
 
-            <div class="d-flex justify-content-between">
-                <div class="flex-fill mr-1 rounded text-center position-relative" style="background-color: #fff8e1; border: 1px solid #ffe0b2; padding: 2px;">
-                    <span class="font-weight-bold text-warning" style="font-size: 1rem;">${data.proses}</span>
-                    <span class="text-muted d-block" style="font-size: 8px; margin-top: -3px;">DIPROSES</span>
-                </div>
-                <div class="flex-fill mr-1 rounded text-center position-relative" style="background-color: #e3f2fd; border: 1px solid #bbdefb; padding: 2px;">
-                    <span class="font-weight-bold text-info" style="font-size: 1rem;">${data.revisi}</span>
-                    <span class="text-muted d-block" style="font-size: 8px; margin-top: -3px;">REVISI</span>
-                </div>
-                <div class="flex-fill mr-1 rounded text-center position-relative" style="background-color: #e8f5e9; border: 1px solid #c8e6c9; padding: 2px;">
-                    <span class="font-weight-bold text-success" style="font-size: 1rem;">${data.setuju}</span>
-                    <span class="text-muted d-block" style="font-size: 8px; margin-top: -3px;">DISETUJUI</span>
-                </div>
-                <div class="flex-fill rounded text-center position-relative" style="background-color: #ffebee; border: 1px solid #ffcdd2; padding: 2px;">
-                    <span class="font-weight-bold text-danger" style="font-size: 1rem;">${data.tolak}</span>
-                    <span class="text-muted d-block" style="font-size: 8px; margin-top: -3px;">DITOLAK</span>
-                </div>
-            </div>
-        </div>`;
-    }
+            // D. Update Pie Chart
+            updatePieChart();
+        })
+        .withFailureHandler(function(e) {
+            console.log("Error " + type, e);
+            $('#' + idTotal).html('<small class="text-danger">Err</small>');
+        })
+        .getSiabaMetric(type);
+}
 
-    // Eksekusi Render Baris
-    container.append(createSlimVisualRow('Cuti', 'fa-calendar-alt', s.cuti));
-    container.append(createSlimVisualRow('Perjalanan Dinas', 'fa-car', s.dinas));
-    container.append(createSlimVisualRow('Lupa Presensi', 'fa-question-circle', s.lupa));
-    container.append(createSlimVisualRow('Salah Presensi', 'fa-times-circle', s.salah));
+function loadChartTrend() {
+    google.script.run.withSuccessHandler(function(json) {
+        var data = JSON.parse(json);
+        renderBarChart(data);
+    }).getSiabaChartTrend();
+}
 
-    // 4. CHART DONUT (PIE)
-    updateProgress("Proses", p, total);
-    updateProgress("Revisi", r, total);
-    updateProgress("Setuju", ok, total);
-    updateProgress("Tolak", no, total);
+// =================================================================
+// 4. VISUAL RENDERING (UPDATED FOR CHART.JS V3)
+// =================================================================
 
-    new Chart(document.getElementById('chartGabungan').getContext('2d'), {
+function initPieChart() {
+    $('#rincianContainer').html('<div class="loading-placeholder text-center text-muted mt-5"><i class="fas fa-spinner fa-spin"></i> Menunggu data...</div>');
+    
+    var canvas = document.getElementById('chartGabungan');
+    if (!canvas) return;
+
+    var ctx = canvas.getContext('2d');
+    
+    // FORMAT V3 (Updated Syntax)
+    pieChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Diproses', 'Revisi', 'Disetujui', 'Ditolak'],
             datasets: [{
-                data: [p, r, ok, no],
-                backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'], 
-                borderWidth: 2,
-                borderColor: '#ffffff'
+                data: [0, 0, 0, 0], 
+                backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                borderWidth: 2, 
+                borderColor: '#ffffff',
+                hoverOffset: 4
             }]
         },
         options: {
             maintainAspectRatio: false,
             responsive: true,
-            legend: { position: 'right', labels: { boxWidth: 10, fontSize: 10 } },
-            cutoutPercentage: 70
+            cutout: '70%', // V3 Syntax (Dulu cutoutPercentage)
+            plugins: {     // V3 Syntax (Legend masuk ke dalam plugins)
+                legend: { 
+                    position: 'right', 
+                    labels: { boxWidth: 10, font: { size: 10 } } 
+                }
+            },
+            animation: { duration: 800 }
         }
     });
+}
 
-    // 5. CHART BAR (DISIPLIN)
-    var ctxBar = document.getElementById('chartBarDisiplin').getContext('2d');
+function renderBarChart(data) {
+    var canvas = document.getElementById('chartBarDisiplin');
+    if (!canvas) return;
+
+    var ctxBar = canvas.getContext('2d');
+    
+    // FORMAT V3 (Updated Syntax)
     new Chart(ctxBar, {
         type: 'bar',
         data: {
-            labels: data.chartBar.labels, 
+            labels: data.labels, 
             datasets: [
-                {
-                    label: 'Terlambat',
-                    backgroundColor: '#dc3545',
-                    data: data.chartBar.terlambat
+                { 
+                    label: 'Terlambat', 
+                    backgroundColor: '#dc3545', 
+                    data: data.terlambat,
+                    barPercentage: 0.6
                 },
-                {
-                    label: 'Pulang Awal',
-                    backgroundColor: '#6f42c1',
-                    data: data.chartBar.pulangAwal
+                { 
+                    label: 'Pulang Awal', 
+                    backgroundColor: '#6f42c1', 
+                    data: data.pulangAwal,
+                    barPercentage: 0.6
                 }
             ]
         },
@@ -315,18 +330,77 @@ function renderDashboard(jsonStr) {
             maintainAspectRatio: false,
             responsive: true,
             scales: {
-                yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }],
-                xAxes: [{ gridLines: { display: false } }]
+                y: { // V3 Syntax (Bukan yAxes)
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
+                    grid: { borderDash: [2, 2] }
+                },
+                x: { // V3 Syntax (Bukan xAxes)
+                    grid: { display: false }
+                }
             },
-            legend: { position: 'top', labels: { boxWidth: 10, fontSize: 10 } }
+            plugins: { // V3 Syntax
+                legend: { 
+                    position: 'top', 
+                    labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 } } 
+                } 
+            }
         }
     });
 }
 
-// Helper untuk Progress Bar di bawah Pie Chart
-function updateProgress(id, val, total) {
-    var pct = total > 0 ? Math.round((val / total) * 100) : 0;
-    $('#lbl'+id).text(val); 
-    $('#prog'+id).css('width', pct + '%');
+function updatePieChart() {
+    if(!pieChartInstance) return;
+    
+    var s = GLOBAL_STATS;
+    var total = s.proses + s.revisi + s.setuju + s.tolak;
+
+    // Update Data
+    pieChartInstance.data.datasets[0].data = [s.proses, s.revisi, s.setuju, s.tolak];
+    pieChartInstance.update();
+
+    // Update Progress Bars
+    updateProgressBar('Proses', s.proses, total);
+    updateProgressBar('Revisi', s.revisi, total);
+    updateProgressBar('Setuju', s.setuju, total);
+    updateProgressBar('Tolak', s.tolak, total);
 }
+
+// --- HELPER UI ---
+function createSlimVisualRow(label, icon, data) {
+    var displayLabel = label;
+    if(label === 'Cuti') displayLabel = 'Data Cuti';
+    if(label === 'Dinas') displayLabel = 'Perjalanan Dinas';
+    if(label === 'Lupa') displayLabel = 'Lupa Presensi';
+    if(label === 'Salah') displayLabel = 'Salah Presensi';
+
+    return `
+    <div class="mb-2 pb-2 border-bottom animated fadeIn">
+        <div class="d-flex align-items-center mb-1">
+            <i class="fas ${icon} text-secondary mr-2" style="font-size: 0.9rem;"></i>
+            <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">${displayLabel}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            ${renderMiniBox(data.proses, 'Diproses', 'warning', '#fff8e1', '#ffe0b2')}
+            ${renderMiniBox(data.revisi, 'Revisi', 'info', '#e3f2fd', '#bbdefb')}
+            ${renderMiniBox(data.setuju, 'Disetujui', 'success', '#e8f5e9', '#c8e6c9')}
+            ${renderMiniBox(data.tolak, 'Ditolak', 'danger', '#ffebee', '#ffcdd2')}
+        </div>
+    </div>`;
+}
+
+function renderMiniBox(val, label, color, bg, border) {
+    return `<div class="flex-fill mr-1 rounded text-center position-relative" style="background-color: ${bg}; border: 1px solid ${border}; padding: 2px;">
+                <span class="font-weight-bold text-${color}" style="font-size: 1rem;">${val}</span>
+                <span class="text-muted d-block" style="font-size: 8px; margin-top: -3px; text-transform:uppercase">${label}</span>
+            </div>`;
+}
+
+function updateProgressBar(id, val, total) {
+    var pct = total > 0 ? Math.round((val / total) * 100) : 0;
+    $('#lbl' + id).text(val);
+    $('#prog' + id).css('width', pct + '%');
+}
+
+function capitalize(s) { return s && s[0].toUpperCase() + s.slice(1); }
 </script>

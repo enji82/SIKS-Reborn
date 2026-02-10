@@ -201,34 +201,48 @@
         }); 
     }
 
-    // --- BADGE SULTAN (KEMBALI MENGGUNAKAN IKON AGAR SAMA PERSIS) ---
+    // --- BADGE SULTAN (ICON BULAT - STANDARD BARU) ---
     function getBadgeSultan(status) {
-        if (!status || status === "-" || status === "") return '<span class="text-muted small">-</span>';
+        if (!status || status === "-" || status === "") {
+            return '<i class="fas fa-minus text-black-50 small" style="opacity:0.2"></i>';
+        }
         
         var s = String(status).trim();
         var stLower = s.toLowerCase();
-        
-        // Skip Badge untuk Header Semester
-        if (stLower.includes("sem 1") || stLower.includes("sem 2") || s.length < 3) {
-            return `<span class="font-weight-bold text-dark">${s}</span>`;
+
+        // Base Class untuk bentuk bulat
+        var baseClass = "btn-icon-sultan shadow-sm"; 
+        var iconHtml = "";
+
+        // 1. REVISI -> Kuning (Sync)
+        if (stLower.includes('revisi') || stLower.includes('perbaiki')) {
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-warning" data-toggle="tooltip" title="${s}" style="cursor:help;">
+                            <i class="fas fa-sync-alt"></i>
+                         </div>`;
+        }
+        // 2. DITOLAK -> Merah (Times)
+        else if (stLower.includes('tolak') || stLower.includes('x') || stLower.includes('salah')) {
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-danger" data-toggle="tooltip" title="${s}" style="cursor:help;">
+                            <i class="fas fa-times"></i>
+                         </div>`;
+        }
+        // 3. DISETUJUI -> Hijau (Check)
+        else if (stLower.includes('verif') || stLower.includes('setuju') || stLower.includes('ok') || stLower.includes('valid')) {
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-success" data-toggle="tooltip" title="${s}" style="cursor:help;">
+                            <i class="fas fa-check"></i>
+                         </div>`;
+        }
+        // 4. DIPROSES (Biasanya Tanggal) -> Biru (Spinner)
+        else if (s.length > 5) {
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-info" data-toggle="tooltip" title="${s}" style="cursor:help;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                         </div>`;
+        }
+        // 5. TEXT PENDEK (Misal: "Belum") -> Teks Biasa
+        else {
+             return `<span class="text-muted small font-weight-bold" style="font-size:11px;">${s}</span>`;
         }
 
-        var badgeStyle = 'badge-sultan-light-warning'; 
-        var iconClass = 'clock'; // Default icon (Diproses)
-
-        if (stLower.includes('ok') || stLower.includes('setuju') || stLower.includes('valid') || stLower.includes('sudah') || stLower.includes('lengkap')) {
-            badgeStyle = 'badge-sultan-light-success'; 
-            iconClass = 'check-circle'; 
-        } else if (stLower.includes('revisi')) {
-            badgeStyle = 'badge-sultan-light-info'; 
-            iconClass = 'sync-alt'; 
-        } else if (stLower.includes('tolak') || stLower.includes('salah') || stLower.includes('kurang')) {
-            badgeStyle = 'badge-sultan-light-danger'; 
-            iconClass = 'times-circle'; 
-        }
-
-        return `<span class="badge badge-sultan ${badgeStyle}">
-                    <i class="fas fa-${iconClass} mr-1"></i>${s}
-                </span>`;
+        return iconHtml;
     }
 </script>
