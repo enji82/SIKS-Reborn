@@ -737,7 +737,12 @@ function kirimPengajuanCuti() {
             }
             loadDataServer(); 
         } else {
-            Swal.fire('Error', res, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menyimpan',
+                text: res, // Pesan error dari backend akan muncul disini
+                footer: res.includes('bentrok') ? 'Silakan periksa kembali tanggal pengajuan Anda.' : ''
+            });
         }
     }).withFailureHandler(function(err){ btn.prop('disabled', false).html(txt); Swal.fire('Error', err.toString(), 'error'); });
     

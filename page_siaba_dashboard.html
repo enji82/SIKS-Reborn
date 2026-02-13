@@ -14,123 +14,63 @@
 <section class="content">
   <div class="container-fluid">
     
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-lg-3 col-6">
             <div class="small-box bg-maroon shadow-sm">
                 <div class="inner">
-                    <h3 id="totalCuti">
-                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
-                    </h3>
+                    <h3 id="totalCuti"><i class="fas fa-spinner fa-spin f-20"></i></h3>
                     <p class="mb-0">Total Cuti</p>
-                    <div class="mt-2 text-white-50" style="font-size: 0.9rem;">
-                        <i class="fas fa-calendar-day mr-1"></i> Bulan Ini: <strong id="bulanCuti">...</strong>
-                    </div>
+                    <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanCuti">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-calendar-alt"></i></div>
-                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_cuti_data')">
-                    Lihat Detail <i class="fas fa-arrow-circle-right"></i>
-                </a>
+                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_cuti_data')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
-
         <div class="col-lg-3 col-6">
             <div class="small-box bg-primary shadow-sm">
                 <div class="inner">
-                    <h3 id="totalDinas">
-                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
-                    </h3>
+                    <h3 id="totalDinas"><i class="fas fa-spinner fa-spin f-20"></i></h3>
                     <p class="mb-0">Perjalanan Dinas</p>
-                    <div class="mt-2 text-white-50" style="font-size: 0.9rem;">
-                        <i class="fas fa-calendar-day mr-1"></i> Bulan Ini: <strong id="bulanDinas">...</strong>
-                    </div>
+                    <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanDinas">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-car"></i></div>
-                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_perjalanan_dinas')">
-                    Lihat Detail <i class="fas fa-arrow-circle-right"></i>
-                </a>
+                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_perjalanan_dinas')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
-
         <div class="col-lg-3 col-6">
             <div class="small-box bg-warning shadow-sm">
                 <div class="inner text-white">
-                    <h3 id="totalLupa">
-                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
-                    </h3>
+                    <h3 id="totalLupa"><i class="fas fa-spinner fa-spin f-20"></i></h3>
                     <p class="mb-0">Lupa Presensi</p>
-                    <div class="mt-2 text-white-50" style="font-size: 0.9rem;">
-                        <i class="fas fa-calendar-day mr-1"></i> Bulan Ini: <strong id="bulanLupa">...</strong>
-                    </div>
+                    <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanLupa">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-question-circle"></i></div>
-                <a href="#" class="small-box-footer text-white" onclick="loadPage('page_siaba_presensi_lupa')">
-                    Lihat Detail <i class="fas fa-arrow-circle-right"></i>
-                </a>
+                <a href="#" class="small-box-footer text-white" onclick="loadPage('page_siaba_presensi_lupa')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
-
         <div class="col-lg-3 col-6">
             <div class="small-box bg-danger shadow-sm">
                 <div class="inner">
-                    <h3 id="totalSalah">
-                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
-                    </h3>
+                    <h3 id="totalSalah"><i class="fas fa-spinner fa-spin f-20"></i></h3>
                     <p class="mb-0">Salah Presensi</p>
-                    <div class="mt-2 text-white-50" style="font-size: 0.9rem;">
-                        <i class="fas fa-calendar-day mr-1"></i> Bulan Ini: <strong id="bulanSalah">...</strong>
-                    </div>
+                    <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanSalah">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-times-circle"></i></div>
-                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_presensi_salah')">
-                    Lihat Detail <i class="fas fa-arrow-circle-right"></i>
-                </a>
+                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_presensi_salah')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        
+    <div class="row mb-4">
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-dark">
-                        <i class="fas fa-chart-pie mr-1"></i> Akumulasi Status
-                    </h3>
+                    <h3 class="card-title font-weight-bold text-dark"><i class="fas fa-chart-pie mr-1"></i> Akumulasi</h3>
                 </div>
                 <div class="card-body">
-                    <div style="height: 180px;">
-                        <canvas id="chartGabungan"></canvas>
-                    </div>
+                    <div style="height: 180px;" id="wrap-chartGabungan"><canvas id="chartGabungan"></canvas></div>
                     <hr>
-                    <div class="mt-2">
-                        <div class="d-flex justify-content-between mb-1 small">
-                            <span class="text-warning font-weight-bold">Diproses</span><span id="lblProses">0</span>
-                        </div>
-                        <div class="progress progress-xs mb-2">
-                            <div class="progress-bar bg-warning" id="progProses" style="width: 0%"></div>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-1 small">
-                            <span class="text-info font-weight-bold">Revisi</span><span id="lblRevisi">0</span>
-                        </div>
-                        <div class="progress progress-xs mb-2">
-                            <div class="progress-bar bg-info" id="progRevisi" style="width: 0%"></div>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-1 small">
-                            <span class="text-success font-weight-bold">Disetujui</span><span id="lblSetuju">0</span>
-                        </div>
-                        <div class="progress progress-xs mb-2">
-                            <div class="progress-bar bg-success" id="progSetuju" style="width: 0%"></div>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-1 small">
-                            <span class="text-danger font-weight-bold">Ditolak</span><span id="lblTolak">0</span>
-                        </div>
-                        <div class="progress progress-xs mb-0">
-                            <div class="progress-bar bg-danger" id="progTolak" style="width: 0%"></div>
-                        </div>
-                    </div>
+                    <div class="mt-2" id="progressContainer"></div>
                 </div>
             </div>
         </div>
@@ -138,112 +78,166 @@
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-maroon">
-                        <i class="fas fa-list-alt mr-1"></i> Rincian Status
-                    </h3>
+                    <h3 class="card-title font-weight-bold text-maroon"><i class="fas fa-list-alt mr-1"></i> Rincian Status</h3>
                 </div>
-                <div class="card-body p-3" id="rincianContainer" style="overflow-y: auto; max-height: auto;">
-                    <div class="text-center text-muted mt-5">
-                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
-                    </div>
-                </div>
+                <div class="card-body p-3" id="rincianContainer" style="overflow-y: auto; max-height: 400px;"></div>
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-purple-sultan">
-                        <i class="fas fa-chart-bar mr-1"></i> Tren Kedisiplinan
-                    </h3>
+                    <h3 class="card-title font-weight-bold text-purple-sultan"><i class="fas fa-chart-bar mr-1"></i> Tren Kedisiplinan</h3>
                 </div>
                 <div class="card-body">
-                    <div style="height: 330px;">
-                        <canvas id="chartBarDisiplin"></canvas>
-                    </div>
-                    <div class="mt-2 text-center small text-muted font-italic">
-                        *Jumlah kejadian Terlambat & Pulang Awal
+                    <div style="height: 330px;" id="wrap-chartBarDisiplin"><canvas id="chartBarDisiplin"></canvas></div>
+                    <div class="mt-2 text-center small text-muted font-italic">*Rekap Terlambat & Pulang Awal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-maroon"><i class="fas fa-chart-bar mr-1"></i> Tren Cuti</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 330px;" id="wrap-chartTrendCuti">
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-primary"><i class="fas fa-chart-bar mr-1"></i> Tren Dinas</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 330px;" id="wrap-chartTrendDinas">
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-warning"><i class="fas fa-chart-bar mr-1"></i> Tren Lupa</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 330px;" id="wrap-chartTrendLupa">
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-danger"><i class="fas fa-chart-bar mr-1"></i> Tren Salah</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 330px;" id="wrap-chartTrendSalah">
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
   </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
 <script>
-// =================================================================
+// ==========================================
 // 1. GLOBAL VARIABLES
-// =================================================================
+// ==========================================
 var GLOBAL_STATS = {
     proses: 0, revisi: 0, setuju: 0, tolak: 0,
     done: { cuti: false, dinas: false, lupa: false, salah: false }
 };
 var pieChartInstance = null;
 
-// =================================================================
-// 2. INITIALIZATION (SMART LOADER V3)
-// =================================================================
+// ==========================================
+// 2. INITIALIZATION (SMART LOADER)
+// ==========================================
 $(document).ready(function() {
-    // Cek apakah Library Chart.js sudah ada?
+    // Pastikan library Chart sudah termuat
+    // Jika belum, beri delay sedikit
     if (typeof Chart === 'undefined') {
-        // Jika belum, Load Versi 3.9.1 (Versi Stabil Modern)
-        console.log("⏳ Memuat Library Chart.js v3...");
-        $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js")
-            .done(function() {
-                console.log("✅ Chart.js Siap.");
-                startDashboardEngine();
-            })
-            .fail(function() {
-                $('#rincianContainer').html('<div class="text-danger text-center">Gagal memuat Grafik.</div>');
-            });
+        setTimeout(function() {
+            startDashboardEngine();
+        }, 500); // Tunggu 500ms
     } else {
-        // Jika sudah ada (bawaan AdminLTE), langsung gas
-        console.log("✅ Menggunakan Chart.js Bawaan.");
         startDashboardEngine();
     }
 });
 
 function startDashboardEngine() {
-    initPieChart();     // Siapkan Kanvas Grafik (Format V3)
-    loadAllMetrics();   // Tarik Data 4 Modul (Paralel)
-    loadChartTrend();   // Tarik Data Grafik Bar (Format V3)
+    loadDashboardData();
 }
 
-// =================================================================
-// 3. CORE FUNCTIONS (PARALLEL FETCH)
-// =================================================================
-
-function loadAllMetrics() {
-    fetchMetric('cuti', 'totalCuti', 'bulanCuti', 'fa-calendar-alt');
-    fetchMetric('dinas', 'totalDinas', 'bulanDinas', 'fa-car');
-    fetchMetric('lupa', 'totalLupa', 'bulanLupa', 'fa-question-circle');
-    fetchMetric('salah', 'totalSalah', 'bulanSalah', 'fa-times-circle');
+function loadDashboardData() {
+    showLoadingState(); 
+    
+    // Panggil 4 Kurir Data (Paralel)
+    fetchMetric('cuti', 'totalCuti', 'bulanCuti', 'fa-calendar-alt', 'chartTrendCuti');
+    fetchMetric('dinas', 'totalDinas', 'bulanDinas', 'fa-car', 'chartTrendDinas');
+    fetchMetric('lupa', 'totalLupa', 'bulanLupa', 'fa-question-circle', 'chartTrendLupa');
+    fetchMetric('salah', 'totalSalah', 'bulanSalah', 'fa-times-circle', 'chartTrendSalah');
+    
+    // Panggil 1 Kurir Data Grafik Disiplin
+    loadChartTrend();
+    
+    // Siapkan wadah Pie Chart
+    initPieChart();
 }
 
-function fetchMetric(type, idTotal, idBulan, icon) {
+function showLoadingState() {
+    $('#rincianContainer').html('<div class="d-flex align-items-center justify-content-center h-100 text-muted"><div class="text-center"><i class="fas fa-circle-notch fa-spin fa-2x mb-2"></i><br>Sinkronisasi Data...</div></div>');
+}
+
+// ==========================================
+// 3. CORE FUNCTIONS (PARALLEL)
+// ==========================================
+
+function fetchMetric(type, idTotal, idBulan, icon, idChart) {
     google.script.run
         .withSuccessHandler(function(json) {
             var data = JSON.parse(json);
             
-            // A. Update Kartu Atas
+            // A. Update Small Box
             $('#' + idTotal).text(data.total).hide().fadeIn();
             $('#' + idBulan).text(data.bulanIni);
 
-            // B. Update List Rincian
+            // B. Update List Rincian (Append)
             var html = createSlimVisualRow(capitalize(type), icon, data);
-            $('#rincianContainer').find('.loading-placeholder').remove(); 
+            
+            // Cek apakah wadah masih berisi spinner loading? Jika iya, kosongkan dulu
+            if($('#rincianContainer').find('.fa-spin').length > 0) {
+                $('#rincianContainer').empty();
+            }
             $('#rincianContainer').append(html);
 
-            // C. Akumulasi Data untuk Pie Chart
+            // C. Update Grafik Tren (Card Bawah)
+            renderSpecificChart(idChart, data.trend);
+
+            // D. Akumulasi Donut
             GLOBAL_STATS.proses += (data.proses || 0);
             GLOBAL_STATS.revisi += (data.revisi || 0);
             GLOBAL_STATS.setuju += (data.setuju || 0);
             GLOBAL_STATS.tolak  += (data.tolak || 0);
             GLOBAL_STATS.done[type] = true;
-
-            // D. Update Pie Chart
             updatePieChart();
         })
         .withFailureHandler(function(e) {
@@ -260,116 +254,135 @@ function loadChartTrend() {
     }).getSiabaChartTrend();
 }
 
-// =================================================================
-// 4. VISUAL RENDERING (UPDATED FOR CHART.JS V3)
-// =================================================================
+// ==========================================
+// 4. VISUAL RENDERING (CHART V3)
+// ==========================================
 
 function initPieChart() {
-    $('#rincianContainer').html('<div class="loading-placeholder text-center text-muted mt-5"><i class="fas fa-spinner fa-spin"></i> Menunggu data...</div>');
-    
-    var canvas = document.getElementById('chartGabungan');
-    if (!canvas) return;
+    var ctxElement = document.getElementById('chartGabungan');
+    if (!ctxElement) return; // Safety Check
 
-    var ctx = canvas.getContext('2d');
+    var ctx = ctxElement.getContext('2d');
     
-    // FORMAT V3 (Updated Syntax)
-    pieChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Diproses', 'Revisi', 'Disetujui', 'Ditolak'],
-            datasets: [{
-                data: [0, 0, 0, 0], 
-                backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
-                borderWidth: 2, 
-                borderColor: '#ffffff',
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            cutout: '70%', // V3 Syntax (Dulu cutoutPercentage)
-            plugins: {     // V3 Syntax (Legend masuk ke dalam plugins)
-                legend: { 
-                    position: 'right', 
-                    labels: { boxWidth: 10, font: { size: 10 } } 
-                }
+    // Pastikan Chart terdefinisi sebelum membuat instance baru
+    if (typeof Chart !== 'undefined') {
+        pieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Diproses', 'Revisi', 'Disetujui', 'Ditolak'],
+                datasets: [{
+                    data: [0, 0, 0, 0], 
+                    backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                    borderWidth: 2, borderColor: '#ffffff'
+                }]
             },
-            animation: { duration: 800 }
-        }
-    });
-}
-
-function renderBarChart(data) {
-    var canvas = document.getElementById('chartBarDisiplin');
-    if (!canvas) return;
-
-    var ctxBar = canvas.getContext('2d');
-    
-    // FORMAT V3 (Updated Syntax)
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: data.labels, 
-            datasets: [
-                { 
-                    label: 'Terlambat', 
-                    backgroundColor: '#dc3545', 
-                    data: data.terlambat,
-                    barPercentage: 0.6
-                },
-                { 
-                    label: 'Pulang Awal', 
-                    backgroundColor: '#6f42c1', 
-                    data: data.pulangAwal,
-                    barPercentage: 0.6
-                }
-            ]
-        },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            scales: {
-                y: { // V3 Syntax (Bukan yAxes)
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 },
-                    grid: { borderDash: [2, 2] }
-                },
-                x: { // V3 Syntax (Bukan xAxes)
-                    grid: { display: false }
-                }
-            },
-            plugins: { // V3 Syntax
-                legend: { 
-                    position: 'top', 
-                    labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 } } 
-                } 
+            options: {
+                maintainAspectRatio: false, responsive: true, cutout: '70%', 
+                plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size:10} } } }
             }
-        }
-    });
+        });
+    }
 }
 
 function updatePieChart() {
     if(!pieChartInstance) return;
-    
     var s = GLOBAL_STATS;
     var total = s.proses + s.revisi + s.setuju + s.tolak;
-
-    // Update Data
+    
     pieChartInstance.data.datasets[0].data = [s.proses, s.revisi, s.setuju, s.tolak];
     pieChartInstance.update();
-
-    // Update Progress Bars
-    updateProgressBar('Proses', s.proses, total);
-    updateProgressBar('Revisi', s.revisi, total);
-    updateProgressBar('Setuju', s.setuju, total);
-    updateProgressBar('Tolak', s.tolak, total);
+    renderProgressBar(s.proses, s.revisi, s.setuju, s.tolak);
 }
 
-// --- HELPER UI ---
+function renderBarChart(data) {
+    $('#wrap-chartBarDisiplin').html('<canvas id="chartBarDisiplin"></canvas>');
+    var ctxElement = document.getElementById('chartBarDisiplin');
+    if (!ctxElement) return;
+
+    var ctx = ctxElement.getContext('2d');
+    if (typeof Chart !== 'undefined') {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels, 
+                datasets: [
+                    { label: 'Terlambat', backgroundColor: '#dc3545', data: data.terlambat },
+                    { label: 'Pulang Awal', backgroundColor: '#6f42c1', data: data.pulangAwal }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false, responsive: true,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { borderDash: [2, 2] } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { position: 'top', labels: { boxWidth: 10, usePointStyle: true } } }
+            }
+        });
+    }
+}
+
+function renderSpecificChart(canvasId, dataset) {
+    $('#wrap-' + canvasId).html('<canvas id="' + canvasId + '"></canvas>');
+    var ctxElement = document.getElementById(canvasId);
+    if (!ctxElement) return;
+
+    var ctx = ctxElement.getContext('2d');
+    
+    if (typeof Chart !== 'undefined') {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"],
+                datasets: [
+                    { label: 'Diproses', backgroundColor: '#ffc107', data: dataset.proses },
+                    { label: 'Revisi', backgroundColor: '#17a2b8', data: dataset.revisi },
+                    { label: 'Disetujui', backgroundColor: '#28a745', data: dataset.setuju },
+                    { label: 'Ditolak', backgroundColor: '#dc3545', data: dataset.tolak }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false, responsive: true,
+                plugins: { 
+                    legend: { position: 'top', labels: { boxWidth: 8, font: {size: 9}, usePointStyle: true } },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { stacked: false, grid: { display: false }, ticks: { font: {size: 9} } },
+                    y: { stacked: false, beginAtZero: true, ticks: { font: {size: 9} } }
+                }
+            }
+        });
+    }
+}
+
+// ==========================================
+// 5. HELPER UI
+// ==========================================
+
+function renderProgressBar(p, r, ok, no) {
+    var total = p + r + ok + no;
+    function calc(val) { return total > 0 ? Math.round((val / total) * 100) + '%' : '0%'; }
+    var html = `
+        ${progressItem('Diproses', p, calc(p), 'warning')}
+        ${progressItem('Revisi', r, calc(r), 'info')}
+        ${progressItem('Disetujui', ok, calc(ok), 'success')}
+        ${progressItem('Ditolak', no, calc(no), 'danger')}
+    `;
+    $('#progressContainer').html(html);
+}
+
+function progressItem(lbl, val, pct, color) {
+    return `
+    <div class="d-flex justify-content-between mb-1 small">
+        <span class="text-${color} font-weight-bold">${lbl}</span><span>${val}</span>
+    </div>
+    <div class="progress progress-xs mb-2"><div class="progress-bar bg-${color}" style="width: ${pct}"></div></div>`;
+}
+
 function createSlimVisualRow(label, icon, data) {
     var displayLabel = label;
-    if(label === 'Cuti') displayLabel = 'Data Cuti';
+    if(label === 'Cuti') displayLabel = 'Pengajuan Cuti';
     if(label === 'Dinas') displayLabel = 'Perjalanan Dinas';
     if(label === 'Lupa') displayLabel = 'Lupa Presensi';
     if(label === 'Salah') displayLabel = 'Salah Presensi';
@@ -396,11 +409,10 @@ function renderMiniBox(val, label, color, bg, border) {
             </div>`;
 }
 
-function updateProgressBar(id, val, total) {
-    var pct = total > 0 ? Math.round((val / total) * 100) : 0;
-    $('#lbl' + id).text(val);
-    $('#prog' + id).css('width', pct + '%');
-}
-
 function capitalize(s) { return s && s[0].toUpperCase() + s.slice(1); }
 </script>
+
+<style>
+    .f-20 { font-size: 1.25rem; }
+    .small-box h3, canvas { transition: all 0.3s ease; }
+</style>

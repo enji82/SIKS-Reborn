@@ -39,8 +39,7 @@
           <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
         </li>
         <li class="nav-item d-none d-md-block">
-          <span id="page-breadcrumb" class="nav-link text-white" style="cursor: default;">
-            </span>
+          <span id="page-breadcrumb" class="nav-link text-white" style="cursor: default;"></span>
         </li>
       </ul>
 
@@ -85,7 +84,7 @@
     </aside>
 
     <div class="content-wrapper">
-      <div id="main-content" class="p-3"></div>
+      <div id="app-content" class="p-3"></div>
     </div>
 
     <footer class="main-footer text-sm">
@@ -110,140 +109,165 @@
   <?!= include('javascript'); ?>
 
   <script>
+  // ============================================
+  // 1. UPDATE UI NAVBAR (Data User)
+  // ============================================
+  function updateNavbarUI(user) {
+      if (!user) return;
+      var displayName = user.nama_lengkap || user.nama || user.username || "User";
+      
+      // Setup Foto
+      var photoUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(displayName) + "&background=random&color=fff";
+      if (user.photo && user.photo.trim() !== "") {
+          if (user.photo.startsWith("http")) photoUrl = user.photo;
+          else photoUrl = "https://drive.google.com/thumbnail?id=" + user.photo + "&sz=s200";
+      }
+      
+      $('#nav-user-name').text(displayName);
+      $('#nav-user-photo').attr('src', photoUrl);
+      $('#dropdown-user-name-big').text(displayName);
+      $('#dropdown-user-role').text(user.role || "Pengguna");
+      $('#dropdown-user-photo').attr('src', photoUrl);
+      $('.user-panel .info a').text(displayName);
+      $('.user-panel .image img').attr('src', photoUrl);
+      
+      if(user.role !== 'Admin') { $('#menu-setting-admin').hide(); } 
+      else { $('#menu-setting-admin').show(); }
+  }
+
+  // ============================================
+  // 2. FUNGSI LOAD HALAMAN (ROUTING UTAMA)
+  // ============================================
+  function loadContent(pageName) {
+    if(!pageName) return;
+    
+    // Highlight Menu Sidebar
+    $('.nav-link').removeClass('active'); 
+    var $activeLink = $('a[data-page="' + pageName + '"]');
+    $activeLink.addClass('active');
+
+    // Buka menu induk (Treeview)
+    var $parentTree = $activeLink.closest('.nav-treeview');
+    if ($parentTree.length > 0) {
+        $parentTree.show();
+        $parentTree.closest('.nav-item').addClass('menu-open');
+        $parentTree.prev('.nav-link').addClass('active');
+    }
+
+    // Panggil Server (TANPA SPINNER MANUAL, BIARKAN POPUP BAWAAN)
+    google.script.run
+      .withSuccessHandler(function(html) {
+        $('#app-content').html(html); 
+        
+        // Update Breadcrumb
+        var homeBtn = '<span style="cursor:pointer" class="btn-home-crumb"><i class="fas fa-home mr-1"></i> Beranda</span>';
+        var pageTitle = $activeLink.find('p').text() || pageName;
+        pageTitle = pageTitle.replace('<i class="right fas fa-angle-left"></i>', '').trim();
+        
+        if(pageName !== 'home') {
+            $('#page-breadcrumb').html(homeBtn + ' <i class="fas fa-chevron-right mx-2 small text-muted"></i> <span class="font-weight-bold text-white">' + pageTitle + '</span>');
+        } else {
+            $('#page-breadcrumb').html(homeBtn);
+        }
+      })
+      .withFailureHandler(function(err) {
+        $('#app-content').html('<div class="alert alert-danger m-3">Gagal memuat halaman: ' + err.message + '</div>');
+      })
+      .loadPage(pageName);
+  }
+
+  // ============================================
+  // 3. FUNGSI LOGOUT (SOFT LOGOUT - ANTI BLANK)
+  // ============================================
+  function handleLogout() {
+    Swal.fire({
+      title: 'Keluar Aplikasi?', text: "Sesi Anda akan diakhiri.", icon: 'warning',
+      showCancelButton: true, confirmButtonColor: '#800000', cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Ya, Logout', cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // 1. Hapus Sesi Lokal
+        localStorage.removeItem("siksUser");
+        
+        // 2. Efek Transisi (Fade Out Dashboard -> Fade In Login)
+        $('#konten-aplikasi').fadeOut(400, function() {
+            // Reset Form Login
+            $('#username').val('');
+            $('#password').val('');
+            
+            // Kembalikan Tombol Login ke Kondisi Awal (Bukan Hijau)
+            $('#tombolLogin').prop('disabled', false)
+                .html('<i class="fas fa-sign-in-alt mr-2"></i> MASUK APLIKASI')
+                .css('background', ''); 
+
+            // Tampilkan Wrapper Login
+            $('#gerbang-login').show();
+            $('.login-screen-wrapper').fadeIn(400); 
+        });
+
+        // 3. Logout Server (Background Process)
+        google.script.run.processLogout();
+      }
+    });
+  }
+
+  // ============================================
+  // 4. INISIALISASI (DOCUMENT READY)
+  // ============================================
   $(document).ready(function() {
     
-    try {
-        var user = JSON.parse(localStorage.getItem("siksUser"));
+    // A. CEK LOGIN
+    var userLocal = localStorage.getItem("siksUser");
+    var user = userLocal ? JSON.parse(userLocal) : null;
+
+    if (user) {
+        // SUDAH LOGIN
+        $('#gerbang-login').hide(); 
+        $('#konten-aplikasi').show(); 
+        updateNavbarUI(user);
+        loadContent('home'); 
         
-        // KONDISI SAKIT: Jika User ada, TAPI namanya "User Web" atau nama_lengkap tidak ada
-        if (user && (user.nama_lengkap === "User Web" || !user.nama_lengkap)) {
-            
-            console.log("⚠️ Terdeteksi Profil User Belum Lengkap. Melakukan Auto-Repair...");
-            
-            // Panggil Server diam-diam untuk minta data asli
-            google.script.run.withSuccessHandler(function(res){
+        // Auto Repair (Background)
+        if (!user.nama_lengkap || user.nama_lengkap === user.username) {
+             google.script.run.withSuccessHandler(function(res){
                 if(res.found) {
-                    // UPDATE MEMORI BROWSER
-                    user.nama_lengkap = res.nama_lengkap; // Nama Asli dari DB
-                    user.nama = res.nama_lengkap;         // Update key legacy juga
-                    user.role = res.role;                 // Update role sekalian biar aman
-                    user.unit = res.unit;
-                    
-                    // SIMPAN KEMBALI
+                    user.nama_lengkap = res.nama_lengkap; user.nama = res.nama_lengkap;
+                    user.role = res.role; user.unit = res.unit; 
+                    if(res.photo) user.photo = res.photo; 
                     localStorage.setItem("siksUser", JSON.stringify(user));
-                    
-                    // UPDATE TAMPILAN NAVBAR LANGSUNG
-                    $('.user-panel .info a').text(res.nama_lengkap);
-                    $('.navbar-nav .user-menu .d-none').text(res.nama_lengkap);
-                    $('#nav-user-name').text(res.nama_lengkap);
-                    
-                    console.log("✅ Auto-Repair Sukses: Nama diperbarui menjadi " + res.nama_lengkap);
+                    updateNavbarUI(user);
                 }
             }).getUserProfileByName(user.username);
         }
-    } catch (e) {
-        console.log("Gagal Auto-Repair User");
+    } else {
+        // BELUM LOGIN
+        $('#konten-aplikasi').hide();
+        $('#gerbang-login').show();
     }
-    
-    // 1. SETUP TOMBOL BERANDA
-    var homeBtn = '<span class="btn-home-crumb" style="cursor:pointer" title="Reset ke Dashboard"><i class="fas fa-home mr-2"></i>Beranda</span>';
-    $('#page-breadcrumb').html(homeBtn);
 
-    // 2. LOGIKA KLIK TOMBOL RUMAH (Reset Total)
-    $(document).on('click', '.btn-home-crumb', function() {
-        var dashLink = $('.nav-sidebar > .nav-item > .nav-link').first();
-        if(dashLink.length) dashLink.trigger('click'); 
-        
-        // Tutup semua menu paksa
-        $('.nav-sidebar .menu-open').removeClass('menu-open');
-        $('.nav-sidebar .nav-treeview').slideUp(300);
-        $('.nav-sidebar .nav-link.active').removeClass('active');
-        $('#page-breadcrumb').html(homeBtn);
-    });
-
-    // 3. LOGIKA KLIK MENU SIDEBAR (Auto-Collapse & Breadcrumb)
+    // B. EVENT HANDLER SIDEBAR
     $(document).on('click', '.nav-sidebar .nav-link', function(e) {
-        
-        // --- BAGIAN A: FITUR AUTO-COLLAPSE (SULTAN FOCUS) ---
-        // Idenya: Saat klik sesuatu, tutup semua tetangga yang tidak sedarah.
-        
-        var $clickedItem = $(this).closest('.nav-item');
-        var $hasChild = $(this).next('.nav-treeview').length > 0;
+        e.preventDefault(); // Wajib untuk mencegah refresh
 
-        // Jika yang diklik adalah MENU AKHIR (Leaf/Link Halaman)
-        // Maka: Tutup semua menu lain yang BUKAN orang tua/kakek dari menu ini.
-        if (!$hasChild) {
-            $('.nav-sidebar .menu-open').not($clickedItem.parents()).each(function(){
-                $(this).removeClass('menu-open');
-                $(this).children('.nav-treeview').slideUp(300);
-            });
-        }
-        // Jika yang diklik adalah MENU INDUK (Punya Anak)
-        // Maka: Tutup saudara-saudaranya (Sibling) yang sedang terbuka.
-        else {
-           $clickedItem.siblings('.menu-open').each(function(){
-                $(this).removeClass('menu-open');
-                $(this).children('.nav-treeview').slideUp(300);
-           });
-        }
+        var pageName = $(this).data('page'); 
 
-        // --- BAGIAN B: BREADCRUMB UPDATE ---
-        
-        var menuText = $(this).find('p').text().trim();
-        if(!menuText) menuText = $(this).text().trim();
-
-        var parent = $(this).closest('.nav-treeview').prev('.nav-link');
-        var grandParent = parent.closest('.nav-treeview').prev('.nav-link');
-        var sep = '<i class="fas fa-chevron-right mx-2" style="font-size:10px; opacity:0.5;"></i>';
-        
-        var fullPath = homeBtn;
-
-        if (grandParent.length > 0) {
-            fullPath += sep + '<span class="opacity-50">' + grandParent.find('p').text().trim() + '</span>';
-        }
-        if (parent.length > 0) {
-            fullPath += sep + '<span class="opacity-50">' + parent.find('p').text().trim() + '</span>';
-        }
-        if (menuText) {
-            // Jika punya anak, teks biasa. Jika halaman akhir, teks tebal putih.
-            var styleClass = $hasChild ? "opacity-50" : "font-weight-bold text-white";
-            fullPath += sep + '<span class="' + styleClass + '">' + menuText + '</span>';
-        }
-
-        $('#page-breadcrumb').html(fullPath);
+        if (pageName) {
+            loadContent(pageName);
+            if ($(window).width() < 768) {
+                $('body').removeClass('sidebar-open').addClass('sidebar-closed sidebar-collapse');
+            }
+        } 
     });
+
+    // C. TOMBOL BREADCRUMB HOME
+    $(document).on('click', '.btn-home-crumb', function(e) {
+        e.preventDefault();
+        loadContent('home');
+        $('.nav-sidebar .menu-open').removeClass('menu-open');
+        $('.nav-sidebar .nav-treeview').slideUp();
+    });
+
   });
-
-  /* ======================================================================
-     LOAD CONTENT MANAGER (FIXED)
-     ====================================================================== */
-  function loadContent(pageName) {
-    // 1. Tampilkan Loading
-    $('#app-content').html('<div class="text-center mt-5"><i class="fas fa-3x fa-circle-notch fa-spin text-maroon"></i><br><br>Memuat Halaman...</div>');
-    
-    // 2. Highlight Menu Aktif di Sidebar
-    $('.nav-link').removeClass('active'); // Hapus aktif di semua menu
-    
-    // Cari menu yang diklik dan aktifkan (Opsional, agar terlihat rapi)
-    // Kita cari link yang onclick-nya mengandung nama halaman ini
-    $('a[onclick*="' + pageName + '"]').addClass('active');
-
-    // 3. Panggil Server (Code.gs -> loadPage)
-    google.script.run
-      .withSuccessHandler(function(html) {
-        // Masukkan hasil HTML ke area konten utama
-        $('#app-content').html(html);
-        
-        // --- PENTING UNTUK HALAMAN SETTING ---
-        // Karena halaman Setting butuh load data awal (running text),
-        // kita tidak perlu trigger manual disini karena di dalam page_setting.html
-        // kita sudah pasang $(document).ready(...)
-      })
-      .withFailureHandler(function(err) {
-        $('#app-content').html('<div class="alert alert-danger">Gagal memuat halaman: ' + err.message + '</div>');
-      })
-      .loadPage(pageName); // Memanggil fungsi universal di Code.gs
-  }
 </script>
 
 </body>

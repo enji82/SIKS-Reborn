@@ -1132,6 +1132,81 @@ function prosesRestoreSalahAbsen(nip, tgl, jam) {
    Semua ID didefinisikan di dalam fungsi agar tidak ada konflik global.
    ====================================================================== */
 
+function cekBentrokLupa(nipBaru, tglBaruStr, jenisBaru, rowIdPengecualian) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_NAME = "Lupa_Presensi";
+  
+  var ss = SpreadsheetApp.openById(ID_DB);
+  var sheet = ss.getSheetByName(SHEET_NAME);
+  // Ambil data kolom C (NIP), D (Tgl), F (Jenis), K (Status) untuk efisiensi
+  // Tapi getDataRange().getValues() lebih mudah dibaca
+  var data = sheet.getDataRange().getValues();
+  
+  // 1. STANDARISASI INPUT BARU -> YYYY-MM-DD
+  // Contoh: '2026-02-12' tetap '2026-02-12'
+  var tglBaruYMD = normalizeToYMD(tglBaruStr);
+  var jenisBaruClean = String(jenisBaru).trim().toLowerCase();
+
+  // Loop Data (Mulai baris 2 / Index 1)
+  for (var i = 1; i < data.length; i++) {
+    // Skip jika sedang edit baris ini sendiri
+    if (rowIdPengecualian && (i + 1) == rowIdPengecualian) continue;
+
+    var rowNip = String(data[i][2]).replace(/'/g, "").trim(); 
+    var rowStatus = String(data[i][10]).toLowerCase();
+    
+    // Cek NIP & Status Aktif (Bukan Ditolak)
+    if (rowNip === String(nipBaru).trim() && !rowStatus.includes("tolak")) {
+       
+       // 2. STANDARISASI TANGGAL DATABASE -> YYYY-MM-DD
+       // Contoh: '12-02-2026' akan diubah jadi '2026-02-12'
+       var rowTglRaw = data[i][3];
+       var rowTglYMD = normalizeToYMD(rowTglRaw);
+       
+       var rowJenis = String(data[i][5]).trim().toLowerCase();
+       
+       // 3. BANDINGKAN FORMAT YANG SUDAH SAMA
+       if (rowTglYMD === tglBaruYMD && rowJenis === jenisBaruClean) {
+           var tglDisplay = String(rowTglRaw).replace(/'/g,""); // Tampilkan tanggal asli biar user paham
+           return "Gagal: Data ganda! Anda sudah mengajukan Lupa Presensi (" + data[i][5] + ") pada tanggal " + tglDisplay + ".";
+       }
+    }
+  }
+  return null; // Aman
+}
+
+// --- HELPER BARU: PENERJEMAH TANGGAL ---
+function normalizeToYMD(val) {
+  if (!val) return "";
+  
+  // 1. Jika Data Asli Excel (Date Object) -> Ubah ke YYYY-MM-DD
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  }
+  
+  var s = String(val).replace(/'/g, "").trim();
+  
+  // 2. Jika format sudah YYYY-MM-DD (Input HTML) -> Biarkan
+  if (s.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return s;
+  }
+  
+  // 3. Jika format DD-MM-YYYY atau DD/MM/YYYY (Format Indo) -> Balik jadi YYYY-MM-DD
+  var parts = s.split(/[-/]/); // Pisahkan berdasarkan - atau /
+  if (parts.length === 3) {
+     // Asumsi: Bagian pertama adalah Tanggal (DD), Ketiga adalah Tahun (YYYY)
+     // Cek panjang string: DD (2 digit), YYYY (4 digit)
+     if (parts[0].length <= 2 && parts[2].length === 4) {
+        var dd = parts[0].padStart(2, '0');
+        var mm = parts[1].padStart(2, '0');
+        var yyyy = parts[2];
+        return yyyy + "-" + mm + "-" + dd;
+     }
+  }
+  
+  return s; // Kembalikan apa adanya jika format aneh
+}
+
 // 1. FILTER TAHUN
 function getLupaFilters() {
   var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU"; // ID Spreadsheet
@@ -1298,81 +1373,117 @@ function updateLupaPresensi(form, fileData) {
   var DRIVE_ID = "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa";
 
   try {
+    var baris = parseInt(form.recId);
+    var targetNip = form.nip_asn || form.nip_lama; 
+    
+    // Normalisasi Tanggal
+    var tglSimpan = form.tanggal; // yyyy-mm-dd
+
+    // --- VALIDASI BENTROK ---
+    var err = cekBentrokLupa(targetNip, tglSimpan, form.jenis, baris);
+    if (err) return err;
+    // ------------------------
+
     var ss = SpreadsheetApp.openById(ID_DB);
     var sheet = ss.getSheetByName(SHEET_NAME);
-    var baris = parseInt(form.recId);
     
-    if (isNaN(baris)) throw new Error("ID Data tidak valid");
+    // Ambil Data Lama untuk Cek File
     var rangeLama = sheet.getRange(baris, 1, 1, 16); 
     var valLama = rangeLama.getValues()[0];
-    
-    var stLama = valLama[10]; 
-    if(stLama === "OK" || stLama === "Disetujui") throw new Error("Data sudah disetujui, tidak bisa diedit.");
-    
-    var stBaru = (stLama === "Ditolak" || stLama === "Revisi") ? "Diproses" : "Diproses";
-
-    // Format Tanggal Baru
-    var tglSimpan = "";
-    if (form.tanggal && form.tanggal.includes("-")) {
-       var parts = form.tanggal.split("-"); 
-       tglSimpan = parts[2] + "-" + parts[1] + "-" + parts[0];
-    } else { tglSimpan = form.tanggal; }
-
-    var jamSimpan = "";
-    if (form.waktu) {
-        var jamParts = form.waktu.split(":");
-        jamSimpan = String(jamParts[0]).padStart(2, '0') + ":" + String(jamParts[1]).padStart(2, '0');
-    }
-
-    // --- LOGIKA FILE UPDATE (FORMAT NIP) ---
     var finalUrl = valLama[9]; 
-    var nipUser = valLama[2]; // Ambil NIP dari database (Kolom C / Index 2)
     
-    // FORMAT BARU: <NIP> - <Tanggal> - <Jenis>.pdf
-    var namaFileBaru = nipUser + " - " + tglSimpan + " - " + form.jenis + ".pdf";
-
+    // ... (Logika file sama seperti sebelumnya) ...
+    // Format Nama File Baru
+    var namaFileBaru = targetNip + " - " + tglSimpan + " - " + form.jenis + ".pdf";
     var targetFolder = getFolderTahunBulan(DRIVE_ID, tglSimpan);
 
     if (fileData && fileData.data) {
-       // A. UPLOAD FILE BARU
+       // Upload Baru
        var blob = Utilities.newBlob(Utilities.base64Decode(fileData.data), fileData.mimeType, namaFileBaru);
        var newFile = targetFolder.createFile(blob);
        newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
        finalUrl = newFile.getUrl();
-       
     } else {
-       // B. RENAME FILE LAMA (Jika tanggal/jenis berubah)
+       // Rename Lama jika perlu
        var tglLamaSheet = String(valLama[3]).replace(/'/g, "");
-       
-       // Cek perubahan (Tanggal, Jenis, atau Nama File belum sesuai NIP)
        if (tglSimpan !== tglLamaSheet || form.jenis !== valLama[5]) {
            try { 
              var idFile = finalUrl.match(/[-\w]{25,}/);
              if(idFile) {
                  var fileDrive = DriveApp.getFileById(idFile[0]);
-                 fileDrive.setName(namaFileBaru); // Rename jadi format NIP
-                 
-                 // Pindah folder jika tanggal berubah
-                 if (tglSimpan !== tglLamaSheet) {
-                     fileDrive.moveTo(targetFolder);
-                 }
+                 fileDrive.setName(namaFileBaru);
+                 if (tglSimpan !== tglLamaSheet) fileDrive.moveTo(targetFolder);
              }
            } catch(e) {}
        }
     }
 
-    // Simpan ke Sheet
+    var jamSimpan = form.waktu; // Format HH:mm
+
     sheet.getRange(baris, 4).setValue("'" + tglSimpan);      
     sheet.getRange(baris, 5).setValue("'" + jamSimpan);      
     sheet.getRange(baris, 6).setValue(form.jenis);   
     sheet.getRange(baris, 7).setValue("'" + form.komulatif); 
     sheet.getRange(baris, 10).setValue(finalUrl);    
-    sheet.getRange(baris, 11).setValue(stBaru);      
     sheet.getRange(baris, 12).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss"));        
     sheet.getRange(baris, 13).setValue(form.user_login);
 
     return "Sukses Data Berhasil Diupdate";
-  } catch(e) { throw new Error("Gagal Update: " + e.message); }
+  } catch(e) { return "Error: " + e.message; }
+}
+
+function softDeleteLupaPresensi(dataKirim) {
+  var ID_DB = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var SHEET_MAIN = "Lupa_Presensi";
+  var SHEET_TRASH = "Trash"; // Pastikan sheet ini ada
+
+  try {
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheetMain = ss.getSheetByName(SHEET_MAIN);
+    
+    // Cek Sheet Sampah, buat jika belum ada
+    var sheetTrash = ss.getSheetByName(SHEET_TRASH);
+    if (!sheetTrash) {
+       sheetTrash = ss.insertSheet(SHEET_TRASH);
+       sheetTrash.appendRow(["Unit","Nama","NIP","Tanggal","Jam","Jenis","Komulatif","Tgl Kirim","User","File","Status","Ket","...","...","...","...","Waktu Hapus","User Hapus","Alasan"]);
+    }
+
+    var rowIdx = parseInt(dataKirim.recId);
+    if (isNaN(rowIdx)) throw new Error("ID Baris tidak valid.");
+
+    // Cek Kode Hapus (Server Side Validation)
+    var now = new Date();
+    var validCode = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyyMMdd");
+    if(String(dataKirim.kode).trim() !== validCode) {
+       throw new Error("KODE_SALAH"); // Lempar error khusus
+    }
+
+    // Ambil Data Baris tsb (Kolom A s.d P / 1 s.d 16)
+    var range = sheetMain.getRange(rowIdx, 1, 1, 16);
+    var rowValues = range.getValues()[0];
+
+    // Format ulang tanggal/jam biar ada petiknya saat masuk tong sampah (biar format terjaga)
+    rowValues[3] = "'" + String(rowValues[3]).replace(/'/g, ""); // Tanggal
+    rowValues[4] = "'" + String(rowValues[4]).replace(/'/g, ""); // Jam
+    rowValues[6] = "'" + String(rowValues[6]).replace(/'/g, ""); // Komulatif
+
+    // Tambah Metadata Hapus
+    var tglHapus = Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    var userHapus = dataKirim.user_login || "Admin";
+    var alasan = dataKirim.alasan || "-";
+
+    var trashRow = rowValues.concat([tglHapus, userHapus, alasan]);
+
+    // Pindah ke Sampah & Hapus dari Utama
+    sheetTrash.appendRow(trashRow);
+    sheetMain.deleteRow(rowIdx);
+
+    return "Sukses";
+
+  } catch (e) {
+    if(e.message === "KODE_SALAH") return "KODE_SALAH";
+    return "Error Server: " + e.message;
+  }
 }
 
 // 6. SOFT DELETE (HAPUS KE TRASH)
@@ -1428,15 +1539,25 @@ function simpanLupaPresensi(dataKirim) {
   var DRIVE_ID = "1h8LcyYYrdVmd-fDPdcZ47hT9--rLQ7Fa"; 
 
   try {
-    var ss = SpreadsheetApp.openById(ID_DB);
-    var sheet = ss.getSheetByName(SHEET_NAME);
-    
-    // Normalisasi Tanggal
+    // Normalisasi Tanggal untuk Validasi & Simpan
     var tglSimpan = "";
     if (dataKirim.tanggal && dataKirim.tanggal.includes("-")) {
        var parts = dataKirim.tanggal.split("-");
-       tglSimpan = parts[2] + "-" + parts[1] + "-" + parts[0];
+       // Input HTML date: yyyy-mm-dd -> Kita simpan yyyy-mm-dd juga biar konsisten
+       tglSimpan = parts[0] + "-" + parts[1] + "-" + parts[2]; 
+       // KOREKSI: Jika logic sebelumnya membalik tanggal, sesuaikan disini. 
+       // Biasanya database spreadsheet lebih aman pakai yyyy-mm-dd atau 'dd-mm-yyyy text.
+       // Mari gunakan format text 'yyyy-mm-dd sesuai input HTML agar match stringnya mudah.
     } else { tglSimpan = dataKirim.tanggal; }
+
+    // --- VALIDASI BENTROK ---
+    // Kirim tglSimpan yang sudah dinormalisasi
+    var err = cekBentrokLupa(dataKirim.nip_asn, tglSimpan, dataKirim.jenis, null);
+    if (err) return err; 
+    // ------------------------
+
+    var ss = SpreadsheetApp.openById(ID_DB);
+    var sheet = ss.getSheetByName(SHEET_NAME);
 
     // Normalisasi Jam
     var jamSimpan = dataKirim.waktu;
@@ -1445,33 +1566,28 @@ function simpanLupaPresensi(dataKirim) {
        jamSimpan = String(jamParts[0]).padStart(2, '0') + ":" + String(jamParts[1]).padStart(2, '0');
     }
 
-    // --- LOGIKA FILE (UPDATE NIP) ---
+    // Simpan File
     var targetFolder = getFolderTahunBulan(DRIVE_ID, tglSimpan);
-    
-    // FORMAT BARU: <NIP> - <Tanggal> - <Jenis>.pdf
     var fileExt = dataKirim.file.name.split('.').pop();
     var fileNameBaru = dataKirim.nip_asn + " - " + tglSimpan + " - " + dataKirim.jenis + "." + fileExt;
-
-    // Simpan File
     var fileBlob = Utilities.newBlob(Utilities.base64Decode(dataKirim.file.data), dataKirim.file.mimeType, dataKirim.file.name);
     var newFile = targetFolder.createFile(fileBlob).setName(fileNameBaru);
-    
-    // Set Public
     newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     var fileUrl = newFile.getUrl();
-    // --------------------------------
 
     var timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
+    
+    // Simpan dengan tanda petik agar terbaca TEXT
     var rowData = [
       dataKirim.unit_kerja, dataKirim.nama_asn, dataKirim.nip_asn,
-      "'" + tglSimpan, "'" + jamSimpan, dataKirim.jenis, dataKirim.komulatif,
+      "'" + tglSimpan, "'" + jamSimpan, dataKirim.jenis, "'" + dataKirim.komulatif,
       timestamp, dataKirim.user_login, fileUrl, "Diproses",
       "", "", "", "", ""
     ];
     sheet.appendRow(rowData);
     return "Sukses Data Berhasil Disimpan";
     
-  } catch (e) { throw new Error("Gagal Simpan: " + e.message); }
+  } catch (e) { return "Error: " + e.message; }
 }
 
 // HELPER (Tetap sama, tidak perlu ID DB)
@@ -2387,9 +2503,59 @@ function getDatabaseCutiOptions() {
   } catch (e) { return JSON.stringify([]); }
 }
 
+/* ======================================================================
+   HELPER VALIDASI: CEK BENTROK TANGGAL CUTI
+   Return: null jika aman, string error jika bentrok
+   ====================================================================== */
+function cekBentrokCuti(nipBaru, tglMulaiBaruStr, tglSelesaiBaruStr, rowIdPengecualian) {
+  var ss = SpreadsheetApp.openById(ID_SS_CUTI);
+  var sheet = ss.getSheetByName("Form Cuti");
+  var data = sheet.getDataRange().getValues();
+  
+  var dMulaiBaru = new Date(tglMulaiBaruStr); // Format yyyy-mm-dd
+  var dSelesaiBaru = new Date(tglSelesaiBaruStr);
+  
+  // Reset jam agar komparasi murni tanggal
+  dMulaiBaru.setHours(0,0,0,0);
+  dSelesaiBaru.setHours(0,0,0,0);
+
+  // Loop semua data (Skip header baris 1)
+  for (var i = 1; i < data.length; i++) {
+    // Skip jika sedang edit baris ini sendiri
+    if (rowIdPengecualian && (i + 1) == rowIdPengecualian) continue;
+
+    var rowNip = String(data[i][2]).replace(/'/g, "").trim(); // Kolom C
+    var rowStatus = String(data[i][10]).toLowerCase();        // Kolom K
+    
+    // Cek NIP sama & Status Aktif (Bukan Ditolak/Dibatalkan)
+    if (rowNip === String(nipBaru).trim() && !rowStatus.includes("tolak") && !rowStatus.includes("batal")) {
+      
+      // Ambil Tanggal Lama (Kolom E & F) - Parsing manual jika format teks Indonesia
+      var tglMulaiLama = parseDateIndo(data[i][4]) || new Date(data[i][4]);
+      var tglSelesaiLama = parseDateIndo(data[i][5]) || new Date(data[i][5]);
+      
+      if (tglMulaiLama && tglSelesaiLama) {
+        tglMulaiLama.setHours(0,0,0,0);
+        tglSelesaiLama.setHours(0,0,0,0);
+        
+        // RUMUS TABRAKAN TANGGAL:
+        // (StartA <= EndB) and (EndA >= StartB)
+        if (dMulaiBaru <= tglSelesaiLama && dSelesaiBaru >= tglMulaiLama) {
+           var conflictDate = Utilities.formatDate(tglMulaiLama, "GMT+7", "dd/MM/yyyy") + " s.d " + 
+                              Utilities.formatDate(tglSelesaiLama, "GMT+7", "dd/MM/yyyy");
+           return "Gagal: Tanggal bentrok dengan pengajuan aktif (" + conflictDate + ")";
+        }
+      }
+    }
+  }
+  return null; // Aman
+}
+
 /* 2. SIMPAN PENGAJUAN CUTI */
 function simpanPengajuanCuti(payload) {
   try {
+    var errorBentrok = cekBentrokCuti(payload.nip, payload.tglMulai, payload.tglSelesai, null);
+    if (errorBentrok) return errorBentrok;
     var ss = SpreadsheetApp.openById(ID_SS_CUTI);
     var sheet = ss.getSheetByName("Form Cuti");
     if (!sheet) return "Error: Sheet 'Form Cuti' tidak ditemukan.";
@@ -2685,11 +2851,13 @@ function getOrCreateSubfolder(parentFolder, folderName) {
 
 function updatePengajuanCuti(payload) {
   try {
+    var rowIndex = parseInt(payload.rowBaris);
+    var errorBentrok = cekBentrokCuti(payload.nip, payload.tglMulai, payload.tglSelesai, rowIndex);
+    if (errorBentrok) return errorBentrok;
     var ss = SpreadsheetApp.openById(ID_SS_CUTI);
     var sheet = ss.getSheetByName("Form Cuti");
     if (!sheet) return "Error: Sheet 'Form Cuti' tidak ditemukan.";
     
-    var rowIndex = parseInt(payload.rowBaris);
     if (!rowIndex || rowIndex < 2) return "Error: Baris data tidak valid.";
 
     var now = new Date();
@@ -3498,4 +3666,280 @@ function parseEventDateSimple(raw) {
   // Fallback ke standard date
   var dObj = new Date(raw);
   return isNaN(dObj.getTime()) ? null : dObj;
+}
+
+/* ======================================================================
+   DASHBOARD BACKEND: ASYNCHRONOUS / PARALLEL MODE
+   Setiap fungsi mengambil data spesifik agar frontend tidak menunggu lama.
+   ====================================================================== */
+
+// 1. CONFIG ID DATABASE
+var DB_ID = {
+  CUTI:  "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo",
+  DINAS: "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M",
+  LUPA:  "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU",
+  SALAH: "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY",
+  REKAP: "1tQsQY1-Ny1ie66GOZPTLtvZ7BiYCgFdNrX-AVGCtaHA"
+};
+
+// 2. HELPER PARSER TANGGAL
+function parseDateIso(v) {
+  if(!v) return null;
+  if(v instanceof Date) return v;
+  var s = String(v).trim().replace(/'/g,'');
+  var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return new Date(m[3], m[2]-1, m[1]);
+  return new Date(s);
+}
+
+// 3. API: AMBIL DATA PER MODUL (Dipanggil Terpisah oleh Frontend)
+function getSiabaMetric(type) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = "metric_v2_" + type;
+  var cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  var now = new Date();
+  var curYear = now.getFullYear();
+  var curMonth = now.getMonth();
+
+  // Config per tipe
+  var config = {};
+  if (type == 'cuti')  config = { id: DB_ID.CUTI,  tab: "Form Cuti",        idxTgl: 4, idxStat: 10 };
+  if (type == 'dinas') config = { id: DB_ID.DINAS, tab: "Perjalanan_Dinas", idxTgl: 3, idxStat: 9 };
+  if (type == 'lupa')  config = { id: DB_ID.LUPA,  tab: "Lupa_Presensi",    idxTgl: 3, idxStat: 10 };
+  if (type == 'salah') config = { id: DB_ID.SALAH, tab: "Salah_Presensi",   idxTgl: 3, idxStat: 8 };
+
+  var res = {
+    type: type,
+    total: 0, 
+    bulanIni: 0,
+    proses: 0, revisi: 0, setuju: 0, tolak: 0, // Untuk Pie Chart & List
+    trend: { // Untuk Grafik Bar per Modul
+      proses: new Array(12).fill(0),
+      revisi: new Array(12).fill(0),
+      setuju: new Array(12).fill(0),
+      tolak:  new Array(12).fill(0)
+    }
+  };
+
+  try {
+    var ss = SpreadsheetApp.openById(config.id);
+    var sh = ss.getSheetByName(config.tab);
+    if (sh) {
+      var data = sh.getDataRange().getValues();
+      for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        var tgl = parseDateIso(row[config.idxTgl]);
+        
+        if (!tgl || tgl.getFullYear() !== curYear) continue;
+
+        var bln = tgl.getMonth();
+        var st = String(row[config.idxStat]||"").toLowerCase();
+
+        res.total++;
+        if (bln === curMonth) res.bulanIni++;
+
+        if (st.includes("setuju") || st.includes("ok") || st.includes("disetujui")) {
+          res.setuju++; res.trend.setuju[bln]++;
+        } else if (st.includes("tolak") || st.includes("tidak")) {
+          res.tolak++; res.trend.tolak[bln]++;
+        } else if (st.includes("revisi") || st.includes("ubah")) {
+          res.revisi++; res.trend.revisi[bln]++;
+        } else {
+          res.proses++; res.trend.proses[bln]++;
+        }
+      }
+    }
+  } catch (e) { res.error = e.message; }
+
+  var json = JSON.stringify(res);
+  cache.put(cacheKey, json, 120); // Cache 2 menit per modul
+  return json;
+}
+
+// 4. API: AMBIL DATA GRAFIK TREN (Terpisah)
+function getSiabaChartTrend() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get("chart_trend_v2");
+  if (cached) return cached;
+
+  var curYear = new Date().getFullYear();
+  var res = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"],
+    terlambat: new Array(12).fill(0),
+    pulangAwal: new Array(12).fill(0)
+  };
+
+  try {
+    var ss = SpreadsheetApp.openById(DB_ID.REKAP);
+    ["Rekap_Terlambat", "Rekap_Pulang_Awal"].forEach(function(nm) {
+      var sh = ss.getSheetByName(nm);
+      if (sh) {
+        var data = sh.getDataRange().getDisplayValues();
+        var key = nm.includes("Terlambat") ? "terlambat" : "pulangAwal";
+        for (var i = 2; i < data.length; i++) {
+          if (String(data[i][0]).trim() == curYear) {
+            for (var m = 0; m < 12; m++) {
+              res[key][m] += (parseInt(data[i][4 + (m * 2)]) || 0);
+            }
+          }
+        }
+      }
+    });
+  } catch (e) {}
+
+  var json = JSON.stringify(res);
+  cache.put("chart_trend_v2", json, 300);
+  return json;
+}
+
+/* ======================================================================
+   [ADD-ON] KHUSUS DATA TREN BULANAN
+   Fungsi ini berdiri sendiri agar tidak mengganggu kode utama.
+   ====================================================================== */
+function getTrenBulananData() {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = "siaba_trend_addon_v1"; 
+  var cachedResult = cache.get(cacheKey);
+  if (cachedResult) return cachedResult;
+
+  var now = new Date();
+  var curYear = now.getFullYear(); 
+
+  // Inisialisasi Struktur Data
+  function initArr() { return [0,0,0,0,0,0,0,0,0,0,0,0]; }
+  var result = {
+    cuti:  { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() },
+    dinas: { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() },
+    lupa:  { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() },
+    salah: { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() }
+  };
+
+  // Helper Tanggal
+  function parseTgl(v) {
+    if(!v) return null;
+    if(v instanceof Date) return v;
+    var s = String(v).trim().replace(/'/g,'');
+    var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if(m) return new Date(m[3], m[2]-1, m[1]);
+    return new Date(s);
+  }
+
+  // Logic Processor
+  function processTrend(idSS, tabName, key, colTgl, colStat) {
+    try {
+      var ss = SpreadsheetApp.openById(idSS);
+      var sheet = ss.getSheetByName(tabName);
+      if(!sheet) return;
+      var data = sheet.getDataRange().getValues();
+      
+      for(var i=1; i<data.length; i++) {
+        var row = data[i];
+        var tgl = parseTgl(row[colTgl]);
+        if(!tgl || tgl.getFullYear() !== curYear) continue;
+
+        var bln = tgl.getMonth(); // 0-11
+        var st = String(row[colStat]||"").toLowerCase();
+        var target = result[key];
+
+        if(st.includes("setuju") || st.includes("ok") || st.includes("disetujui")) target.setuju[bln]++;
+        else if(st.includes("tolak") || st.includes("tidak")) target.tolak[bln]++;
+        else if(st.includes("revisi") || st.includes("ubah")) target.revisi[bln]++;
+        else target.proses[bln]++;
+      }
+    } catch(e) {}
+  }
+
+  // ID DATABASE (Gunakan ID yang sama dengan di file Anda)
+  var ID_DB_CUTI  = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var ID_DB_DINAS = "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M"; 
+  var ID_DB_LUPA  = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var ID_DB_SALAH = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
+
+  // Eksekusi
+  processTrend(ID_DB_CUTI, "Form Cuti", "cuti", 4, 10);
+  processTrend(ID_DB_DINAS, "Perjalanan_Dinas", "dinas", 3, 9);
+  processTrend(ID_DB_LUPA, "Lupa_Presensi", "lupa", 3, 10);
+  processTrend(ID_DB_SALAH, "Salah_Presensi", "salah", 3, 8);
+
+  var json = JSON.stringify(result);
+  cache.put(cacheKey, json, 120);
+  return json;
+}
+
+/* ======================================================================
+   [ADD-ON] DATA TREN BULANAN (PARALLEL FETCHING)
+   ====================================================================== */
+function getTrenBulananData() {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = "siaba_trend_full_v2"; 
+  var cachedResult = cache.get(cacheKey);
+  
+  if (cachedResult) return cachedResult;
+
+  var now = new Date();
+  var curYear = now.getFullYear(); 
+
+  // Init Array 0-11
+  function initArr() { return [0,0,0,0,0,0,0,0,0,0,0,0]; }
+  
+  var result = {
+    cuti:  { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() },
+    dinas: { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() },
+    lupa:  { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() },
+    salah: { proses: initArr(), revisi: initArr(), setuju: initArr(), tolak: initArr() }
+  };
+
+  // Helper Parser Tanggal
+  function parseDate(v) {
+    if(!v) return null;
+    if(v instanceof Date) return v;
+    var s = String(v).trim().replace(/'/g,'');
+    var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if(m) return new Date(m[3], m[2]-1, m[1]);
+    return new Date(s);
+  }
+
+  // Logic Processor
+  function processData(id, tab, key, colTgl, colStat) {
+    try {
+      var ss = SpreadsheetApp.openById(id);
+      var sh = ss.getSheetByName(tab);
+      if(!sh) return;
+      var data = sh.getDataRange().getValues();
+      
+      for(var i=1; i<data.length; i++) {
+        var row = data[i];
+        var tgl = parseDate(row[colTgl]);
+        
+        if(!tgl || tgl.getFullYear() !== curYear) continue;
+
+        var bln = tgl.getMonth();
+        var st = String(row[colStat]||"").toLowerCase();
+        var target = result[key];
+
+        if(st.includes("setuju") || st.includes("ok") || st.includes("disetujui")) target.setuju[bln]++;
+        else if(st.includes("tolak") || st.includes("tidak")) target.tolak[bln]++;
+        else if(st.includes("revisi") || st.includes("ubah")) target.revisi[bln]++;
+        else target.proses[bln]++;
+      }
+    } catch(e){}
+  }
+
+  // ID DATABASE (Sesuaikan dengan file Anda)
+  var ID_DB_CUTI  = "1UYG80gGxuC19ieaVBzJaUV8bhlS2q5gExr0-Yl7upKo";
+  var ID_DB_DINAS = "1I_2yUFGXnBJTCSW6oaT3D482YCs8TIRkKgQVBbvpa1M"; 
+  var ID_DB_LUPA  = "160IjN8aiDAgDYXjgDLStS4nCZLKn3Ny-dq3BOFAfDrU";
+  var ID_DB_SALAH = "1TZGrMiTuyvh2Xbo44RhJuWlQnOC5LzClsgIoNKtRFkY";
+
+  // Eksekusi
+  processData(ID_DB_CUTI, "Form Cuti", "cuti", 4, 10);
+  processData(ID_DB_DINAS, "Perjalanan_Dinas", "dinas", 3, 9);
+  processData(ID_DB_LUPA, "Lupa_Presensi", "lupa", 3, 10);
+  processData(ID_DB_SALAH, "Salah_Presensi", "salah", 3, 8);
+
+  var json = JSON.stringify(result);
+  cache.put(cacheKey, json, 120); // Cache 2 menit
+  return json;
 }

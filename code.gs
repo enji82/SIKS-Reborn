@@ -90,7 +90,6 @@ function processLogin(formObj) {
     var inputUser = "";
     var inputPass = "";
     
-    // Menangani input baik dari Form Object maupun Parameter langsung
     if (typeof formObj === 'object' && formObj.username) {
       inputUser = String(formObj.username).trim();
       inputPass = String(formObj.password).trim();
@@ -103,37 +102,34 @@ function processLogin(formObj) {
     var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
     var data = sheet.getDataRange().getValues();
 
-    // Loop Database (Mulai baris 1, melewati header)
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      // Kolom A (0) = Username, Kolom B (1) = Password
-      // CATATAN: Sebaiknya username tidak case-sensitive, jadi kita lowercase
+      // Kolom A=Username, B=Password, C=Nama Lengkap, D=Role, E=Foto
       if (String(row[0]).trim().toLowerCase() == inputUser.toLowerCase() && String(row[1]).trim() == inputPass) {
         
-        // LOGIN SUKSES!
+        var realName = row[2]; // Nama dari Excel
+        
+        // JIKA NAMA KOSONG DI EXCEL, PAKAI USERNAME AGAR TIDAK ERROR
+        if (!realName || realName === "") realName = row[0];
+
         var userObj = {
           username: row[0],
-          nama_lengkap: row[2], // Kolom C: Nama Lengkap
-          role: row[3],     // Kolom D: Role (Admin/User)
-          photo: row[4] || "", // Kolom E: Foto
+          nama_lengkap: realName, // KUNCI UTAMA
+          nama: realName,         // KUNCI CADANGAN (Legacy Support)
+          role: row[3],     
+          photo: row[4] || "", 
+          unit: row[4] || "",     // Asumsi Unit ada di kolom E juga/sesuaikan
           isLoggedIn: true
         };
-        
-        // --- PERBAIKAN: JANGAN SIMPAN DI PROPERTIES SERVICE ---
-        // Kita langsung kembalikan data user ke Frontend.
-        // Biarkan Frontend (javascript.html) yang menyimpannya di localStorage.
         
         return { 
           status: 'success', 
           message: 'Login Berhasil',
-          // Sertakan data user di sini agar frontend bisa menerimanya
           userData: userObj 
         };
       }
     }
-
     return { status: 'error', message: 'Username atau Password Salah.' };
-
   } catch (e) {
     return { status: 'error', message: 'Error Server: ' + e.toString() };
   }
@@ -340,45 +336,16 @@ function getMonitoring_Users() {
    ====================================================================== */
 
 function logUserVisit(userData) {
-  // Cegah error jika userData kosong
   if (!userData) return;
   
-  // 1. UPDATE STATUS ONLINE (Untuk fitur "Sedang Online")
-  try {
-    var props = PropertiesService.getScriptProperties();
-    var now = new Date().getTime();
-    var cutoff = now - (10 * 60 * 1000); // Batas aktif: 10 Menit terakhir
-    
-    // Ambil database user online
-    var json = props.getProperty('ONLINE_USERS_DB');
-    var activeUsers = json ? JSON.parse(json) : {};
-    
-    // Masukkan user ini (Nama sebagai Key)
-    var userName = userData.nama || userData.username || "Unknown";
-    activeUsers[userName] = now;
-    
-    // Bersihkan user yang sudah offline (lebih dari 10 menit)
-    var cleanList = {};
-    for (var u in activeUsers) {
-      if (activeUsers[u] > cutoff) {
-        cleanList[u] = activeUsers[u];
-      }
-    }
-    
-    // Simpan Kembali
-    props.setProperty('ONLINE_USERS_DB', JSON.stringify(cleanList));
-    
-  } catch (e) {
-    console.log("Online Tracker Error: " + e.message);
-  }
+  // 1. UPDATE STATUS ONLINE
+  updateOnlineStatus(userData.username || userData.nama); // Pakai Username untuk ID Unik
 
-  // 2. SIMPAN LOG PERMANEN KE SPREADSHEET (Untuk Dashboard Monitoring)
+  // 2. SIMPAN LOG
   try {
-    // Pastikan ID_SS_DATABASE_USER sudah benar di Global Variables Anda
     var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
     var sheet = ss.getSheetByName("LOG_ACCESS");
     
-    // Jika sheet belum ada, buat baru (Safety mechanism)
     if (!sheet) {
         sheet = ss.insertSheet("LOG_ACCESS");
         sheet.appendRow(["Timestamp", "Tanggal", "Bulan", "Nama User", "Role", "Jenis Hari"]);
@@ -389,44 +356,23 @@ function logUserVisit(userData) {
     var tgalOnly  = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM-dd");
     var blnOnly   = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
     
-    // Cek Hari Libur (Sabtu/Minggu)
+    // LOGIC HARI LIBUR... (Sama seperti sebelumnya)
     var dayIndex = now.getDay();
-    var jenisHari = "Hari Efektif";
-    var ketHari = "Reguler";
+    var jenisHari = (dayIndex === 0 || dayIndex === 6) ? "Hari Libur" : "Hari Efektif";
+    
+    // PRIORITAS NAMA: Cek nama_lengkap dulu, baru nama, baru username
+    var namaLog = userData.nama_lengkap || userData.nama || userData.username || "Unknown";
 
-    // 1. Cek Weekend
-    if (dayIndex === 0 || dayIndex === 6) {
-      jenisHari = "Hari Libur";
-      ketHari = (dayIndex === 0) ? "Minggu" : "Sabtu";
-    }
-
-    // 2. Cek Kalender Libur (Jika Anda punya sheet DATA_LIBUR)
-    var sheetLibur = ss.getSheetByName("DATA_LIBUR");
-    if (sheetLibur && sheetLibur.getLastRow() > 1) {
-      var dataLibur = sheetLibur.getRange(2, 1, sheetLibur.getLastRow()-1, 2).getValues();
-      for (var i = 0; i < dataLibur.length; i++) {
-        var tglLibur = Utilities.formatDate(new Date(dataLibur[i][0]), "Asia/Jakarta", "yyyy-MM-dd");
-        if (tglLibur === tgalOnly) {
-          jenisHari = "Hari Libur";
-          ketHari = dataLibur[i][1];
-          break;
-        }
-      }
-    }
-
-    // Simpan Baris Log
     sheet.appendRow([
         timestamp, 
         tgalOnly, 
         blnOnly, 
-        userData.nama || userData.username, 
+        namaLog, // <--- INI SUDAH DIPERBAIKI
         userData.role, 
-        jenisHari + " (" + ketHari + ")"
+        jenisHari
     ]);
     
-  } catch (e) {
-    console.log("Log Error: " + e.message);
-  }
+  } catch (e) { console.log("Log Error: " + e.message); }
 }
 
 /* ======================================================================
