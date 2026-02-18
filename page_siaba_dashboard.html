@@ -86,6 +86,40 @@
 
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h3 class="card-title font-weight-bold text-danger"><i class="fas fa-exclamation-circle mr-1"></i> Presensi Belum Lengkap</h3>
+                    <div class="card-tools d-flex">
+                        <select id="filterTahunDash" class="form-control form-control-sm mr-1" style="width: 70px;"></select>
+                        <select id="filterBulanDash" class="form-control form-control-sm" style="width: 110px;"></select>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="height: 350px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-head-fixed text-nowrap" id="tableBelumLengkap">
+                            <thead>
+                                <tr>
+                                    <th>Unit Kerja</th>
+                                    <th class="text-center" style="width: 50px;">Jml</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyBelumLengkap">
+                                <tr><td colspan="2" class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white p-2 text-center">
+                     <button class="btn btn-xs btn-outline-danger btn-block" onclick="loadDataBelumLengkap()">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh Data
+                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
                     <h3 class="card-title font-weight-bold text-purple-sultan"><i class="fas fa-chart-bar mr-1"></i> Tren Kedisiplinan</h3>
                 </div>
@@ -95,9 +129,7 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row mb-4">
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
@@ -114,23 +146,10 @@
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-primary"><i class="fas fa-chart-bar mr-1"></i> Tren Dinas</h3>
+                    <h3 class="card-title font-weight-bold text-primary"><i class="fas fa-chart-bar mr-1"></i> Tren Perjalanan Dinas</h3>
                 </div>
                 <div class="card-body">
                     <div style="height: 330px;" id="wrap-chartTrendDinas">
-                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card-sultan mb-3 h-100">
-                <div class="card-header bg-white border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-warning"><i class="fas fa-chart-bar mr-1"></i> Tren Lupa</h3>
-                </div>
-                <div class="card-body">
-                    <div style="height: 330px;" id="wrap-chartTrendLupa">
                         <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
                     </div>
                 </div>
@@ -142,7 +161,20 @@
         <div class="col-md-4">
             <div class="card-sultan mb-3 h-100">
                 <div class="card-header bg-white border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-danger"><i class="fas fa-chart-bar mr-1"></i> Tren Salah</h3>
+                    <h3 class="card-title font-weight-bold text-warning"><i class="fas fa-chart-bar mr-1"></i> Tren Lupa Presensi</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 330px;" id="wrap-chartTrendLupa">
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-sultan mb-3 h-100">
+                <div class="card-header bg-white border-bottom-0">
+                    <h3 class="card-title font-weight-bold text-danger"><i class="fas fa-chart-bar mr-1"></i> Tren Salah Presensi</h3>
                 </div>
                 <div class="card-body">
                     <div style="height: 330px;" id="wrap-chartTrendSalah">
@@ -169,15 +201,11 @@ var GLOBAL_STATS = {
 var pieChartInstance = null;
 
 // ==========================================
-// 2. INITIALIZATION (SMART LOADER)
+// 2. INITIALIZATION
 // ==========================================
 $(document).ready(function() {
-    // Pastikan library Chart sudah termuat
-    // Jika belum, beri delay sedikit
     if (typeof Chart === 'undefined') {
-        setTimeout(function() {
-            startDashboardEngine();
-        }, 500); // Tunggu 500ms
+        setTimeout(startDashboardEngine, 500);
     } else {
         startDashboardEngine();
     }
@@ -185,21 +213,18 @@ $(document).ready(function() {
 
 function startDashboardEngine() {
     loadDashboardData();
+    initFiltersBelumLengkap(); // Init Card Baru
 }
 
 function loadDashboardData() {
     showLoadingState(); 
     
-    // Panggil 4 Kurir Data (Paralel)
     fetchMetric('cuti', 'totalCuti', 'bulanCuti', 'fa-calendar-alt', 'chartTrendCuti');
     fetchMetric('dinas', 'totalDinas', 'bulanDinas', 'fa-car', 'chartTrendDinas');
     fetchMetric('lupa', 'totalLupa', 'bulanLupa', 'fa-question-circle', 'chartTrendLupa');
     fetchMetric('salah', 'totalSalah', 'bulanSalah', 'fa-times-circle', 'chartTrendSalah');
     
-    // Panggil 1 Kurir Data Grafik Disiplin
     loadChartTrend();
-    
-    // Siapkan wadah Pie Chart
     initPieChart();
 }
 
@@ -208,7 +233,7 @@ function showLoadingState() {
 }
 
 // ==========================================
-// 3. CORE FUNCTIONS (PARALLEL)
+// 3. CORE FUNCTIONS (METRIC & CHART)
 // ==========================================
 
 function fetchMetric(type, idTotal, idBulan, icon, idChart) {
@@ -216,23 +241,18 @@ function fetchMetric(type, idTotal, idBulan, icon, idChart) {
         .withSuccessHandler(function(json) {
             var data = JSON.parse(json);
             
-            // A. Update Small Box
             $('#' + idTotal).text(data.total).hide().fadeIn();
             $('#' + idBulan).text(data.bulanIni);
 
-            // B. Update List Rincian (Append)
             var html = createSlimVisualRow(capitalize(type), icon, data);
             
-            // Cek apakah wadah masih berisi spinner loading? Jika iya, kosongkan dulu
             if($('#rincianContainer').find('.fa-spin').length > 0) {
                 $('#rincianContainer').empty();
             }
             $('#rincianContainer').append(html);
 
-            // C. Update Grafik Tren (Card Bawah)
             renderSpecificChart(idChart, data.trend);
 
-            // D. Akumulasi Donut
             GLOBAL_STATS.proses += (data.proses || 0);
             GLOBAL_STATS.revisi += (data.revisi || 0);
             GLOBAL_STATS.setuju += (data.setuju || 0);
@@ -255,16 +275,119 @@ function loadChartTrend() {
 }
 
 // ==========================================
-// 4. VISUAL RENDERING (CHART V3)
+// 4. NEW FEATURE: PRESENSI BELUM LENGKAP
+// ==========================================
+
+function initFiltersBelumLengkap() {
+    // Populate Dropdown Tahun (3 Tahun Terakhir)
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var curMonth = now.getMonth(); // 0-11
+    
+    // Logic: Default Bulan Lalu
+    var defMonthIdx = curMonth - 1; 
+    var defYear = curYear;
+    if(defMonthIdx < 0) { // Jika Januari, mundur ke Desember tahun lalu
+        defMonthIdx = 11;
+        defYear = curYear - 1;
+    }
+
+    // Isi Tahun
+    var $th = $('#filterTahunDash');
+    for(var i=0; i<3; i++) {
+        var y = curYear - i;
+        $th.append(`<option value="${y}">${y}</option>`);
+    }
+    $th.val(defYear);
+
+    // Isi Bulan
+    var months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    var $bl = $('#filterBulanDash');
+    months.forEach((m, i) => {
+        $bl.append(`<option value="${m}">${m}</option>`);
+    });
+    $bl.val(months[defMonthIdx]);
+
+    // Listener Change
+    $('#filterTahunDash, #filterBulanDash').change(function() {
+        loadDataBelumLengkap();
+    });
+
+    // Load Data Awal
+    loadDataBelumLengkap();
+}
+
+function loadDataBelumLengkap() {
+    var th = $('#filterTahunDash').val();
+    var bl = $('#filterBulanDash').val();
+    var tbody = $('#bodyBelumLengkap');
+    
+    tbody.html('<tr><td colspan="2" class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin mr-2"></i>Mengambil Data...</td></tr>');
+
+    google.script.run
+        .withSuccessHandler(function(res) {
+            var data = JSON.parse(res);
+            
+            if (data.error) {
+                tbody.html(`<tr><td colspan="2" class="text-center text-danger small">${data.error}</td></tr>`);
+                return;
+            }
+
+            if (!data.rows || data.rows.length === 0) {
+                tbody.html('<tr><td colspan="2" class="text-center text-muted py-5"><i class="fas fa-check-circle text-success mr-2"></i>Semua Presensi Lengkap!</td></tr>');
+                return;
+            }
+
+            // Grouping by Unit Kerja & Count
+            var unitCounts = {};
+            data.rows.forEach(function(row) {
+                // Asumsi Unit Kerja ada di Kolom Terakhir (Hidden di getSiabaTidakData)
+                // Atau Kolom ke-3 (Index 2) di tampilan tabel aslinya
+                // Mari kita cek struktur data getSiabaTidakData:
+                // Header: [No, Nama, Unit Kerja, ...] 
+                // Row API: [Nama, NIP, ..., UnitKerja]
+                
+                var unit = row[row.length - 1]; // Unit Kerja disimpan di elemen terakhir array oleh API
+                if(unit) {
+                    unitCounts[unit] = (unitCounts[unit] || 0) + 1;
+                }
+            });
+
+            // Convert to Array & Sort
+            var sortedUnits = Object.keys(unitCounts).map(function(key) {
+                return { unit: key, count: unitCounts[key] };
+            }).sort(function(a, b) { return b.count - a.count; }); // Urut Terbanyak
+
+            var html = "";
+            sortedUnits.forEach(function(item) {
+                html += `<tr>
+                            <td class="small font-weight-bold text-dark">${item.unit}</td>
+                            <td class="text-center"><span class="badge badge-danger badge-pill">${item.count}</span></td>
+                         </tr>`;
+            });
+            
+            if(html === "") {
+                 tbody.html('<tr><td colspan="2" class="text-center text-muted py-5">Data Kosong</td></tr>');
+            } else {
+                 tbody.html(html);
+            }
+        })
+        .withFailureHandler(function(e) {
+            tbody.html(`<tr><td colspan="2" class="text-center text-danger small">Gagal: ${e.message}</td></tr>`);
+        })
+        .getSiabaTidakData(th, bl, "SEMUA");
+}
+
+
+// ==========================================
+// 5. VISUAL RENDERING (CHART)
 // ==========================================
 
 function initPieChart() {
     var ctxElement = document.getElementById('chartGabungan');
-    if (!ctxElement) return; // Safety Check
+    if (!ctxElement) return;
 
     var ctx = ctxElement.getContext('2d');
-    
-    // Pastikan Chart terdefinisi sebelum membuat instance baru
     if (typeof Chart !== 'undefined') {
         pieChartInstance = new Chart(ctx, {
             type: 'doughnut',
@@ -287,8 +410,6 @@ function initPieChart() {
 function updatePieChart() {
     if(!pieChartInstance) return;
     var s = GLOBAL_STATS;
-    var total = s.proses + s.revisi + s.setuju + s.tolak;
-    
     pieChartInstance.data.datasets[0].data = [s.proses, s.revisi, s.setuju, s.tolak];
     pieChartInstance.update();
     renderProgressBar(s.proses, s.revisi, s.setuju, s.tolak);
@@ -357,7 +478,7 @@ function renderSpecificChart(canvasId, dataset) {
 }
 
 // ==========================================
-// 5. HELPER UI
+// 6. HELPER UI
 // ==========================================
 
 function renderProgressBar(p, r, ok, no) {
@@ -415,4 +536,6 @@ function capitalize(s) { return s && s[0].toUpperCase() + s.slice(1); }
 <style>
     .f-20 { font-size: 1.25rem; }
     .small-box h3, canvas { transition: all 0.3s ease; }
+    /* Table Scroll */
+    .table-head-fixed th { position: sticky; top: 0; background: #fff; z-index: 10; border-top: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 </style>

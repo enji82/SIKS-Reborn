@@ -2107,20 +2107,28 @@ function verifikasiDataDinas(rowBaris, status, keterangan, userVerifikator) {
     var now = new Date();
     var sysDateStr = "'" + Utilities.formatDate(now, Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm");
 
+    // 1. Update Status (Kolom J / Index 10)
     sheet.getRange(row, 10).setValue(status);
-    sheet.getRange(row, 14).setValue(sysDateStr);
-    sheet.getRange(row, 15).setValue(verifikator);
-    sheet.getRange(row, 16).setValue(sysDateStr);
-    sheet.getRange(row, 17).setValue(verifikator);
 
+    // --- PERBAIKAN: JANGAN TULIS DI KOLOM N (14) & O (15) ---
+    // Kolom N & O dibiarkan agar tetap mencatat "Last Update" dari User, bukan Verifikator.
+    // sheet.getRange(row, 14).setValue(sysDateStr); <--- HAPUS/KOMENTAR
+    // sheet.getRange(row, 15).setValue(verifikator); <--- HAPUS/KOMENTAR
+
+    // 2. Update Info Verifikasi ke Kolom P (16) & Q (17)
+    sheet.getRange(row, 16).setValue(sysDateStr);   // Tanggal Verifikasi
+    sheet.getRange(row, 17).setValue(verifikator);  // Nama Verifikator
+
+    // 3. Update Keterangan (Kolom R / Index 18)
     if (keterangan) {
         sheet.getRange(row, 18).setValue(keterangan);
     } else if (status === 'Disetujui') {
+        // Jika disetujui, bersihkan catatan revisi sebelumnya (opsional)
         sheet.getRange(row, 18).setValue("");
     }
     
     SpreadsheetApp.flush();
-    Utilities.sleep(1500); 
+    Utilities.sleep(1000); // Jeda sedikit agar flush tuntas
     return "Sukses";
   } catch(e) { return "Error: " + e.toString(); }
 }

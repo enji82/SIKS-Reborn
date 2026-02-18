@@ -181,23 +181,24 @@
       </ul>
     </li>
 
-        <li class="nav-item">
+    <li class="nav-item">
       <a href="#" class="nav-link">
         <i class="nav-icon fas fa-users text-maroon"></i>
         <p>Data PTK <i class="right fas fa-angle-left"></i></p>
       </a>
       <ul class="nav nav-treeview">
         <li class="nav-item">
+          <a href="#" class="nav-link" data-page="ptk_dashboard">
+            <i class="far fa-circle nav-icon"></i>
+            <p>Dashboard PTK</p></a></li>
+        <li class="nav-item">
           <a href="#" class="nav-link">
             <i class="fas fa-child nav-icon"></i>
             <p>PAUD <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kelola_paud"><i class="far fa-circle nav-icon"></i><p>Daftar Nama PTK</p></a></li>
             <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_keadaan_paud"><i class="far fa-circle nav-icon"></i><p>Keadaan PTK</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_jumlah_bulanan_paud"><i class="far fa-circle nav-icon"></i><p>Jumlah Bulanan</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_daftar_paud"><i class="far fa-circle nav-icon"></i><p>Daftar PTK</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kelola_paud"><i class="far fa-circle nav-icon"></i><p>Kelola Data PTK</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_non_aktif_paud" style="color:#ef4444;"><i class="far fa-circle nav-icon"></i><p>Non Aktif (Arsip)</p></a></li>
           </ul>
         </li>
         <li class="nav-item">
@@ -207,9 +208,51 @@
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kelola_sdn"><i class="far fa-circle nav-icon"></i><p>Daftar Nama PTK</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_keadaan_sd"><i class="far fa-circle nav-icon"></i><p>Keadaan PTK</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kebutuhan_sd_negeri"><i class="far fa-circle nav-icon"></i><p>Kebutuhan Guru</p></a></li>
-            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_bezetting_sd_negeri"><i class="far fa-circle nav-icon"></i><p>Bezetting Guru</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_keadaan_sdn"><i class="far fa-circle nav-icon"></i><p>Keadaan PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kebutuhan_sdn"><i class="far fa-circle nav-icon"></i><p>Kebutuhan Guru</p></a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+             <i class="fas fa-school nav-icon"></i>
+             <p>SD Swasta<i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kelola_sds"><i class="far fa-circle nav-icon"></i><p>Daftar Nama PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_keadaan_sds"><i class="far fa-circle nav-icon"></i><p>Keadaan PTK</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="ptk_kebutuhan_sds"><i class="far fa-circle nav-icon"></i><p>Kebutuhan Guru</p></a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+
+    <li class="nav-item">
+      <a href="#" class="nav-link">
+        <i class="nav-icon fas fa-user-graduate text-maroon"></i>
+        <p>Data Murid <i class="right fas fa-angle-left"></i></p>
+      </a>
+      <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <li class="nav-item"> <a href="#" class="nav-link" data-page="murid_dashboard">
+            <i class="far fa-circle nav-icon"></i>
+            <p>Dashboard Murid</p></a></li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+             <i class="fas fa-child nav-icon"></i><p>PAUD <i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item"><a href="#" class="nav-link" data-page="murid_paud_rombel"><i class="far fa-circle nav-icon"></i><p>Menurut Rombel</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="murid_paud_jenis_kelamin"><i class="far fa-circle nav-icon"></i><p>Menurut Jenis Kelamin</p></a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+             <i class="fas fa-school nav-icon"></i><p>SD <i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item"><a href="#" class="nav-link" data-page="murid_sd_kelas"><i class="far fa-circle nav-icon"></i><p>Menurut Kelas</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="murid_sd_rombel"><i class="far fa-circle nav-icon"></i><p>Menurut Rombel</p></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-page="murid_sd_agama"><i class="far fa-circle nav-icon"></i><p>Menurut Agama</p></a></li>
           </ul>
         </li>
       </ul>
@@ -217,7 +260,7 @@
 
     
 
-    <li class="nav-item d-none" id="menu-setting-admin">
+    <li class="nav-item" id="menu-setting-admin">
       <a href="#" class="nav-link" data-page="page_setting">
         <i class="nav-icon fas fa-cogs text-warning"></i>
         <p>Pengaturan</p>

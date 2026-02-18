@@ -141,7 +141,7 @@ function inisialisasiAplikasi() {
   if (!sesiUser) {
     console.log("🔒 Status: Belum Login.");
     $('#konten-aplikasi').hide();
-    $('#gerbang-login').show();
+    $('#gerbang-login').show(); // Pastikan ditampilkan jika belum login
     if (preloader.length) preloader.fadeOut('fast');
     return;
   }
@@ -149,12 +149,12 @@ function inisialisasiAplikasi() {
   console.log("🔓 Status: Login OK");
   var user = JSON.parse(sesiUser);
 
-  $('#gerbang-login').remove();
+  $('#gerbang-login').hide(); // <--- GANTI JADI HIDE (Disembunyikan saja)
   $('#konten-aplikasi').show();
 
   updateUI(user);
   tampilkanMenuAdmin(user);
-  loadPage('home'); // Load halaman default
+  loadPage('home'); 
 
   if (preloader.length) preloader.fadeOut('fast');
 }
@@ -204,15 +204,22 @@ function handleLoginV2(event) {
     .processLogin(form);
 }
 
-// --- FUNGSI LOGOUT ---
+// --- FUNGSI LOGOUT (HARD RELOAD) ---
 function handleLogout() {
-  NotifSultan.konfirmasi('Logout?', 'Anda akan keluar dari aplikasi.', 'Ya, Keluar')
+  NotifSultan.konfirmasi('Keluar Aplikasi?', 'Sesi Anda akan diakhiri.', 'Ya, Logout')
   .then((result) => {
     if (result.isConfirmed) {
+        // 1. Hapus Sesi Lokal
         localStorage.removeItem("siksUser");
+        
+        // 2. Tampilkan Loading agar user tahu sistem sedang bekerja
+        NotifSultan.loading("Sedang keluar...");
+
+        // 3. Panggil Server untuk Reload URL
         google.script.run
             .withSuccessHandler(function (url) {
-            window.top.location.href = url;
+                // RELOAD HALAMAN
+                window.top.location.href = url; 
             })
             .getScriptUrl();
     }

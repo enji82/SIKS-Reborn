@@ -1,0 +1,293 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-child text-maroon mr-2"></i>Jumlah Murid PAUD Menurut Rombel
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
+                  <li class="mb-1">Data bersumber dari laporan bulan yang terakhir diunggah.</li>
+                  <li>Gunakan filter <b>Jenjang</b> untuk menyaring unit kerja (TK/KB/SPS/TPA).</li>
+                  <li>Kolom <b>Total</b> menjumlahkan kategori Usia dan Kelas masing-masing.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap align-items-center">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="loadMuridRombel()" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterJenjang" class="form-control form-control-sultan input-auto-width" onchange="updateFilterUnit()">
+                    <option value="SEMUA">- Semua Jenjang -</option>
+                </select>
+
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width max-w-250">
+                    <option value="SEMUA">- Semua Unit Kerja -</option>
+                </select>
+
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="filterTampilan()" title="Terapkan Filter">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-sultan w-100 overflow-hidden">
+          <div class="card-body p-0 w-100">
+            <div class="table-responsive" style="overflow-x: auto; max-height: 70vh; position: relative;">
+              <table class="table table-bordered table-hover table-sm text-nowrap mb-0 text-center" style="width:100%; font-size: 0.85rem;">
+                
+                <thead id="headData" class="font-weight-bold text-dark" style="display:none;">
+                  <tr>
+                    <th rowspan="2" class="align-middle bg-white text-maroon text-left pl-3" 
+                        style="position:sticky; left:0; z-index:50; min-width:250px; border-right: 2px solid #dee2e6; border-bottom: 2px solid #800000;">Unit Kerja</th>
+                    
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">NPSN</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Jenjang</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Bulan</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Tahun</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Rombel</th>
+
+                    <th colspan="8" class="align-middle" style="background-color: #e8f5e9; border-bottom: 1px solid #a5d6a7;">Jumlah Menurut Usia</th>
+                    
+                    <th colspan="3" class="align-middle" style="background-color: #e3f2fd; border-bottom: 1px solid #90caf9;">Jumlah Menurut Kelas</th>
+                  </tr>
+
+                  <tr class="small">
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">0-1 Th</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">1-2 Th</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">2-3 Th</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">3-4 Th</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">4-5 Th</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">5-6 Th</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">>6 Th</th>
+                    <th style="background-color: #c8e6c9; border-bottom: 2px solid #800000; font-weight: bold;">TOTAL</th>
+
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Kelas A</th>
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Kelas B</th>
+                    <th style="background-color: #bbdefb; border-bottom: 2px solid #800000; font-weight: bold;">TOTAL</th>
+                  </tr>
+                </thead>
+
+                <tbody id="bodyData">
+                    <tr>
+                        <td class="text-center td-spinner" colspan="100%">
+                            <div class="sultan-loading-container">
+                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                <h6 class="text-muted font-weight-bold">Menyiapkan data...</h6>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <tfoot id="footData" class="bg-light font-weight-bold" style="border-top: 3px solid #800000; display:none;">
+                    </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+var RAW_DATA_MURID = [];
+
+$(document).ready(function() {
+    loadMuridRombel();
+});
+
+function loadMuridRombel() {
+    $('#headData').hide();
+    $('#footData').hide();
+    
+    var loadingHtml = '<tr><td class="text-center td-spinner" colspan="100%">' + 
+                      '<div class="sultan-loading-container">' + 
+                      '<i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>' + 
+                      '<h6 class="text-muted font-weight-bold">Mengambil data server...</h6>' + 
+                      '</div></td></tr>';
+    
+    $('#bodyData').html(loadingHtml);
+    $('#btnCari').prop('disabled', true);
+
+    google.script.run
+        .withSuccessHandler(function(data) {
+            $('#btnCari').prop('disabled', false);
+            RAW_DATA_MURID = data || [];
+            
+            populateFilterFromData();
+            filterTampilan();
+        })
+        .withFailureHandler(function(err) {
+            $('#btnCari').prop('disabled', false);
+            $('#bodyData').html(`<tr><td class="text-center text-danger p-5 font-weight-bold" colspan="100%"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${err.message}</td></tr>`);
+        })
+        .getDataMuridPAUDRombel();
+}
+
+function populateFilterFromData() {
+    var uniqueJenjang = new Set();
+    RAW_DATA_MURID.forEach(row => {
+        var j = row[2] ? String(row[2]).trim() : ""; // Col C (Index 2) = Jenjang
+        if(j) uniqueJenjang.add(j);
+    });
+
+    var sortedJenjang = Array.from(uniqueJenjang).sort();
+    var jHtml = '<option value="SEMUA">- Semua Jenjang -</option>';
+    sortedJenjang.forEach(j => jHtml += `<option value="${j}">${j}</option>`);
+    $('#filterJenjang').html(jHtml);
+    
+    updateFilterUnit();
+}
+
+function updateFilterUnit() {
+    var selectedJenjang = $('#filterJenjang').val();
+    var uniqueUnit = new Set();
+    
+    RAW_DATA_MURID.forEach(row => {
+        var rUnit = row[0]; 
+        var rJenjang = row[2]; 
+        
+        if (selectedJenjang === "SEMUA" || rJenjang === selectedJenjang) {
+            if(rUnit) uniqueUnit.add(rUnit);
+        }
+    });
+    
+    var sortedUnit = Array.from(uniqueUnit).sort();
+    var uHtml = '<option value="SEMUA">- Semua Unit Kerja -</option>';
+    sortedUnit.forEach(u => uHtml += `<option value="${u}">${u}</option>`);
+    $('#filterUnit').html(uHtml);
+}
+
+function filterTampilan() {
+    var fJenjang = $('#filterJenjang').val();
+    var fUnit = $('#filterUnit').val();
+    
+    var filteredData = RAW_DATA_MURID.filter(row => {
+        var passJenjang = (fJenjang === "SEMUA" || row[2] === fJenjang);
+        var passUnit = (fUnit === "SEMUA" || row[0] === fUnit);
+        return passJenjang && passUnit;
+    });
+
+    renderTable(filteredData);
+}
+
+function renderTable(data) {
+    var tbody = $('#bodyData');
+    var tfoot = $('#footData');
+    var thead = $('#headData');
+    
+    tbody.empty();
+    tfoot.empty();
+
+    if (data.length === 0) {
+        thead.show();
+        tbody.html('<tr><td class="text-center p-5 text-muted" colspan="100%">Data tidak ditemukan.</td></tr>');
+        return;
+    }
+
+    var $tbl = $('#bodyData').parent('table');
+    $tbl.css({ 'border-right': 'none', 'border-left': 'none', 'border-top': 'none', 'border-bottom': 'none' });
+
+    // Index Kolom Data: G(6) s.d Q(16)
+    // 0:Unit, 1:NPSN, 2:Jenjang, 3:Bulan, 4:Tahun, 5:Rombel
+    // Usia: 6,7,8,9,10,11,12, 13(Total)
+    // Kelas: 14,15, 16(Total)
+    var colTotals = new Array(17).fill(0); 
+
+    var html = "";
+    data.forEach(function(row) {
+        html += '<tr class="tr-animasi">';
+        
+        // STATIC COLS
+        html += `<td class="font-weight-bold bg-white text-dark text-left pl-3 align-middle" 
+                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">${row[0] || '-'}</td>`;
+        html += `<td class="text-center align-middle">${row[1] || '-'}</td>`;
+        html += `<td class="text-center align-middle font-weight-bold text-maroon">${row[2] || '-'}</td>`;
+        html += `<td class="text-center align-middle">${row[3] || '-'}</td>`;
+        html += `<td class="text-center align-middle">${row[4] || '-'}</td>`;
+        html += `<td class="text-center align-middle font-weight-bold">${row[5] || '0'}</td>`; // Rombel
+
+        // LOOP DATA (6 s.d 16)
+        for (var i = 6; i <= 16; i++) {
+            var val = parseInt(row[i]) || 0;
+            colTotals[i] += val; 
+
+            var display = (val === 0) ? '<span class="text-black-50" style="opacity:0.2">-</span>' : val;
+            var weight = (val > 0) ? 'font-weight-bold text-dark' : '';
+            
+            // WARNA BACKGROUND
+            var bgColor = "#ffffff";
+            if (i >= 6 && i <= 13) bgColor = "#e8f5e9"; // Hijau Muda (Usia)
+            if (i === 13) bgColor = "#c8e6c9"; // Total Usia (Hijau Tuaan)
+            
+            if (i >= 14 && i <= 16) bgColor = "#e3f2fd"; // Biru Muda (Kelas)
+            if (i === 16) bgColor = "#bbdefb"; // Total Kelas (Biru Tuaan)
+
+            html += `<td class="text-center align-middle ${weight}" style="background-color: ${bgColor};">${display}</td>`;
+        }
+        html += '</tr>';
+    });
+
+    tbody.html(html);
+
+    // --- RENDER FOOTER ---
+    var footHtml = '<tr>';
+    footHtml += `<td class="bg-light text-maroon text-right font-weight-bold pr-3 align-middle" 
+                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">TOTAL</td>`;
+    
+    // Kosongkan B, C, D, E
+    footHtml += `<td class="bg-light"></td><td class="bg-light"></td><td class="bg-light"></td><td class="bg-light"></td>`;
+    
+    // Total Rombel (Col F / 5) -> Opsional, tapi data rombel biasanya bukan sum murni jika barisnya banyak
+    // Kita kosongkan saja atau hitung jika perlu. Di sini kita kosongkan.
+    footHtml += `<td class="bg-light"></td>`;
+
+    for (var i = 6; i <= 16; i++) {
+        var val = colTotals[i];
+        var bgColor = "#f8f9fa"; // Default Footer
+        var txtColor = "text-maroon";
+
+        if (i >= 6 && i <= 13) bgColor = "#e8f5e9"; 
+        if (i === 13) bgColor = "#c8e6c9"; 
+        if (i >= 14 && i <= 16) bgColor = "#e3f2fd"; 
+        if (i === 16) bgColor = "#bbdefb"; 
+
+        footHtml += `<td class="text-center align-middle font-weight-bold ${txtColor}" style="background-color: ${bgColor};">${val}</td>`;
+    }
+    footHtml += '</tr>';
+    tfoot.html(footHtml);
+
+    thead.show();
+    tfoot.show();
+}
+</script>

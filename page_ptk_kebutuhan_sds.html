@@ -1,0 +1,308 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-chalkboard-teacher text-maroon mr-2"></i>Kebutuhan Guru SD Swasta
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
+                  <li class="mb-1">Data bersumber dari Sheet "Kebutuhan Guru SDS".</li>
+                  <li>Kolom <b>+/-</b> : Merah (Kekurangan), Biru (Kelebihan).</li>
+                  <li>Scroll ke samping untuk melihat seluruh data guru mata pelajaran.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap align-items-center">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="loadKebutuhanSDS()" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width max-w-250">
+                    <option value="SEMUA">- Semua Unit Kerja -</option>
+                </select>
+
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="filterTampilan()" title="Terapkan Filter">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-sultan w-100 overflow-hidden">
+          <div class="card-body p-0 w-100">
+            <div class="table-responsive" style="overflow-x: auto; max-height: 70vh; position: relative;">
+              <table class="table table-bordered table-hover table-sm text-nowrap mb-0 text-center" style="width:100%; font-size: 0.85rem;">
+                
+                <thead id="headKebutuhan" class="font-weight-bold text-dark" style="display:none;">
+                  
+                  <tr>
+                    <th rowspan="2" class="align-middle bg-white text-maroon text-left pl-3" 
+                        style="position:sticky; left:0; z-index:50; min-width:250px; border-right: 2px solid #dee2e6; border-bottom: 2px solid #800000;">Unit Kerja</th>
+                    
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">NPSN</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Jml<br>Rombel</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Jml<br>Murid</th>
+
+                    <th colspan="5" class="align-middle" style="background-color: #e3f2fd; border-bottom: 1px solid #90caf9;">Kepala Sekolah</th>
+                    
+                    <th colspan="6" class="align-middle" style="background-color: #e8f5e9; border-bottom: 1px solid #a5d6a7;">Guru Kelas</th>
+                    
+                    <th colspan="6" class="align-middle" style="background-color: #fff3e0; border-bottom: 1px solid #ffcc80;">Guru PJOK</th>
+                    
+                    <th colspan="6" class="align-middle" style="background-color: #f3e5f5; border-bottom: 1px solid #ce93d8;">Guru PAI</th>
+                  </tr>
+
+                  <tr class="small">
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Keb.</th>
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">GTY</th>
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">+/-</th>
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2026</th>
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2027</th>
+
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">Keb.</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">GTY</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">+/-</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2026</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2027</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">GTT</th>
+
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">Keb.</th>
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">GTY</th>
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">+/-</th>
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2026</th>
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2027</th>
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">GTT</th>
+
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">Keb.</th>
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">GTY</th>
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">+/-</th>
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2026</th>
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;" class="text-danger">Pensiun<br>2027</th>
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">GTT</th>
+                  </tr>
+                </thead>
+
+                <tbody id="bodyKebutuhan">
+                    <tr>
+                        <td class="text-center td-spinner" colspan="100%">
+                            <div class="sultan-loading-container">
+                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                <h6 class="text-muted font-weight-bold">Menyiapkan data...</h6>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <tfoot id="footKebutuhan" class="bg-light font-weight-bold" style="border-top: 3px solid #800000; display:none;">
+                    </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+var RAW_DATA_KEBUTUHAN_SDS = [];
+
+$(document).ready(function() {
+    loadKebutuhanSDS();
+});
+
+function loadKebutuhanSDS() {
+    // 1. Kunci Visibilitas Header & Footer
+    $('#headKebutuhan').hide();
+    $('#footKebutuhan').hide();
+    
+    // 2. Tampilkan Spinner
+    var loadingHtml = '<tr><td class="text-center td-spinner" colspan="100%">' + 
+                      '<div class="sultan-loading-container">' + 
+                      '<i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>' + 
+                      '<h6 class="text-muted font-weight-bold">Mengambil data server...</h6>' + 
+                      '</div></td></tr>';
+    
+    $('#bodyKebutuhan').html(loadingHtml);
+    $('#btnCari').prop('disabled', true);
+
+    // 3. Panggil Server
+    google.script.run
+        .withSuccessHandler(function(data) {
+            $('#btnCari').prop('disabled', false);
+            RAW_DATA_KEBUTUHAN_SDS = data || [];
+            
+            // Populate Filter Unit
+            if ($('#filterUnit option').length <= 1) {
+                var uniqueUnit = [...new Set(RAW_DATA_KEBUTUHAN_SDS.map(item => item[0]))].sort();
+                var h = '<option value="SEMUA">- Semua Unit Kerja -</option>';
+                uniqueUnit.forEach(u => { if(u) h += `<option value="${u}">${u}</option>`; });
+                $('#filterUnit').html(h);
+            }
+
+            filterTampilan();
+        })
+        .withFailureHandler(function(err) {
+            $('#btnCari').prop('disabled', false);
+            $('#bodyKebutuhan').html(`<tr><td class="text-center text-danger p-5 font-weight-bold" colspan="100%"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${err.message}</td></tr>`);
+        })
+        .getDataKebutuhanGuruSDS(); 
+}
+
+function filterTampilan() {
+    var filter = $('#filterUnit').val();
+    var filteredData = RAW_DATA_KEBUTUHAN_SDS;
+
+    if (filter && filter !== "SEMUA") {
+        filteredData = RAW_DATA_KEBUTUHAN_SDS.filter(row => row[0] === filter);
+    }
+
+    renderTable(filteredData);
+}
+
+// Helper Warna Header (Pastel)
+function getColumnColor(index) {
+    if (index >= 4 && index <= 8) return "#f4faff";   // KS (Biru Muda) - E-I
+    if (index >= 9 && index <= 14) return "#f1f8e9";  // G.Kelas (Hijau Muda) - J-O
+    if (index >= 15 && index <= 20) return "#fff8e1"; // PJOK (Oranye Muda) - P-U
+    if (index >= 21 && index <= 26) return "#f3e5f5"; // PAI (Ungu Muda) - V-AA
+    return "#ffffff"; 
+}
+
+function renderTable(data) {
+    var tbody = $('#bodyKebutuhan');
+    var tfoot = $('#footKebutuhan');
+    var thead = $('#headKebutuhan');
+    
+    tbody.empty();
+    tfoot.empty();
+
+    if (data.length === 0) {
+        thead.show();
+        tbody.html('<tr><td class="text-center p-5 text-muted" colspan="100%">Data tidak ditemukan.</td></tr>');
+        return;
+    }
+
+    // Bersihkan border wrapper
+    var $tbl = $('#bodyKebutuhan').parent('table');
+    $tbl.css({ 'border-right': 'none', 'border-left': 'none', 'border-top': 'none', 'border-bottom': 'none' });
+
+    // Inisialisasi Totals (0 - 26) -> A s.d AA
+    var colTotals = new Array(27).fill(0); 
+
+    var html = "";
+    data.forEach(function(row) {
+        html += '<tr class="tr-animasi">';
+        
+        // Col A: Unit (Sticky Left)
+        html += `<td class="font-weight-bold bg-white text-dark text-left pl-3 align-middle" 
+                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">${row[0] || '-'}</td>`;
+        
+        // Col B: NPSN
+        html += `<td class="text-center align-middle">${row[1] || '-'}</td>`;
+        
+        // Col C: Rombel
+        html += `<td class="text-center align-middle">${row[2] || '0'}</td>`;
+        colTotals[2] += parseInt(row[2]) || 0;
+        
+        // Col D: Murid
+        html += `<td class="text-center align-middle">${row[3] || '0'}</td>`;
+        colTotals[3] += parseInt(row[3]) || 0;
+
+        // Loop Kolom E (4) sampai AA (26)
+        for (var i = 4; i <= 26; i++) {
+            var val = parseInt(row[i]) || 0;
+            colTotals[i] += val; 
+
+            var display = (val === 0) ? '<span class="text-black-50" style="opacity:0.2">-</span>' : val;
+            var weight = (val !== 0) ? 'font-weight-bold' : '';
+            var bgColor = getColumnColor(i);
+            var txtColor = "text-dark";
+            
+            // --- LOGIKA WARNA +/- (BLOCK COLOR) ---
+            // Index Kolom +/- SDS:
+            // KS: G (6)
+            // Kelas: L (11)
+            // PJOK: R (17)
+            // PAI: X (23)
+            if ([6, 11, 17, 23].includes(i)) {
+                if (val < 0) {
+                    bgColor = "#dc3545"; // Merah
+                    txtColor = "text-white"; 
+                } else if (val > 0) {
+                    bgColor = "#007bff"; // Biru
+                    txtColor = "text-white";
+                }
+            }
+            
+            html += `<td class="text-center align-middle ${weight} ${txtColor}" style="background-color: ${bgColor};">${display}</td>`;
+        }
+        html += '</tr>';
+    });
+
+    tbody.html(html);
+
+    // --- RENDER FOOTER ---
+    var footHtml = '<tr>';
+    // Label TOTAL
+    footHtml += `<td class="bg-light text-maroon text-right font-weight-bold pr-3 align-middle" 
+                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">TOTAL</td>`;
+    
+    // NPSN (Kosong)
+    footHtml += `<td class="bg-light"></td>`;
+
+    // Data C s.d AA
+    for (var i = 2; i <= 26; i++) {
+        var val = colTotals[i];
+        var bgColor = getColumnColor(i);
+        var txtColor = "text-maroon";
+
+        // Footer juga diberi warna jika +/-
+        if ([6, 11, 17, 23].includes(i)) {
+            if (val < 0) {
+                bgColor = "#dc3545";
+                txtColor = "text-white";
+            } else if (val > 0) {
+                bgColor = "#007bff";
+                txtColor = "text-white";
+            }
+        }
+        
+        footHtml += `<td class="text-center align-middle font-weight-bold ${txtColor}" style="background-color: ${bgColor};">${val}</td>`;
+    }
+    footHtml += '</tr>';
+    tfoot.html(footHtml);
+
+    // 4. MUNCULKAN SEMUA
+    thead.show();
+    tfoot.show();
+}
+</script>

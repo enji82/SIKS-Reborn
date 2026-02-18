@@ -99,6 +99,64 @@
                 </div>
             </div>
         </div>
+        <div class="col-12 mt-3">
+            <h6 class="font-weight-bold text-maroon mb-3"><i class="fas fa-exclamation-circle mr-2"></i>Daftar Sekolah Belum Lapor</h6>
+            <div class="row">
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card-sultan h-100 border-top-info">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="m-0 font-weight-bold text-info small">SD Belum Lapor <span id="countBelumSd" class="badge badge-info float-right">0</span></h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul id="listBelumSd" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
+                                <li class="list-group-item text-center text-muted">Memuat...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card-sultan h-100 border-top-warning">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="m-0 font-weight-bold text-warning small">TK Belum Lapor <span id="countBelumTk" class="badge badge-warning float-right text-white">0</span></h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul id="listBelumTk" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
+                                <li class="list-group-item text-center text-muted">Memuat...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card-sultan h-100 border-top-success">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="m-0 font-weight-bold text-success small">KB Belum Lapor <span id="countBelumKb" class="badge badge-success float-right">0</span></h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul id="listBelumKb" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
+                                <li class="list-group-item text-center text-muted">Memuat...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card-sultan h-100 border-top-primary">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="m-0 font-weight-bold text-primary small">SPS Belum Lapor <span id="countBelumSps" class="badge badge-primary float-right">0</span></h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul id="listBelumSps" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
+                                <li class="list-group-item text-center text-muted">Memuat...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
 
         <div class="col-12 mt-2">
             <div class="row">
@@ -172,27 +230,48 @@
         }
     });
 
+    function renderListBelum(jenjang, dataList) {
+        var ul = $('#listBelum' + jenjang); // ID: listBelumSd, listBelumTk, dll
+        var badge = $('#countBelum' + jenjang);
+        
+        ul.empty();
+        
+        if (!dataList || dataList.length === 0) {
+            ul.html('<li class="list-group-item text-center text-success py-4"><i class="fas fa-check-circle fa-2x mb-2"></i><br>Semua Sudah Lapor!</li>');
+            badge.text("0");
+            return;
+        }
+
+        badge.text(dataList.length);
+
+        dataList.forEach(function(namaSekolah) {
+            ul.append('<li class="list-group-item py-2 px-3 border-bottom-light">' + namaSekolah + '</li>');
+        });
+    }
+
     function loadDashboard() {
         var t = $('#dashTahun').val();
         var b = $('#dashBulan').val();
 
-        // Reset UI & Data
         resetDataStore();
         if(CHART_INSTANCE) updateChart(); 
         $('#listActivity').empty(); 
         ACTIVITY_POOL = [];
 
-        // Show Spinners
-        $('.overlay-spinner').css('display', 'flex');
+        // --- RESET UI LIST BELUM ---
+        ['Sd', 'Tk', 'Kb', 'Sps'].forEach(function(j) {
+            $('#listBelum'+j).html('<li class="list-group-item text-center text-muted py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</li>');
+            $('#countBelum'+j).text('...');
+        });
 
-        // PARALLEL FETCHING: 2 JALUR
-        // 1. Ambil SD
+        // ... sisa kode loadDashboard ...
+        $('.overlay-spinner').css('display', 'flex');
+        
         google.script.run
             .withSuccessHandler(function(json) { handleResponse('sd', json); })
             .withFailureHandler(function(e){ console.error(e); $('#loadSd').hide(); })
             .getLapbulMetric_SD(t, b);
 
-        // 2. Ambil PAUD (TK, KB, SPS) sekaligus
         google.script.run
             .withSuccessHandler(function(json) { handleResponse('paud', json); })
             .withFailureHandler(function(e){ console.error(e); $('#loadPaud1,#loadPaud2,#loadPaud3').hide(); })
@@ -207,6 +286,9 @@
             updateCard('Sd', data.sd);
             updateStore('sd', data.sd);
             addActivities(data.recent);
+            
+            // --- RENDER LIST BELUM SD ---
+            renderListBelum('Sd', data.sd.listBelum); 
         } 
         else if (source === 'paud') {
             $('#loadPaud1, #loadPaud2, #loadPaud3').fadeOut();
@@ -214,9 +296,14 @@
             updateCard('Kb', data.kb); updateStore('kb', data.kb);
             updateCard('Sps', data.sps); updateStore('sps', data.sps);
             addActivities(data.recent);
+
+            // --- RENDER LIST BELUM PAUD ---
+            renderListBelum('Tk', data.tk.listBelum);
+            renderListBelum('Kb', data.kb.listBelum);
+            renderListBelum('Sps', data.sps.listBelum);
         }
         
-        updateChart(); // Refresh Chart setiap kali ada data masuk
+        updateChart(); 
     }
 
     function updateCard(jenjang, stats) {

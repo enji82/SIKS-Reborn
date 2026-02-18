@@ -1,7 +1,7 @@
 <style>
   textarea.form-control-sultan {
-    height: auto !important; /* Biarkan tinggi mengikuti rows */
-    min-height: 100px !important; /* Paksa minimal tinggi */
+    height: auto !important;
+    min-height: 100px !important;
 }
 </style>
 
@@ -361,11 +361,11 @@
 
 <script>
 // =================================================================
-// LOGIC SCRIPT (TIDAK ADA PERUBAHAN LOGIKA, HANYA UI)
+// LOGIC SCRIPT - SULTAN NOTIFICATION STANDARDIZED
 // =================================================================
 var DATA_DINAS = {};
-var GLOBAL_CACHE_DINAS = []; // Penampung Data Mentah dari Server
-var CACHE_KEY_DINAS = "";    // Penanda Cache (Tahun-Bulan)
+var GLOBAL_CACHE_DINAS = []; 
+var CACHE_KEY_DINAS = "";    
 var UNI_IS_NEW_SPT = true;
 var UNI_TEMP_PESERTA = [];
 var IS_FORM_LOCKED = false;
@@ -394,7 +394,7 @@ function initFilterTahun() {
     $('#filterTahun').html(h); 
 }
 
-/* 2. FUNGSI FILTER (UPDATE DENGAN STATUS) */
+/* 2. FUNGSI FILTER */
 function applyFilterDinas(e) {
     if(e) e.preventDefault();
 
@@ -402,46 +402,31 @@ function applyFilterDinas(e) {
     var bl = $('#filterBulan').val(); 
     var currentKey = th + "-" + bl;
 
-    // VALIDASI: Jika Tahun/Bulan belum dipilih
-    if (!th || !bl) {
-        // Bisa tambahkan alert jika mau
-        return; 
-    }
+    if (!th || !bl) return; 
 
-    // CEK CACHE: Apakah Tahun & Bulan sama dengan data yang sudah ada di memori?
     if (currentKey === CACHE_KEY_DINAS && GLOBAL_CACHE_DINAS.length > 0) {
-        console.log("⚡ Filter Lokal Aktif (Data Ready)");
-        jalankanFilterLokalDinas(); // Cukup filter di sisi klien
+        jalankanFilterLokalDinas(); 
     } else {
-        console.log("⏳ Load Server Aktif (Ambil Data Baru)");
-        fetchDataServerDinas(th, bl); // Ambil baru dari server
+        fetchDataServerDinas(th, bl); 
     }
 }
 
-// FUNGSI 1: AMBIL DATA DARI SERVER (HANYA JIKA TAHUN/BULAN BERUBAH)
+// FUNGSI 1: AMBIL DATA DARI SERVER
 function fetchDataServerDinas(th, bl) {
     if ($.fn.DataTable.isDataTable('#tabelDinas')) { $('#tabelDinas').DataTable().destroy(); }
     $('#headTabelDinas').hide();
     
-    // Tampilkan Loading
     $('#bodyTabelDinas').html('<tr><td class="text-center td-spinner" colspan="16"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengambil data server...</h6></div></td></tr>');
     $('#btnCari').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
-    // PANGGIL SERVER: Status dikirim KOSONG ("") agar server memberikan SEMUA data bulan tsb
     var cb = new Date().getTime(); 
     google.script.run
         .withSuccessHandler(function(jsonString) {
             $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
-            
             try {
-                // 1. Simpan ke Global Cache
                 GLOBAL_CACHE_DINAS = JSON.parse(jsonString);
-                // 2. Set Kunci Cache
                 CACHE_KEY_DINAS = th + "-" + bl;
-                
-                // 3. Jalankan Filter Lokal untuk menampilkan data
                 jalankanFilterLokalDinas();
-                
             } catch (e) {
                 $('#bodyTabelDinas').html('<tr><td colspan="16" class="text-center text-danger p-5">Gagal parse data: '+e.message+'</td></tr>');
             }
@@ -450,22 +435,18 @@ function fetchDataServerDinas(th, bl) {
             $('#btnCari').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
             $('#bodyTabelDinas').html('<tr><td colspan="16" class="text-center text-danger p-5">Server Error: '+err+'</td></tr>'); 
         })
-        .getDaftarDinas(th, bl, "", cb); // Param ke-3 (Status) dikosongkan
+        .getDaftarDinas(th, bl, "", cb); 
 }
 
-// FUNGSI 2: FILTER LOKAL (CEPAT)
+// FUNGSI 2: FILTER LOKAL
 function jalankanFilterLokalDinas() {
-    var statusFilter = $('#filterStatus').val(); // Ambil nilai dropdown status
+    var statusFilter = $('#filterStatus').val(); 
     
-    // Filter Array GLOBAL_CACHE_DINAS
     var hasilSaringan = GLOBAL_CACHE_DINAS.filter(function(row) {
-        // Jika filter status kosong, ambil semua. Jika ada isinya, cek kesesuaian.
         if (statusFilter && statusFilter !== "") {
-            // Pastikan status ada isinya sebelum di-lowercase
             var sRow = String(row.status || "").toLowerCase();
             var sTarget = statusFilter.toLowerCase();
             
-            // Logic pencocokan (flexibel)
             if (sTarget === "diproses") return (sRow === "" || sRow.includes("proses"));
             if (sTarget === "disetujui") return (sRow.includes("setuju") || sRow.includes("acc") || sRow.includes("ok"));
             if (sTarget === "revisi") return sRow.includes("revisi");
@@ -473,15 +454,14 @@ function jalankanFilterLokalDinas() {
             
             return sRow === sTarget;
         }
-        return true; // Jika filter status kosong, loloskan semua
+        return true; 
     });
 
     renderTabelDinas(hasilSaringan);
 }
 
-/* 3. RENDER TABEL (SUDAH SUPPORT ARRAY LANGSUNG) */
+/* 3. RENDER TABEL */
 function renderTabelDinas(dataInput) {
-    // Normalisasi Input: Bisa berupa JSON String (dari server lama) atau Array Object (dari cache baru)
     var data = [];
     if (typeof dataInput === 'string') {
         try { data = JSON.parse(dataInput); } catch(e) { data = []; }
@@ -513,7 +493,20 @@ function renderTabelDinas(dataInput) {
         var safeNoSpt = cleanText(row.noSpt); 
         var safeUrl = (row.dokumen||"").replace(/'/g, "%27").replace(/"/g, "%22");
         
-        var btnDetail = `<button class="btn btn-sm btn-warning shadow-sm font-weight-bold text-dark" onclick="tambahDataDinasWithVal('${safeNoSpt}')" title="Buka Detail SPT">
+        // --- LOGIKA WARNA TOMBOL EDIT ---
+        var stButton = (row.status || "").toLowerCase();
+        var btnColor = "btn-warning"; 
+        var btnTextColor = "text-dark"; 
+
+        if (stButton.includes('setuju') || stButton.includes('acc') || stButton.includes('ok')) {
+            btnColor = "btn-success"; 
+            btnTextColor = "text-white";
+        } else if (stButton.includes('tolak')) {
+            btnColor = "btn-danger"; 
+            btnTextColor = "text-white";
+        }
+
+        var btnDetail = `<button class="btn btn-sm ${btnColor} shadow-sm font-weight-bold ${btnTextColor}" onclick="tambahDataDinasWithVal('${safeNoSpt}')" title="Buka Detail SPT">
                             <i class="fas fa-pencil-alt mr-1"></i> Detail/Edit
                          </button>`;
         
@@ -551,18 +544,17 @@ function renderTabelDinas(dataInput) {
         html += `<tr class="tr-animasi">
             <td class="col-sticky-left bg-white text-center border-right">${groupAksi}</td>
             <td class="text-center">${cleanText(row.jenis)}</td>
-            <td class="font-weight-bold">${safeNoSpt}</td>
+            <td class="text-left font-weight-bold">${safeNoSpt}</td>
             <td class="text-center">${row.tglSpt}</td>
             <td class="text-center">${row.tglMulai}</td>
             <td class="text-center">${row.tglSelesai}</td>
-            <td class="small" style="min-width:200px; white-space:normal;">${cleanText(row.tujuan)}</td>
-            <td class="small" style="min-width:250px; white-space:normal;">${cleanText(row.kegiatan)}</td>
+            <td class="text-left" style="min-width:200px; white-space:normal;">${cleanText(row.tujuan)}</td>
+            <td class="text-left" style="min-width:250px; white-space:normal;">${cleanText(row.kegiatan)}</td>
             <td class="text-center font-weight-bold">${row.jmlAsn||'0'}</td>
             <td class="text-center">${btnFile}</td>
             <td class="text-center small">${cleanText(row.jenisDok)}</td>
             <td class="text-center">${renderBadgeSultan(row.status, row.keterangan)}</td>
             <td class="text-center">${btnAdmin}</td>
-            
             <td class="text-center">${metaKirim}</td>
             <td class="text-center">${metaUpdate}</td>
             <td class="text-center">${metaVerif}</td>
@@ -571,7 +563,6 @@ function renderTabelDinas(dataInput) {
     
     $('#bodyTabelDinas').html(html);
     
-    // Beri sedikit delay agar DOM siap sebelum Datatable init
     setTimeout(function() { 
         initDataTableStandard('#tabelDinas'); 
         if($('[data-toggle="tooltip"]').length > 0) $('[data-toggle="tooltip"]').tooltip();
@@ -589,7 +580,6 @@ function initDataTableStandard(tableId) {
     }); 
 }
 
-/* HELPER LAINNYA */
 function cleanText(text) { if (text == null) return ""; return String(text).replace(/(\r\n|\n|\r)/gm, " ").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
 function renderBadgeSultan(status, ket) { 
@@ -617,7 +607,6 @@ function tambahDataDinas() {
   $('#panelCariPegawai').hide(); $('#uniInputCari').val(''); $('#uniHasilCari').html(''); renderUniTabel(); 
   try { 
       var user = JSON.parse(localStorage.getItem("siksUser") || "{}"); 
-      // Prioritas: nama_lengkap > fullname > nama > username
       var namaPaten = user.nama_lengkap || user.fullname || user.nama || user.username || "User Web";
       $('#uniUserLogin').val(namaPaten); 
   } catch(e){ 
@@ -629,7 +618,9 @@ function tambahDataDinas() {
 
 function cekNoSptUnified() { 
     var noSpt = $('#uniNoSpt').val().trim(); 
-    if (noSpt.length < 3) { Swal.fire('Perhatian', 'Minimal 3 karakter!', 'warning'); return; } 
+    // UPDATE: NotifSultan
+    if (noSpt.length < 3) { NotifSultan.alert('warning', 'Perhatian', 'Minimal 3 karakter!'); return; } 
+    
     $('#uniNoSpt').prop('disabled', true); $('#msgCekSpt').html('<i class="fas fa-spinner fa-spin text-maroon"></i> Cek database...'); 
     google.script.run.withSuccessHandler(function(json){ 
         var res = JSON.parse(json); 
@@ -674,33 +665,69 @@ function lockFormControls(isLocked, statusText) { IS_FORM_LOCKED = isLocked; if 
 function loadExistingPeserta(noSpt) { $('#uniTabelPeserta').html('<tr><td colspan="4" class="text-center py-3 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> Loading peserta...</td></tr>'); google.script.run.withSuccessHandler(function(json){ var list = JSON.parse(json); UNI_TEMP_PESERTA = []; if (list.length > 0) { list.forEach(function(p){ UNI_TEMP_PESERTA.push({ nip: p.nip, nama: p.nama, unit: p.unit }); }); } renderUniTabel(); }).getPesertaDinas(noSpt); }
 function toggleCariPeserta() { $('#panelCariPegawai').slideToggle('fast'); setTimeout(() => { $('#uniInputCari').focus(); }, 200); }
 var timeoutUni; function cariPegawaiUni(val) { if (val.length < 3) { $('#uniHasilCari').html(''); return; } $('#uniHasilCari').html('<div class="text-center p-3 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i>Mencari...</div>'); clearTimeout(timeoutUni); timeoutUni = setTimeout(function(){ google.script.run.withSuccessHandler(function(json){ try { var res = JSON.parse(json); var h = ''; if(res.length === 0) { h = '<div class="text-center p-2 small text-muted">Tidak ditemukan.</div>'; } else { res.forEach(function(p){ h += `<a href="#" class="list-group-item list-group-item-action py-2" onclick="pilihPegawaiUni('${p.nip}', '${cleanText(p.nama)}', '${p.unit}')"><b>${p.nama}</b><br><small class="text-muted">${p.nip} - ${p.unit}</small></a>`; }); } $('#uniHasilCari').html(h); } catch(e) { $('#uniHasilCari').html('<div class="text-center p-2 text-danger small">Gagal memproses.</div>'); } }).withFailureHandler(function(err){ $('#uniHasilCari').html('<div class="text-center p-2 text-danger small">Error: ' + err + '</div>'); }).cariPegawaiDatabase(val); }, 600); }
-function pilihPegawaiUni(nip, nama, unit) { var isExist = UNI_TEMP_PESERTA.some(x => x.nip === nip); if(isExist) { Swal.fire('Info', 'Sudah ada.', 'warning'); return; } UNI_TEMP_PESERTA.push({nip: nip, nama: nama, unit: unit}); renderUniTabel(); $('#uniInputCari').val('').focus(); }
-function hapusPesertaUni(index) { if(IS_FORM_LOCKED) return; var nama = UNI_TEMP_PESERTA[index] ? UNI_TEMP_PESERTA[index].nama : 'Peserta ini'; Swal.fire({ title: 'Hapus Peserta?', text: "Hapus " + nama + "?", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya', cancelButtonText: 'Batal' }).then((result) => { if (result.isConfirmed) { UNI_TEMP_PESERTA.splice(index, 1); renderUniTabel(); } }); }
+
+function pilihPegawaiUni(nip, nama, unit) { 
+    var isExist = UNI_TEMP_PESERTA.some(x => x.nip === nip); 
+    // UPDATE: NotifSultan
+    if(isExist) { NotifSultan.toast('warning', 'Peserta sudah ada.'); return; } 
+    UNI_TEMP_PESERTA.push({nip: nip, nama: nama, unit: unit}); renderUniTabel(); $('#uniInputCari').val('').focus(); 
+}
+
+function hapusPesertaUni(index) { 
+    if(IS_FORM_LOCKED) return; 
+    var nama = UNI_TEMP_PESERTA[index] ? UNI_TEMP_PESERTA[index].nama : 'Peserta ini'; 
+    // UPDATE: NotifSultan
+    NotifSultan.konfirmasi('Hapus Peserta?', 'Hapus ' + nama + ' dari daftar?', 'Ya, Hapus').then((result) => { 
+        if (result.isConfirmed) { UNI_TEMP_PESERTA.splice(index, 1); renderUniTabel(); } 
+    }); 
+}
+
 function renderUniTabel() { if (UNI_TEMP_PESERTA.length === 0) { $('#uniTabelPeserta').empty(); $('#uniEmptyState').show(); return; } $('#uniEmptyState').hide(); var h = ''; UNI_TEMP_PESERTA.forEach(function(row, idx){ var btnDel = IS_FORM_LOCKED ? '<i class="fas fa-lock text-muted"></i>' : `<button class="btn btn-xs btn-outline-danger" onclick="hapusPesertaUni(${idx})"><i class="fas fa-trash"></i></button>`; h += `<tr><td class="pl-3 font-weight-bold">${row.nama}</td><td>${row.nip}</td><td>${row.unit}</td><td class="text-center">${btnDel}</td></tr>`; }); $('#uniTabelPeserta').html(h); }
-function simpanUnified() { if (UNI_IS_NEW_SPT) { if (!$('#uniTglSpt').val() || !$('#uniTglMulai').val() || !$('#uniJenis').val()) { Swal.fire('Gagal', 'Lengkapi Data Header!', 'error'); return; } if ($('#uniJenisDok').val() === "") { Swal.fire('Gagal', 'Pilih Jenis Dokumen!', 'warning'); return; } if (!document.getElementById('uniFile').files[0]) { Swal.fire('Gagal', 'Upload PDF!', 'error'); return; } } if (UNI_TEMP_PESERTA.length === 0) { Swal.fire('Gagal', 'Belum ada peserta!', 'warning'); return; } var btn = $('#uniBtnSimpan'); var txt = btn.html(); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Proses...'); if (UNI_IS_NEW_SPT) { var fileInput = document.getElementById('uniFile'); var reader = new FileReader(); reader.onload = function(e) { var payload = { isNewSpt: true, header: { noSpt: $('#uniNoSpt').val(), jenis: $('#uniJenis').val(), tglSpt: $('#uniTglSpt').val(), tglMulai: $('#uniTglMulai').val(), tglSelesai: $('#uniTglSelesai').val(), tujuan: $('#uniTujuan').val(), kegiatan: $('#uniKegiatan').val(), jenisDok: $('#uniJenisDok').val() }, listPeserta: UNI_TEMP_PESERTA, user_login: $('#uniUserLogin').val(), fileData: e.target.result.split(',')[1], fileName: fileInput.files[0].name, mimeType: fileInput.files[0].type }; execSimpan(payload, btn, txt); }; reader.readAsDataURL(fileInput.files[0]); } else { var payload = { isNewSpt: false, header: { noSpt: $('#uniNoSpt').val() }, listPeserta: UNI_TEMP_PESERTA, user_login: $('#uniUserLogin').val() }; execSimpan(payload, btn, txt); } }
+
+function simpanUnified() { 
+    // UPDATE: NotifSultan Validasi
+    if (UNI_IS_NEW_SPT) { 
+        if (!$('#uniTglSpt').val() || !$('#uniTglMulai').val() || !$('#uniJenis').val()) { NotifSultan.alert('error', 'Gagal', 'Lengkapi Data Header!'); return; } 
+        if ($('#uniJenisDok').val() === "") { NotifSultan.alert('warning', 'Gagal', 'Pilih Jenis Dokumen!'); return; } 
+        if (!document.getElementById('uniFile').files[0]) { NotifSultan.alert('error', 'Gagal', 'Wajib Upload File SPT!'); return; } 
+    } 
+    if (UNI_TEMP_PESERTA.length === 0) { NotifSultan.alert('warning', 'Gagal', 'Belum ada peserta!'); return; } 
+    
+    var btn = $('#uniBtnSimpan'); var txt = btn.html(); 
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Proses...'); 
+    
+    if (UNI_IS_NEW_SPT) { 
+        var fileInput = document.getElementById('uniFile'); var reader = new FileReader(); 
+        reader.onload = function(e) { 
+            var payload = { isNewSpt: true, header: { noSpt: $('#uniNoSpt').val(), jenis: $('#uniJenis').val(), tglSpt: $('#uniTglSpt').val(), tglMulai: $('#uniTglMulai').val(), tglSelesai: $('#uniTglSelesai').val(), tujuan: $('#uniTujuan').val(), kegiatan: $('#uniKegiatan').val(), jenisDok: $('#uniJenisDok').val() }, listPeserta: UNI_TEMP_PESERTA, user_login: $('#uniUserLogin').val(), fileData: e.target.result.split(',')[1], fileName: fileInput.files[0].name, mimeType: fileInput.files[0].type }; 
+            execSimpan(payload, btn, txt); 
+        }; 
+        reader.readAsDataURL(fileInput.files[0]); 
+    } else { 
+        var payload = { isNewSpt: false, header: { noSpt: $('#uniNoSpt').val() }, listPeserta: UNI_TEMP_PESERTA, user_login: $('#uniUserLogin').val() }; 
+        execSimpan(payload, btn, txt); 
+    } 
+}
+
 function execSimpan(payload, btn, txt) { 
     google.script.run.withSuccessHandler(function(res){ 
         btn.prop('disabled', false).html(txt); 
         if(res === "Sukses") { 
             $('#modalUnified').modal('hide'); 
-            Swal.fire({ 
-                icon: 'success', title: 'Berhasil', text: 'Tersimpan.', 
-                timer: 1500, timerProgressBar: true, showConfirmButton: false, 
-                didClose: () => { 
-                    // --- FIX BUG CACHE DISINI ---
-                    CACHE_KEY_DINAS = ""; 
-                    GLOBAL_CACHE_DINAS = [];
-                    applyFilterDinas(); 
-                } 
-            }); 
+            // UPDATE: NotifSultan Success
+            NotifSultan.alert('success', 'Berhasil', 'Data perjalanan dinas telah tersimpan.');
+            CACHE_KEY_DINAS = ""; GLOBAL_CACHE_DINAS = [];
+            applyFilterDinas(); 
         } else { 
-            Swal.fire('Gagal', res, 'error'); 
+            // UPDATE: NotifSultan Error
+            NotifSultan.alert('error', 'Gagal Menyimpan', res); 
         } 
     }).withFailureHandler(function(err){ 
         btn.prop('disabled', false).html(txt); 
-        Swal.fire('Error', err.toString(), 'error'); 
+        NotifSultan.alert('error', 'Error Sistem', err.toString()); 
     }).simpanSptUnified(payload); 
 }
+
 function bukaModalVerif(rowId) { var data = DATA_DINAS[rowId]; if(!data) return; $('#verifRowId').val(rowId); $('#vNoSpt').text(data.noSpt); $('#vTglSpt').text(data.tglSpt); $('#vTglDinas').text(data.tglMulai + ' s.d ' + data.tglSelesai); $('#vTujuan').text(data.tujuan); $('#vKegiatan').text(data.kegiatan); $('#vJml').text((data.jmlAsn || '0') + ' Orang'); $('#vCatatan').val(''); $('#vListPeserta').html('<li class="text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> Loading...</li>'); google.script.run.withSuccessHandler(function(json){ var list = JSON.parse(json); var li = ""; if (list.length === 0) { li = '<li class="text-danger font-italic">Kosong.</li>'; } else { list.forEach(function(p){ li += `<li class="mb-1"><b>${p.nama}</b><br><small class="text-muted">${p.nip}</small></li>`; }); } $('#vListPeserta').html(li); }).getPesertaDinas(data.noSpt); var url = data.dokumen || ""; if (url.length > 10) { var previewUrl = url.replace(/\/view.*/, '/preview'); $('#framePreview').attr('src', previewUrl).show(); $('#previewError').hide(); $('#linkFileFull').attr('href', url); } else { $('#framePreview').hide(); $('#previewError').show(); $('#linkFileFull').attr('href', '#'); } $('#modalVerifikasi').modal('show'); }
 
 function execVerifSide(status) { 
@@ -708,93 +735,82 @@ function execVerifSide(status) {
     var ket = $('#vCatatan').val().trim(); 
     
     if ((status === 'Revisi' || status === 'Ditolak') && ket === "") { 
-        Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Tulis alasan!', confirmButtonColor: '#d33' }); 
+        NotifSultan.alert('warning', 'Catatan Wajib', 'Mohon tulis alasan revisi/penolakan.'); 
         return; 
     } 
     
-    var colorBtn = '#28a745'; 
-    if(status === 'Revisi') colorBtn = '#ffc107'; 
-    if(status === 'Ditolak') colorBtn = '#dc3545'; 
-    
-    // --- PERBAIKAN LOGIKA NAMA DI SINI ---
     var myName = "Admin"; 
-    try { 
-        var user = JSON.parse(localStorage.getItem("siksUser") || "{}"); 
-        myName = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin"; 
-    } catch(e){} 
+    try { var user = JSON.parse(localStorage.getItem("siksUser") || "{}"); myName = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin"; } catch(e){} 
     
-    Swal.fire({ 
-        title: 'Konfirmasi ' + status, 
-        text: 'Lanjutkan?', 
-        icon: 'question', 
-        showCancelButton: true, 
-        confirmButtonColor: colorBtn, 
-        confirmButtonText: 'Ya' 
-    }).then((result) => { 
+    // UPDATE: NotifSultan Confirm
+    NotifSultan.konfirmasi('Konfirmasi ' + status, 'Anda yakin ingin melanjutkan?', 'Ya, Proses').then((result) => { 
         if (result.isConfirmed) { 
-            Swal.fire({title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }}); 
+            // UPDATE: NotifSultan Loading
+            NotifSultan.loading("Sedang memproses...");
             
             google.script.run.withSuccessHandler(function(res){ 
-                Swal.close(); 
+                Swal.close(); // Tutup loading
                 if(res === 'Sukses') { 
                     $('#modalVerifikasi').modal('hide'); 
-                    NotifSultan.toast('success', 'Berhasil'); 
+                    NotifSultan.alert('success', 'Berhasil', 'Data telah diverifikasi: ' + status);
                     
-                    // --- FIX BUG CACHE DISINI ---
-                    CACHE_KEY_DINAS = "";      // Reset Kunci Cache
-                    GLOBAL_CACHE_DINAS = [];   // Kosongkan Data Lama
-                    // ----------------------------
-
+                    CACHE_KEY_DINAS = "";      
+                    GLOBAL_CACHE_DINAS = [];   
                     setTimeout(() => applyFilterDinas(), 500); 
                 } else { 
-                    Swal.fire('Error', res, 'error'); 
+                    NotifSultan.alert('error', 'Gagal', res); 
                 } 
             }).verifikasiDataDinas(rowId, status, ket, myName); 
         } 
     }); 
 }
 
-function hapusDataDinas(rowBaris) { Swal.fire({ title: 'Hapus Data?', text: "Permanen!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' }).then((result) => { if (result.isConfirmed) { Swal.fire({title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }}); google.script.run.withSuccessHandler(function(res){ Swal.close(); if(res === 'Sukses') { NotifSultan.toast('success', 'Dihapus'); applyFilterDinas(); } else { Swal.fire('Error', res, 'error'); } }).hapusDataDinas(rowBaris); } }); }
+function hapusDataDinas(rowBaris) { 
+    // UPDATE: NotifSultan Confirm
+    NotifSultan.konfirmasi('Hapus Permanen?', 'Data akan dihapus selamanya!', 'Hapus').then((result) => { 
+        if (result.isConfirmed) { 
+            NotifSultan.loading('Menghapus...'); 
+            google.script.run.withSuccessHandler(function(res){ 
+                Swal.close(); 
+                if(res === 'Sukses') { 
+                    NotifSultan.toast('success', 'Data berhasil dihapus'); 
+                    applyFilterDinas(); 
+                } else { 
+                    NotifSultan.alert('error', 'Gagal', res); 
+                } 
+            }).hapusDataDinas(rowBaris); 
+        } 
+    }); 
+}
+
 function previewDokumen(url) { if (!url) return; var previewUrl = url; if (url.includes('drive.google.com') && url.includes('/view')) { previewUrl = url.replace(/\/view.*/, '/preview'); } $('#frameDokumenViewer').attr('src', previewUrl).show(); $('#errPreview').hide(); $('#btnFullDownload').attr('href', url); $('#modalPreviewDokumen').modal('show'); }
 
-/* BUKA MODAL HAPUS */
 function konfirmasiHapusDinas(rowBaris) {
-    // Simpan ID baris yang mau dihapus
     $('#hapusRowId').val(rowBaris);
-    // Reset Input Kode
     $('#inputKodeHapus').val('');
-    // Buka Modal
     $('#modalHapusDinas').modal('show');
-    // Auto focus ke input kode setelah modal muncul
     setTimeout(function() { $('#inputKodeHapus').focus(); }, 500);
 }
 
-/* EKSEKUSI HAPUS (VALIDASI KODE) */
 function eksekusiHapusDinas() {
     var rowBaris = $('#hapusRowId').val();
     var kodeInput = $('#inputKodeHapus').val();
     
-    // 1. Generate Kode Hari Ini (YYYYMMDD)
     var now = new Date();
     var yyyy = now.getFullYear();
     var mm = String(now.getMonth() + 1).padStart(2, '0');
     var dd = String(now.getDate()).padStart(2, '0');
     var kodeValid = yyyy + mm + dd;
 
-    // 2. Validasi Kode
     if (kodeInput !== kodeValid) {
-        Swal.fire({ icon: 'error', title: 'Kode Salah', text: 'Kode konfirmasi tidak sesuai.', timer: 2000, showConfirmButton: false });
+        // UPDATE: NotifSultan
+        NotifSultan.alert('error', 'Akses Ditolak', 'Kode keamanan salah.');
         return;
     }
 
-    // --- PERBAIKAN LOGIKA NAMA DI SINI ---
     var userDelete = "Admin";
-    try {
-        var user = JSON.parse(localStorage.getItem("siksUser") || "{}");
-        userDelete = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin";
-    } catch(e){}
+    try { var user = JSON.parse(localStorage.getItem("siksUser") || "{}"); userDelete = user.nama_lengkap || user.fullname || user.nama || user.username || "Admin"; } catch(e){}
 
-    // 3. Eksekusi ke Server
     var btn = $('#btnEksekusiHapus');
     var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...');
@@ -805,23 +821,17 @@ function eksekusiHapusDinas() {
             $('#modalHapusDinas').modal('hide');
             
             if(res === 'Sukses') {
-                NotifSultan.toast('success', 'Data berhasil dihapus');
-                
-                // --- FIX BUG CACHE DISINI ---
-                CACHE_KEY_DINAS = ""; 
-                GLOBAL_CACHE_DINAS = [];
-                // ----------------------------
-                
+                NotifSultan.alert('success', 'Berhasil', 'Data telah dihapus dari sistem.');
+                CACHE_KEY_DINAS = ""; GLOBAL_CACHE_DINAS = [];
                 applyFilterDinas();
             } else {
-                Swal.fire('Gagal', res, 'error');
+                NotifSultan.alert('error', 'Gagal', res);
             }
         })
         .withFailureHandler(function(err){
             btn.prop('disabled', false).html(txt);
-            Swal.fire('Error', err.message, 'error');
+            NotifSultan.alert('error', 'Error', err.message);
         })
-        // Kirim 2 Parameter: ID dan Nama Penghapus
         .hapusDataDinas(rowBaris, userDelete);
 }
 </script>

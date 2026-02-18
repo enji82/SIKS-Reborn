@@ -3,7 +3,7 @@
     <div class="row mb-2">
       <div class="col-sm-12">
         <h5 class="m-0 font-weight-bold">
-          <i class="fas fa-child text-maroon mr-2"></i>Data PTK PAUD
+          <i class="fas fa-user-tie text-maroon mr-2"></i>Data PTK SD Swasta
         </h5>
         <hr class="style-sultan-solid">
       </div>
@@ -28,8 +28,9 @@
             <div id="infoCollapse" class="collapse">
               <div class="mt-2 pt-2 border-top small text-muted">
                 <ul class="mb-0 pl-3">
-                  <li class="mb-1">Apabila ada data yang tidak sesuai, perbaiki melalui tombol <strong><i class="fas fa-pencil-alt text-warning"></i> Edit</strong> di kolom Aksi.</li>
-                  <li>Perbaiki data Anda secara berkala, atau setiap kali ada perubahan data kepegawaian.</li>
+                  <li class="mb-1">Halaman ini khusus untuk mengelola data PTK <b>SD Swasta</b>.</li>
+                  <li class="mb-1">Apabila ada data yang tidak sesuai, perbaiki melalui tombol <strong><i class="fas fa-pencil-alt text-warning"></i> Edit</strong>.</li>
+                  <li>Perbarui data Anda segera setelah mengalami perubahan data..</li>
                 </ul>
               </div>
             </div>
@@ -42,12 +43,12 @@
                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
 
-                <select id="filterJenjang" class="form-control form-control-sultan input-auto-width" onchange="updateFilterUnit()">
-                    <option value="SEMUA">- Semua Jenjang -</option>
-                </select>
-
                 <select id="filterUnitPTK" class="form-control form-control-sultan input-auto-width max-w-250">
                     <option value="SEMUA">- Semua Unit Kerja -</option>
+                </select>
+
+                <select id="filterStatusPTK" class="form-control form-control-sultan input-auto-width">
+                    <option value="SEMUA">- Semua Status -</option>
                 </select>
 
                 <div class="divider-vertical"></div>
@@ -77,8 +78,6 @@
                     <th class="text-center align-middle" style="width:100px; min-width:100px; border-bottom: 2px solid #800000 !important;">Aksi</th>
                     <th class="text-left align-middle" style="min-width:250px; border-bottom: 2px solid #800000 !important;">Nama Lengkap</th>
                     
-                    <th class="text-center align-middle" style="border-bottom: 2px solid #800000 !important;">Jenjang</th>
-
                     <th class="text-left text-nowrap align-middle pl-3" style="border-bottom: 2px solid #800000 !important;">NIY</th>
                     <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Tempat, Tgl Lahir</th>
                     <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">NIK</th>
@@ -98,7 +97,7 @@
                 </thead>
 
                 <tbody id="bodyTabelPTK">
-                    <tr><td class="text-center td-spinner" colspan="17"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Menyiapkan data PAUD...</h6></div></td></tr>
+                    <tr><td class="text-center td-spinner" colspan="16"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Menyiapkan data PTK SDS...</h6></div></td></tr>
                 </tbody>
               </table>
             </div>
@@ -113,7 +112,7 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content border-0 shadow-lg modal-content-sultan">
             <div class="modal-header bg-maroon text-white" id="headerModalPTK">
-                <h5 class="modal-title font-weight-bold" id="titleModalPTK"><i class="fas fa-user-plus mr-2"></i>Tambah Data PTK PAUD</h5>
+                <h5 class="modal-title font-weight-bold" id="titleModalPTK"><i class="fas fa-user-plus mr-2"></i>Tambah Data PTK SDS</h5>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <form id="formPTK" onsubmit="submitFormPTK(event)">
@@ -123,7 +122,6 @@
                     <input type="hidden" id="inputUserLogin" name="user_login">
                     <input type="hidden" id="inputNpsnLogin" name="npsn_login">
                     <input type="hidden" id="inputUnitLogin" name="unit_login">
-                    <input type="hidden" id="inputJenjang" name="jenjang">
 
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-white py-2"><h6 class="m-0 font-weight-bold text-maroon">I. IDENTITAS DIRI</h6></div>
@@ -133,7 +131,7 @@
                                     <label class="form-label-sultan">Gelar Depan</label>
                                     <input type="text" name="gelar_depan" class="form-control form-control-sultan" placeholder="-">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-8 mb-3">
                                     <label class="form-label-sultan">Nama Lengkap (Tanpa Gelar) <span class="text-danger">*</span></label>
                                     <input type="text" name="nama_lengkap" class="form-control form-control-sultan" required oninput="this.value = this.value.toUpperCase()">
                                 </div>
@@ -145,11 +143,11 @@
 
                             <div class="form-row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label-sultan">NIY / NIP</label>
-                                    <input type="text" name="niy" class="form-control form-control-sultan">
+                                    <label class="form-label-sultan">NIY (Nomor Induk Yayasan)</label>
+                                    <input type="text" name="niy" class="form-control form-control-sultan" placeholder="(Opsional)">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label-sultan">NIK (Nomor KTP) <span class="text-danger">*</span></label>
+                                    <label class="form-label-sultan">NIK (16 Digit) <span class="text-danger">*</span></label>
                                     <input type="text" name="nik" class="form-control form-control-sultan" maxlength="16" minlength="16" pattern="\d*" title="Wajib 16 angka" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 </div>
                             </div>
@@ -195,8 +193,12 @@
                                         <option value="SD/MI Sederajat">SD/MI Sederajat</option>
                                         <option value="SMP/MTs Sederajat">SMP/MTs Sederajat</option>
                                         <option value="SMA/SMK Sederajat">SMA/SMK Sederajat</option>
-                                        <option value="D1">D1</option><option value="D2">D2</option><option value="D3">D3</option><option value="D4">D4</option>
-                                        <option value="S1">S1</option><option value="S2">S2</option>
+                                        <option value="D1">D1</option>
+                                        <option value="D2">D2</option>
+                                        <option value="D3">D3</option>
+                                        <option value="D4">D4</option>
+                                        <option value="S1">S1</option>
+                                        <option value="S2">S2</option>
                                     </select>
                                 </div>
                                 <div class="col-md-7 mb-3">
@@ -205,13 +207,13 @@
                                 </div>
                                 <div class="col-md-2 mb-3">
                                     <label class="form-label-sultan">LULUS <span class="text-danger">*</span></label>
-                                    <input type="text" name="thn_lulus" class="form-control form-control-sultan" maxlength="4" placeholder="Tahun" required>
+                                    <input type="text" name="thn_lulus" class="form-control form-control-sultan" maxlength="4" placeholder="Thn" required>
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label-sultan">NUPTK (Jika memiliki)</label>
+                                    <label class="form-label-sultan">NUPTK (16 Digit / - )</label>
                                     <input type="text" name="nuptk" class="form-control form-control-sultan" placeholder="-">
                                 </div>
                                 <div class="col-md-6 mb-3">
@@ -234,7 +236,6 @@
                                         <option value="PTY">PTY (Pegawai Tetap Yayasan)</option>
                                         <option value="GTT">GTT (Guru Tidak Tetap)</option>
                                         <option value="PTT">PTT (Pegawai Tidak Tetap)</option>
-                                        <option value="PNS">PNS</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
@@ -243,10 +244,10 @@
                                         <option value="">-Pilih-</option>
                                         <option value="Kepala Sekolah">Kepala Sekolah</option>
                                         <option value="Guru Kelas">Guru Kelas</option>
-                                        <option value="Guru Pendamping">Guru Pendamping</option>
-                                        <option value="Guru Ekstrakurikuler">Guru Ekstrakurikuler</option>
-                                        <option value="Pengasuh">Pengasuh</option>
-                                        <option value="Guru Lainnya">Guru Lainnya</option>
+                                        <option value="Guru PJOK">Guru PJOK</option>
+                                        <option value="Guru PAI">Guru PAI</option>
+                                        <option value="Guru Bahasa Inggris">Guru Bahasa Inggris</option>
+                                        <option value="Guru Mapel Lainnya">Guru Mapel Lainnya</option>
                                         <option value="Penjaga Sekolah">Penjaga Sekolah</option>
                                         <option value="Tenaga Administrasi">Tenaga Administrasi</option>
                                         <option value="Tenaga Perpustakaan">Tenaga Perpustakaan</option>
@@ -325,6 +326,7 @@
                 <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus</h5>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
+            
             <div class="modal-body bg-white p-4">
                 <input type="hidden" id="idHapusPTK">
                 <div class="alert alert-warning text-dark border-warning shadow-sm mb-3">
@@ -350,6 +352,7 @@
                     <small class="text-muted mt-1 font-italic"><i class="fas fa-info-circle mr-1"></i>Kode keamanan berubah setiap hari.</small>
                 </div>
             </div>
+            
             <div class="modal-footer bg-light justify-content-between p-3">
                 <button type="button" class="btn btn-default border shadow-sm px-4 font-weight-bold" data-dismiss="modal">Batal</button>
                 <button type="button" class="btn btn-danger shadow-sm px-4 font-weight-bold" onclick="submitHapusPTK()">
@@ -368,10 +371,10 @@ var ROW_MAP_PTK = {};
 var CURRENT_USER = {};
 var IS_ADMIN = false; 
 var USER_NPSN = "";
-var MY_JENJANG = "";
 
 function cleanString(str) { if (!str) return ""; return String(str).toUpperCase().replace(/\s+/g, ' ').trim(); }
 
+// Format Tanggal Indonesia
 function formatTanggalIndo(strDate) {
     if (!strDate || strDate === '-' || strDate === '') return '-';
     var dateObj;
@@ -396,49 +399,29 @@ $(document).ready(function() {
         CURRENT_USER = JSON.parse(localStorage.getItem("siksUser") || "{}");
         var role = String(CURRENT_USER.role || "").toLowerCase();
         USER_NPSN = String(CURRENT_USER.username || "").trim(); 
-        
         if (role.includes('admin') || role.includes('super')) { IS_ADMIN = true; }
-        
         $('#inputUserLogin').val(CURRENT_USER.nama_lengkap || USER_NPSN);
         $('#inputNpsnLogin').val(USER_NPSN);
         $('#inputUnitLogin').val(CURRENT_USER.unit_kerja || USER_NPSN);
-        
-        // --- BARU: JIKA BUKAN ADMIN, AMBIL JENJANG DARI DATABASE ---
-        if (!IS_ADMIN && USER_NPSN) {
-            google.script.run.withSuccessHandler(function(res) {
-                MY_JENJANG = res; // Simpan Jenjang (misal: "TK" atau "KB")
-                console.log("Jenjang Valid Terdeteksi: " + MY_JENJANG);
-            }).getJenjangByNPSN(USER_NPSN);
-        }
-        // -----------------------------------------------------------
-
     } catch(e){ IS_ADMIN = false; }
-    
     refreshTabelPTK(); 
 });
-
-function cekJurusan() {
-    var pend = $('#selPendidikan').val();
-    var inputJur = $('#inputJurusan');
-    if (pend === 'SD/MI Sederajat' || pend === 'SMP/MTs Sederajat') {
-        inputJur.val('-').prop('readonly', true);
-    } else {
-        inputJur.prop('readonly', false);
-        if(inputJur.val() === '-') inputJur.val('');
-    }
-}
 
 function refreshTabelPTK() {
     ALL_DATA_PTK = [];
     CACHE_READY = false;
-    if ($.fn.DataTable.isDataTable('#tabelPTK')) { $('#tabelPTK').DataTable().destroy(); }
     
-    // Colspan 17
-    $('#bodyTabelPTK').html('<tr><td class="text-center td-spinner" colspan="17"><div class="sultan-loading-container py-5"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengunduh Database PTK PAUD...</h6></div></td></tr>');
+    // 1. Hancurkan DataTable jika ada (PENTING AGAR TIDAK KONFLIK)
+    if ($.fn.DataTable.isDataTable('#tabelPTK')) { 
+        $('#tabelPTK').DataTable().destroy(); 
+    }
+
+    // 2. Tampilkan Loading (Pastikan colspan=16)
+    $('#bodyTabelPTK').html('<tr><td class="text-center td-spinner" colspan="16"><div class="sultan-loading-container py-5"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengunduh Database PTK SDS...</h6></div></td></tr>');
     
     $('#btnCariPTK').prop('disabled', true);
 
-    // CALL BACKEND PAUD
+    // CALL BACKEND SDS
     google.script.run.withSuccessHandler(function(jsonStr) {
         $('#btnCariPTK').prop('disabled', false);
         ALL_DATA_PTK = JSON.parse(jsonStr);
@@ -447,126 +430,86 @@ function refreshTabelPTK() {
         applyFilterPTK(); 
     }).withFailureHandler(function(e){
         $('#btnCariPTK').prop('disabled', false);
-        $('#bodyTabelPTK').html('<tr><td colspan="17" class="text-danger text-center font-weight-bold p-4">Gagal memuat: '+e.message+'</td></tr>');
-    }).getDataPTKPAUD(); 
+        // Error juga colspan 16
+        $('#bodyTabelPTK').html('<tr><td colspan="16" class="text-danger text-center font-weight-bold p-4">Gagal memuat: '+e.message+'</td></tr>');
+    }).getDataPTKSDS(); 
 }
 
-// 1. POPULATE AWAL (Hanya isi Jenjang, lalu panggil update unit)
 function populateFilterFromData() {
-    var uniqueJenjang = new Set();
-    
-    // Ambil Data Jenjang Unik
-    ALL_DATA_PTK.forEach(row => {
-        var j = row.jenjang ? String(row.jenjang).trim() : "";
-        if(j) uniqueJenjang.add(j);
-    });
-
-    var sortedJenjang = Array.from(uniqueJenjang).sort();
-
-    // Render Dropdown Jenjang
-    var jHtml = '<option value="SEMUA">- Semua Jenjang -</option>';
-    sortedJenjang.forEach(j => jHtml += `<option value="${j}">${j}</option>`);
-    $('#filterJenjang').html(jHtml);
-
-    // Panggil fungsi update unit untuk inisialisasi awal
-    updateFilterUnit();
-}
-
-// 2. FUNGSI BARU: UPDATE UNIT BERDASARKAN JENJANG
-function updateFilterUnit() {
-    var selectedJenjang = $('#filterJenjang').val(); // Ambil Jenjang yg dipilih
     var uniqueUnits = new Set();
+    var uniqueStatus = new Set();
     var myUnitName = "";
-
-    // Filter Unit berdasarkan Jenjang yg dipilih
     ALL_DATA_PTK.forEach(row => {
-        // Cek Hak Akses Dulu
-        if (!IS_ADMIN && String(row.npsn).trim() !== USER_NPSN) {
-            return; // Skip jika bukan unit user (untuk non-admin)
-        }
-        
-        // Simpan Unit User Login (untuk keperluan non-admin)
-        if (!IS_ADMIN) {
-            myUnitName = row.unit ? String(row.unit).trim() : "";
-        }
-
-        var rJenjang = row.jenjang ? String(row.jenjang).trim() : "";
-        var rUnit = row.unit ? String(row.unit).trim() : "";
-
-        // LOGIKA FILTER:
-        // Jika Jenjang "SEMUA", ambil semua unit.
-        // Jika Jenjang Spesifik, hanya ambil unit yg jenjangnya cocok.
-        if (selectedJenjang === "SEMUA" || rJenjang === selectedJenjang) {
-            if(rUnit) uniqueUnits.add(rUnit);
-        }
+        var u = row.unit ? String(row.unit).trim() : "";
+        var s = row.status_peg ? String(row.status_peg).trim() : "";
+        if(u) uniqueUnits.add(u);
+        if(s) uniqueStatus.add(s);
+        if(!IS_ADMIN && String(row.npsn).trim() === USER_NPSN) myUnitName = u;
     });
-
     var sortedUnits = Array.from(uniqueUnits).sort();
-    var uHtml = '';
+    var sortedStatus = Array.from(uniqueStatus).sort();
 
+    var uHtml = '';
     if (IS_ADMIN) {
-        // ADMIN: Tampilkan dropdown pilihan
         uHtml = '<option value="SEMUA">- Semua Unit Kerja -</option>';
         sortedUnits.forEach(u => uHtml += `<option value="${u}">${u}</option>`);
-        
-        $('#filterUnitPTK')
-            .html(uHtml)
-            .prop('disabled', false)
-            .removeClass('bg-light')
-            .val('SEMUA'); // Reset ke SEMUA saat jenjang berubah
+        $('#filterUnitPTK').html(uHtml).prop('disabled', false).removeClass('bg-light').val('SEMUA');
     } else {
-        // NON-ADMIN: Kunci di unit sendiri
         if(!myUnitName) myUnitName = CURRENT_USER.unit_kerja || "Unit Anda";
         uHtml = `<option value="${myUnitName}" selected>${myUnitName}</option>`;
-        
-        $('#filterUnitPTK')
-            .html(uHtml)
-            .prop('disabled', true)
-            .addClass('bg-light');
+        $('#filterUnitPTK').html(uHtml).prop('disabled', true).addClass('bg-light');
     }
+
+    var sHtml = '<option value="SEMUA">- Semua Status -</option>';
+    sortedStatus.forEach(s => sHtml += `<option value="${s}">${s}</option>`);
+    $('#filterStatusPTK').html(sHtml).val('SEMUA');
 }
 
 function applyFilterPTK() {
     if (!CACHE_READY) return;
     var valUnit = $('#filterUnitPTK').val();
-    var valJenjang = $('#filterJenjang').val();
-    
+    var valStatus = $('#filterStatusPTK').val();
     var fUnit = (valUnit === "SEMUA" || !valUnit) ? "SEMUA" : cleanString(valUnit);
-    var fJenjang = (valJenjang === "SEMUA" || !valJenjang) ? "SEMUA" : cleanString(valJenjang);
+    var fStatus = (valStatus === "SEMUA" || !valStatus) ? "SEMUA" : cleanString(valStatus);
 
     var filteredData = ALL_DATA_PTK.filter(function(row) {
         var rNpsn = cleanString(row.npsn);
         var rUnit = cleanString(row.unit);
-        var rJenjang = cleanString(row.jenjang);
-
+        var rStatus = cleanString(row.status_peg);
         if (!IS_ADMIN && rNpsn !== cleanString(USER_NPSN)) return false;
-        
         var passUnit = (fUnit === "SEMUA") || (rUnit === fUnit);
-        var passJenjang = (fJenjang === "SEMUA") || (rJenjang === fJenjang);
-        
-        return passUnit && passJenjang;
+        var passStatus = (fStatus === "SEMUA") || (rStatus === fStatus);
+        return passUnit && passStatus;
     });
     renderTabelPTK(filteredData);
 }
 
 function renderTabelPTK(data) {
-    if ($.fn.DataTable.isDataTable('#tabelPTK')) { $('#tabelPTK').DataTable().destroy(); }
+    // 1. Hancurkan DataTable lama (Wajib)
+    if ($.fn.DataTable.isDataTable('#tabelPTK')) { 
+        $('#tabelPTK').DataTable().destroy(); 
+    }
+    
     var tbody = $('#bodyTabelPTK');
-    tbody.empty();
+    tbody.empty(); // Bersihkan isi tabel (spinner/data lama)
     ROW_MAP_PTK = {};
 
+    // 2. JIKA DATA KOSONG
     if (!data || data.length === 0) {
-        // Init DataTable kosong
+        // JANGAN inject HTML <tr> manual disini. 
+        // Biarkan tbody kosong, nanti DataTables yang akan memunculkan pesan "Tidak ada data" otomatis.
         initDataTablePTK(); 
         return;
     }
 
+    // 3. Sorting Data
     data.sort(function(a, b) {
         var nameA = (a.nama_lengkap || "").toUpperCase();
         var nameB = (b.nama_lengkap || "").toUpperCase();
         return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
     });
 
+    // 4. Build HTML Data
     var html = "";
     data.forEach(function(row, idx) {
         ROW_MAP_PTK[row.id] = row; 
@@ -587,6 +530,7 @@ function renderTabelPTK(data) {
         
         var delay = Math.min(idx * 30, 500); 
 
+        // Pastikan jumlah TD pas 16 biji
         html += `<tr style="opacity: 0; animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; animation-delay: ${delay}ms;">
             <td class="text-center align-middle bg-white font-weight-bold text-muted" 
                 style="position:sticky; left:0; z-index:100; border-right: 2px solid #dee2e6;">${idx + 1}</td>
@@ -595,9 +539,6 @@ function renderTabelPTK(data) {
                 <button class="btn-icon-sultan btn-icon-sultan-danger btn-sm" onclick="hapusDataPTK('${row.id}', '${row.nama_lengkap.replace(/'/g, "\\'")}')" title="Hapus"><i class="fas fa-trash"></i></button>
             </td>
             <td class="text-left font-weight-bold text-dark align-middle">${row.nama_lengkap}</td>
-            
-            <td class="text-center font-weight-bold text-maroon align-middle">${row.jenjang || '-'}</td>
-
             <td class="text-left align-middle pl-3">${row.niy || '-'}</td>
             <td class="text-left align-middle">${ttl}</td>
             <td class="text-left align-middle text-muted" title="NIK Disensor">${nikMask}</td>
@@ -615,88 +556,64 @@ function renderTabelPTK(data) {
     });
     
     tbody.html(html);
+    
+    // 5. Init Ulang DataTable
     initDataTablePTK();
 }
 
 function initDataTablePTK() {
-    if ($.fn.DataTable.isDataTable('#tabelPTK')) { $('#tabelPTK').DataTable().destroy(); }
+    if ($.fn.DataTable.isDataTable('#tabelPTK')) { 
+        $('#tabelPTK').DataTable().destroy(); 
+    }
+
     $('#tabelPTK').DataTable({
-        "ordering": false, "pageLength": 10, "autoWidth": false, "deferRender": true,
-        "scrollX": true, "scrollCollapse": true,
+        "ordering": false, 
+        "pageLength": 10, 
+        "autoWidth": false, 
+        "deferRender": true,
+        "scrollX": true, 
+        "scrollCollapse": true,
         "language": { 
-            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", 
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json",
+            // Pesan Custom saat kosong:
             "emptyTable": "<div class='py-5 text-muted'><i class='fas fa-search fa-3x mb-3 text-light'></i><br>Tidak ada data yang sesuai filter.</div>",
             "zeroRecords": "<div class='py-5 text-muted'><i class='fas fa-search fa-3x mb-3 text-light'></i><br>Tidak ada data yang sesuai pencarian.</div>"
         },
-        "initComplete": function() { setTimeout(function(){ $('#tabelPTK').DataTable().columns.adjust(); }, 300); }
+        "initComplete": function() { 
+            setTimeout(function(){ $('#tabelPTK').DataTable().columns.adjust(); }, 300); 
+        }
     });
 }
 
-function detectJenjangFromUnit(unitName) {
-    if (!unitName) return "";
-    unitName = unitName.toUpperCase();
-    
-    // Urutan prioritas deteksi
-    if (unitName.includes("TK ") || unitName.includes("TAMAN KANAK")) return "TK";
-    if (unitName.includes("KB ") || unitName.includes("KELOMPOK BERMAIN")) return "KB";
-    if (unitName.includes("SPS ") || unitName.includes("SATUAN PAUD")) return "SPS";
-    if (unitName.includes("TPA ") || unitName.includes("TAMAN PENITIPAN")) return "TPA";
-    if (unitName.includes("POS PAUD")) return "SPS"; 
-    if (unitName.includes("RA ")) return "TK"; // RA disamakan TK jika perlu
-    
-    return ""; 
-}
-
 function tambahDataPTK() {
-    // 1. Reset Form
     $('#formPTK')[0].reset();
     $('#inputMode').val('insert');
     $('#inputId').val('');
     $('#inputJurusan').prop('readonly', false);
     
-    // UI Styling
+    // UI Maroon
     $('#headerModalPTK').removeClass('bg-warning').addClass('bg-maroon').removeClass('text-dark').addClass('text-white');
-    $('#titleModalPTK').removeClass('text-dark').addClass('text-white').html('<i class="fas fa-user-plus mr-2"></i>Tambah Data PTK PAUD');
+    $('#titleModalPTK').removeClass('text-dark').addClass('text-white').html('<i class="fas fa-user-plus mr-2"></i>Tambah Data PTK SDS');
     $('#headerModalPTK .close').removeClass('text-dark').addClass('text-white');
     $('#btnSimpanPTK').removeClass('btn-warning').addClass('btn-primary').html('<i class="fas fa-save mr-1"></i> SIMPAN DATA');
+    
+    $('#modalFormPTK').modal('show');
+}
 
-    // 2. FUNGSI PENGISI JENJANG OTOMATIS
-    // Fungsi ini dipanggil setelah data jenjang dipastikan ada
-    var openModalWithJenjang = function(jenjangValue) {
-        if (!jenjangValue && !IS_ADMIN) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Data Sekolah Belum Lengkap',
-                text: 'NPSN Sekolah Anda belum terdaftar di Sheet "Database Sekolah". Hubungi Admin untuk set Jenjang (TK/KB/SPS).'
-            });
-            return; 
-        }
-        
-        // ISI HIDDEN INPUT OTOMATIS
-        // Jika Admin, biarkan kosong dulu (nanti diedit manual jika perlu, atau default TK)
-        // Tapi request Boss menghapus field, jadi kita asumsikan Admin menginput via Edit atau backend.
-        $('#inputJenjang').val(jenjangValue); 
-        
-        // Buka Modal
-        $('#modalFormPTK').modal('show');
-    };
+function cekJurusan() {
+    var pend = $('#selPendidikan').val();
+    var inputJur = $('#inputJurusan');
 
-    // 3. EKSEKUSI (Cek Ketersediaan Data)
-    if (MY_JENJANG && MY_JENJANG !== "") {
-        // KASUS A: Data sudah siap di memori
-        openModalWithJenjang(MY_JENJANG);
+    if (pend === 'SD/MI Sederajat' || pend === 'SMP/MTs Sederajat') {
+        // Jika SD/SMP, Jurusan Readonly dan diisi strip
+        inputJur.val('-').prop('readonly', true);
     } else {
-        // KASUS B: Data belum ada, panggil server dadakan
-        // Tampilkan loading kecil biar user tau sistem sedang bekerja
-        var btn = $('button[onclick="tambahDataPTK()"]');
-        var oldHtml = btn.html();
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
-
-        google.script.run.withSuccessHandler(function(res) {
-            btn.prop('disabled', false).html(oldHtml);
-            MY_JENJANG = res; // Simpan ke global
-            openModalWithJenjang(res);
-        }).getJenjangByNPSN(USER_NPSN);
+        // Selain itu, Jurusan Wajib Diisi
+        inputJur.prop('readonly', false);
+        // Jika isinya cuma strip, kosongkan agar user mengisi
+        if(inputJur.val() === '-') {
+            inputJur.val('');
+        }
     }
 }
 
@@ -710,17 +627,13 @@ function editDataPTK(id) {
     
     // UI Kuning
     $('#headerModalPTK').removeClass('bg-maroon').addClass('bg-warning').removeClass('text-white').addClass('text-dark');
-    $('#titleModalPTK').removeClass('text-white').addClass('text-dark').html('<i class="fas fa-user-edit mr-2"></i>Edit Data PTK PAUD');
+    $('#titleModalPTK').removeClass('text-white').addClass('text-dark').html('<i class="fas fa-user-edit mr-2"></i>Edit Data PTK SDS');
     $('#headerModalPTK .close').removeClass('text-white').addClass('text-dark');
     $('#btnSimpanPTK').removeClass('btn-primary').addClass('btn-warning').html('<i class="fas fa-save mr-1"></i> UPDATE DATA');
 
     // Populate Data
-    // PENTING: Isi Hidden Input Jenjang dengan data yang sudah ada di tabel
-    $('#inputJenjang').val(row.jenjang); 
-    
     $('[name="gelar_depan"]').val(row.gelar_depan);
     $('[name="nama_lengkap"]').val(row.nama_no_gelar);
-    // ... (sisa populate data lainnya biarkan sama) ...
     $('[name="gelar_belakang"]').val(row.gelar_belakang);
     $('[name="niy"]').val(row.niy);
     $('[name="nik"]').val(row.nik);
@@ -731,6 +644,7 @@ function editDataPTK(id) {
     $('[name="alamat"]').val(row.alamat);
     $('[name="pendidikan"]').val(row.pendidikan);
     $('[name="jurusan"]').val(row.jurusan);
+    cekJurusan();
     $('[name="thn_lulus"]').val(row.thn_lulus);
     $('[name="nuptk"]').val(row.nuptk);
     $('[name="hp"]').val(row.hp);
@@ -743,7 +657,6 @@ function editDataPTK(id) {
     $('[name="dapodik"]').val(row.dapodik);
     $('[name="tugtam"]').val(row.tugtam);
     
-    cekJurusan();
     $('#modalFormPTK').modal('show');
 }
 
@@ -768,8 +681,9 @@ function submitFormPTK(e) {
         Swal.fire('Error', err.message, 'error');
     });
 
-    if (mode === 'insert') { runner.insertDataPTKPAUD(formData); } 
-    else { runner.updateDataPTKPAUD(formData); } 
+    // Panggil Backend SDS
+    if (mode === 'insert') { runner.insertDataPTKSDS(formData); } 
+    else { runner.updateDataPTKSDS(formData); } 
 }
 
 function hapusDataPTK(id, nama) {
@@ -809,6 +723,6 @@ function submitHapusPTK() {
     }).withFailureHandler(function(err){
         btn.prop('disabled', false).html(oldText);
         Swal.fire('Error', err.message, 'error');
-    }).deleteDataPTKPAUD(id, alasan, userLogin);
+    }).deleteDataPTKSDS(id, alasan, userLogin);
 }
 </script>

@@ -3,7 +3,7 @@
     <div class="row mb-2">
       <div class="col-sm-12">
         <h5 class="m-0 font-weight-bold">
-          <i class="fas fa-users text-maroon mr-2"></i>Data PTK SD
+          <i class="fas fa-users text-maroon mr-2"></i>Data PTK SD Negeri
         </h5>
         <hr class="style-sultan-solid">
       </div>
@@ -15,6 +15,26 @@
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-12" style="overflow: hidden;"> 
+
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
+                  <li class="mb-1">Apabila ada data yang tidak sesuai, perbaiki melalui tombol <strong><i class="fas fa-pencil-alt text-warning"></i> Edit</strong> di kolom Aksi.</li>
+                  <li>Perbaiki data Anda secara berkala, atau setiap kali ada perubahan data kepegawaian.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="card-sultan p-3 mb-3">
             <div class="d-flex-gap align-items-center">
@@ -49,38 +69,39 @@
             <div class="table-responsive" style="overflow-x: auto;">
               <table id="tabelPTK" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100" style="width:100%">
                 
-                <thead id="headTabelPTK" style="display:none;">
+                <thead id="headTabelPTK">
                   <tr>
                     <th class="text-center align-middle bg-white font-weight-bold text-muted" 
-                        style="position:sticky; left:0; z-index:102; width:50px; border-right: 2px solid #dee2e6; border-bottom: 2px solid #800000 !important;">No.</th>
-                    <th class="text-center align-middle align-middle" style="width:100px; min-width:100px; border-bottom: 2px solid #800000 !important;">Aksi</th>
-                    <th class="text-left align-middle" style="min-width:250px; border-bottom: 2px solid #800000 !important;">Nama Lengkap</th>
+                        style="position:sticky; left:0; z-index:102; width:50px; border-right: 2px solid #dee2e6; border-bottom: 1px solid #800000 !important;">No.</th>
                     
-                    <th class="text-left text-nowrap align-middle pl-3" style="border-bottom: 2px solid #800000 !important;">NIP</th>
-                    <th class="text-left text-nowrap align-middle" style="min-width: 180px; border-bottom: 2px solid #800000 !important;">Tempat, Tgl Lahir</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">NIK</th>
-                    <th class="text-left align-middle" style="min-width: 200px; border-bottom: 2px solid #800000 !important;">Pendidikan Terakhir</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Status Pegawai</th>
-                    <th class="text-left align-middle" style="min-width: 200px; border-bottom: 2px solid #800000 !important;">Jabatan</th>
-                    <th class="text-left align-middle" style="min-width: 150px; border-bottom: 2px solid #800000 !important;">Pangkat/Gol</th>
+                    <th class="text-center align-middle align-middle" style="width:100px; min-width:100px; border-bottom: 1px solid #800000 !important;">Aksi</th>
+                    <th class="text-left align-middle" style="min-width:250px; border-bottom: 1px solid #800000 !important;">Nama Lengkap</th>
                     
-                    <th class="text-center text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Masa Kerja</th>
-                    <th class="text-center text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Kelas</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Tugas</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">NUPTK</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Serdik</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Dapodik</th>
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Tugas Tambahan</th>
+                    <th class="text-left text-nowrap align-middle pl-3" style="border-bottom: 1px solid #800000 !important;">NIP</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Tempat, Tgl Lahir</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">NIK</th>
+                    <th class="text-left align-middle" style="min-width: 200px; border-bottom: 1px solid #800000 !important;">Pendidikan Terakhir</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Status Pegawai</th>
+                    <th class="text-left align-middle" style="border-bottom: 1px solid #800000 !important;">Jabatan</th>
+                    <th class="text-left align-middle" style="min-width: 150px; border-bottom: 1px solid #800000 !important;">Pangkat/Gol</th>
                     
-                    <th class="text-left text-nowrap align-middle" style="border-bottom: 2px solid #800000 !important;">Jabatan Guru/Peg</th>
+                    <th class="text-center text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Masa Kerja</th>
+                    <th class="text-center text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Kelas</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Tugas</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">NUPTK</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Serdik</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Dapodik</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Tugas Tambahan</th>
                     
-                    <th class="small text-muted text-nowrap text-left align-middle" style="border-bottom: 2px solid #800000 !important;">Diinput</th>
-                    <th class="small text-muted text-nowrap text-left align-middle" style="border-bottom: 2px solid #800000 !important;">Diedit</th>
+                    <th class="text-left text-nowrap align-middle" style="border-bottom: 1px solid #800000 !important;">Jabatan Guru/Pegawai</th>
+                    
+                    <th class="small text-muted text-nowrap text-left align-middle" style="border-bottom: 1px solid #800000 !important;">Diinput</th>
+                    <th class="small text-muted text-nowrap text-left align-middle" style="border-bottom: 1px solid #800000 !important;">Diedit</th>
                   </tr>
                 </thead>
 
                 <tbody id="bodyTabelPTK">
-                    <tr><td class="text-center td-spinner" colspan="100%"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Menyiapkan data PTK...</h6></div></td></tr>
+                    <tr><td class="text-center td-spinner" colspan="20"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Menyiapkan data PTK...</h6></div></td></tr>
                 </tbody>
               </table>
             </div>
@@ -126,8 +147,9 @@
 
                             <div class="form-row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label-sultan">NIP (18 Digit / - ) <span class="text-danger">*</span></label>
-                                    <input type="text" name="nip" class="form-control form-control-sultan" placeholder="-" required>
+                                    <label class="form-label-sultan">NIP (18 Digit)</label>
+                                    <input type="text" name="nip" class="form-control form-control-sultan" maxlength="18" pattern="\d*" placeholder="Isi '-' atau kosongkan jika bukan ASN">
+                                    <small class="text-muted font-italic">*Wajib diisi untuk ASN</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label-sultan">NIK (16 Digit) <span class="text-danger">*</span></label>
@@ -374,8 +396,48 @@ function cleanString(str) {
     return String(str).toUpperCase().replace(/\s+/g, ' ').trim();
 }
 
+// --- FUNGSI BARU: FORMAT TANGGAL INDONESIA ---
+function formatTanggalIndo(strDate) {
+    if (!strDate || strDate === '-' || strDate === '') return '-';
+    
+    var dateObj;
+    
+    // Cek format input (String atau Date Object)
+    if (strDate instanceof Date) {
+        dateObj = strDate;
+    } else {
+        // Bersihkan string
+        var cleanStr = String(strDate).trim().replace(/'/g, ''); 
+        
+        // Coba parsing manual jika format yyyy-mm-dd atau yyyy/mm/dd
+        var parts = cleanStr.match(/^(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})$/); // yyyy-mm-dd
+        if (parts) {
+            dateObj = new Date(parts[1], parts[2] - 1, parts[3]);
+        } else {
+            // Coba format dd/mm/yyyy
+            parts = cleanStr.match(/^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{4})$/);
+            if (parts) {
+                dateObj = new Date(parts[3], parts[2] - 1, parts[1]);
+            } else {
+                // Fallback ke parser bawaan JS
+                dateObj = new Date(cleanStr);
+            }
+        }
+    }
+
+    // Validasi apakah tanggal valid
+    if (isNaN(dateObj.getTime())) return strDate; // Kembalikan aslinya jika gagal parse
+
+    var months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    var d = dateObj.getDate();
+    var m = months[dateObj.getMonth()];
+    var y = dateObj.getFullYear();
+
+    return d + ' ' + m + ' ' + y;
+}
+
 $(document).ready(function() {
-    console.log("🚀 Halaman Kelola PTK SD Siap (Delete Feature)");
+    console.log("🚀 Halaman Kelola PTK SD Siap (Date Fix)");
     
     try {
         CURRENT_USER = JSON.parse(localStorage.getItem("siksUser") || "{}");
@@ -451,8 +513,13 @@ function refreshTabelPTK() {
     ALL_DATA_PTK = [];
     CACHE_READY = false;
     
-    if ($.fn.DataTable.isDataTable('#tabelPTK')) { $('#tabelPTK').DataTable().clear().draw(); }
-    $('#bodyTabelPTK').html('<tr><td class="text-center td-spinner" colspan="100%"><div class="sultan-loading-container py-5"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengunduh Database PTK...</h6></div></td></tr>');
+    // 1. Destroy DataTable dulu sebelum manipulasi HTML
+    if ($.fn.DataTable.isDataTable('#tabelPTK')) { 
+        $('#tabelPTK').DataTable().destroy(); 
+    }
+    
+    // 2. Tampilkan Loading (Colspan 20)
+    $('#bodyTabelPTK').html('<tr><td class="text-center td-spinner" colspan="20"><div class="sultan-loading-container py-5"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengunduh Database PTK...</h6></div></td></tr>');
     
     $('#btnCariPTK').prop('disabled', true);
 
@@ -466,7 +533,8 @@ function refreshTabelPTK() {
 
     }).withFailureHandler(function(e){
         $('#btnCariPTK').prop('disabled', false);
-        $('#bodyTabelPTK').html('<tr><td colspan="100%" class="text-danger text-center">Gagal memuat: '+e.message+'</td></tr>');
+        // Error juga colspan 20
+        $('#bodyTabelPTK').html('<tr><td colspan="20" class="text-danger text-center font-weight-bold p-4">Gagal memuat: '+e.message+'</td></tr>');
     }).getDataPTKSD("", ""); 
 }
 
@@ -532,10 +600,11 @@ function applyFilterPTK() {
 }
 
 // =================================================================
-// 4. RENDER TABEL
+// 4. RENDER TABEL (DENGAN FORMAT DATE FIX)
 // =================================================================
 
 function renderTabelPTK(data) {
+    // 1. Destroy DataTable Lama
     if ($.fn.DataTable.isDataTable('#tabelPTK')) { 
         $('#tabelPTK').DataTable().destroy(); 
     }
@@ -544,24 +613,28 @@ function renderTabelPTK(data) {
     tbody.empty();
     ROW_MAP_PTK = {};
 
+    // 2. Jika Data Kosong -> Biarkan tbody kosong, DataTables yg handle pesannya
     if (!data || data.length === 0) {
-        $('#headTabelPTK').show();
-        tbody.html('<tr><td colspan="100%" class="text-center py-5 text-muted"><i class="fas fa-search fa-3x mb-3 text-light"></i><br>Tidak ada data yang sesuai.</td></tr>');
+        // Jangan inject HTML manual di sini agar tidak error _DT_CellIndex
         initDataTablePTK();
         return;
     }
 
+    // 3. Sorting Nama
     data.sort(function(a, b) {
         var nameA = (a.nama_lengkap || "").toUpperCase();
         var nameB = (b.nama_lengkap || "").toUpperCase();
         return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
     });
 
+    // 4. Build HTML
     var html = "";
     data.forEach(function(row, idx) {
         ROW_MAP_PTK[row.id] = row; 
         
-        var ttl = (row.tmp_lahir || '-') + '<br><small class="text-muted">' + (row.tgl_lahir || '-') + '</small>';
+        var tglLahirIndo = formatTanggalIndo(row.tgl_lahir);
+        var ttl = '<span class="font-weight-bold text-dark">' + (row.tmp_lahir || '-') + '</span><br>' + '<small class="text-muted">' + tglLahirIndo + '</small>';
+
         var nikRaw = String(row.nik || "-");
         var nikMask = nikRaw.length > 6 ? nikRaw.substring(0, nikRaw.length - 6) + "******" : nikRaw;
         
@@ -570,15 +643,16 @@ function renderTabelPTK(data) {
         if(row.thn_lulus) pend += '<br><small class="text-muted">Lulus: ' + row.thn_lulus + '</small>';
 
         var jab = (row.jabatan || '-');
-        if(row.tmt_jabatan) jab += '<br><small class="text-muted">TMT: ' + row.tmt_jabatan + '</small>';
+        if(row.tmt_jabatan) jab += '<br><small class="text-muted">TMT: ' + formatTanggalIndo(row.tmt_jabatan) + '</small>';
         var pang = (row.pangkat || '-');
-        if(row.tmt_gol) pang += '<br><small class="text-muted">TMT: ' + row.tmt_gol + '</small>';
+        if(row.tmt_gol) pang += '<br><small class="text-muted">TMT: ' + formatTanggalIndo(row.tmt_gol) + '</small>';
         
         var delay = Math.min(idx * 30, 500); 
 
+        // Pastikan ada 20 TD (Sesuai Header)
         html += `<tr style="opacity: 0; animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; animation-delay: ${delay}ms;">
             <td class="text-center align-middle bg-white font-weight-bold text-muted" 
-                style="position:sticky; left:0; z-index:100; border-right: 2px solid #dee2e6;">${idx + 1}</td>
+                style="position:sticky; left:0; z-index:102; border-right: 2px solid #dee2e6;">${idx + 1}</td>
             
             <td class="text-center align-middle bg-white" style="white-space:nowrap;">
                 <button class="btn-icon-sultan btn-icon-sultan-warning btn-sm mr-1" onclick="editDataPTK('${row.id}')" title="Edit">
@@ -601,36 +675,44 @@ function renderTabelPTK(data) {
             <td class="text-left align-middle small">${pang}</td>
             <td class="text-center align-middle small text-nowrap">${row.mkg || '-'}</td>
             <td class="text-center align-middle">${row.kelas_jab || '-'}</td>
-            <td class="text-left align-middle small">${row.tugas || '-'}</td>
+            <td class="text-left align-middle">${row.tugas || '-'}</td>
             <td class="text-left align-middle">${row.nuptk || '-'}</td>
             <td class="text-left align-middle">${row.serdik || '-'}</td>
             <td class="text-left align-middle">${row.dapodik || '-'}</td>
-            <td class="text-left align-middle small">${row.tugtam || '-'}</td>
-            <td class="text-left align-middle font-weight-bold text-primary">${row.jabatan_guru || '-'}</td>
+            <td class="text-left align-middle">${row.tugtam || '-'}</td>
+            <td class="text-left align-middle small" style="width:200px; max-width:200px; white-space:normal; word-wrap:break-word; overflow-wrap:break-word;">${row.jabatan_guru || '-'}</td>
             <td class="text-left align-middle"><div style="line-height:1.2; font-size:11px;"><span class="d-block font-weight-bold">${row.diinput||'-'}</span><span class="text-muted">${row.user_input||'-'}</span></div></td>
             <td class="text-left align-middle"><div style="line-height:1.2; font-size:11px;"><span class="d-block font-weight-bold">${row.diedit||'-'}</span><span class="text-muted">${row.user_edit||'-'}</span></div></td>
         </tr>`;
     });
 
-    $('#headTabelPTK').show();
+    // $('#headTabelPTK').show(); // Tidak perlu show manual karena display:none sudah dihapus
     tbody.html(html);
     
-    if($('#animStyle').length === 0) $('head').append('<style id="animStyle">@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }</style>');
-
-    if($.fn.DataTable.isDataTable('#tabelPTK')) { $('#tabelPTK').DataTable().destroy(); }
     initDataTablePTK();
 }
 
 function initDataTablePTK() {
+    if ($.fn.DataTable.isDataTable('#tabelPTK')) { 
+        $('#tabelPTK').DataTable().destroy(); 
+    }
+
     var table = $('#tabelPTK').DataTable({
-        "ordering": false, "pageLength": 10, "autoWidth": false, "deferRender": true, 
-        "scrollX": true, "scrollCollapse": true,
-        "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "emptyTable": "Tidak ada data yang sesuai." },
-        "drawCallback": function(settings) {
-            $('.dataTables_scrollHeadInner table thead th').css({'border-bottom': '2px solid #800000'});
-            setTimeout(function(){ $('#tabelPTK').DataTable().columns.adjust(); }, 100);
+        "ordering": false,
+        "pageLength": 10,
+        "autoWidth": false,
+        "deferRender": true,
+        "scrollX": true,
+        "scrollCollapse": true,
+        "language": { 
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", 
+            // Custom Message saat kosong
+            "emptyTable": "<div class='py-5 text-muted'><i class='fas fa-search fa-3x mb-3 text-light'></i><br>Tidak ada data yang sesuai filter.</div>",
+            "zeroRecords": "<div class='py-5 text-muted'><i class='fas fa-search fa-3x mb-3 text-light'></i><br>Tidak ada data yang sesuai pencarian.</div>"
         },
-        "initComplete": function() { setTimeout(function(){ $('#tabelPTK').DataTable().columns.adjust(); }, 300); }
+        "initComplete": function() { 
+            setTimeout(function(){ $('#tabelPTK').DataTable().columns.adjust(); }, 300); 
+        }
     });
 }
 
@@ -648,28 +730,21 @@ function tambahDataPTK() {
     var btn = $('#btnSimpanPTK');
     var closeBtn = $('#headerModalPTK .close');
 
-    // 1. Reset Warna Background
     header.removeClass('bg-warning bg-primary').addClass('bg-maroon');
-    
-    // 2. Reset Warna Teks
     header.removeClass('text-dark').addClass('text-white');
     title.removeClass('text-dark').addClass('text-white');
     closeBtn.removeClass('text-dark').addClass('text-white');
     
-    // 3. Set Judul & Icon
     title.html('<i class="fas fa-user-plus mr-2"></i>Tambah Data PTK');
-    
-    // 4. Set Tombol Simpan
     btn.removeClass('btn-warning').addClass('btn-primary').html('<i class="fas fa-save mr-1"></i> SIMPAN DATA');
     
-    // 5. Logic Form Lainnya
     $('#wrapperPangkat').hide(); 
     toggleJurusanField(); 
     
     $('#modalFormPTK').modal('show');
 }
 
-function editDataPTK(id, nama) { // Tambahkan param nama jika belum (untuk konsistensi tombol hapus, tapi di edit tidak wajib)
+function editDataPTK(id, nama) {
     var row = ROW_MAP_PTK[id];
     if(!row) return;
 
@@ -683,18 +758,12 @@ function editDataPTK(id, nama) { // Tambahkan param nama jika belum (untuk konsi
     var btn = $('#btnSimpanPTK');
     var closeBtn = $('#headerModalPTK .close');
 
-    // 1. Reset Warna Background (Hapus Maroon!)
     header.removeClass('bg-maroon bg-primary').addClass('bg-warning');
-    
-    // 2. Reset Warna Teks (Jadi Hitam)
     header.removeClass('text-white').addClass('text-dark');
     title.removeClass('text-white').addClass('text-dark');
     closeBtn.removeClass('text-white').addClass('text-dark');
     
-    // 3. Set Judul & Icon
     title.html('<i class="fas fa-user-edit mr-2"></i>Edit Data PTK');
-    
-    // 4. Set Tombol Update
     btn.removeClass('btn-primary').addClass('btn-warning').html('<i class="fas fa-save mr-1"></i> UPDATE DATA');
 
     // --- POPULATE DATA ---
@@ -705,7 +774,12 @@ function editDataPTK(id, nama) { // Tambahkan param nama jika belum (untuk konsi
     $('[name="nip"]').val(row.nip);
     $('[name="nik"]').val(row.nik);
     $('[name="tmp_lahir"]').val(row.tmp_lahir);
-    $('[name="tgl_lahir"]').val(row.tgl_lahir);
+    
+    // Format tanggal untuk input type="date" harus yyyy-mm-dd
+    // Gunakan fungsi formatTanggalIndo tapi balik ke yyyy-mm-dd untuk input
+    // Atau ambil raw data karena input date butuh raw yyyy-mm-dd
+    $('[name="tgl_lahir"]').val(row.tgl_lahir); 
+    
     $('[name="lp"]').val(row.lp);
     $('[name="agama"]').val(row.agama);
     $('[name="alamat"]').val(row.alamat);
@@ -724,7 +798,6 @@ function editDataPTK(id, nama) { // Tambahkan param nama jika belum (untuk konsi
     $('[name="tmt_gol"]').val(row.tmt_gol);
     $('[name="tugas"]').val(row.tugas);
     
-    // MKG Parsing
     if(row.mkg && row.mkg !== "-") {
         var parts = row.mkg.match(/(\d+) Tahun (\d+) Bulan/);
         if(parts) { $('[name="mkg_thn"]').val(parts[1]); $('[name="mkg_bln"]').val(parts[2]); }
@@ -765,12 +838,12 @@ function submitFormPTK(e) {
 }
 
 // =================================================================
-// 6. CRUD: HAPUS DATA (REVISI MODAL)
+// 6. CRUD: HAPUS DATA
 // =================================================================
 
 function hapusDataPTK(id, nama) {
     $('#idHapusPTK').val(id);
-    $('#namaHapusPTK').text(nama); // Tampilkan Nama di Alert Kuning
+    $('#namaHapusPTK').text(nama);
     $('#alasanHapus').val('');
     $('#kodeHapus').val('');
     $('#modalHapusPTK').modal('show');
@@ -781,34 +854,22 @@ function submitHapusPTK() {
     var alasan = $('#alasanHapus').val();
     var kode = $('#kodeHapus').val();
     
-    // 1. Validasi Input Alasan
     if (!alasan.trim()) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Alasan Kosong',
-            text: 'Mohon isikan alasan penghapusan data.'
-        });
+        Swal.fire({ icon: 'warning', title: 'Alasan Kosong', text: 'Mohon isikan alasan penghapusan data.' });
         return;
     }
     
-    // 2. Validasi Kode Keamanan (RAHASIA: YYYYMMDD)
     var today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0'); 
     var yyyy = today.getFullYear();
-    var correctCode = yyyy + mm + dd; // Contoh: 20260213
+    var correctCode = yyyy + mm + dd;
 
     if (kode !== correctCode) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Akses Ditolak',
-            text: 'Kode keamanan yang Anda masukkan salah. Silakan hubungi Admin Korwil.',
-            footer: 'Kode berubah setiap hari demi keamanan data.'
-        });
+        Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: 'Kode keamanan yang Anda masukkan salah.', footer: 'Hubungi admin Korwil.' });
         return;
     }
 
-    // 3. Eksekusi Backend
     var btn = $('#modalHapusPTK .btn-danger');
     var oldText = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
@@ -820,13 +881,7 @@ function submitHapusPTK() {
         $('#modalHapusPTK').modal('hide');
         
         if(res === 'Sukses') {
-            Swal.fire({ 
-                icon: 'success', 
-                title: 'Data Terhapus', 
-                text: 'Data berhasil dipindahkan ke arsip non-aktif.', 
-                timer: 2000, 
-                showConfirmButton: false 
-            });
+            Swal.fire({ icon: 'success', title: 'Data Terhapus', text: 'Data berhasil dipindahkan ke arsip non-aktif.', timer: 2000, showConfirmButton: false });
             refreshTabelPTK();
         } else {
             Swal.fire('Gagal', res, 'error');

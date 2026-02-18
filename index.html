@@ -116,7 +116,6 @@
       if (!user) return;
       var displayName = user.nama_lengkap || user.nama || user.username || "User";
       
-      // Setup Foto
       var photoUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(displayName) + "&background=random&color=fff";
       if (user.photo && user.photo.trim() !== "") {
           if (user.photo.startsWith("http")) photoUrl = user.photo;
@@ -136,12 +135,52 @@
   }
 
   // ============================================
-  // 2. FUNGSI LOAD HALAMAN (ROUTING UTAMA)
+  // 2. FUNGSI UPDATE BREADCRUMB
+  // ============================================
+  function updateBreadcrumb($activeLink, pageName) {
+      var homeHtml = '<span style="cursor:pointer" class="btn-home-crumb"><i class="fas fa-home mr-1"></i> Beranda</span>';
+      var separator = ' <i class="fas fa-angle-right mx-2 text-white-50" style="font-size: 0.8em; vertical-align: middle;"></i> ';
+      var breadHtml = homeHtml;
+
+      if (pageName !== 'home') {
+          // 1. Cucu (Halaman Aktif)
+          var currentTitle = $activeLink.find('p').clone().children().remove().end().text().trim(); 
+          
+          // 2. Bapak (Menu Induk)
+          var $parentTree = $activeLink.closest('.nav-treeview');
+          if ($parentTree.length > 0) {
+              var $parentLi = $parentTree.closest('.nav-item');
+              var $parentLink = $parentLi.children('.nav-link');
+              
+              if ($parentLink.length > 0) {
+                  var parentTitle = $parentLink.find('p').clone().children().remove().end().text().trim();
+                  
+                  // 3. Kakek (Menu Induk Level 2)
+                  var $grandParentTree = $parentLi.closest('.nav-treeview');
+                  if ($grandParentTree.length > 0) {
+                       var $grandParentLi = $grandParentTree.closest('.nav-item');
+                       var $grandParentLink = $grandParentLi.children('.nav-link');
+                       if ($grandParentLink.length > 0) {
+                           var grandParentTitle = $grandParentLink.find('p').clone().children().remove().end().text().trim();
+                           breadHtml += separator + '<span class="text-white-50">' + grandParentTitle + '</span>';
+                       }
+                  }
+                  breadHtml += separator + '<span class="text-white-50">' + parentTitle + '</span>';
+              }
+          }
+          breadHtml += separator + '<span class="font-weight-bold text-white">' + (currentTitle || pageName) + '</span>';
+      }
+      
+      $('#page-breadcrumb').html(breadHtml);
+  }
+
+  // ============================================
+  // 3. FUNGSI LOAD HALAMAN (ROUTING)
   // ============================================
   function loadContent(pageName) {
     if(!pageName) return;
     
-    // Highlight Menu Sidebar
+    // Highlight Menu
     $('.nav-link').removeClass('active'); 
     var $activeLink = $('a[data-page="' + pageName + '"]');
     $activeLink.addClass('active');
@@ -152,23 +191,20 @@
         $parentTree.show();
         $parentTree.closest('.nav-item').addClass('menu-open');
         $parentTree.prev('.nav-link').addClass('active');
+        
+        var $grandParentTree = $parentTree.closest('.nav-item').closest('.nav-treeview');
+        if ($grandParentTree.length > 0) {
+            $grandParentTree.show();
+            $grandParentTree.closest('.nav-item').addClass('menu-open');
+            $grandParentTree.prev('.nav-link').addClass('active');
+        }
     }
 
-    // Panggil Server (TANPA SPINNER MANUAL, BIARKAN POPUP BAWAAN)
+    // Panggil Server
     google.script.run
       .withSuccessHandler(function(html) {
         $('#app-content').html(html); 
-        
-        // Update Breadcrumb
-        var homeBtn = '<span style="cursor:pointer" class="btn-home-crumb"><i class="fas fa-home mr-1"></i> Beranda</span>';
-        var pageTitle = $activeLink.find('p').text() || pageName;
-        pageTitle = pageTitle.replace('<i class="right fas fa-angle-left"></i>', '').trim();
-        
-        if(pageName !== 'home') {
-            $('#page-breadcrumb').html(homeBtn + ' <i class="fas fa-chevron-right mx-2 small text-muted"></i> <span class="font-weight-bold text-white">' + pageTitle + '</span>');
-        } else {
-            $('#page-breadcrumb').html(homeBtn);
-        }
+        updateBreadcrumb($activeLink, pageName);
       })
       .withFailureHandler(function(err) {
         $('#app-content').html('<div class="alert alert-danger m-3">Gagal memuat halaman: ' + err.message + '</div>');
@@ -177,57 +213,22 @@
   }
 
   // ============================================
-  // 3. FUNGSI LOGOUT (SOFT LOGOUT - ANTI BLANK)
+  // 4. LOGOUT (RESET UI)
   // ============================================
-  function handleLogout() {
-    Swal.fire({
-      title: 'Keluar Aplikasi?', text: "Sesi Anda akan diakhiri.", icon: 'warning',
-      showCancelButton: true, confirmButtonColor: '#800000', cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Ya, Logout', cancelButtonText: 'Batal'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // 1. Hapus Sesi Lokal
-        localStorage.removeItem("siksUser");
-        
-        // 2. Efek Transisi (Fade Out Dashboard -> Fade In Login)
-        $('#konten-aplikasi').fadeOut(400, function() {
-            // Reset Form Login
-            $('#username').val('');
-            $('#password').val('');
-            
-            // Kembalikan Tombol Login ke Kondisi Awal (Bukan Hijau)
-            $('#tombolLogin').prop('disabled', false)
-                .html('<i class="fas fa-sign-in-alt mr-2"></i> MASUK APLIKASI')
-                .css('background', ''); 
 
-            // Tampilkan Wrapper Login
-            $('#gerbang-login').show();
-            $('.login-screen-wrapper').fadeIn(400); 
-        });
-
-        // 3. Logout Server (Background Process)
-        google.script.run.processLogout();
-      }
-    });
-  }
 
   // ============================================
-  // 4. INISIALISASI (DOCUMENT READY)
+  // 5. INISIALISASI
   // ============================================
   $(document).ready(function() {
     
-    // A. CEK LOGIN
     var userLocal = localStorage.getItem("siksUser");
     var user = userLocal ? JSON.parse(userLocal) : null;
 
     if (user) {
-        // SUDAH LOGIN
-        $('#gerbang-login').hide(); 
-        $('#konten-aplikasi').show(); 
-        updateNavbarUI(user);
-        loadContent('home'); 
+        $('#gerbang-login').hide(); $('#konten-aplikasi').show(); 
+        updateNavbarUI(user); loadContent('home'); 
         
-        // Auto Repair (Background)
         if (!user.nama_lengkap || user.nama_lengkap === user.username) {
              google.script.run.withSuccessHandler(function(res){
                 if(res.found) {
@@ -240,26 +241,29 @@
             }).getUserProfileByName(user.username);
         }
     } else {
-        // BELUM LOGIN
-        $('#konten-aplikasi').hide();
-        $('#gerbang-login').show();
+        $('#konten-aplikasi').hide(); $('#gerbang-login').show();
     }
 
-    // B. EVENT HANDLER SIDEBAR
+    // --- PERBAIKAN UTAMA ACCORDION ---
     $(document).on('click', '.nav-sidebar .nav-link', function(e) {
-        e.preventDefault(); // Wajib untuk mencegah refresh
-
         var pageName = $(this).data('page'); 
 
         if (pageName) {
+            // JIKA MENU PUNYA HALAMAN (ANAK) -> STOP RELOAD & LOAD PAGE
+            e.preventDefault(); 
             loadContent(pageName);
+            
+            // Tutup sidebar di HP
             if ($(window).width() < 768) {
                 $('body').removeClass('sidebar-open').addClass('sidebar-closed sidebar-collapse');
             }
-        } 
+        } else {
+            // JIKA MENU TIDAK PUNYA HALAMAN (BAPAK/ACCORDION) 
+            // -> JANGAN preventDefault. Biarkan AdminLTE menangani expand/collapse.
+            // AdminLTE secara otomatis menangani href="#" agar tidak lompat ke atas.
+        }
     });
 
-    // C. TOMBOL BREADCRUMB HOME
     $(document).on('click', '.btn-home-crumb', function(e) {
         e.preventDefault();
         loadContent('home');

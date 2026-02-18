@@ -1084,12 +1084,18 @@ function getLapbulMetric_PAUD(tahun, bulan) {
   return processSheet(CONF_LAPBUL.paud, "Status PAUD", tahun, bulan, ["TK", "KB", "SPS"]);
 }
 
-// CORE PROCESSOR
+// CORE PROCESSOR (UPDATED: RETURN LIST BELUM LAPOR)
 function processSheet(idSS, sheetName, tahun, bulan, targetJenjangArray) {
-  // Struktur Result Dinamis sesuai target jenjang
+  // Struktur Result Dinamis
   var result = { recent: [] };
+  
   targetJenjangArray.forEach(function(j) {
-    result[j.toLowerCase()] = { total:0, sudah:0, belum:0, persen:0, disetujui:0, diproses:0, revisi:0, ditolak:0 };
+    // Tambahkan array 'listBelum' di sini
+    result[j.toLowerCase()] = { 
+        total:0, sudah:0, belum:0, persen:0, 
+        disetujui:0, diproses:0, revisi:0, ditolak:0,
+        listBelum: [] // <--- ARRAY PENAMPUNG NAMA
+    };
   });
 
   try {
@@ -1100,20 +1106,20 @@ function processSheet(idSS, sheetName, tahun, bulan, targetJenjangArray) {
     var data = sheet.getDataRange().getValues();
     if (data.length < 2) return JSON.stringify(result);
 
-    var idxStatus = parseInt(bulan) + 3; // Jan(1) = Col 4 (Index 3 + 1) -> Index Array dimulai dari 0, jadi +3 pas.
+    var idxStatus = parseInt(bulan) + 3; 
 
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
       var rTahun = String(row[3]).trim(); 
       var rJenjang = String(row[2]).trim().toUpperCase();
 
-      // Filter Tahun
       if (rTahun !== String(tahun)) continue;
       
-      // Filter Jenjang (Cek apakah jenjang baris ini ada di targetArray)
-      if (targetJenjangArray.indexOf(rJenjang) === -1) continue;
+      // Fix: Pastikan jenjang cocok persis (misal 'SD' tidak boleh masuk ke 'SPS')
+      var indexJenjang = targetJenjangArray.indexOf(rJenjang);
+      if (indexJenjang === -1) continue;
 
-      var key = rJenjang.toLowerCase(); // 'tk', 'kb', 'sps', 'sd'
+      var key = rJenjang.toLowerCase(); 
       var stats = result[key];
       
       stats.total++;
@@ -1121,9 +1127,11 @@ function processSheet(idSS, sheetName, tahun, bulan, targetJenjangArray) {
       var rawStatus = String(row[idxStatus] || "").trim();
       var st = rawStatus.toLowerCase();
 
-      // LOGIKA STATUS
+      // LOGIKA BELUM LAPOR
       if (st === "" || st === "-" || st === "0") {
         stats.belum++;
+        // MASUKKAN NAMA SEKOLAH KE LIST (Kolom A / Index 0)
+        stats.listBelum.push(row[0]); 
       } else {
         stats.sudah++;
         
@@ -1132,22 +1140,18 @@ function processSheet(idSS, sheetName, tahun, bulan, targetJenjangArray) {
         else if (st.includes('ok') || st.includes('setuju') || st.includes('valid')) stats.disetujui++;
         else stats.diproses++;
 
-        // Push ke Recent (Max 10 per request biar ringan)
         if (result.recent.length < 10) {
-           result.recent.push({
-             sekolah: row[0],
-             jenjang: rJenjang,
-             status: rawStatus
-           });
+           result.recent.push({ sekolah: row[0], jenjang: rJenjang, status: rawStatus });
         }
       }
     }
 
-    // Hitung Persentase Final
     targetJenjangArray.forEach(function(j) {
        var k = j.toLowerCase();
        var s = result[k];
        s.persen = s.total === 0 ? 0 : Math.round((s.sudah / s.total) * 100);
+       // Sortir nama sekolah biar rapi (A-Z)
+       s.listBelum.sort(); 
     });
 
   } catch (e) { result.error = e.toString(); }

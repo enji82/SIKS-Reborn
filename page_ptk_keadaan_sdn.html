@@ -1,0 +1,289 @@
+<div class="content-header pb-0">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h5 class="m-0 font-weight-bold">
+          <i class="fas fa-chart-area text-maroon mr-2"></i>Keadaan PTK SD Negeri
+        </h5>
+        <hr class="style-sultan-solid">
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-12">
+
+        <div class="card-sultan mb-3">
+          <div class="card-body py-2 px-3 border-left-dark">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+              <div class="d-flex align-items-center text-maroon font-weight-bold">
+                <i class="fas fa-info-circle mr-2"></i> Informasi
+              </div>
+              <i class="fas fa-chevron-down text-muted icon-sm"></i>
+            </div>
+            <div id="infoCollapse" class="collapse">
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <ul class="mb-0 pl-3">
+                  <li class="mb-1">Data jumlah PTK bersumber dari menu Daftar Nama PTK</li>
+                  <li>Apabila jumlah tidak sesuai, periksa kembali data PTK.</li>
+                  <li>Baris paling bawah menunjukkan total akumulasi per kolom.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-sultan p-3 mb-3">
+            <div class="d-flex-gap align-items-center">
+                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="loadKeadaanPTK()" title="Refresh Data">
+                   <i class="fas fa-sync-alt text-maroon"></i>
+                </button>
+
+                <select id="filterUnit" class="form-control form-control-sultan input-auto-width max-w-250">
+                    <option value="SEMUA">- Semua Unit Kerja -</option>
+                </select>
+
+                <div class="divider-vertical"></div>
+
+                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="filterTampilan()" title="Terapkan Filter">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-sultan w-100 overflow-hidden">
+          <div class="card-body p-0 w-100">
+            <div class="table-responsive" style="overflow-x: auto; max-height: 70vh; position: relative;">
+              <table class="table table-bordered table-hover table-sm text-nowrap mb-0 text-center" style="width:100%; font-size: 0.85rem;">
+                
+                <thead id="headKeadaan" class="font-weight-bold text-dark" style="display:none;">
+                  
+                  <tr>
+                    <th rowspan="2" class="align-middle bg-white text-maroon text-left pl-3" style="position:sticky; left:0; z-index:50; border-right: 2px solid #dee2e6; border-bottom: 2px solid #800000; min-width:250px;">Unit Kerja</th>
+                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">NPSN</th>
+                    
+                    <th colspan="2" class="align-middle" style="background-color: #e3f2fd; border-bottom: 1px solid #90caf9;">Kepala Sekolah</th>
+                    <th colspan="4" class="align-middle" style="background-color: #e8f5e9; border-bottom: 1px solid #a5d6a7;">Guru Kelas</th>
+                    <th colspan="4" class="align-middle" style="background-color: #fff3e0; border-bottom: 1px solid #ffcc80;">Guru PJOK</th>
+                    <th colspan="4" class="align-middle" style="background-color: #f3e5f5; border-bottom: 1px solid #ce93d8;">Guru PAI</th>
+                    <th colspan="4" class="align-middle" style="background-color: #fce4ec; border-bottom: 1px solid #f48fb1;">Guru PA Kristen</th>
+                    <th colspan="2" class="align-middle" style="background-color: #e0f7fa; border-bottom: 1px solid #80deea;">Guru B.Ing</th>
+                    
+                    <th colspan="4" class="align-middle" style="background-color: #fffde7; border-bottom: 1px solid #fff59d;">Pengelola Umum Ops</th>
+                    <th colspan="4" class="align-middle" style="background-color: #e0f2f1; border-bottom: 1px solid #80cbc4;">Operator Layanan Ops</th>
+                    <th colspan="4" class="align-middle" style="background-color: #e8eaf6; border-bottom: 1px solid #9fa8da;">Pengelola Layanan Ops</th>
+                    <th colspan="4" class="align-middle" style="background-color: #f9fbe7; border-bottom: 1px solid #e6ee9c;">Penata Layanan Ops</th>
+                    <th colspan="4" class="align-middle" style="background-color: #efebe9; border-bottom: 1px solid #bcaaa4;">Admin Perkantoran</th>
+                    
+                    <th rowspan="2" class="align-middle bg-light" style="border-bottom: 2px solid #800000;">Penjaga<br>PTT</th>
+                    <th rowspan="2" class="align-middle bg-light" style="border-bottom: 2px solid #800000;">TAS<br>PTT</th>
+                    <th rowspan="2" class="align-middle bg-light" style="border-bottom: 2px solid #800000;">Perpus<br>PTT</th>
+                    
+                    <th colspan="3" class="align-middle" style="background-color: #e9ecef; border-bottom: 1px solid #ced4da;">Jumlah PNS</th>
+                    <th colspan="3" class="align-middle" style="background-color: #dee2e6; border-bottom: 1px solid #adb5bd;">Jumlah PPPK</th>
+                    <th colspan="2" class="align-middle" style="background-color: #e9ecef; border-bottom: 1px solid #ced4da;">Jml PPPK PW</th>
+                    <th colspan="2" class="align-middle" style="background-color: #dee2e6; border-bottom: 1px solid #adb5bd;">Jml GTT/PTT</th>
+                    
+                    <th rowspan="2" class="align-middle" style="background-color: #ffecb3; border-bottom: 2px solid #800000;">TOTAL<br>PTK</th>
+                  </tr>
+
+                  <tr class="small">
+                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">PPPK</th>
+                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #fff3e0; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #f3e5f5; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #fce4ec; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #fce4ec; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #fce4ec; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #fce4ec; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #e0f7fa; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #e0f7fa; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #fffde7; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #fffde7; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #fffde7; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #fffde7; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #e0f2f1; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #e0f2f1; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #e0f2f1; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #e0f2f1; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #e8eaf6; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #e8eaf6; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #e8eaf6; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #e8eaf6; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #f9fbe7; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #f9fbe7; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #f9fbe7; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #f9fbe7; border-bottom: 2px solid #800000;">GTT</th>
+                    <th style="background-color: #efebe9; border-bottom: 2px solid #800000;">PNS</th><th style="background-color: #efebe9; border-bottom: 2px solid #800000;">PPPK</th><th style="background-color: #efebe9; border-bottom: 2px solid #800000;">PW</th><th style="background-color: #efebe9; border-bottom: 2px solid #800000;">GTT</th>
+                    
+                    <th style="background-color: #e9ecef; border-bottom: 2px solid #800000;">KS</th><th style="background-color: #e9ecef; border-bottom: 2px solid #800000;">Guru</th><th style="background-color: #e9ecef; border-bottom: 2px solid #800000;">Tendik</th>
+                    <th style="background-color: #dee2e6; border-bottom: 2px solid #800000;">KS</th><th style="background-color: #dee2e6; border-bottom: 2px solid #800000;">Guru</th><th style="background-color: #dee2e6; border-bottom: 2px solid #800000;">Tendik</th>
+                    <th style="background-color: #e9ecef; border-bottom: 2px solid #800000;">Guru</th><th style="background-color: #e9ecef; border-bottom: 2px solid #800000;">Tendik</th>
+                    <th style="background-color: #dee2e6; border-bottom: 2px solid #800000;">Guru</th><th style="background-color: #dee2e6; border-bottom: 2px solid #800000;">Tendik</th>
+                  </tr>
+                </thead>
+
+                <tbody id="bodyKeadaan">
+                    <tr>
+                        <td class="text-center td-spinner" colspan="100%">
+                            <div class="sultan-loading-container">
+                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                                <h6 class="text-muted font-weight-bold">Menyiapkan data...</h6>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <tfoot id="footKeadaan" class="bg-light font-weight-bold" style="border-top: 3px solid #800000; display:none;">
+                    </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+var RAW_DATA_KEADAAN = [];
+
+$(document).ready(function() {
+    loadKeadaanPTK();
+});
+
+function loadKeadaanPTK() {
+    // 1. KUNCI HEADER & FOOTER SEGERA (SEMBUNYIKAN)
+    $('#headKeadaan').hide();
+    $('#footKeadaan').hide();
+    
+    // 2. MUNCULKAN SPINNER DI BODY
+    var loadingHtml = '<tr><td class="text-center td-spinner" colspan="100%">' + 
+                      '<div class="sultan-loading-container">' + 
+                      '<i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>' + 
+                      '<h6 class="text-muted font-weight-bold">Mengambil data server...</h6>' + 
+                      '</div></td></tr>';
+                      
+    $('#bodyKeadaan').html(loadingHtml);
+    $('#btnCari').prop('disabled', true);
+
+    google.script.run
+        .withSuccessHandler(function(data) {
+            $('#btnCari').prop('disabled', false);
+            RAW_DATA_KEADAAN = data || [];
+            
+            if ($('#filterUnit option').length <= 1) {
+                var uniqueUnit = [...new Set(RAW_DATA_KEADAAN.map(item => item[0]))].sort();
+                var h = '<option value="SEMUA">- Semua Unit Kerja -</option>';
+                uniqueUnit.forEach(u => { if(u) h += `<option value="${u}">${u}</option>`; });
+                $('#filterUnit').html(h);
+            }
+
+            filterTampilan();
+        })
+        .withFailureHandler(function(err) {
+            $('#btnCari').prop('disabled', false);
+            $('#bodyKeadaan').html(`<tr><td class="text-center text-danger p-5 font-weight-bold" colspan="100%"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${err.message}</td></tr>`);
+        })
+        .getDataKeadaanGTK();
+}
+
+function filterTampilan() {
+    var filter = $('#filterUnit').val();
+    var filteredData = RAW_DATA_KEADAAN;
+
+    if (filter && filter !== "SEMUA") {
+        filteredData = RAW_DATA_KEADAAN.filter(row => row[0] === filter);
+    }
+
+    renderTable(filteredData);
+}
+
+// --- WARNA KOLOM (TETAP) ---
+function getColumnColor(index) {
+    if (index >= 2 && index <= 3) return "#f4faff"; 
+    if (index >= 4 && index <= 7) return "#f1f8e9"; 
+    if (index >= 8 && index <= 11) return "#fff8e1"; 
+    if (index >= 12 && index <= 15) return "#f3e5f5"; 
+    if (index >= 16 && index <= 19) return "#fce4ec"; 
+    if (index >= 20 && index <= 21) return "#e0f7fa"; 
+    if (index >= 22 && index <= 25) return "#fffde7"; 
+    if (index >= 26 && index <= 29) return "#e0f2f1"; 
+    if (index >= 30 && index <= 33) return "#e8eaf6"; 
+    if (index >= 34 && index <= 37) return "#f9fbe7"; 
+    if (index >= 38 && index <= 41) return "#efebe9"; 
+    if (index >= 42 && index <= 44) return "#f8f9fa"; 
+    if (index >= 45 && index <= 54) return "#f1f3f5"; 
+    if (index === 55) return "#fff8e1"; 
+    return "#ffffff";
+}
+
+function renderTable(data) {
+    var tbody = $('#bodyKeadaan');
+    var tfoot = $('#footKeadaan');
+    var thead = $('#headKeadaan');
+    
+    tbody.empty();
+    tfoot.empty();
+
+    if (data.length === 0) {
+        thead.show(); 
+        tbody.html('<tr><td class="text-center p-5 text-muted" colspan="100%">Data tidak ditemukan.</td></tr>');
+        return;
+    }
+
+    // Reset style wrapper (Hapus border wrapper agar bersih)
+    var $tbl = $('#bodyKeadaan').parent('table');
+    $tbl.css({ 'border-right': 'none', 'border-left': 'none', 'border-top': 'none', 'border-bottom': 'none' });
+
+    var colTotals = new Array(56).fill(0); 
+
+    var html = "";
+    data.forEach(function(row) {
+        html += '<tr class="tr-animasi">';
+        
+        // Col A: Unit (Sticky Left)
+        html += `<td class="font-weight-bold bg-white text-dark text-left pl-3 align-middle" 
+                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">${row[0] || '-'}</td>`;
+        
+        // Col B: NPSN
+        html += `<td class="text-center align-middle">${row[1] || '-'}</td>`;
+
+        // Col C s/d BD
+        for (var i = 2; i <= 55; i++) {
+            var val = parseInt(row[i]) || 0;
+            colTotals[i] += val; 
+
+            var display = (val === 0) ? '<span class="text-black-50" style="opacity:0.2">-</span>' : val;
+            var weight = (val > 0) ? 'font-weight-bold text-dark' : '';
+            var bgColor = getColumnColor(i);
+            var style = `background-color: ${bgColor};`;
+            
+            if (i === 55) {
+                // Border Kiri: Kuning. Kanan: BERSIH.
+                style += 'border-left: 2px solid #ffecb3;'; 
+            }
+
+            html += `<td class="text-center align-middle ${weight}" style="${style}">${display}</td>`;
+        }
+        html += '</tr>';
+    });
+
+    tbody.html(html);
+
+    // --- RENDER FOOTER ---
+    var footHtml = '<tr>';
+    footHtml += `<td class="bg-light text-maroon text-right font-weight-bold pr-3 align-middle" 
+                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">TOTAL JUMLAH</td>`;
+    
+    footHtml += `<td class="bg-light"></td>`;
+
+    for (var i = 2; i <= 55; i++) {
+        var val = colTotals[i];
+        var bgColor = getColumnColor(i); 
+        var style = `background-color: ${bgColor};`;
+        
+        if (i === 55) {
+            style += 'border-left: 2px solid #ffecb3;'; 
+        }
+        
+        footHtml += `<td class="text-center align-middle font-weight-bold text-maroon" style="${style}">${val}</td>`;
+    }
+    footHtml += '</tr>';
+    tfoot.html(footHtml);
+
+    // 3. MUNCULKAN SEMUA SEKALIGUS (SNAP! TANPA FADEIN LAMBAT)
+    // Gunakan .show() agar perilakunya sama persis dengan DataTables yang 'muncul tiba-tiba' setelah loading.
+    thead.show();
+    tfoot.show();
+}
+</script>
