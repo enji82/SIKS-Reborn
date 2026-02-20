@@ -99,10 +99,18 @@
                 </div>
             </div>
         </div>
+
         <div class="col-12 mt-3">
-            <h6 class="font-weight-bold text-maroon mb-3"><i class="fas fa-exclamation-circle mr-2"></i>Daftar Sekolah Belum Lapor</h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="font-weight-bold text-maroon m-0">
+                    <i class="fas fa-exclamation-circle mr-2"></i>Daftar Sekolah Belum Lapor
+                </h6>
+                <button class="btn btn-sm btn-outline-danger shadow-sm font-weight-bold" onclick="copySemuaBelumLapor()" title="Salin Semua Data ke WhatsApp">
+                    <i class="fas fa-copy mr-1"></i> Salin Semua (WA)
+                </button>
+            </div>
+            
             <div class="row">
-                
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="card-sultan h-100 border-top-info">
                         <div class="card-header bg-light py-2">
@@ -203,24 +211,26 @@
 
 <script>
     var CHART_INSTANCE = null;
-    // Data Store Global untuk Chart (SD, TK, KB, SPS)
     var DASH_DATA = {
         sd:  { ok:0, pro:0, rev:0, no:0, blm:0 },
         tk:  { ok:0, pro:0, rev:0, no:0, blm:0 },
         kb:  { ok:0, pro:0, rev:0, no:0, blm:0 },
         sps: { ok:0, pro:0, rev:0, no:0, blm:0 }
     };
-    var ACTIVITY_POOL = []; // Penampung aktivitas gabungan
+    var ACTIVITY_POOL = []; 
+    
+    // VARIABEL GLOBAL PENAMPUNG DATA BELUM LAPOR
+    var GLOBAL_BELUM_LAPOR = {
+        sd: [], tk: [], kb: [], sps: []
+    };
 
     $(document).ready(function() {
-        // Init Filter
         var d = new Date(); d.setMonth(d.getMonth() - 1); 
         var thn = d.getFullYear(); var bln = d.getMonth() + 1;
         var $sel = $('#dashTahun').empty();
         for(var i = thn - 4; i <= thn + 1; i++){ $sel.append('<option value="'+i+'">'+i+'</option>'); }
         $sel.val(thn); $('#dashBulan').val(bln);
 
-        // Smart Loader Chart.js v3
         if (typeof Chart === 'undefined') {
             $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js").done(function() {
                 initChart(); loadDashboard();
@@ -231,9 +241,8 @@
     });
 
     function renderListBelum(jenjang, dataList) {
-        var ul = $('#listBelum' + jenjang); // ID: listBelumSd, listBelumTk, dll
+        var ul = $('#listBelum' + jenjang); 
         var badge = $('#countBelum' + jenjang);
-        
         ul.empty();
         
         if (!dataList || dataList.length === 0) {
@@ -245,7 +254,7 @@
         badge.text(dataList.length);
 
         dataList.forEach(function(namaSekolah) {
-            ul.append('<li class="list-group-item py-2 px-3 border-bottom-light">' + namaSekolah + '</li>');
+            ul.append('<li class="list-group-item py-2 px-3 border-bottom-light text-dark font-weight-bold" style="font-size:12px;">' + namaSekolah + '</li>');
         });
     }
 
@@ -257,14 +266,15 @@
         if(CHART_INSTANCE) updateChart(); 
         $('#listActivity').empty(); 
         ACTIVITY_POOL = [];
+        
+        // Reset Data Kosong Belum Lapor
+        GLOBAL_BELUM_LAPOR = { sd: [], tk: [], kb: [], sps: [] };
 
-        // --- RESET UI LIST BELUM ---
         ['Sd', 'Tk', 'Kb', 'Sps'].forEach(function(j) {
-            $('#listBelum'+j).html('<li class="list-group-item text-center text-muted py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</li>');
+            $('#listBelum'+j).html('<li class="list-group-item text-center text-muted py-4"><i class="fas fa-spinner fa-spin mb-2"></i><br>Memuat...</li>');
             $('#countBelum'+j).text('...');
         });
 
-        // ... sisa kode loadDashboard ...
         $('.overlay-spinner').css('display', 'flex');
         
         google.script.run
@@ -283,12 +293,11 @@
         
         if (source === 'sd') {
             $('#loadSd').fadeOut();
-            updateCard('Sd', data.sd);
-            updateStore('sd', data.sd);
+            updateCard('Sd', data.sd); updateStore('sd', data.sd);
             addActivities(data.recent);
             
-            // --- RENDER LIST BELUM SD ---
-            renderListBelum('Sd', data.sd.listBelum); 
+            GLOBAL_BELUM_LAPOR.sd = data.sd.listBelum || [];
+            renderListBelum('Sd', GLOBAL_BELUM_LAPOR.sd); 
         } 
         else if (source === 'paud') {
             $('#loadPaud1, #loadPaud2, #loadPaud3').fadeOut();
@@ -297,13 +306,63 @@
             updateCard('Sps', data.sps); updateStore('sps', data.sps);
             addActivities(data.recent);
 
-            // --- RENDER LIST BELUM PAUD ---
-            renderListBelum('Tk', data.tk.listBelum);
-            renderListBelum('Kb', data.kb.listBelum);
-            renderListBelum('Sps', data.sps.listBelum);
+            GLOBAL_BELUM_LAPOR.tk = data.tk.listBelum || [];
+            GLOBAL_BELUM_LAPOR.kb = data.kb.listBelum || [];
+            GLOBAL_BELUM_LAPOR.sps = data.sps.listBelum || [];
+
+            renderListBelum('Tk', GLOBAL_BELUM_LAPOR.tk);
+            renderListBelum('Kb', GLOBAL_BELUM_LAPOR.kb);
+            renderListBelum('Sps', GLOBAL_BELUM_LAPOR.sps);
         }
-        
         updateChart(); 
+    }
+
+    // --- FUNGSI SAKTI: SALIN SEMUA (UNTUK WHATSAPP) ---
+    function copySemuaBelumLapor() {
+        var th = $('#dashTahun').val();
+        var blnText = $('#dashBulan option:selected').text();
+        
+        var totalBelum = GLOBAL_BELUM_LAPOR.sd.length + GLOBAL_BELUM_LAPOR.tk.length + GLOBAL_BELUM_LAPOR.kb.length + GLOBAL_BELUM_LAPOR.sps.length;
+
+        if (totalBelum === 0) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Hebat! Semua sekolah sudah lapor.', showConfirmButton: false, timer: 3000 });
+            return;
+        }
+
+        // Header WhatsApp
+        var txt = `*DAFTAR SEKOLAH BELUM LAPOR BULANAN*\nPeriode: ${blnText} ${th}\n\n`;
+
+        // Helper penyusun list
+        function appendList(title, list) {
+            txt += `*${title}:*\n`;
+            if (!list || list.length === 0) {
+                txt += `_Semua sudah lapor_ ✅\n\n`;
+            } else {
+                list.forEach((nama, i) => {
+                    txt += `${i + 1}. ${nama}\n`;
+                });
+                txt += `\n`;
+            }
+        }
+
+        // Susun teks
+        appendList('JENJANG SD', GLOBAL_BELUM_LAPOR.sd);
+        appendList('JENJANG TK', GLOBAL_BELUM_LAPOR.tk);
+        appendList('JENJANG KB', GLOBAL_BELUM_LAPOR.kb);
+        appendList('JENJANG SPS', GLOBAL_BELUM_LAPOR.sps);
+
+        txt += `_Mohon segera mengirimkan laporan ke sistem SIKS-REBORN._`;
+
+        // Salin ke Clipboard
+        navigator.clipboard.writeText(txt).then(function() {
+            if (typeof NotifSultan !== 'undefined') {
+                NotifSultan.toast('success', 'Berhasil! Data siap di-paste (tempel) di WhatsApp.');
+            } else {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Tersalin ke Clipboard!', showConfirmButton: false, timer: 3000 });
+            }
+        }).catch(function(err) {
+            alert("Gagal menyalin text. Browser Anda mungkin memblokir fitur clipboard.");
+        });
     }
 
     function updateCard(jenjang, stats) {
@@ -316,9 +375,7 @@
 
     function updateStore(key, s) {
         if(!s) return;
-        DASH_DATA[key] = {
-            ok: s.disetujui, pro: s.diproses, rev: s.revisi, no: s.ditolak, blm: s.belum
-        };
+        DASH_DATA[key] = { ok: s.disetujui, pro: s.diproses, rev: s.revisi, no: s.ditolak, blm: s.belum };
     }
 
     function addActivities(list) {
@@ -347,7 +404,7 @@
             options: {
                 responsive: true, maintainAspectRatio: false,
                 scales: {
-                    x: { grid: { display: false } },
+                    x: { grid: { display: false }, stacked: false },
                     y: { beginAtZero: true, ticks: { stepSize: 1 } }
                 },
                 plugins: { legend: { position: 'bottom' } },
@@ -359,7 +416,6 @@
     function updateChart() {
         if(!CHART_INSTANCE) return;
         var d = DASH_DATA;
-        // Map data store ke dataset chart (Urutan: SD, TK, KB, SPS)
         CHART_INSTANCE.data.datasets[0].data = [d.sd.ok, d.tk.ok, d.kb.ok, d.sps.ok];
         CHART_INSTANCE.data.datasets[1].data = [d.sd.pro, d.tk.pro, d.kb.pro, d.sps.pro];
         CHART_INSTANCE.data.datasets[2].data = [d.sd.rev, d.tk.rev, d.kb.rev, d.sps.rev];
@@ -371,7 +427,6 @@
     function renderActivity(list) {
         var el = $('#listActivity');
         el.empty();
-        // Ambil 10 data terakhir saja
         var limitList = list.slice(0, 10);
         
         limitList.forEach(function(item) {

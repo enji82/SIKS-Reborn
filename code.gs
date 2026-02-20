@@ -477,22 +477,26 @@ function logUserVisit(userData) {
 }
 
 /* ======================================================================
-   MODUL: SELF-HEALING (PERBAIKAN NAMA OTOMATIS)
+   MODUL: SELF-HEALING USER DATA (FIX NAMA "USER WEB")
    ====================================================================== */
+
 function getUserProfileByName(username) {
   try {
-    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
-    var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER); // Pastikan ID ini benar
+    var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME); // Pastikan Nama Sheet benar
     var data = sheet.getDataRange().getValues();
 
-    // Loop cari username (Kolom A)
+    // Loop cari username (Kolom A / Index 0)
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim().toLowerCase() === String(username).trim().toLowerCase()) {
+        // Asumsi Struktur Kolom Database User:
+        // A=Username, B=Password, C=Nama Lengkap, D=Role, E=Unit/Foto
         return {
           found: true,
-          nama_lengkap: data[i][2], // Kolom C: Nama Lengkap
-          role: data[i][3],         // Kolom D: Role
-          unit: data[i][4]          // Kolom E: Unit
+          username: data[i][0],
+          nama_lengkap: data[i][2], // Kolom C
+          role: data[i][3],         // Kolom D
+          unit: data[i][4]          // Kolom E
         };
       }
     }

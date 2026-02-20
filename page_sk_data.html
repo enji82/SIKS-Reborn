@@ -87,7 +87,6 @@
         <div class="card-sultan">
           <div class="card-body p-3">
             <table id="tabelDataSK" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
-              
               <thead id="headTabelSK" style="display:none;">
                 <tr>
                   <th class="col-sticky-left" style="min-width: 250px;">Nama Sekolah</th>
@@ -99,13 +98,11 @@
                   <th class="text-center text-nowrap">File</th>
                   <th class="text-center text-nowrap">Status</th>
                   <th class="text-center text-nowrap">Aksi</th>
-                  
                   <th class="small text-muted text-nowrap text-center">Dikirim</th>
                   <th class="small text-muted text-nowrap text-center">Diubah</th>
                   <th class="small text-muted text-nowrap text-center">Verifikasi</th>
                 </tr>
               </thead>
-
               <tbody id="bodyTabelSK">
                   <tr>
                       <td class="text-center td-spinner" colspan="100%">
@@ -140,9 +137,7 @@
           <input type="hidden" id="editRowId" name="editRowId">
           <input type="hidden" id="originalRowId" name="originalRowId">
           
-          <div id="alertDuplikat" class="alert alert-warning d-none">
-              <i class="fas fa-exclamation-circle mr-1"></i> Data ditemukan! Formulir terisi otomatis.
-          </div>
+          <div id="alertDuplikat" class="alert alert-warning d-none"></div>
           <div id="alertLocked" class="alert alert-danger d-none">
               <i class="fas fa-lock mr-1"></i> Data sudah <b>DISETUJUI</b> dan tidak dapat diubah lagi.
           </div>
@@ -150,19 +145,21 @@
           <div class="form-group">
             <label class="form-label-sultan">Nomor SK <span class="text-danger">*</span></label>
             <div class="input-group">
-                <input type="text" class="form-control form-control-sultan" id="editNoSk" name="editNoSk" required placeholder="Ketik Nomor SK lalu tekan Tab / Enter..." onchange="cekNomorSK(this.value)">
+                <input type="text" class="form-control form-control-sultan" id="editNoSk" name="editNoSk" required placeholder="Ketik Nomor SK lalu klik tombol Cek..." onchange="cekNomorSK(this.value)">
                 <div class="input-group-append">
                     <button class="btn btn-maroon" type="button" onclick="cekNomorSK($('#editNoSk').val())" id="btnCekSK">
                         <i class="fas fa-search"></i> Cek
                     </button>
                 </div>
             </div>
-            <small class="text-muted font-italic">Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.</small>
+            <small id="helpNoSk" class="text-muted font-italic mt-1 d-block">
+                Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.
+            </small>
           </div>
 
           <div class="form-group">
             <label class="form-label-sultan">Nama Sekolah <span class="text-danger">*</span></label>
-            <select class="form-control form-control-sultan" id="editNamaSd" name="editNamaSd" required>
+            <select class="form-control form-control-sultan font-weight-bold" id="editNamaSd" name="editNamaSd" required>
                 <option value="">- Pilih Sekolah -</option>
             </select>
           </div>
@@ -209,7 +206,7 @@
           </div>
           
           <div class="form-group border p-3 rounded bg-white mt-2 shadow-sm">
-            <label class="form-label-sultan mb-2"><i class="fas fa-file-pdf text-danger mr-1"></i> Unggah File</label>
+            <label class="form-label-sultan mb-2" id="labelWajibFile"><i class="fas fa-file-pdf text-danger mr-1"></i> Unggah File</label>
             
             <div id="linkFileLama" class="mb-2 d-none">
                 <a href="#" target="_blank" class="btn btn-sm btn-info shadow-sm"><i class="fas fa-eye mr-1"></i> Lihat Dokumen Tersimpan</a>
@@ -229,7 +226,7 @@
           <button type="button" class="btn btn-default shadow-sm font-weight-bold" data-dismiss="modal">
               <i class="fas fa-times mr-1"></i> Batal
           </button>
-          <button type="submit" id="btnSimpanSK" class="btn btn-maroon font-weight-bold shadow-sm px-4">
+          <button type="submit" id="btnSimpanSK" class="btn btn-maroon font-weight-bold shadow-sm px-4" style="display:none;">
               <i class="fas fa-save mr-1"></i> SIMPAN DATA
           </button>
         </div>
@@ -241,7 +238,6 @@
 <div class="modal fade" id="modalVerifikasiSK" tabindex="-1" role="dialog" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 98%; width: 98%; margin: auto;">
         <div class="modal-content border-0 shadow-lg" style="height: 95vh;">
-            
             <div class="modal-header bg-maroon text-white py-2">
                 <h5 class="modal-title font-weight-bold" style="font-size: 16px;">
                     <i class="fas fa-clipboard-check mr-2"></i>Verifikasi SK Pembagian Tugas
@@ -250,11 +246,9 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-
             <form id="formVerifSK" onsubmit="handleSimpanVerifikasi(event)" class="h-100 p-0 m-0">
                 <div class="modal-body p-0 bg-light h-100">
                     <div class="row no-gutters h-100">
-                        
                         <div class="col-lg-8 bg-dark d-flex align-items-center justify-content-center position-relative border-right">
                             <iframe id="verifFrame" style="width:100%; height:100%; border:none; display:none;"></iframe>
                             <div id="verifNoFile" class="text-center text-white-50">
@@ -262,48 +256,24 @@
                                 <p class="mb-0">Pratinjau dokumen tidak tersedia.</p>
                             </div>
                         </div>
-
                         <div class="col-lg-4 bg-white d-flex flex-column h-100">
-                            
                             <div class="p-3 overflow-auto" style="flex: 1;">
                                 <input type="hidden" id="verifRowId">
-
                                 <h6 class="text-maroon font-weight-bold border-bottom pb-2 mb-3">
                                     <i class="fas fa-school mr-1"></i> Data Sekolah
                                 </h6>
-                                
                                 <table class="table table-sm table-borderless small mb-3 text-dark" style="font-size: 14px;">
-                                    <tr>
-                                        <td class="text-muted font-weight-bold" width="35%">Unit Kerja</td>
-                                        <td class="font-weight-bold text-dark" id="vNamaSd">-</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Nomor SK</td>
-                                        <td class="font-weight-bold text-primary" id="vNoSk" style="word-break: break-all;">-</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Tanggal SK</td>
-                                        <td id="vTglSk">-</td>
-                                    </tr>
+                                    <tr><td class="text-muted font-weight-bold" width="35%">Unit Kerja</td><td class="font-weight-bold text-dark" id="vNamaSd">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Nomor SK</td><td class="font-weight-bold text-primary" id="vNoSk" style="word-break: break-all;">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Tanggal SK</td><td id="vTglSk">-</td></tr>
                                     <tr><td colspan="2"><hr class="my-1 dashed"></td></tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Tahun Ajaran</td>
-                                        <td class="font-weight-bold" id="vTahun">-</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Semester</td>
-                                        <td id="vSemester">-</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Jenis SK</td>
-                                        <td><span class="badge badge-sultan badge-sultan-light-info" id="vKriteria">-</span></td>
-                                    </tr>
+                                    <tr><td class="text-muted font-weight-bold">Tahun Ajaran</td><td class="font-weight-bold" id="vTahun">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Semester</td><td id="vSemester">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Jenis SK</td><td><span class="badge badge-sultan badge-sultan-light-info" id="vKriteria">-</span></td></tr>
                                 </table>
-
                                 <a id="btnUnduhFileVerif" href="#" target="_blank" class="btn btn-outline-primary btn-sm btn-block mb-4 shadow-sm font-weight-bold rounded-pill">
                                     <i class="fas fa-download mr-2"></i>Unduh Dokumen PDF
                                 </a>
-
                                 <div class="card bg-light border-0 shadow-sm">
                                     <div class="card-body p-3">
                                         <div class="form-group mb-3">
@@ -315,7 +285,6 @@
                                                 <option value="Ditolak">❌ Ditolak</option>
                                             </select>
                                         </div>
-
                                         <div class="form-group mb-0">
                                             <label class="font-weight-bold text-dark small mb-1">Catatan Admin</label>
                                             <textarea class="form-control form-control-sultan" id="verifKeterangan" rows="3" placeholder="Tulis catatan..."></textarea>
@@ -326,14 +295,12 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="p-3 bg-white border-top shadow-lg d-flex justify-content-between" style="z-index: 10;">
                                 <button type="button" class="btn btn-secondary px-4 font-weight-bold shadow-sm" data-dismiss="modal">Batal</button>
                                 <button type="submit" id="btnSimpanVerif" class="btn btn-maroon px-4 font-weight-bold shadow">
                                     <i class="fas fa-save mr-2"></i> SIMPAN
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -363,29 +330,23 @@
 <div class="modal fade" id="modalHapusSK" tabindex="-1" role="dialog" data-backdrop="static">
     <div class="modal-dialog" role="document">
         <div class="modal-content border-0 shadow-lg modal-content-sultan">
-            
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title font-weight-bold">
                     <i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            
             <form id="formHapusSK" onsubmit="handleSimpanHapus(event)">
                 <div class="modal-body bg-light">
                     <input type="hidden" id="hapusRowId" name="hapusRowId">
-                    
                     <div class="alert alert-warning shadow-sm">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Anda akan menghapus data SK Nomor: <br>
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Anda akan menghapus data SK Nomor: <br>
                         <strong id="infoHapusNoSk" class="text-dark" style="font-size: 1.1em;">-</strong>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label-sultan">Alasan Penghapusan <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="hapusAlasan" name="hapusAlasan" rows="2" required placeholder="Contoh: Salah upload file, Data ganda, dll..."></textarea>
                     </div>
-
                     <div class="form-group mb-0">
                         <label class="form-label-sultan">Kode Keamanan <span class="text-danger">*</span></label>
                         <div class="input-group">
@@ -394,12 +355,9 @@
                             </div>
                             <input type="password" class="form-control" id="hapusKode" name="hapusKode" required placeholder="Hubungi admin Korwil untuk kode hapus." autocomplete="off">
                         </div>
-                        <small class="text-muted font-italic mt-1 d-block">
-                            Kode keamanan berubah setiap hari.
-                        </small>
+                        <small class="text-muted font-italic mt-1 d-block">Kode keamanan berubah setiap hari.</small>
                     </div>
                 </div>
-
                 <div class="modal-footer bg-white justify-content-between">
                     <button type="button" class="btn btn-default shadow-sm font-weight-bold" data-dismiss="modal">Batal</button>
                     <button type="submit" id="btnEksekusiHapus" class="btn btn-danger font-weight-bold shadow-sm px-4">
@@ -422,10 +380,8 @@
             </div>
             <div class="modal-body bg-light p-4">
                 <div class="alert alert-info border-0 shadow-sm mb-3">
-                    <i class="fas fa-info-circle mr-1"></i> 
-                    Data di sini adalah data yang dihapus sementara. Klik tombol <b>Pulihkan</b> untuk mengembalikannya ke tabel utama.
+                    <i class="fas fa-info-circle mr-1"></i> Data di sini adalah data yang dihapus sementara. Klik tombol <b>Pulihkan</b> untuk mengembalikannya ke tabel utama.
                 </div>
-                
                 <div class="table-responsive bg-white rounded shadow-sm p-0">
                     <table class="table table-hover table-striped mb-0" id="tabelSampah" width="100%">
                         <thead class="bg-dark text-white text-uppercase small">
@@ -439,16 +395,13 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="tbodySampah" class="text-dark">
-                            </tbody>
+                        <tbody id="tbodySampah" class="text-dark"></tbody>
                     </table>
                 </div>
-                
                 <div id="loadingSampah" class="text-center py-5 d-none">
                     <div class="spinner-border text-warning" role="status"></div>
                     <p class="mt-2 text-muted font-weight-bold">Menggali tumpukan sampah...</p>
                 </div>
-                
                 <div id="kosongSampah" class="text-center py-5 d-none">
                     <i class="fas fa-trash-alt fa-3x text-black-50 mb-3"></i>
                     <p class="text-muted">Tong sampah bersih! Tidak ada data yang dihapus.</p>
@@ -467,47 +420,23 @@ var GLOBAL_DATA_MAP = {};
 var CURRENT_FILE_URL = ""; 
 
 $(document).ready(function() {
-    // 1. Inisialisasi Default (Tahun & Semester saat ini)
     initFilterDefaults(); 
-    
-    // 2. Cek Hak Akses (Tombol Tambah/Hapus/Restore)
     checkUserRole(); 
-    
-    // 3. Aktifkan Tooltip Bootstrap
     $('body').tooltip({selector: '[data-toggle="tooltip"]'});
-    
-    // 4. LOAD DATA PERTAMA KALI (Otomatis)
-    // Ini akan mengambil semua data, lalu menampilkannya sesuai filter default (Tahun aktif)
     refreshDataServer();  
     
-    // 5. INPUT FILE (Agar nama file muncul saat dipilih)
     $(document).on('change', '#editFileSk', function(e) {
         var fileName = e.target.files[0] ? e.target.files[0].name : 'Pilih file PDF...';
         $(this).next('.custom-file-label').html(fileName);
     });
     
-    // --- PERUBAHAN LOGIKA FILTER DI SINI ---
-    
-    // KITA HAPUS (COMMENT) BAGIAN INI:
-    /* $('#filterTahun, #filterSemester, #filterStatus, #filterSD').on('change', function() {
-        jalankanFilterLokal();
-    });
-    */
-   
-    // SEKARANG:
-    // Filter hanya akan berjalan jika tombol "Cari" (btnCariSK) diklik.
-    // Tombol tersebut sudah memiliki atribut onclick="jalankanFilterLokal()" di HTML.
-    // Jadi kita tidak perlu menambahkan kode JS apapun lagi di sini.
-
-
-    // 6. BERSIHKAN IFRAME SAAT MODAL DITUTUP (Biar tidak berat/memori bocor)
     $('#modalPreviewSK, #modalVerifikasiSK').on('hidden.bs.modal', function () { 
         $('iframe').attr('src', ''); 
     });
 });
 
 // =================================================================
-// 2. DATA SERVER
+// 2. DATA SERVER & FILTER
 // =================================================================
 function refreshDataServer() {
     var curTahun = $('#filterTahun').val();
@@ -541,9 +470,6 @@ function refreshDataServer() {
         .getDaftarSK(); 
 }
 
-// =================================================================
-// 3. FILTER LOKAL
-// =================================================================
 function jalankanFilterLokal() {
     var th = ($('#filterTahun').val() || "").trim();
     var sm = ($('#filterSemester').val() || "").trim();
@@ -574,7 +500,7 @@ function jalankanFilterLokal() {
 }
 
 // =================================================================
-// 4. RENDER TABEL (UI SIABA)
+// 3. RENDER TABEL
 // =================================================================
 function renderTabel(data) {
     if ($.fn.DataTable.isDataTable('#tabelDataSK')) { $('#tabelDataSK').DataTable().clear().destroy(); }
@@ -590,9 +516,6 @@ function renderTabel(data) {
     var sesi = localStorage.getItem("siksUser"); 
     var isAdmin = sesi && sesi.toLowerCase().includes('admin');
 
-    // --- PERBAIKAN LOGIKA SORTING (LAST ACTIVITY) ---
-    // Memasukkan tglVerval sebagai salah satu parameter aktivitas terakhir
-    // Menggunakan parseDateTime yang sudah diperbaiki (include Time)
     data.sort(function(a, b) {
         var timeA = Math.max(
             parseDateTime(a.tglUnggah), 
@@ -604,7 +527,7 @@ function renderTabel(data) {
             parseDateTime(b.tglUpdate), 
             parseDateTime(b.tglVerval)
         );
-        return timeB - timeA; // Descending (Terbaru di atas)
+        return timeB - timeA; 
     });
 
     var html = "";
@@ -642,9 +565,7 @@ function renderTabel(data) {
              infoTooltip = `<i class="fas fa-info-circle text-dark ml-2" title="${safeKet}" data-toggle="tooltip" style="cursor:help; opacity:0.6;"></i>`;
         }
 
-        var badgeHtml = `<span class="badge badge-sultan ${badgeStyle}">
-                            <i class="fas fa-${iconClass} mr-1"></i>${rawStatus}
-                         </span>${infoTooltip}`;
+        var badgeHtml = `<span class="badge badge-sultan ${badgeStyle}"><i class="fas fa-${iconClass} mr-1"></i>${rawStatus}</span>${infoTooltip}`;
 
         var isLocked = (labelStatus === "DISETUJUI");
         var attrDis = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
@@ -688,14 +609,161 @@ function renderTabel(data) {
 }
 
 // =================================================================
-// 5. HELPER FORM (JS DISESUAIKAN DENGAN MODAL BARU)
+// 4. HELPER FORM: TAMBAH & EDIT (MURNI MANUAL DROPDOWN)
 // =================================================================
+
+function tambahDataSK() {
+    $('#formEditSK')[0].reset(); 
+    $('#editRowId').val(''); 
+    $('#originalRowId').val(''); 
+    
+    $('#alertDuplikat, #alertLocked').addClass('d-none');
+    $('#alertDuplikat').removeClass('alert-warning alert-danger');
+    $('.is-invalid').removeClass('is-invalid');
+    
+    // 1. Kunci form (Kecuali SK) sampai pengecekan selesai
+    $('#formEditSK input, #formEditSK select').prop('disabled', true);
+    $('#editNoSk').prop('disabled', false).prop('readonly', false);
+    $('#btnCekSK').prop('disabled', false);
+    $('#btnSimpanSK').hide().prop('disabled', true); 
+    
+    // 2. Reset Teks Bantuan 
+    $('#helpNoSk').html('Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.')
+                  .removeClass('text-success text-danger font-weight-bold')
+                  .addClass('text-muted');
+    
+    $('#labelWajibFile').html('Unggah File PDF <span class="text-danger">*</span>');
+    $('.custom-file-label').html('Pilih file PDF...');
+    
+    // 3. KOSONGKAN NAMA SEKOLAH, BIARKAN USER MEMILIH SENDIRI
+    $('#editNamaSd').val(""); 
+
+    $('#modalEditSK').modal('show'); 
+}
+
+function editSK(id) {
+    var d = GLOBAL_DATA_MAP[id];
+    if (!d) return;
+
+    $('#editRowId').val(id);
+    $('#originalRowId').val(id);
+
+    $('#alertDuplikat, #alertLocked').addClass('d-none');
+    $('#formEditSK input, #formEditSK select').prop('disabled', false);
+    
+    // Mode Edit: Tombol Simpan langsung aktif
+    $('#btnSimpanSK').show().prop('disabled', false);
+    
+    // Mode Edit: Ubah Helper Teks
+    $('#helpNoSk').html('<i class="fas fa-info-circle"></i> Anda sedang dalam mode Edit Data.')
+                  .removeClass('text-success text-danger')
+                  .addClass('text-muted font-weight-bold');
+
+    var cleanNoSk = (d.noSk || "").replace(/\s+/g, ''); 
+    $('#editNoSk').val(cleanNoSk); 
+
+    // Set nilai sekolah (hanya bisa diubah di mode edit)
+    $('#editNamaSd').val(d.namaSd);
+    
+    $('#editTahun').val(d.tahun);
+    $('#editSemester').val(d.semester);
+    $('#editTglSk').val(formatDateForInput(d.tglSk));
+    $('#editKriteria').val(d.kriteria);
+
+    // KUNCI HANYA NOMOR SK & SEKOLAH agar riwayat data tidak tumpang tindih
+    $('#editNoSk, #editNamaSd').prop('disabled', true);
+    $('#btnCekSK').prop('disabled', true);
+
+    CURRENT_FILE_URL = d.fileUrl || "";
+    if (d.fileUrl && d.fileUrl.length > 5) {
+        $('#linkFileLama').removeClass('d-none');
+        $('#linkFileLama a').attr('onclick', `previewPDF('${d.fileUrl}'); return false;`);
+        $('.custom-file-label').html('Biarkan kosong jika tidak ganti...');
+        $('#labelWajibFile').html('Unggah File PDF');
+    } else {
+        $('#linkFileLama').addClass('d-none');
+        $('.custom-file-label').html('Pilih file PDF...');
+        $('#labelWajibFile').html('Unggah File PDF <span class="text-danger">*</span>');
+    }
+
+    $('#modalEditSK').modal('show');
+}
+
+// =================================================================
+// 5. PENGECEKAN NOMOR SK (DINAMIS UI)
+// =================================================================
+function cekNomorSK(val) {
+    $('#alertDuplikat').addClass('d-none').removeClass('alert-warning alert-danger');
+    
+    if (!val) {
+        $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
+        $('#btnSimpanSK').hide().prop('disabled', true); 
+        $('#helpNoSk').html('Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.')
+                      .removeClass('text-success text-danger font-weight-bold').addClass('text-muted');
+        return;
+    }
+
+    if (val.indexOf(' ') >= 0) {
+        $('#helpNoSk').html('<i class="fas fa-times-circle"></i> FORMAT SALAH: Hapus spasi pada Nomor SK!')
+                      .removeClass('text-muted text-success').addClass('text-danger font-weight-bold');
+        $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
+        $('#btnSimpanSK').hide().prop('disabled', true); 
+        return; 
+    }
+
+    if (val.length < 3) return; 
+
+    var btn = $('#btnCekSK'); var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    // Status Loading
+    $('#helpNoSk').html('<i class="fas fa-circle-notch fa-spin"></i> Sedang memeriksa database...')
+                  .removeClass('text-danger text-success font-weight-bold').addClass('text-muted');
+
+    google.script.run.withSuccessHandler(function(res) {
+        btn.prop('disabled', false).html(txt);
+        var currentId = $('#editRowId').val();
+
+        if (res.found) {
+            if (currentId && String(res.data.rowId) === String(currentId)) {
+                 // Edit punya sendiri (Aman)
+                 $('#helpNoSk').html('<i class="fas fa-check-circle"></i> Nomor SK Valid (Milik Sendiri).')
+                               .removeClass('text-muted text-danger').addClass('text-success font-weight-bold');
+                 
+                 $('#formEditSK input, #formEditSK select').prop('disabled', false);
+                 $('#btnSimpanSK').show().prop('disabled', false);
+                 $('#editNoSk, #editNamaSd').prop('disabled', true);
+            } else {
+                 // Duplikat (Gagal)
+                 $('#helpNoSk').html('<i class="fas fa-exclamation-triangle"></i> Gagal: Nomor SK ini sudah terdaftar!')
+                               .removeClass('text-muted text-success').addClass('text-danger font-weight-bold');
+                 
+                 $('#alertDuplikat').removeClass('d-none').addClass('alert-warning')
+                                    .html('<i class="fas fa-exclamation-triangle mr-1"></i> <b>Data Ditemukan.</b> Gunakan tombol Edit di tabel jika ini data Anda.');
+                 
+                 $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
+                 $('#btnSimpanSK').hide().prop('disabled', true);
+            }
+        } else {
+            // DATA BARU (SUKSES)
+            $('#helpNoSk').html('<i class="fas fa-check-circle"></i> Nomor SK Tersedia! Silakan isi formulir di bawah.')
+                          .removeClass('text-muted text-danger').addClass('text-success font-weight-bold');
+            
+            // 1. BUKA SEMUA KUNCI TERMASUK NAMA SEKOLAH (Manual Pilih)
+            $('#formEditSK input, #formEditSK select').prop('disabled', false);
+            $('#btnSimpanSK').show().prop('disabled', false);
+            
+            // 2. Auto fill TAHUN dan SEMESTER
+            var curTahun = $('#filterTahun').val();
+            var curSmt = $('#filterSemester').val();
+            if(curTahun) $('#editTahun').val(curTahun);
+            if(curSmt) $('#editSemester').val(curSmt);
+        }
+    }).cekDuplikatSK(val);
+}
 
 function handleSimpanEdit(e) {
     e.preventDefault();
-    console.log("--- MULAI PROSES SIMPAN ---");
-
-    // 1. AUTO-FIX SPASI
     var rawNoSk = $('#editNoSk').val();
     var cleanNoSk = rawNoSk.replace(/\s+/g, '');
     $('#editNoSk').val(cleanNoSk);
@@ -703,11 +771,8 @@ function handleSimpanEdit(e) {
     var rowId = $('#editRowId').val();
     var fileInput = document.getElementById('editFileSk');
     var hasFile = fileInput.files.length > 0;
-    
-    // Ambil Tanggal (Pastikan String)
     var valTgl = $('#editTglSk').val(); 
 
-    // Validasi
     if (rowId === "" && !hasFile) { 
         Sultan.notif.gagal('FILE KOSONG: Wajib upload dokumen PDF!'); 
         return; 
@@ -724,22 +789,19 @@ function handleSimpanEdit(e) {
         kriteriaSk: $('#editKriteria').val(),
         nomorSk: cleanNoSk,
         tanggalSk: valTgl, 
-        status: 'Diproses', // Flagging Frontend
+        status: 'Diproses', 
         userInput: (function() {
             var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
             return u.nama_lengkap || u.fullname || u.nama || u.username || "User";
         })(),
-        
         userUpdate: (function() {
             var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
             return u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
         })(),
-        // Redundansi
         editNoSk: cleanNoSk, editTglSk: valTgl, editKriteria: $('#editKriteria').val()
     };
 
     var onSuccess = function(res) {
-        console.log("BALIKAN SERVER:", res);
         btn.prop('disabled', false).html(txt);
         if(res && res.success) {
             $('#modalEditSK').modal('hide');
@@ -750,7 +812,6 @@ function handleSimpanEdit(e) {
         }
     };
 
-    // EKSEKUSI KE FUNGSI BARU
     if (hasFile) {
         var reader = new FileReader();
         reader.onload = function(ev) {
@@ -759,129 +820,36 @@ function handleSimpanEdit(e) {
                 mimeType: fileInput.files[0].type, 
                 name: fileInput.files[0].name 
             };
-            
-            if (rowId === "") {
-                google.script.run.withSuccessHandler(onSuccess).processManualForm(formData); 
-            } else {
-                // PANGGIL FUNGSI BARU DI SINI
-                google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
-            }
+            if (rowId === "") google.script.run.withSuccessHandler(onSuccess).processManualForm(formData); 
+            else google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
-        // PANGGIL FUNGSI BARU DI SINI JUGA
-        if (rowId === "") {
-             google.script.run.withSuccessHandler(onSuccess).processManualForm(formData);
-        } else {
-             google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
-        }
+        if (rowId === "") google.script.run.withSuccessHandler(onSuccess).processManualForm(formData);
+        else google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
     }
 }
-
-function editSK(id) {
-    var d = GLOBAL_DATA_MAP[id];
-    if (!d) return;
-
-    $('#editRowId').val(id);
-    $('#originalRowId').val(id);
-
-    $('#alertDuplikat, #alertLocked').addClass('d-none');
-    $('#formEditSK input, #formEditSK select').prop('disabled', false);
-    $('#btnSimpanSK').show();
-
-    // --- AUTO-CLEAN SAAT LOAD DATA ---
-    // Ambil noSk, lalu .replace(/\s+/g, '') untuk buang semua spasi
-    var cleanNoSk = (d.noSk || "").replace(/\s+/g, ''); 
-    
-    $('#editNoSk').val(cleanNoSk); // Tampilkan versi bersih
-    // ---------------------------------
-
-    $('#editNamaSd').html($('#filterSD').html()).val(d.namaSd);
-    $('#editTahun').val(d.tahun);
-    $('#editSemester').val(d.semester);
-    $('#editTglSk').val(formatDateForInput(d.tglSk));
-    $('#editKriteria').val(d.kriteria);
-
-    // Kunci Input Kritis
-    $('#editNoSk, #editNamaSd').prop('disabled', true);
-    $('#btnCekSK').prop('disabled', true);
-
-    // Logika File Lama
-    CURRENT_FILE_URL = d.fileUrl || "";
-    if (d.fileUrl && d.fileUrl.length > 5) {
-        $('#linkFileLama').removeClass('d-none');
-        $('#linkFileLama a').attr('onclick', `previewPDF('${d.fileUrl}'); return false;`);
-        $('.custom-file-label').html('Biarkan kosong jika tidak ganti...');
-    } else {
-        $('#linkFileLama').addClass('d-none');
-        $('.custom-file-label').html('Pilih file PDF...');
-    }
-
-    $('#modalEditSK').modal('show');
-}
-
-function lihatFileLama() {
-    if(CURRENT_FILE_URL) previewPDF(CURRENT_FILE_URL);
-}
-
-function tambahDataSK() {
-    $('#formEditSK')[0].reset(); 
-    $('#editRowId').val(''); 
-    $('#originalRowId').val(''); 
-    
-    // Reset Alert & Validasi UI
-    $('#alertDuplikat, #alertLocked, #alertAvailable, #containerFileLama, #badgeGantiFile').addClass('d-none');
-    $('#alertDuplikat').removeClass('alert-warning alert-danger');
-    $('.is-invalid').removeClass('is-invalid');
-    
-    // --- LOGIKA PENGAMANAN BARU (DEFAULT LOCKED) ---
-    // 1. Kunci SEMUA Input & Select & Tombol Simpan dulu
-    $('#formEditSK input, #formEditSK select, #btnSimpanSK').prop('disabled', true);
-    
-    // 2. Buka HANYA Input Nomor SK & Tombol Cek
-    $('#editNoSk').prop('disabled', false).prop('readonly', false);
-    $('#btnCekSK').prop('disabled', false);
-    
-    // 3. Sembunyikan Tombol Simpan biar lebih aman (atau disable saja cukup, tapi hidden lebih rapi)
-    $('#btnSimpanSK').hide(); 
-    // ------------------------------------------------
-    
-    $('#labelWajibFile').html('Unggah File PDF <span class="text-danger">*</span>');
-    $('.custom-file-label').html('Pilih file PDF...');
-    
-    // Reset Dropdown (Tanpa mengisi value dulu, karena terkunci)
-    // Kita isi value nanti setelah Nomor SK Valid
-    var h = $('#filterSD').html(); $('#editNamaSd').html(h); 
-    
-    $('#modalEditSK').modal('show'); 
-}
-
-// HELPER LAINNYA
-function hapusSK(id,no){ $('#hapusRowId').val(id); $('#infoHapusNoSk').text(no); $('#hapusKode').val(''); $('#modalHapusSK').modal('show'); }
 
 // =================================================================
-// 1. MEMBUKA MODAL VERIFIKASI
+// 6. FUNGSI VERIFIKASI (ADMIN)
 // =================================================================
 function verifikasiSK(id) {
     var d = GLOBAL_DATA_MAP[id];
     if (!d) return;
 
-    // A. Isi Data Tampilan
     $('#verifRowId').val(d.rowBaris);
     $('#vNamaSd').text(d.namaSd || '-');
     $('#vNoSk').text(d.noSk || '-');
-    $('#vTglSk').text(d.tglSkDisplay || d.tglSk || '-'); // Menggunakan Tgl Display
+    $('#vTglSk').text(d.tglSkDisplay || d.tglSk || '-'); 
     $('#vTahun').text(d.tahun || '-');
     $('#vSemester').text(d.semester || '-');
     $('#vKriteria').text(d.kriteria || '-');
 
-    // B. Reset Form
     $('#verifStatus').val(''); 
     $('#verifKeterangan').val(d.keterangan || '').attr('placeholder', 'Catatan opsional...'); 
     $('#verifWajibCatatan').addClass('d-none');
     $('#btnSimpanVerif').prop('disabled', false).html('<i class="fas fa-save mr-2"></i> SIMPAN');
 
-    // C. Logic Preview Dokumen
     var url = d.fileUrl;
     $('#verifFrame').hide().attr('src', ''); 
     $('#verifNoFile').removeClass('d-none').show();
@@ -889,7 +857,6 @@ function verifikasiSK(id) {
 
     if (url && url.length > 10) {
         $('#btnUnduhFileVerif').removeClass('disabled').attr('href', url);
-        
         var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
         var fileId = match ? match[1] : null;
 
@@ -899,11 +866,9 @@ function verifikasiSK(id) {
             $('#verifNoFile').hide();
         }
     }
-
     $('#modalVerifikasiSK').modal('show');
 }
 
-// Helper: Cek jika Revisi/Tolak wajib isi catatan
 function cekStatusVerif(val) {
     var isNegatif = (val === 'Revisi' || val === 'Ditolak');
     if (isNegatif) {
@@ -915,427 +880,157 @@ function cekStatusVerif(val) {
     }
 }
 
-// =================================================================
-// 2. SIMPAN VERIFIKASI (NOTIFIKASI SULTAN)
-// =================================================================
 function handleSimpanVerifikasi(e) {
     e.preventDefault();
-    
     var rowId = $('#verifRowId').val();
     var status = $('#verifStatus').val();
     var ket = $('#verifKeterangan').val().trim();
-    
-    // Ambil Admin
     var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
     var admin = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
 
-    // Validasi
-    if (!status) { 
-        Swal.fire({
-            icon: 'warning', title: 'Pilih Status',
-            text: 'Tentukan status verifikasi (Disetujui/Revisi/Ditolak).',
-            confirmButtonColor: '#d33'
-        });
-        return; 
-    }
-    
-    if ((status === 'Revisi' || status === 'Ditolak') && ket === "") {
-        Swal.fire({
-            icon: 'warning', title: 'Catatan Wajib',
-            text: 'Wajib mengisi catatan alasan jika statusnya Ditolak atau Revisi.',
-            confirmButtonColor: '#d33'
-        });
-        $('#verifKeterangan').focus();
-        return;
-    }
+    if (!status) { Swal.fire({icon: 'warning', title: 'Pilih Status', text: 'Tentukan status verifikasi.', confirmButtonColor: '#d33'}); return; }
+    if ((status === 'Revisi' || status === 'Ditolak') && ket === "") { Swal.fire({icon: 'warning', title: 'Catatan Wajib', text: 'Wajib mengisi catatan alasan.', confirmButtonColor: '#d33'}); $('#verifKeterangan').focus(); return; }
 
-    var btn = $('#btnSimpanVerif'); 
-    var txt = btn.html();
+    var btn = $('#btnSimpanVerif'); var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...');
 
     google.script.run.withSuccessHandler(function(res) {
         btn.prop('disabled', false).html(txt);
-        
         if (res.success) {
             $('#modalVerifikasiSK').modal('hide');
-            
-            // --- NOTIFIKASI SULTAN (Auto Close) ---
-            Swal.fire({ 
-                title: 'Verifikasi Berhasil',
-                html: `Status diperbarui menjadi <b class="text-maroon">${status}</b>.<br><small class="text-muted">Memuat ulang data...</small>`,
-                icon: 'success',
-                showConfirmButton: false, 
-                timer: 2500,              
-                timerProgressBar: true,
-                background: '#fff', 
-                backdrop: `rgba(0,0,0,0.5)`
-            });
-
-            // Refresh Data tanpa reload halaman
+            Swal.fire({ title: 'Berhasil', html: `Status menjadi <b class="text-maroon">${status}</b>.`, icon: 'success', showConfirmButton: false, timer: 2500});
             refreshDataServer(); 
         } else {
-            Swal.fire({
-                title: 'Gagal',
-                text: res.message,
-                icon: 'error',
-                confirmButtonColor: '#d33'
-            });
+            Swal.fire({title: 'Gagal', text: res.message, icon: 'error', confirmButtonColor: '#d33'});
         }
-    }).verifikasiDataSK({
-        verifRowId: rowId,
-        verifStatus: status,
-        verifKeterangan: ket,
-        verifikator: admin
-    });
+    }).verifikasiDataSK({verifRowId: rowId, verifStatus: status, verifKeterangan: ket, verifikator: admin});
 }
 
-function cekNomorSK(val) {
-    // Reset Alert
-    $('#alertDuplikat, #alertLocked, #alertAvailable').addClass('d-none');
-    $('#alertDuplikat').removeClass('alert-warning alert-danger');
-    
-    // --- 1. JIKA KOSONG -> TETAP KUNCI ---
-    if (!val) {
-        $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
-        $('#btnSimpanSK').prop('disabled', true).hide();
-        return;
-    }
-
-    // --- 2. JIKA ADA SPASI -> TETAP KUNCI ---
-    if (val.indexOf(' ') >= 0) {
-        $('#alertDuplikat').removeClass('d-none').addClass('alert-danger')
-            .html('<i class="fas fa-times-circle mr-1"></i> <b>FORMAT SALAH:</b> Isikan nomor SK tanpa spasi.');
-            
-        // KUNCI PAKSA field lain
-        $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
-        $('#btnSimpanSK').prop('disabled', true).hide();
-        return; 
-    }
-
-    if (val.length < 3) return; 
-
-    var btn = $('#btnCekSK'); var txt = btn.html();
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
-    google.script.run.withSuccessHandler(function(res) {
-        btn.prop('disabled', false).html(txt);
-        var currentId = $('#editRowId').val();
-
-        if (res.found) {
-            // --- DATA DUPLIKAT -> TETAP KUNCI ---
-            
-            // Kecuali Edit Punya Sendiri
-            if (currentId && String(res.data.rowId) === String(currentId)) {
-                 $('#alertAvailable').removeClass('d-none').html('<i class="fas fa-check-circle mr-1"></i> Nomor SK Valid (Milik Sendiri).');
-                 // BUKA KUNCI
-                 $('#formEditSK input, #formEditSK select').prop('disabled', false);
-                 $('#btnSimpanSK').prop('disabled', false).show();
-                 // Kunci kembali Identitas (Sesuai logika edit)
-                 $('#editNoSk, #editNamaSd').prop('disabled', true);
-            } else {
-                 // Duplikat Punya Orang Lain
-                 $('#alertDuplikat').removeClass('d-none').addClass('alert-warning')
-                    .html('<i class="fas fa-exclamation-triangle mr-1"></i> <b>Sudah Ada.</b> Gunakan tombol Edit di tabel untuk data ini.');
-                 
-                 // KUNCI FIELD LAIN (User tidak bisa lanjut isi form)
-                 $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
-                 $('#btnSimpanSK').prop('disabled', true).hide();
-            }
-
-        } else {
-            // --- DATA BARU (AVAILABLE) -> BUKA KUNCI! ---
-            
-            $('#alertAvailable').removeClass('d-none')
-                .html('<i class="fas fa-check-circle mr-1"></i> <b>Data Baru.</b> Silakan lengkapi form.');
-            
-            // 1. UNLOCK SEMUA INPUT
-            $('#formEditSK input, #formEditSK select').prop('disabled', false);
-            
-            // 2. AKTIFKAN TOMBOL SIMPAN
-            $('#btnSimpanSK').prop('disabled', false).show();
-            
-            // 3. AUTO FILL FILTER (Fitur Cerdas dipindah kesini)
-            // Karena baru dibuka kuncinya, sekarang kita isi nilai default-nya
-            var curTahun = $('#filterTahun').val();
-            var curSmt = $('#filterSemester').val();
-            if(curTahun) $('#editTahun').val(curTahun);
-            if(curSmt) $('#editSemester').val(curSmt);
-            
-            // Role Check (Lock Unit jika bukan admin)
-            if (!checkUserRoleIsAdmin()) { 
-                var u = JSON.parse(localStorage.getItem("siksUser") || "{}"); 
-                $('#editNamaSd').val(u.unit).prop('disabled', true); 
-            } 
-        }
-
-    }).cekDuplikatSK(val);
-}
-
+// =================================================================
+// 7. UTILITIES LAINNYA
+// =================================================================
 function checkUserRoleIsAdmin() {
     try {
         var userStr = localStorage.getItem("siksUser");
         if (!userStr) return false;
-        
         var user = JSON.parse(userStr);
         var role = (user.role || "").toLowerCase();
-        
-        // Daftar role yang dianggap Admin/Boleh edit sekolah
-        if (role.includes('admin') || role.includes('operator') || role.includes('verifikator')) {
-            return true;
-        }
+        if (role === 'admin' || role === 'admin korwil' || role === 'verifikator') return true;
         return false;
-    } catch (e) {
-        return false;
-    }
+    } catch (e) { return false; }
 }
 
 function checkUserRole() {
-    // 1. Ambil Data User dari LocalStorage
     var userStr = localStorage.getItem("siksUser");
     var user = JSON.parse(userStr || "{}");
+    if (user.role === 'Admin' || user.role === 'Admin Korwil' || user.role === 'Operator') $('#btnTambahData').removeClass('d-none');
+    else $('#btnTambahData').addClass('d-none');
     
-    console.log("Cek Role User:", user.role); // Debugging: Cek di Console browser
-
-    // 2. LOGIKA TOMBOL TAMBAH & EDIT (Logika Lama Bapak)
-    // (Sesuaikan dengan aturan Bapak sebelumnya, contoh:)
-    if (user.role === 'Admin' || user.role === 'Admin Korwil' || user.role === 'Operator') {
-        $('#btnTambahData').removeClass('d-none');
-    } else {
-        $('#btnTambahData').addClass('d-none');
-    }
-
-    // 3. LOGIKA TOMBOL RESTORE (INI YANG PENTING)
-    // Pastikan ejaan 'Admin' sesuai dengan yang ada di Database User Bapak (Besar/Kecil berpengaruh)
-    if (user.role === 'Admin' || user.role === 'Admin Korwil' || user.role === 'Verifikator') {
-        
-        // Hapus class d-none agar tombol muncul
-        $('#btnBukaSampah').removeClass('d-none'); 
-        
-    } else {
-        // Sembunyikan jika bukan Admin
-        $('#btnBukaSampah').addClass('d-none');
-    }
+    if (user.role === 'Admin' || user.role === 'Admin Korwil' || user.role === 'Verifikator') $('#btnBukaSampah').removeClass('d-none'); 
+    else $('#btnBukaSampah').addClass('d-none');
 }
+
 function previewPDF(u){ $('#framePreview').attr('src',u.replace('/view','/preview')); $('#modalPreviewSK').modal('show'); }
 function initDataTableStandard(id, empty){ if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy(); $(id).DataTable({ ordering:false, pageLength:10, autoWidth:false, language:{url:"//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", emptyTable: empty?"Silakan cari data":"Data kosong"}, initComplete: function(){ if(!$(id).parent().hasClass('table-scroll-wrapper')) $(id).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width:100%"></div>'); setTimeout(()=>$(id).DataTable().columns.adjust(), 300); }}); }
 function formatDateForInput(s){ if(!s) return ""; if(typeof s==='string'&&s.match(/^\d{4}-\d{2}-\d{2}$/)) return s; var d=new Date(s); return isNaN(d)?s:d.toISOString().split('T')[0]; }
 function parseDateTime(str) { 
     if (!str || str === '-' || str === '') return 0; 
     try { 
-        // Handle format standard: "YYYY-MM-DD HH:mm:ss" ATAU "DD-MM-YYYY HH:mm:ss"
-        // String mungkin hanya tanggal, atau tanggal+waktu
-        var p = str.toString().split(' '); 
-        var dateParts = p[0].split('-'); 
-        var timeParts = (p[1] || "00:00:00").split(':');
-
+        var p = str.toString().split(' '); var dateParts = p[0].split('-'); var timeParts = (p[1] || "00:00:00").split(':');
         var y, m, d;
-        // Deteksi format: Jika bagian pertama length 4 (2024), berarti YYYY-MM-DD
-        if(dateParts[0].length === 4) {
-            y = parseInt(dateParts[0]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[2]);
-        } else {
-            // Asumsi DD-MM-YYYY
-            y = parseInt(dateParts[2]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[0]);
-        }
-        
-        var hr = parseInt(timeParts[0] || 0);
-        var mn = parseInt(timeParts[1] || 0);
-        var sc = parseInt(timeParts[2] || 0);
-
+        if(dateParts[0].length === 4) { y = parseInt(dateParts[0]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[2]); } 
+        else { y = parseInt(dateParts[2]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[0]); }
+        var hr = parseInt(timeParts[0] || 0); var mn = parseInt(timeParts[1] || 0); var sc = parseInt(timeParts[2] || 0);
         return new Date(y, m, d, hr, mn, sc).getTime(); 
     } catch(e) { return 0; } 
 }
 
 function initFilterDefaults() {
-    var now = new Date();
-    var curYear = now.getFullYear();
-    var curMonth = now.getMonth(); // 0-11
-    
-    // Logic Tahun Ajaran: Mulai 2021 hingga Tahun Depan
+    var now = new Date(); var curYear = now.getFullYear(); var curMonth = now.getMonth(); 
     var htmlTahun = '<option value="">- Semua Tahun -</option>';
-    
-    // Loop dari 2021 sampai (Tahun Sekarang + 1)
-    for (var y = 2021; y <= curYear + 1; y++) {
-        var thnAjaran = y + "/" + (y + 1);
-        htmlTahun += `<option value="${thnAjaran}">${thnAjaran}</option>`;
-    }
-    
-    $('#filterTahun, #editTahun').html(htmlTahun); // Terapkan ke Filter & Modal
-
-    // Set Default Tahun & Semester saat ini
+    for (var y = 2021; y <= curYear + 1; y++) { var thnAjaran = y + "/" + (y + 1); htmlTahun += `<option value="${thnAjaran}">${thnAjaran}</option>`; }
+    $('#filterTahun, #editTahun').html(htmlTahun); 
     var currentTa = (curMonth >= 6) ? curYear + '/' + (curYear + 1) : (curYear - 1) + '/' + curYear;
     var currentSmt = (curMonth >= 6) ? "Semester 1" : "Semester 2";
-
     $('#filterSemester').val(currentSmt);
-    // Cek apakah tahun saat ini ada di opsi, jika ada set valuenya
-    if ($(`#filterTahun option[value='${currentTa}']`).length > 0) {
-        $('#filterTahun').val(currentTa);
+    if ($(`#filterTahun option[value='${currentTa}']`).length > 0) { $('#filterTahun').val(currentTa); } else { $('#filterTahun').val(""); }
+}
+
+// AMBIL DAFTAR SEKOLAH DARI KULKAS (DROPDOWN_STATIS)
+function populasiDropdownUnit(d){ 
+    var daftarSekolah = [];
+    if (typeof DROPDOWN_STATIS !== 'undefined' && DROPDOWN_STATIS["NamaSD"]) {
+        daftarSekolah = DROPDOWN_STATIS["NamaSD"];
     } else {
-        $('#filterTahun').val("");
+        // Fallback jika tidak ditemukan
+        var u=new Set(); d.forEach(r=>{if(r.namaSd)u.add(r.namaSd)}); 
+        daftarSekolah = Array.from(u).sort();
     }
-}
-function populasiDropdownUnit(d){ var cur=$('#filterSD').val(); var u=new Set(); d.forEach(r=>{if(r.namaSd)u.add(r.namaSd)}); var h='<option value="">- Semua Sekolah -</option>'; Array.from(u).sort().forEach(unit=>h+=`<option value="${unit}">${unit}</option>`); $('#filterSD').html(h); $('#editNamaSd').html(h.replace("Semua Sekolah","Pilih Sekolah")); }
-
-// =================================================================
-// LOGIKA HAPUS DATA (SOFT DELETE)
-// =================================================================
-
-function hapusSK(id, noSk) {
-    // Set ID dan Tampilan
-    $('#hapusRowId').val(id);
-    $('#infoHapusNoSk').text(noSk);
     
-    // Reset Form
-    $('#hapusAlasan').val('');
-    $('#hapusKode').val('');
-    $('#btnEksekusiHapus').prop('disabled', false).html('<i class="fas fa-trash mr-1"></i> HAPUS DATA');
-    
-    $('#modalHapusSK').modal('show');
+    var htmlFilter = '<option value="">- Semua Sekolah -</option>'; 
+    daftarSekolah.forEach(function(unit) { htmlFilter += `<option value="${unit}">${unit}</option>`; });
+    $('#filterSD').html(htmlFilter); 
+
+    var htmlForm = '<option value="">- Pilih Sekolah -</option>';
+    daftarSekolah.forEach(function(unit) { htmlForm += `<option value="${unit}">${unit}</option>`; });
+    $('#editNamaSd').html(htmlForm);
 }
 
+function hapusSK(id, noSk) { $('#hapusRowId').val(id); $('#infoHapusNoSk').text(noSk); $('#hapusAlasan').val(''); $('#hapusKode').val(''); $('#btnEksekusiHapus').prop('disabled', false).html('<i class="fas fa-trash mr-1"></i> HAPUS DATA'); $('#modalHapusSK').modal('show'); }
 function handleSimpanHapus(e) {
     e.preventDefault();
-    
-    // 1. VALIDASI KODE DI CLIENT (Biar cepat)
     var inputKode = $('#hapusKode').val().trim();
-    
-    // Generate Kode Hari Ini (YYYYMMDD)
-    var d = new Date();
-    var yyyy = d.getFullYear();
-    var mm = String(d.getMonth() + 1).padStart(2, '0');
-    var dd = String(d.getDate()).padStart(2, '0');
+    var d = new Date(); var yyyy = d.getFullYear(); var mm = String(d.getMonth() + 1).padStart(2, '0'); var dd = String(d.getDate()).padStart(2, '0');
     var kodeHariIni = yyyy + mm + dd;
+    if (inputKode !== kodeHariIni) { Sultan.notif.gagal('Kode Keamanan SALAH! Silakan hubungi Admin.'); $('#hapusKode').addClass('is-invalid').focus(); return; } 
+    else { $('#hapusKode').removeClass('is-invalid'); }
 
-    if (inputKode !== kodeHariIni) {
-        Sultan.notif.gagal('Kode Keamanan SALAH! Silakan hubungi Admin.');
-        $('#hapusKode').addClass('is-invalid').focus();
-        return;
-    } else {
-        $('#hapusKode').removeClass('is-invalid');
-    }
-
-    // 2. PERSIAPAN DATA
-    var btn = $('#btnEksekusiHapus');
-    var txt = btn.html();
+    var btn = $('#btnEksekusiHapus'); var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...');
-    
     var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
     var userLogin = u.nama_lengkap || u.fullname || u.nama || u.username || "User";
 
-    var formData = {
-        hapusRowId: $('#hapusRowId').val(),
-        hapusAlasan: $('#hapusAlasan').val(),
-        hapusKode: inputKode,
-        userDelete: userLogin
-    };
-
-    // 3. KIRIM KE BACKEND
+    var formData = { hapusRowId: $('#hapusRowId').val(), hapusAlasan: $('#hapusAlasan').val(), hapusKode: inputKode, userDelete: userLogin };
     google.script.run.withSuccessHandler(function(res) {
         btn.prop('disabled', false).html(txt);
-        
-        if (res.success) {
-            $('#modalHapusSK').modal('hide');
-            Sultan.notif.sukses(res.message);
-            refreshDataServer(); // Refresh tabel
-        } else {
-            Sultan.notif.gagal(res.message);
-        }
+        if (res.success) { $('#modalHapusSK').modal('hide'); Sultan.notif.sukses(res.message); refreshDataServer(); } 
+        else { Sultan.notif.gagal(res.message); }
     }).hapusDataSK(formData);
 }
 
-// =================================================================
-// FITUR: TONG SAMPAH (RESTORE DATA)
-// =================================================================
-
-function bukaTongSampah() {
-    $('#modalTongSampah').modal('show');
-    loadDataSampah();
-}
-
+function bukaTongSampah() { $('#modalTongSampah').modal('show'); loadDataSampah(); }
 function loadDataSampah() {
-    $('#tbodySampah').empty();
-    $('#loadingSampah').removeClass('d-none');
-    $('#kosongSampah').addClass('d-none');
-
+    $('#tbodySampah').empty(); $('#loadingSampah').removeClass('d-none'); $('#kosongSampah').addClass('d-none');
     google.script.run.withSuccessHandler(function(data) {
         $('#loadingSampah').addClass('d-none');
-        
-        if (!data || data.length === 0) {
-            $('#kosongSampah').removeClass('d-none');
-            return;
-        }
-
+        if (!data || data.length === 0) { $('#kosongSampah').removeClass('d-none'); return; }
         var html = '';
         data.forEach(function(item, index) {
-            // URUTAN INI HARUS SAMA PERSIS DENGAN HEADER TABEL HTML
-            // Header: No | Sekolah | Nomor SK | Dihapus Oleh | Alasan | Waktu Hapus | Aksi
-            
-            html += `
-                <tr>
+            html += `<tr>
                     <td class="text-center align-middle">${index + 1}</td>
-                    
-                    <td class="align-middle font-weight-bold">
-                        ${item.namaSd || '-'}
-                    </td>
-                    
-                    <td class="align-middle text-nowrap">
-                        ${item.noSk || '-'}
-                    </td>
-                    
-                    <td class="align-middle text-center">
-                        <span class="badge badge-secondary px-2 py-1">${item.userHapus || 'Admin'}</span>
-                    </td>
-                    
-                    <td class="align-middle text-danger font-italic small text-wrap" style="max-width: 200px;">
-                        "${item.alasanHapus || '-'}"
-                    </td>
-                    
-                    <td class="align-middle small text-center text-muted">
-                        ${item.tglHapus || '-'}
-                    </td>
-                    
+                    <td class="align-middle font-weight-bold">${item.namaSd || '-'}</td>
+                    <td class="align-middle text-nowrap">${item.noSk || '-'}</td>
+                    <td class="align-middle text-center"><span class="badge badge-secondary px-2 py-1">${item.userHapus || 'Admin'}</span></td>
+                    <td class="align-middle text-danger font-italic small text-wrap" style="max-width: 200px;">"${item.alasanHapus || '-'}"</td>
+                    <td class="align-middle small text-center text-muted">${item.tglHapus || '-'}</td>
                     <td class="text-center align-middle">
-                        <button class="btn btn-sm btn-success shadow-sm font-weight-bold" 
-                                onclick="restoreSK(${item.rowBaris}, '${item.namaSd}')">
-                            <i class="fas fa-undo-alt mr-1"></i> Pulihkan
-                        </button>
-                    </td>
-                </tr>
-            `;
+                        <button class="btn btn-sm btn-success shadow-sm font-weight-bold" onclick="restoreSK(${item.rowBaris}, '${item.namaSd}')"><i class="fas fa-undo-alt mr-1"></i> Pulihkan</button>
+                    </td></tr>`;
         });
         $('#tbodySampah').html(html);
-        
     }).getTrashSK();
 }
-
 function restoreSK(rowId, namaSd) {
-    Swal.fire({
-        title: 'Pulihkan Data?',
-        text: "Data " + namaSd + " akan dikembalikan ke tabel aktif.",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Pulihkan!'
+    Swal.fire({ title: 'Pulihkan Data?', text: "Data " + namaSd + " akan dikembalikan ke tabel aktif.", icon: 'question', showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#d33', confirmButtonText: 'Ya, Pulihkan!'
     }).then((result) => {
         if (result.isConfirmed) {
-            
             Swal.fire({title: 'Memulihkan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            
             var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
             var userLogin = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
-
             google.script.run.withSuccessHandler(function(res) {
-                if(res.success) {
-                    Swal.fire('Berhasil!', res.message, 'success');
-                    $('#modalTongSampah').modal('hide');
-                    refreshDataServer(); // Refresh tabel utama agar data muncul lagi
-                } else {
-                    Swal.fire('Gagal!', res.message, 'error');
-                }
-            }).restoreDataSK({
-                rowId: rowId,
-                userRestore: userLogin
-            });
+                if(res.success) { Swal.fire('Berhasil!', res.message, 'success'); $('#modalTongSampah').modal('hide'); refreshDataServer(); } 
+                else { Swal.fire('Gagal!', res.message, 'error'); }
+            }).restoreDataSK({ rowId: rowId, userRestore: userLogin });
         }
     });
 }

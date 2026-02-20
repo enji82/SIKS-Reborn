@@ -7,14 +7,13 @@
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-  
   <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
   
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+  
   <script>
-    // FIX: Matikan eror autoIframeMode
     localStorage.setItem('AdminLTE:IFrame:Options', JSON.stringify({autoIframeMode:false}));
   </script>
   <?!= include('js_core_sultan'); ?>
@@ -99,23 +98,23 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
   <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
   <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
 
   <?!= include('dropdown_data'); ?>
   <?!= include('javascript'); ?>
 
   <script>
   // ============================================
-  // 1. UPDATE UI NAVBAR (Data User)
+  // UPDATE UI NAVBAR (Kode Asli)
   // ============================================
   function updateNavbarUI(user) {
       if (!user) return;
       var displayName = user.nama_lengkap || user.nama || user.username || "User";
-      
       var photoUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(displayName) + "&background=random&color=fff";
       if (user.photo && user.photo.trim() !== "") {
           if (user.photo.startsWith("http")) photoUrl = user.photo;
@@ -135,7 +134,7 @@
   }
 
   // ============================================
-  // 2. FUNGSI UPDATE BREADCRUMB
+  // BREADCRUMB (Kode Asli)
   // ============================================
   function updateBreadcrumb($activeLink, pageName) {
       var homeHtml = '<span style="cursor:pointer" class="btn-home-crumb"><i class="fas fa-home mr-1"></i> Beranda</span>';
@@ -143,19 +142,13 @@
       var breadHtml = homeHtml;
 
       if (pageName !== 'home') {
-          // 1. Cucu (Halaman Aktif)
           var currentTitle = $activeLink.find('p').clone().children().remove().end().text().trim(); 
-          
-          // 2. Bapak (Menu Induk)
           var $parentTree = $activeLink.closest('.nav-treeview');
           if ($parentTree.length > 0) {
               var $parentLi = $parentTree.closest('.nav-item');
               var $parentLink = $parentLi.children('.nav-link');
-              
               if ($parentLink.length > 0) {
                   var parentTitle = $parentLink.find('p').clone().children().remove().end().text().trim();
-                  
-                  // 3. Kakek (Menu Induk Level 2)
                   var $grandParentTree = $parentLi.closest('.nav-treeview');
                   if ($grandParentTree.length > 0) {
                        var $grandParentLi = $grandParentTree.closest('.nav-item');
@@ -170,22 +163,23 @@
           }
           breadHtml += separator + '<span class="font-weight-bold text-white">' + (currentTitle || pageName) + '</span>';
       }
-      
       $('#page-breadcrumb').html(breadHtml);
   }
 
   // ============================================
-  // 3. FUNGSI LOAD HALAMAN (ROUTING)
+  // LOAD KONTEN (Diperbarui dengan Animasi & Accordion Fix)
   // ============================================
   function loadContent(pageName) {
     if(!pageName) return;
     
-    // Highlight Menu
+    // --- 1. HIGHLIGHT MENU ---
     $('.nav-link').removeClass('active'); 
     var $activeLink = $('a[data-page="' + pageName + '"]');
     $activeLink.addClass('active');
 
-    // Buka menu induk (Treeview)
+    // Accordion Fix
+    $('.nav-sidebar li.menu-open').not($activeLink.parents('li')).removeClass('menu-open').children('.nav-treeview').slideUp(300);
+
     var $parentTree = $activeLink.closest('.nav-treeview');
     if ($parentTree.length > 0) {
         $parentTree.show();
@@ -200,36 +194,73 @@
         }
     }
 
-    // Panggil Server
+    // --- 2. ENGINE ANTI-BLINK ---
+    var $content = $('#app-content');
+
+    // A. Kunci tinggi layar saat ini agar elemen di bawahnya (Footer) tidak melompat
+    $content.css('min-height', $content.height() + 'px');
+
+    // B. Mulai loading bar
+    if (typeof NProgress !== 'undefined') { 
+        NProgress.configure({ showSpinner: false, speed: 400 }); 
+        NProgress.start(); 
+    }
+
+    // C. Sembunyikan konten lama dengan mulus ke opacity 0 (Tak terlihat tapi ukurannya tetap ada)
+    $content.css({'transition': 'opacity 0.2s ease', 'opacity': '0'});
+
+    // D. Panggil Server
     google.script.run
       .withSuccessHandler(function(html) {
-        $('#app-content').html(html); 
-        updateBreadcrumb($activeLink, pageName);
+        if (typeof NProgress !== 'undefined') NProgress.done();
+
+        // Beri jeda 200ms agar transisi pudarnya selesai dulu sebelum ganti DOM
+        setTimeout(function() {
+            
+            // E. Suntikkan HTML baru saat layar sedang "gelap"
+            // (Kita hapus div 'sultan-page-transition' karena efek transform-nya bikin blink)
+            $content.html(html); 
+
+            // Paksa browser membaca struktur HTML baru (Reflow)
+            void $content[0].offsetWidth; 
+
+            // F. Munculkan konten baru dengan mulus
+            $content.css('opacity', '1');
+
+            // G. Lepas kunci tinggi layar setelah transisi selesai
+            setTimeout(function() { 
+                $content.css('min-height', ''); 
+            }, 300);
+
+            updateBreadcrumb($activeLink, pageName);
+
+        }, 200);
       })
       .withFailureHandler(function(err) {
-        $('#app-content').html('<div class="alert alert-danger m-3">Gagal memuat halaman: ' + err.message + '</div>');
+        if (typeof NProgress !== 'undefined') NProgress.done();
+        setTimeout(function() {
+            $content.html('<div class="alert alert-danger m-3">Gagal memuat halaman: ' + err.message + '</div>').css('opacity', '1');
+            $content.css('min-height', '');
+        }, 200);
       })
       .loadPage(pageName);
   }
 
   // ============================================
-  // 4. LOGOUT (RESET UI)
-  // ============================================
-
-
-  // ============================================
-  // 5. INISIALISASI
+  // INISIALISASI (Kode Asli yang dijamin bekerja)
   // ============================================
   $(document).ready(function() {
     
     var userLocal = localStorage.getItem("siksUser");
-    var user = userLocal ? JSON.parse(userLocal) : null;
+    var user = null;
+    try { user = userLocal ? JSON.parse(userLocal) : null; } catch(e){}
 
     if (user) {
         $('#gerbang-login').hide(); $('#konten-aplikasi').show(); 
         updateNavbarUI(user); loadContent('home'); 
         
-        if (!user.nama_lengkap || user.nama_lengkap === user.username) {
+        // Pengecekan Nama Usang
+        if (!user.nama_lengkap || user.nama_lengkap === user.username || user.nama_lengkap === "User Web") {
              google.script.run.withSuccessHandler(function(res){
                 if(res.found) {
                     user.nama_lengkap = res.nama_lengkap; user.nama = res.nama_lengkap;
@@ -244,26 +275,19 @@
         $('#konten-aplikasi').hide(); $('#gerbang-login').show();
     }
 
-    // --- PERBAIKAN UTAMA ACCORDION ---
+    // Klik Sidebar
     $(document).on('click', '.nav-sidebar .nav-link', function(e) {
         var pageName = $(this).data('page'); 
-
         if (pageName) {
-            // JIKA MENU PUNYA HALAMAN (ANAK) -> STOP RELOAD & LOAD PAGE
             e.preventDefault(); 
             loadContent(pageName);
-            
-            // Tutup sidebar di HP
             if ($(window).width() < 768) {
                 $('body').removeClass('sidebar-open').addClass('sidebar-closed sidebar-collapse');
             }
-        } else {
-            // JIKA MENU TIDAK PUNYA HALAMAN (BAPAK/ACCORDION) 
-            // -> JANGAN preventDefault. Biarkan AdminLTE menangani expand/collapse.
-            // AdminLTE secara otomatis menangani href="#" agar tidak lompat ke atas.
         }
     });
 
+    // Klik Beranda Breadcrumb
     $(document).on('click', '.btn-home-crumb', function(e) {
         e.preventDefault();
         loadContent('home');
@@ -272,7 +296,7 @@
     });
 
   });
-</script>
+  </script>
 
 </body>
 </html>

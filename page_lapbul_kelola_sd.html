@@ -408,7 +408,7 @@
                     </div>
 
                     <h5 class="font-weight-bold mt-2">Unggah Laporan SD</h5>
-                    <p class="text-muted mb-1">Format PDF, Maksimal 200 KB.</p>
+                    <p class="text-muted mb-1">Format PDF, Maksimal 1 MB.</p>
                     
                     <p class="text-info font-italic mb-3 d-none" id="msgEditFileSD">
                         <i class="fas fa-info-circle mr-1"></i> Biarkan kosong jika tidak ingin mengganti file.
@@ -622,7 +622,7 @@
                 <div class="card card-sultan shadow-sm p-5 text-center">
                     <i class="fas fa-cloud-upload-alt text-maroon fa-4x mb-3"></i>
                     <h5 class="font-weight-bold">Unggah Laporan PAUD</h5>
-                    <p class="text-muted">Format PDF, Maksimal 200 KB.</p>
+                    <p class="text-muted">Format PDF, Maksimal 1 MB.</p>
                     <div class="custom-file w-50 mx-auto text-left mb-4">
                         <input type="file" class="custom-file-input" id="filePAUD" accept="application/pdf" required onchange="$(this).next().text(this.files[0].name)">
                         <label class="custom-file-label" for="filePAUD">Pilih File...</label>
@@ -1499,7 +1499,7 @@
 
         var f = document.getElementById('fileSD');
         if (f.files.length === 0) { Sultan.notif.gagal("Wajib upload file PDF!"); return; }
-        if(f.files[0].size > 200 * 1024) { Sultan.notif.gagal("Max 200KB!"); return; }
+        if(f.files[0].size > 1000 * 1024) { Sultan.notif.gagal("Max 1 MB!"); return; }
         
         var b = $('#btnFinalSD'); var t = b.html(); b.prop('disabled', true).html('Mengirim...');
         var r = new FileReader();

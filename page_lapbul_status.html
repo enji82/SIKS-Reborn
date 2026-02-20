@@ -63,19 +63,17 @@
 
         <div class="card-sultan">
             <div class="card-body p-3">
-              <table id="tabelStatus" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
-                <thead id="headTabelStatus" class="text-center" style="display:none;"></thead>
-                <tbody id="bodyTabelStatus">
-                    <tr>
-                        <td class="text-center p-5" colspan="100%">
-                            <div class="sultan-loading-container">
-                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
-                                <h6 class="text-muted font-weight-bold">Mengambil Data Status...</h6>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-              </table>
+                
+              <div id="spinnerContainer" class="text-center py-5">
+                  <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                  <h6 class="text-muted font-weight-bold" id="teksLoading">Mempersiapkan Data...</h6>
+              </div>
+
+              <div id="tableWrapper" style="display: none;">
+                  <table id="tabelStatus" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
+                  </table>
+              </div>
+
             </div>
         </div>
 
@@ -95,16 +93,21 @@
             $sel.append('<option value="'+i+'">'+i+'</option>'); 
         }
         $sel.val(thn);
+        
         loadServerData();
+        
         if(typeof setSidebarActive === 'function') {
           setSidebarActive("Status Laporan"); 
-      }
+        }
     });
 
+    // =======================================================
+    // 1. AMBIL DATA SERVER
+    // =======================================================
     function loadServerData() {
-        if ($.fn.DataTable.isDataTable('#tabelStatus')) { $('#tabelStatus').DataTable().destroy(); }
-        $('#headTabelStatus').hide();
-        $('#bodyTabelStatus').html('<tr><td class="text-center p-5" colspan="100%"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Mengambil Data dari Server...</h6></div></td></tr>');
+        $('#tableWrapper').hide();
+        $('#teksLoading').text('Menghubungkan ke Server...');
+        $('#spinnerContainer').show();
         $('#btnCari').prop('disabled', true);
 
         google.script.run
@@ -116,105 +119,129 @@
             })
             .withFailureHandler(function(err) {
                 $('#btnCari').prop('disabled', false);
-                $('#bodyTabelStatus').html(`<tr><td class="text-center text-danger p-5">Error: ${err.message}</td></tr>`);
+                $('#spinnerContainer').html(`<div class="text-danger text-center"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal: ${err.message}</div>`);
             })
             .getRekapLapbulStatus(); 
     }
 
+    // =======================================================
+    // 2. FILTER DATA LOKAL
+    // =======================================================
     function filterLocalData() {
+        $('#tableWrapper').hide();
+        $('#teksLoading').text('Menyusun Tabel...');
+        $('#spinnerContainer').show();
+
         var reqTahun = $('#filterTahun').val();
         var reqJenjang = $('#filterJenjang').val(); 
 
         var filteredRows = CACHE_ALL_DATA.filter(function(row) {
             var rowJenjang = String(row[2]).toUpperCase().trim();
             var rowTahun = String(row[3]).trim();
-
             if (reqTahun && rowTahun !== reqTahun) return false;
-            if (reqJenjang && reqJenjang !== "SEMUA") {
-                if (rowJenjang !== reqJenjang) return false;
-            }
+            if (reqJenjang && reqJenjang !== "SEMUA" && rowJenjang !== reqJenjang) return false;
             return true;
         });
 
-        renderTabel(filteredRows);
+        // Eksekusi Render
+        renderTabelNative(filteredRows);
     }
 
-    function renderTabel(rows) {
+    // =======================================================
+    // 3. RENDER TABEL (NATIVE API DATATABLES - ANTI CRASH)
+    // =======================================================
+    function renderTabelNative(rows) {
+        
+        // --- A. SIAPKAN STRUKTUR KOLOM (HEADERS) ---
+        var dtCols = [];
+        if (GLOBAL_HEADERS.length > 0) {
+            GLOBAL_HEADERS.forEach(function(h, idx) {
+                if (idx === 0) {
+                    // Kolom Nama Sekolah (Index 0) dibuat lengket (Sticky)
+                    dtCols.push({ 
+                        title: h, 
+                        className: "col-sticky-left bg-white border-right text-dark font-weight-bold align-middle text-nowrap"
+                    });
+                } else {
+                    // Kolom NPSN, Jenjang, & Bulan-Bulan
+                    dtCols.push({ 
+                        title: h, 
+                        className: "text-center align-middle text-nowrap" 
+                    });
+                }
+            });
+        } else {
+            dtCols = [{ title: "Nama Sekolah" }, { title: "Status" }]; // Fallback
+        }
+
+        // --- B. SIAPKAN ISI DATA (BODY) ---
+        var dtData = [];
+        if (rows && rows.length > 0) {
+            dtData = rows.map(function(row) {
+                var newRow = [];
+                
+                // 1. Nama Sekolah
+                newRow.push(row[0]);
+                
+                // 2. NPSN
+                newRow.push(row[1]);
+                
+                // 3. Jenjang (Beri Badge)
+                var j = row[2];
+                var badgeClass = 'badge-sultan-light-secondary';
+                if (j === 'SD') badgeClass = 'badge-sultan-light-info';
+                else if (j === 'TK') badgeClass = 'badge-sultan-light-warning';
+                else if (j === 'KB') badgeClass = 'badge-sultan-light-success';
+                else if (j === 'SPS') badgeClass = 'badge-sultan-light-primary';
+                else if (j === 'TPA') badgeClass = 'badge-sultan-light-danger';
+                
+                newRow.push(`<span class="badge badge-sultan ${badgeClass}">${j}</span>`);
+                
+                // 4. Status per Bulan (Mulai dari row[4] karena row[3] adalah Tahun)
+                for (var i = 4; i < row.length; i++) {
+                    newRow.push(getBadgeSultan(row[i]));
+                }
+                
+                return newRow;
+            });
+        }
+
+        // --- C. HANCURKAN DAN BERSIHKAN TABEL LAMA ---
         if ($.fn.DataTable.isDataTable('#tabelStatus')) {
-            $('#tabelStatus').DataTable().clear().destroy();
+            $('#tabelStatus').DataTable().destroy();
         }
-        $('#bodyTabelStatus').empty();
+        $('#tabelStatus').empty(); 
 
-        if (!rows || rows.length === 0) {
-            $('#headTabelStatus').show();
-            $('#headTabelStatus').html('<tr><th>Nama Sekolah</th><th>NPSN</th><th>Jenjang</th><th>Status</th></tr>');
-            initDataTableStandard('#tabelStatus', true);
-            return;
-        }
-
-        // Header
-        var htmlHead = '<tr>';
-        GLOBAL_HEADERS.forEach(function(h, idx) {
-            var stickyClass = (idx === 0) ? 'col-sticky-left' : '';
-            var styleAttr = (idx === 0) ? 'style="min-width: 250px;"' : ''; 
-            htmlHead += `<th class="text-center align-middle text-nowrap ${stickyClass}" ${styleAttr}>${h}</th>`;
-        });
-        htmlHead += '</tr>';
-        $('#headTabelStatus').html(htmlHead);
-
-        // Body
-        var htmlBody = '';
-        rows.forEach(function(row) {
-            htmlBody += '<tr class="tr-animasi">';
-            
-            // Kolom Nama (Sticky)
-            htmlBody += `<td class="col-sticky-left font-weight-bold align-middle text-nowrap bg-white text-dark border-right">${row[0]}</td>`;
-            
-            // Kolom NPSN
-            htmlBody += `<td class="text-center align-middle">${row[1]}</td>`;
-            
-            // Kolom Jenjang
-            var j = row[2];
-            var badgeClass = 'badge-sultan-light-secondary';
-            if (j === 'SD') badgeClass = 'badge-sultan-light-info';
-            else if (j === 'TK') badgeClass = 'badge-sultan-light-warning';
-            else if (j === 'KB') badgeClass = 'badge-sultan-light-success';
-            else if (j === 'SPS') badgeClass = 'badge-sultan-light-primary';
-            else if (j === 'TPA') badgeClass = 'badge-sultan-light-danger';
-            
-            htmlBody += `<td class="text-center align-middle"><span class="badge badge-sultan ${badgeClass}">${j}</span></td>`;
-
-            // Kolom Bulan (Index 4 dst)
-            for (var i = 4; i < row.length; i++) {
-                htmlBody += `<td class="text-center align-middle">${getBadgeSultan(row[i])}</td>`;
-            }
-            htmlBody += '</tr>';
-        });
-        
-        $('#bodyTabelStatus').html(htmlBody);
-        $('#headTabelStatus').show();
-        
-        setTimeout(function() { initDataTableStandard('#tabelStatus'); }, 10);
-    }
-
-    function initDataTableStandard(id, empty){ 
-        if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy(); 
-        $(id).DataTable({ 
-            ordering:false, 
-            pageLength:10, 
-            autoWidth:false, 
-            language:{url:"//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", emptyTable: empty?"Data tidak ditemukan":"Data kosong"}, 
-            initComplete: function(){ 
-                if(!$(id).parent().hasClass('table-scroll-wrapper')) $(id).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width:100%"></div>'); 
-                setTimeout(()=>$(id).DataTable().columns.adjust(), 300); 
-            },
+        // --- D. BANGUN ULANG MENGGUNAKAN MESIN DATATABLES ---
+        $('#tabelStatus').DataTable({
+            data: dtData,       // Tembak data array
+            columns: dtCols,    // Tembak struktur kolom
+            ordering: false, 
+            pageLength: 10, 
+            autoWidth: false, 
+            destroy: true,
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", 
+                emptyTable: "Tidak ada data yang sesuai filter."
+            }, 
             dom: "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                 "<'row'<'col-sm-12'tr>>" +
-                 "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+                 "<'row'<'col-sm-12 table-responsive'tr>>" + 
+                 "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            
+            initComplete: function() {
+                // Aktifkan Tooltip Bootstrap
+                $('[data-toggle="tooltip"]').tooltip();
+                
+                // Sembunyikan Spinner, Tampilkan Tabel dengan Fade In
+                $('#spinnerContainer').hide();
+                $('#tableWrapper').fadeIn(300);
+            }
         }); 
     }
 
-    // --- FUNGSI ICON (MENGGUNAKAN CLASS SULTAN) ---
+    // =======================================================
+    // 4. HELPER ICON STATUS
+    // =======================================================
     function getBadgeSultan(status) {
         if (!status || status === "-" || status === "") {
             return '<i class="fas fa-minus text-black-50 small" style="opacity:0.2"></i>';
@@ -222,35 +249,20 @@
         
         var s = String(status).trim();
         var stLower = s.toLowerCase();
-
-        // Menggunakan class 'btn-icon-sultan' yang sudah didefinisikan di template
-        // Ini menjamin bentuk bulat (border-radius: 50%) dan shadow yang konsisten.
         var baseClass = "btn-icon-sultan"; 
         var iconHtml = "";
 
-        // 1. REVISI -> btn-icon-sultan-warning
         if (stLower.includes('revisi') || stLower.includes('perbaiki')) {
-             iconHtml = `<div class="${baseClass} btn-icon-sultan-warning" data-toggle="tooltip" title="${s}" style="cursor:help;">
-                            <i class="fas fa-sync-alt"></i>
-                         </div>`;
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-warning" data-toggle="tooltip" title="${s}" style="cursor:help;"><i class="fas fa-sync-alt"></i></div>`;
         }
-        // 2. DITOLAK -> btn-icon-sultan-danger
         else if (stLower.includes('tolak') || stLower.includes('x') || stLower.includes('salah')) {
-             iconHtml = `<div class="${baseClass} btn-icon-sultan-danger" data-toggle="tooltip" title="${s}" style="cursor:help;">
-                            <i class="fas fa-times"></i>
-                         </div>`;
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-danger" data-toggle="tooltip" title="${s}" style="cursor:help;"><i class="fas fa-times"></i></div>`;
         }
-        // 3. DISETUJUI -> btn-icon-sultan-success
         else if (stLower.includes('verif') || stLower.includes('setuju') || stLower.includes('ok') || stLower.includes('valid')) {
-             iconHtml = `<div class="${baseClass} btn-icon-sultan-success" data-toggle="tooltip" title="${s}" style="cursor:help;">
-                            <i class="fas fa-check"></i>
-                         </div>`;
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-success" data-toggle="tooltip" title="${s}" style="cursor:help;"><i class="fas fa-check"></i></div>`;
         }
-        // 4. DIPROSES -> btn-icon-sultan-info
         else if (s.length > 5) {
-             iconHtml = `<div class="${baseClass} btn-icon-sultan-info" data-toggle="tooltip" title="${s}" style="cursor:help;">
-                            <i class="fas fa-spinner fa-spin"></i>
-                         </div>`;
+             iconHtml = `<div class="${baseClass} btn-icon-sultan-info" data-toggle="tooltip" title="${s}" style="cursor:help;"><i class="fas fa-spinner fa-spin"></i></div>`;
         }
         else {
              return `<span class="text-muted small font-weight-bold">${s}</span>`;

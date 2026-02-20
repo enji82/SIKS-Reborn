@@ -1,637 +1,368 @@
 <script>
 /* =============================================================
-   1. GLOBAL HELPER: NOTIFIKASI SULTAN (Unified Engine)
-   Letakkan paling atas agar bisa dipanggil siapa saja.
+   1. GLOBAL HELPER: NOTIFIKASI SULTAN & KODE LAMA
    ============================================================= */
-
 const NotifSultan = {
-  // CONFIG WARNA
-  config: {
-    warnaMaroon: '#800000',
-    warnaHitam: '#343a40',
-    warnaSukses: '#28a745',
-    warnaGagal: '#dc3545',
-    warnaWarning: '#ffc107'
-  },
-
-  // A. TOAST (Notifikasi Kecil di Pojok Kanan Atas)
+  config: { warnaMaroon: '#800000', warnaHitam: '#343a40', warnaSukses: '#28a745', warnaGagal: '#dc3545', warnaWarning: '#ffc107' },
   toast: (tipe, pesan) => {
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      background: '#fff',
-      color: '#343a40',
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    });
-
-    Toast.fire({
-      icon: tipe, // success, error, warning, info
-      title: `<span style="font-weight:600">${pesan}</span>`
-    });
+    Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, background: '#fff', color: '#343a40' })
+    .fire({ icon: tipe, title: `<span style="font-weight:600">${pesan}</span>` });
   },
-
-  // B. ALERT (Popup Tengah dengan Tombol)
   alert: (tipe, judul, pesan) => {
-    let btnColor = NotifSultan.config.warnaHitam;
-    let btnText = 'Tutup';
-    
-    if (tipe === 'success') {
-      btnColor = NotifSultan.config.warnaMaroon;
-      btnText = 'Lanjutkan';
-    } else if (tipe === 'error') {
-      btnColor = NotifSultan.config.warnaHitam;
-      btnText = 'Perbaiki';
-    }
-
-    return Swal.fire({
-      icon: tipe,
-      title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`,
-      html: `<div class="text-muted">${pesan}</div>`, // Pakai HTML biar rapi
-      width: '350px',
-      confirmButtonColor: btnColor,
-      confirmButtonText: btnText,
-      padding: '1.2rem',
-      allowOutsideClick: false,
-      buttonsStyling: true,
-      customClass: {
-        popup: 'card-outline card-' + (tipe === 'error' ? 'danger' : 'success') // Gaya AdminLTE
-      }
-    });
+    let btnColor = tipe === 'success' ? NotifSultan.config.warnaMaroon : NotifSultan.config.warnaHitam;
+    return Swal.fire({ icon: tipe, title: `<h5 class="font-weight-bold" style="margin-top:10px">${judul}</h5>`, html: `<div class="text-muted">${pesan}</div>`, width: '350px', confirmButtonColor: btnColor, padding: '1.2rem', customClass: { popup: 'card-outline card-' + (tipe === 'error' ? 'danger' : 'success') } });
   },
-
-  // C. LOADING (Spinner Putar)
   loading: (pesan) => {
-    Swal.fire({
-      width: '300px',
-      title: '',
-      html: `
-        <div class="text-center p-3">
-          <div class="spinner-border text-maroon" role="status" style="width: 3rem; height: 3rem; color: #800000;"></div>
-          <p class="mt-3 mb-0 font-weight-bold text-secondary">${pesan || 'Sedang Memproses...'}</p>
-        </div>
-      `,
-      showConfirmButton: false,
-      allowOutsideClick: false,
-      allowEscapeKey: false
-    });
+    Swal.fire({ width: '300px', title: '', html: `<div class="text-center p-3"><div class="spinner-border text-maroon" style="width: 3rem; height: 3rem;"></div><p class="mt-3 mb-0 font-weight-bold text-secondary">${pesan || 'Memproses...'}</p></div>`, showConfirmButton: false, allowOutsideClick: false });
   },
-
-  // D. KONFIRMASI (Ya/Tidak)
   konfirmasi: (judul, pesan, btnText) => {
-    return Swal.fire({
-      icon: 'question',
-      title: `<h5 class="font-weight-bold">${judul}</h5>`,
-      text: pesan,
-      width: '350px',
-      showCancelButton: true,
-      confirmButtonColor: '#d33', // Merah untuk aksi berbahaya
-      cancelButtonColor: '#3085d6', // Biru untuk batal
-      confirmButtonText: btnText || 'Ya, Lanjutkan', 
-      cancelButtonText: 'Batal',
-      reverseButtons: true
-    });
+    return Swal.fire({ icon: 'question', title: `<h5 class="font-weight-bold">${judul}</h5>`, text: pesan, width: '350px', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: btnText || 'Ya', reverseButtons: true });
   }
 };
 
-/* --- JEMBATAN KODE LAMA (Agar kode lama tidak error) --- */
-// Jika ada kode lama panggil toast(), kita alihkan ke NotifSultan.toast
+// Jembatan fungsi lama agar form/halaman lain tidak eror
 function toast(pesan, tipe) { NotifSultan.toast(tipe, pesan); }
 function tampilkanNotif(pesan, tipe) { NotifSultan.toast(tipe, pesan); }
-
-// Jika ada kode lama panggil Notif.sukses(), alihkan ke NotifSultan.alert
 const Notif = {
   sukses: (p) => NotifSultan.alert('success', 'Berhasil', p),
   gagal: (p) => NotifSultan.alert('error', 'Gagal', p),
-  konfirmasi: (p, cb) => {
-      NotifSultan.konfirmasi('Konfirmasi', p).then((res) => { if(res.isConfirmed) cb(); });
-  }
+  konfirmasi: (p, cb) => { NotifSultan.konfirmasi('Konfirmasi', p).then((res) => { if(res.isConfirmed) cb(); }); }
 };
 
+/* =============================================================
+   2. SISTEM MANAJEMEN SESI
+   ============================================================= */
+function getSesiUser() {
+    var raw = localStorage.getItem("siksUser");
+    if (!raw || raw === "null" || raw === "undefined") return null;
+    try { 
+        var parsed = JSON.parse(raw); 
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed); 
+        return parsed;
+    } catch (e) { return null; }
+}
 
 /* =============================================================
-   2. CORE APP SCRIPT – SIKS REBORN (Logic Utama)
+   3. CORE APP SCRIPT (INISIALISASI)
    ============================================================= */
-
 $(document).ready(function() {
   console.log("SIKS-REBORN: Engine Started.");
+
+  // === 🛠️ FIX MODAL Z-INDEX BUG 🛠️ ===
+  // Memindahkan modal ke body sesaat sebelum terbuka agar tidak tertutup bayangan hitam
+  $(document).on('show.bs.modal', '.modal', function () {
+      $(this).appendTo('body');
+  });
+  // ===================================
+  
+  // 1. Jalankan Inisialisasi
   inisialisasiAplikasi();
 
-  // Handler Klik Menu Sidebar
-  $(document).on('click', '.nav-link[data-page]', function(e) {
-    e.preventDefault();
-    var h = $(this).attr('data-page');
-    if (h) {
-      loadPage(h);
-      $('.nav-sidebar .nav-link').removeClass('active');
-      $(this).addClass('active');
-    }
+  // 2. Handler Klik Menu Sidebar
+  $(document).on('click', '.nav-sidebar .nav-link', function(e) {
+      var pageName = $(this).data('page'); 
+      if (pageName) {
+          e.preventDefault(); 
+          loadContent(pageName); 
+          if ($(window).width() < 768) {
+              $('body').removeClass('sidebar-open').addClass('sidebar-closed sidebar-collapse');
+          }
+      }
+  });
+
+  // 3. Handler Klik Beranda di Breadcrumb
+  $(document).on('click', '.btn-home-crumb', function(e) {
+      e.preventDefault();
+      loadContent('home');
   });
 });
 
 function inisialisasiAplikasi() {
   var preloader = $('.preloader');
-  var sesiUser = localStorage.getItem("siksUser");
+  
+  try {
+      var user = getSesiUser();
 
-  if (!sesiUser) {
-    console.log("🔒 Status: Belum Login.");
-    $('#konten-aplikasi').hide();
-    $('#gerbang-login').show(); // Pastikan ditampilkan jika belum login
-    if (preloader.length) preloader.fadeOut('fast');
-    return;
+      if (!user) {
+        $('#konten-aplikasi').hide();
+        $('#gerbang-login').show(); 
+        if (preloader.length) preloader.fadeOut('fast');
+        return;
+      }
+
+      $('#gerbang-login').hide(); 
+      $('#konten-aplikasi').show();
+
+      updateUI(user);
+      tampilkanMenuAdmin(user);
+      
+      loadContent('home'); 
+
+      if (preloader.length) preloader.fadeOut('fast');
+
+      // Self-Healing Nama User 
+      var isInvalidName = !user.nama_lengkap || user.nama_lengkap === "User Web" || user.nama_lengkap === user.username;
+      if (isInvalidName && user.username) {
+          google.script.run.withSuccessHandler(function(res){
+              if(res.found && res.nama_lengkap) {
+                  user.nama_lengkap = res.nama_lengkap; user.nama = res.nama_lengkap; 
+                  user.role = res.role; user.unit = res.unit;
+                  localStorage.setItem("siksUser", JSON.stringify(user));
+                  updateUI(user);
+              }
+          }).getUserProfileByName(user.username);
+      }
+
+  } catch(fatalError) {
+      console.error("Init Error:", fatalError);
+      $('#gerbang-login').hide(); $('#konten-aplikasi').show();
+      loadContent('home');
+      if (preloader.length) preloader.fadeOut('fast');
   }
-
-  console.log("🔓 Status: Login OK");
-  var user = JSON.parse(sesiUser);
-
-  $('#gerbang-login').hide(); // <--- GANTI JADI HIDE (Disembunyikan saja)
-  $('#konten-aplikasi').show();
-
-  updateUI(user);
-  tampilkanMenuAdmin(user);
-  loadPage('home'); 
-
-  if (preloader.length) preloader.fadeOut('fast');
 }
 
-// --- FUNGSI LOGIN ---
+/* =============================================================
+   4. FUNGSI LOGIN & LOGOUT
+   ============================================================= */
 function handleLoginV2(event) {
   event.preventDefault();
-
   var btn = document.getElementById("tombolLogin");
   var form = document.getElementById("formLogin");
-
-  // Ubah tombol jadi loading
+  
   btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...';
   btn.disabled = true;
 
   google.script.run
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
-        
-        // 1. Simpan Data User
         var userBersih = response.userData ? response.userData : response;
         localStorage.setItem("siksUser", JSON.stringify(userBersih));
-        
-        // 2. Tampilkan Notifikasi
         NotifSultan.toast('success', 'Login Berhasil!');
-        
-        // 3. --- PERBAIKAN UTAMA DI SINI ---
-        // JANGAN RELOAD HALAMAN (window.location.reload / href).
-        // Cukup panggil inisialisasiAplikasi() untuk masuk ke menu utama.
-        setTimeout(function() {
-           inisialisasiAplikasi(); 
-        }, 500); // Jeda setengah detik biar transisi halus
-
+        setTimeout(function() { window.location.reload(); }, 500); 
       } else {
-        // Jika Gagal Login
-        btn.innerText = "MASUK";
-        btn.disabled = false;
+        btn.innerText = "MASUK"; btn.disabled = false;
         NotifSultan.alert('error', 'Login Gagal', response.message || "Username/Password salah.");
       }
     })
     .withFailureHandler(function(err) {
-      // Jika Error Koneksi
-      btn.innerText = "MASUK";
-      btn.disabled = false;
-      NotifSultan.alert('error', 'Koneksi Gagal', "Gagal menghubungi server: " + err.message);
+      btn.innerText = "MASUK"; btn.disabled = false;
+      NotifSultan.alert('error', 'Koneksi Gagal', err.message);
     })
     .processLogin(form);
 }
 
-// --- FUNGSI LOGOUT (HARD RELOAD) ---
 function handleLogout() {
   NotifSultan.konfirmasi('Keluar Aplikasi?', 'Sesi Anda akan diakhiri.', 'Ya, Logout')
   .then((result) => {
     if (result.isConfirmed) {
-        // 1. Hapus Sesi Lokal
+        
+        // 1. Tampilkan Spinner
+        NotifSultan.loading("Sedang keluar...");
+        
+        // 2. Hapus Sesi User dari Browser
         localStorage.removeItem("siksUser");
         
-        // 2. Tampilkan Loading agar user tahu sistem sedang bekerja
-        NotifSultan.loading("Sedang keluar...");
-
-        // 3. Panggil Server untuk Reload URL
-        google.script.run
-            .withSuccessHandler(function (url) {
-                // RELOAD HALAMAN
-                window.top.location.href = url; 
-            })
-            .getScriptUrl();
+        // 3. Jeda sedikit agar proses hapus storage selesai
+        setTimeout(function() {
+             // 4. Reload Iframe (Cara paling aman di Google Apps Script)
+             // Dengan cara ini, kita tidak melanggar keamanan window.top
+             window.location.reload(); 
+        }, 800);
     }
   });
 }
 
-// --- FUNGSI LOAD PAGE ---
-function loadPage(page) {
-  const area = $('#main-content');
-  // Efek Loading Transparan
-  area.css('opacity', '0.3'); 
+/* =============================================================
+   5. MESIN ROUTING
+   ============================================================= */
+function loadContent(pageName) {
+  if(!pageName) return;
+  const area = $('#app-content'); 
+
+  // === 🛠️ TUKANG SAPU MODAL 🛠️ ===
+  // Membersihkan modal tertinggal saat pindah menu agar tidak error/dobel
+  $('body > .modal').remove();
+  $('.modal-backdrop').remove();
+  $('body').removeClass('modal-open').css('padding-right', '');
+  // ==================================
   
-  // Tampilkan Loading Spinner jika loading lama (>500ms)
-  let loadTimeout = setTimeout(() => {
-     NotifSultan.loading("Memuat Halaman...");
-  }, 500);
+  if (typeof NProgress !== 'undefined') {
+      NProgress.configure({ showSpinner: false, speed: 500 });
+      NProgress.start();
+  }
+  area.css({'transition': 'opacity 0.3s ease', 'opacity': '0.3'}); 
 
   google.script.run
     .withSuccessHandler(function(html) {
-      clearTimeout(loadTimeout); // Batalkan loading spinner jika cepat
-      Swal.close(); // Tutup spinner jika terlanjur muncul
+      if (typeof NProgress !== 'undefined') NProgress.done();
+      area.css('opacity', '1');
+      var animatedHtml = '<div class="sultan-page-transition">' + html + '</div>';
+      area.html(animatedHtml);
       
-      area.html(html).css('opacity', '1');
-      highlightSidebar(page);
+      highlightSidebar(pageName);
+      updateBreadcrumb(pageName);
     })
     .withFailureHandler(function(err){
-      clearTimeout(loadTimeout);
-      Swal.close();
+      if (typeof NProgress !== 'undefined') NProgress.done();
       area.css('opacity', '1');
-      NotifSultan.alert('error', 'Gagal Memuat', 'Halaman tidak dapat dibuka.');
+      NotifSultan.alert('error', 'Gagal Memuat', err.message);
     })
-    .getHalaman(page);
+    .loadPage(pageName); 
 }
 
-// --- FUNGSI UPDATE UI USER ---
+/* =============================================================
+   6. MANAJEMEN UI (Sidebar & Breadcrumb)
+   ============================================================= */
 function updateUI(u) {
-  // Prioritas Nama: Nama Lengkap -> Nama -> Username -> "User"
-  var name = u.fullName || u.nama || u.username || "User";
+  if (!u) return; 
+  var name = u.nama_lengkap || u.fullName || u.nama || u.username || "User";
   var photo = u.photo || u.foto || "";
   var role = u.role || "User";
-
-  // Generate Avatar jika tidak ada foto
   var f = photo ? 'https://drive.google.com/thumbnail?id=' + photo + '&sz=w200' : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random';
   
-  // Update Elemen HTML
   $('#nav-user-photo, #dropdown-user-photo').attr('src', f);
-  $('#nav-user-name').text(name);
-  $('#dropdown-user-name-big').text(name);
+  $('#nav-user-name, #dropdown-user-name-big, .user-panel .info a').text(name);
   $('#dropdown-user-role').text(role);
-}
+  $('.user-capsule span, .user-menu .nav-link span, .dropdown-user .dropdown-toggle span').text(name);
 
-function getSesiUser() {
-    var raw = localStorage.getItem("siksUser");
-    if (!raw || raw === "null") return null;
-    try { return JSON.parse(raw); } catch (e) { return null; }
+  if($('#uniUserLogin').length) $('#uniUserLogin').val(name);
 }
 
 function tampilkanMenuAdmin(user) {
-  // 1. Daftar ID Menu Khusus Admin
-  // Masukkan semua ID menu yang ingin disembunyikan dari user biasa di sini
-  var daftarMenuAdmin = [
-    "menuTrashSK",           // Menu Sampah SK (yang lama)
-    "menu-setting-admin",    // Menu Pengaturan (Baru)
-    "menu-monitoring-admin"  // Menu Monitoring (Baru)
-  ];
-
-  // 2. Cek Role User (Aman dari huruf besar/kecil)
-  var role = (user.role || "").toString().toLowerCase();
-  var isAdmin = role.includes("admin"); // Benar jika role mengandung kata "admin"
-
-  // 3. Loop Semua ID dan Atur Tampilan
+  if (!user) return;
+  var daftarMenuAdmin = ["menuTrashSK", "menu-setting-admin", "menu-monitoring-admin"];
+  var isAdmin = (user.role || "").toString().toLowerCase().includes("admin");
   daftarMenuAdmin.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) {
-      if (isAdmin) {
-        // JIKA ADMIN: Hapus class d-none (PENTING!)
-        el.classList.remove("d-none"); 
-        el.style.display = "block"; // Paksa tampil
-      } else {
-        // JIKA BUKAN ADMIN: Tambah class d-none
-        el.classList.add("d-none");
-      }
+      if (isAdmin) { el.classList.remove("d-none"); el.style.display = "block"; } 
+      else { el.classList.add("d-none"); }
     }
   });
 }
 
-// --- UTILS DROPDOWN ---
-function isiDropdownSK() {
-    // Fungsi ini dipanggil dari page SK jika diperlukan
-    renderDropdown("namaSD", "NamaSD");
-    renderDropdown("tahunAjaran", "TahunAjaran");
-    renderDropdown("semester", "Semester");
-    renderDropdown("kriteriaSK", "KriteriaSK");
-}
+function updateBreadcrumb(pageName) {
+    var $activeLink = $('a[data-page="' + pageName + '"]');
+    var homeHtml = '<span style="cursor:pointer" class="btn-home-crumb"><i class="fas fa-home mr-1"></i> Beranda</span>';
+    var separator = ' <i class="fas fa-angle-right mx-2 text-white-50" style="font-size: 0.8em;"></i> ';
+    var breadHtml = homeHtml;
 
-// Helper untuk manual upload form (jika masih dipakai)
-function handleFormSubmit(event) {
-  event.preventDefault();
-  const btn = $('#submitBtn');
-  const fileInput = document.getElementById('fileUpload');
-  const file = fileInput.files[0];
-  const user = getSesiUser();
-
-  if (file && file.size > 1024 * 1024) {
-    NotifSultan.toast('error', "Ukuran file maksimal 1 MB!");
-    return;
-  }
-
-  btn.html('<i class="fas fa-spinner fa-spin"></i> Mengirim...').attr('disabled', true);
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const formData = {
-      namaSD: $('#namaSD').val(),
-      tahunAjaran: $('#tahunAjaran').val(),
-      semester: $('#semester').val(),
-      nomorSK: $('#nomorSK').val(),
-      tanggalSK: $('#tanggalSK').val(),
-      kriteriaSK: $('#kriteriaSK').val(),
-      userInput: user.nama,
-      fileData: {
-        data: e.target.result.split(',')[1],
-        mimeType: file.type,
-        name: file.name
-      }
-    };
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        NotifSultan.alert('success', 'Terkirim', res);
-        $('#manualUploadForm')[0].reset();
-        $('.custom-file-label').html("Pilih file PDF...");
-        btn.html('<i class="fas fa-paper-plane mr-2"></i> Kirim Dokumen').attr('disabled', false);
-      })
-      .processManualForm(formData);
-  };
-  reader.readAsDataURL(file);
-}
-
-/**
- * GLOBAL HELPER: UI SULTAN UNTUK SEMUA STATUS
- * Otomatis mendeteksi warna & ikon berdasarkan teks input.
- */
-function renderBadgeSultan(text) {
-    if (!text) return '-';
-    
-    var str = text.toString().toLowerCase();
-    var color = 'secondary'; // Default warna abu-abu
-    var icon = '';
-
-    // --- KELOMPOK 1: STATUS VERIFIKASI (OK, Ditolak, dll) ---
-    if (str === 'ok' || str === 'disetujui' || str === 'aktif') {
-        color = 'success'; // Hijau
-        icon = '<i class="fas fa-check mr-1"></i>';
-    } 
-    else if (str === 'diproses' || str === 'menunggu') {
-        color = 'warning text-white'; // Kuning (teks putih biar terbaca)
-        icon = '<i class="fas fa-clock mr-1"></i>';
-    } 
-    else if (str === 'revisi') {
-        color = 'info'; // Biru Langit
-        icon = '<i class="fas fa-sync mr-1"></i>';
-    } 
-    else if (str === 'ditolak' || str === 'nonaktif') {
-        color = 'danger'; // Merah
-        icon = '<i class="fas fa-times mr-1"></i>';
-    }
-
-    // --- KELOMPOK 2: JENIS KEHADIRAN (Datang, Pulang) ---
-    else if (str.includes('datang')) {
-        color = 'primary'; // Biru Tua
-        icon = '<i class="fas fa-sign-in-alt mr-1"></i>';
-    } 
-    else if (str.includes('pulang')) {
-        color = 'dark'; // Hitam/Abu Gelap (biar beda dengan Ditolak/Merah)
-        // Atau ganti 'danger' jika ingin merah
-        icon = '<i class="fas fa-sign-out-alt mr-1"></i>';
-    }
-    
-    // Kembalikan HTML Badge
-    return `<span class="badge badge-pill badge-${color} shadow-sm px-3 py-1">${icon}${text}</span>`;
-}
-
-/**
- * FUNGSI GLOBAL: Inisialisasi DataTable Sultan
- * Cukup panggil: initTabelSultan('#idTabelnya');
- */
-/**
- * FUNGSI GLOBAL: Inisialisasi DataTable Sultan (FIX LAYOUT)
- * Search & Pagination Tetap, Tabel Scroll Sendiri.
- */
-function initTabelSultan(selectorId) {
-    // 1. Cek keberadaan tabel
-    var $tbl = $(selectorId);
-    if ($tbl.length === 0) return;
-
-    // 2. Hancurkan jika ada (Reset)
-    if ($.fn.DataTable.isDataTable(selectorId)) {
-        $tbl.DataTable().destroy();
-    }
-
-    // 3. Inisialisasi DataTable
-    var table = $tbl.DataTable({
-        "responsive": false, 
-        "autoWidth": false,
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": false, 
-        "info": true,
-        "stateSave": false,
-        "pageLength": 10,
-        // DOM Layout: Mengatur posisi Search (f), Length (l), Table (t), Info (i), Pagination (p)
-        // Kita bungkus tabel (t) dengan div scroll khusus
-        "dom":  "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                "<'row'<'col-sm-12'tr>>" + // tr = table row
-                "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-        "language": {
-            "emptyTable": "Tidak ada data yang tersedia",
-            "info": "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
-            "infoEmpty": "0 data",
-            "infoFiltered": "(difilter dari _MAX_ total)",
-            "lengthMenu": "_MENU_ data per hal",
-            "loadingRecords": "Sedang memuat...",
-            "processing": "Memproses...",
-            "search": "Cari:",
-            "zeroRecords": "Tidak ditemukan",
-            "paginate": { "first": "<<", "last": ">>", "next": ">", "previous": "<" }
+    if (pageName !== 'home' && $activeLink.length > 0) {
+        var currentTitle = $activeLink.find('p').clone().children().remove().end().text().trim(); 
+        var $parentTree = $activeLink.closest('.nav-treeview');
+        
+        if ($parentTree.length > 0) {
+            var $parentLi = $parentTree.closest('.nav-item');
+            var $parentLink = $parentLi.children('.nav-link');
+            if ($parentLink.length > 0) {
+                var parentTitle = $parentLink.find('p').clone().children().remove().end().text().trim();
+                var $grandParentTree = $parentLi.closest('.nav-treeview');
+                if ($grandParentTree.length > 0) {
+                     var $grandParentLink = $grandParentTree.closest('.nav-item').children('.nav-link');
+                     if ($grandParentLink.length > 0) {
+                         breadHtml += separator + '<span class="text-white-50">' + $grandParentLink.find('p').clone().children().remove().end().text().trim() + '</span>';
+                     }
+                }
+                breadHtml += separator + '<span class="text-white-50">' + parentTitle + '</span>';
+            }
         }
-    });
-
-    // 4. TRIK JITU: Bungkus Tabelnya saja dengan Scroll (Manual Wrapper)
-    // Ini membuat Search Bar diluar scroll, tapi tabel bisa digeser
-    $(selectorId).wrap('<div style="overflow-x: auto; width: 100%; border-top: 1px solid #dee2e6;"></div>');
-}
-
-/* =================================================================
-   FIX FINAL: BRUTE FORCE UI UPDATE
-   Memaksa update nama berkali-kali untuk memastikan tidak ada yang terlewat.
-   ================================================================= */
-$(document).ready(function() {
-    // Panggil langsung saat siap
-    updateTampilanNamaUser();
-
-    // JURUS KUNCI: Ulangi terus setiap 0.5 detik selama 10 detik pertama
-    // Ini menjamin walaupun loading lambat, nama akan tetap terganti.
-    var percobaan = 0;
-    var intervalNama = setInterval(function() {
-        updateTampilanNamaUser();
-        percobaan++;
-        
-        // Hentikan paksa setelah 20x percobaan (10 detik) agar tidak memberatkan browser
-        if (percobaan > 20) clearInterval(intervalNama);
-        
-    }, 500); // 500ms = Setengah detik
-});
-
-function updateTampilanNamaUser() {
-    try {
-        var dataLocal = localStorage.getItem("siksUser");
-        if (!dataLocal) return;
-
-        var u = JSON.parse(dataLocal);
-
-        // 1. PRIORITAS NAMA
-        var namaPaten = (u.nama_lengkap && u.nama_lengkap.trim() !== "") 
-                        ? u.nama_lengkap 
-                        : (u.fullName || u.username || "User");
-
-        // --- PERBAIKAN: JANGAN UBAH HURUF KECIL ---
-        // Kita biarkan apa adanya (SDN tetap SDN)
-        // Jika Boss ingin dipaksa HURUF BESAR SEMUA, aktifkan baris di bawah ini:
-        // namaPaten = namaPaten.toUpperCase(); 
-
-        // --- UPDATE ELEMEN UI ---
-        
-        // A. Sidebar
-        $('.user-panel .info a').text(namaPaten);
-
-        // B. Navbar Capsule
-        var cap1 = $('.user-capsule span');
-        var cap2 = $('.user-menu .nav-link span');
-        var cap3 = $('.dropdown-user .dropdown-toggle span');
-        
-        if (cap1.length) cap1.text(namaPaten);
-        if (cap2.length) cap2.text(namaPaten);
-        if (cap3.length) cap3.text(namaPaten);
-
-        // C. Dropdown Header
-        var dropdownHeader = $('.user-header p');
-        if(dropdownHeader.length) {
-             var roleShow = u.role || "User";
-             dropdownHeader.first().text(namaPaten + ' - ' + roleShow);
-        }
-
-    } catch (e) {
-        console.log("Gagal update UI User: " + e.message);
+        breadHtml += separator + '<span class="font-weight-bold text-white">' + (currentTitle || pageName) + '</span>';
     }
+    $('#page-breadcrumb').html(breadHtml);
 }
 
-/* =================================================================
-   1. KAMUS NAVIGASI (SULTAN MAP)
-   Cukup daftarkan: 'nama_file_page' : 'Teks Menu di Sidebar'
-   ================================================================= */
 const MENU_MAPPING = {
-    // 1. Beranda
-    'home'              : 'Beranda',
-
-    // 2. SK Pembagian Tugas
-    'sk_dashboard'      : 'Dashboard SK',
-    'sk_data'           : 'Data SK',
-    'sk_status'         : 'Status Pengiriman',
-
-    // 3. Laporan Bulan
-    'lapbul_dashboard'  : 'Dashboard Laporan Bulan',
-    'lapbul_kelola'     : 'Kelola Data',
-    'lapbul_status'     : 'Status Laporan',
-
-    // 4. Siaba
-    'siaba_dashboard'   : 'Dashboard Siaba',
-    
-    // 4b. Presensi (Sub-Sub Menu / Cucu)
-    'siaba_presensi_harian'      : 'Harian',
-    'siaba_presensi_apel'        : 'Apel dan Upacara',
-    'siaba_presensi_tidak'       : 'Tidak Presensi',
-    'siaba_presensi_terlambat'   : 'Terlambat',
-    'siaba_presensi_pulang'         : 'Pulang Awal',
-    'siaba_presensi_unduh'       : 'Unduh Rekap Bulanan',
-
-    // 4c - 4e
-    'siaba_presensi_lupa'        : 'Lupa Presensi',
-    'siaba_presensi_salah'       : 'Salah Presensi',
-    'siaba_perjalanan_dinas'       : 'Perjalanan Dinas',
-
-    // 4f. Cuti (Sub-Sub Menu / Cucu)
-    'siaba_cuti_data'        : 'Pengajuan',
-    'siaba_cuti_sisa'         : 'Sisa Cuti Tahunan',
-    'siaba_cuti_rekap'        : 'Rekap Cuti',
-    'siaba_cuti_unggah'        : 'Unggah Surat Cuti',
-    'siaba_cuti_informasi'         : 'Informasi',
-
-    // 4g. Format
-    'siaba_format_panduan'     : 'Format dan Panduan',
-
-    // 5. Pengaturan
-    'setting'        : 'Pengaturan',
-
-    // 6. Monitoring
-    'monitoring'        : 'Monitoring Aktivitas'
+    'home': 'Beranda', 'sk_dashboard': 'Dashboard SK', 'sk_data': 'Data SK', 'sk_status': 'Status Pengiriman',
+    'lapbul_dashboard': 'Dashboard Laporan Bulan', 'lapbul_kelola': 'Kelola Data', 'lapbul_status': 'Status Laporan',
+    'lapbul_format': 'Format Laporan',
+    'siaba_dashboard': 'Dashboard Siaba', 'siaba_presensi_harian': 'Harian', 'siaba_presensi_apel': 'Apel dan Upacara',
+    'siaba_presensi_tidak': 'Tidak Presensi', 'siaba_presensi_terlambat': 'Terlambat', 'siaba_presensi_pulang': 'Pulang Awal',
+    'siaba_presensi_unduh': 'Unduh Rekap Bulanan', 'siaba_presensi_lupa': 'Lupa Presensi', 'siaba_presensi_salah': 'Salah Presensi',
+    'siaba_perjalanan_dinas': 'Perjalanan Dinas', 'siaba_cuti_data': 'Pengajuan', 'siaba_cuti_sisa': 'Sisa Cuti Tahunan',
+    'siaba_cuti_rekap': 'Rekap Cuti', 'siaba_cuti_unggah': 'Unggah Surat Cuti', 'siaba_cuti_informasi': 'Informasi',
+    'siaba_format_panduan': 'Format dan Panduan', 'tata_naskah_dinas': 'Tata Naskah Dinas', 
+    'ptk_dashboard': 'Dashboard PTK', 'ptk_kelola_paud': 'Daftar Nama PTK PAUD',
+    'ptk_keadaan_paud': 'Keadaan PTK PAUD', 'ptk_kelola_sdn': 'Daftar Nama PTK SDN', 'ptk_keadaan_sdn': 'Keadaan PTK SDN',
+    'ptk_kebutuhan_sdn': 'Kebutuhan Guru SDN', 'ptk_kelola_sds': 'Daftar Nama PTK SDS', 'ptk_keadaan_sds': 'Keadaan PTK SDS',
+    'ptk_kebutuhan_sds': 'Kebutuhan Guru SDS', 'murid_dashboard': 'Dashboard Murid', 'murid_paud_rombel': 'PAUD Menurut Rombel',
+    'murid_paud_jenis_kelamin': 'PAUD Menurut Jenis Kelamin', 'murid_sd_kelas': 'SD Menurut Kelas', 'murid_sd_rombel': 'SD Menurut Rombel',
+    'murid_sd_agama': 'SD Menurut Agama', 'setting': 'Pengaturan', 'monitoring': 'Monitoring Aktivitas'
 };
 
-/* =================================================================
-   2. FUNGSI UTAMA: HIGHLIGHT SIDEBAR
-   Dipanggil OTOMATIS oleh loadPage() setiap halaman berganti.
-   ================================================================= */
 function highlightSidebar(pageName) {
-    try {
-        // A. Cari Teks Menu dari Kamus
-        var textMenu = MENU_MAPPING[pageName];
-
-        // B. Jika tidak ada di kamus, coba tebak dari nama file (Auto-Fallback)
-        if (!textMenu) {
-            textMenu = pageName
-                .replace(/_/g, ' ') 
-                .replace(/\b\w/g, function(l){ return l.toUpperCase() });
-        }
-
-        // C. Eksekusi Pewarnaan
-        if (textMenu) {
-            activekanMenuBerdasarkanTeks(textMenu);
-        }
-
-    } catch (e) {
-        console.log("Gagal highlight sidebar: " + e.message);
-    }
+    var textMenu = MENU_MAPPING[pageName] || pageName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    if (textMenu) activekanMenuBerdasarkanTeks(textMenu);
 }
 
-/* =================================================================
-   3. MESIN PEWARNA MENU (LOGIKA SULTAN)
-   Hanya dijalankan saat loadPage, tidak mengganggu klik manual.
-   ================================================================= */
 function activekanMenuBerdasarkanTeks(namaMenu) {
-    // 1. Reset Status Active Saja (JANGAN TUTUP PAKSA TREEVIEW)
-    // Kita hanya hapus kelas 'active' dari link, tapi biarkan struktur menu terbuka apa adanya
     $('.nav-sidebar .nav-link').removeClass('active');
+    var target = $('.nav-sidebar .nav-link').filter(function() { return $(this).text().trim() === namaMenu; });
 
-    // 2. Cari link target berdasarkan Teks
-    var target = $('.nav-sidebar .nav-link').filter(function() {
-        // Trim spasi dan samakan persis
-        return $(this).text().trim() === namaMenu;
-    });
-
-    // 3. Jika ketemu...
     if (target.length > 0) {
-        
-        // A. Nyalakan Si Anak (Target Akhir)
+        $('.nav-sidebar li.menu-open').not(target.parents('li')).removeClass('menu-open').children('.nav-treeview').slideUp(300);
         target.addClass('active');
-
-        // B. Nyalakan Leluhurnya (Bapak, Kakek, dst)
-        // Kita cari semua .nav-item di atasnya
         target.parents('.nav-item').each(function() {
-            
-            // Nyalakan Link Bapaknya (supaya terlihat putih/terang)
             $(this).children('.nav-link').addClass('active');
-            
-            // Buka Dropdown Bapaknya (Jika belum terbuka)
             if (!$(this).hasClass('menu-open')) {
                 $(this).addClass('menu-open');
-                $(this).children('.nav-treeview').slideDown(); // Animasi buka halus
+                $(this).children('.nav-treeview').slideDown(300);
             }
         });
     }
 }
 
+/* =============================================================
+   7. FUNGSI LEGACY (UPLOAD DLL)
+   ============================================================= */
+function isiDropdownSK() {
+    renderDropdown("namaSD", "NamaSD"); renderDropdown("tahunAjaran", "TahunAjaran");
+    renderDropdown("semester", "Semester"); renderDropdown("kriteriaSK", "KriteriaSK");
+}
+
+function handleFormSubmit(event) {
+  event.preventDefault();
+  const btn = $('#submitBtn'); const fileInput = document.getElementById('fileUpload');
+  if(!fileInput) return; const file = fileInput.files[0]; const user = getSesiUser();
+  if (file && file.size > 1024 * 1024) { NotifSultan.toast('error', "Ukuran file maksimal 1 MB!"); return; }
+
+  btn.html('<i class="fas fa-spinner fa-spin"></i> Mengirim...').attr('disabled', true);
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const formData = {
+      namaSD: $('#namaSD').val(), tahunAjaran: $('#tahunAjaran').val(), semester: $('#semester').val(),
+      nomorSK: $('#nomorSK').val(), tanggalSK: $('#tanggalSK').val(), kriteriaSK: $('#kriteriaSK').val(),
+      userInput: user ? user.nama_lengkap || user.nama : "User Web",
+      fileData: { data: e.target.result.split(',')[1], mimeType: file.type, name: file.name }
+    };
+    google.script.run
+      .withSuccessHandler(function(res) {
+        NotifSultan.alert('success', 'Terkirim', res);
+        $('#manualUploadForm')[0].reset(); $('.custom-file-label').html("Pilih file PDF...");
+        btn.html('<i class="fas fa-paper-plane mr-2"></i> Kirim Dokumen').attr('disabled', false);
+      }).processManualForm(formData);
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderBadgeSultan(text) {
+    if (!text) return '-'; var str = text.toString().toLowerCase(); var color = 'secondary', icon = '';
+    if (str === 'ok' || str === 'disetujui' || str === 'aktif') { color = 'success'; icon = '<i class="fas fa-check mr-1"></i>'; } 
+    else if (str === 'diproses' || str === 'menunggu') { color = 'warning text-white'; icon = '<i class="fas fa-clock mr-1"></i>'; } 
+    else if (str === 'revisi') { color = 'info'; icon = '<i class="fas fa-sync mr-1"></i>'; } 
+    else if (str === 'ditolak' || str === 'nonaktif') { color = 'danger'; icon = '<i class="fas fa-times mr-1"></i>'; }
+    else if (str.includes('datang')) { color = 'primary'; icon = '<i class="fas fa-sign-in-alt mr-1"></i>'; } 
+    else if (str.includes('pulang')) { color = 'dark'; icon = '<i class="fas fa-sign-out-alt mr-1"></i>'; }
+    return `<span class="badge badge-pill badge-${color} shadow-sm px-3 py-1">${icon}${text}</span>`;
+}
+
+function initTabelSultan(selectorId) {
+    var $tbl = $(selectorId); if ($tbl.length === 0) return;
+    if ($.fn.DataTable.isDataTable(selectorId)) $tbl.DataTable().destroy();
+    $tbl.DataTable({
+        responsive: false, autoWidth: false, paging: true, lengthChange: true, searching: true, ordering: false, info: true, pageLength: 10,
+        dom:  "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        language: { emptyTable: "Tidak ada data", info: "Hal _START_ s/d _END_ dari _TOTAL_", infoEmpty: "0 data", search: "Cari:", zeroRecords: "Tidak ditemukan", paginate: { first: "<<", last: ">>", next: ">", previous: "<" } }
+    });
+    $(selectorId).wrap('<div style="overflow-x: auto; width: 100%; border-top: 1px solid #dee2e6;"></div>');
+}
 </script>

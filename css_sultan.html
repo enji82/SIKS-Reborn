@@ -561,4 +561,34 @@ thead th.col-sticky-center {
     font-weight: 600; /* Semi-bold */
     padding: 10px 24px;
 }
+
+/* ==============================================================
+   ANIMASI TRANSISI HALAMAN (SPA SULTAN)
+   ============================================================== */
+/* 1. Loading Bar Atas (NProgress) */
+#nprogress .bar {
+  background: #800000 !important; /* Warna Maroon Sultan */
+  height: 4px !important;
+  z-index: 99999 !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #800000, 0 0 5px #800000 !important;
+}
+
+/* 2. Animasi Konten Muncul (Fade In + Slide Up) */
+.sultan-page-transition {
+  animation: fadeInUpSultan 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUpSultan {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>

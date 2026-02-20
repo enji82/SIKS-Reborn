@@ -23,7 +23,7 @@
                     <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanCuti">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-calendar-alt"></i></div>
-                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_cuti_data')">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="#" class="small-box-footer" onclick="loadContent('page_siaba_cuti_data')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <div class="col-lg-3 col-6">
@@ -34,7 +34,7 @@
                     <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanDinas">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-car"></i></div>
-                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_perjalanan_dinas')">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="#" class="small-box-footer" onclick="loadContent('page_siaba_perjalanan_dinas')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <div class="col-lg-3 col-6">
@@ -45,7 +45,7 @@
                     <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanLupa">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-question-circle"></i></div>
-                <a href="#" class="small-box-footer text-white" onclick="loadPage('page_siaba_presensi_lupa')">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="#" class="small-box-footer text-white" onclick="loadContent('page_siaba_presensi_lupa')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <div class="col-lg-3 col-6">
@@ -56,7 +56,7 @@
                     <div class="mt-2 text-white-50 small">Bulan Ini: <strong id="bulanSalah">-</strong></div>
                 </div>
                 <div class="icon"><i class="fas fa-times-circle"></i></div>
-                <a href="#" class="small-box-footer" onclick="loadPage('page_siaba_presensi_salah')">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="#" class="small-box-footer" onclick="loadContent('page_siaba_presensi_salah')">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
     </div>
@@ -80,7 +80,12 @@
                 <div class="card-header bg-white border-bottom-0">
                     <h3 class="card-title font-weight-bold text-maroon"><i class="fas fa-list-alt mr-1"></i> Rincian Status</h3>
                 </div>
-                <div class="card-body p-3" id="rincianContainer" style="overflow-y: auto; max-height: 400px;"></div>
+                <div class="card-body p-3" style="overflow-y: auto; max-height: 500px;">
+                    <div id="rincian-cuti" class="mb-2 pb-2 border-bottom text-center text-muted"><i class="fas fa-circle-notch fa-spin"></i> Memuat Cuti...</div>
+                    <div id="rincian-dinas" class="mb-2 pb-2 border-bottom text-center text-muted"><i class="fas fa-circle-notch fa-spin"></i> Memuat Perjalanan Dinas...</div>
+                    <div id="rincian-lupa" class="mb-2 pb-2 border-bottom text-center text-muted"><i class="fas fa-circle-notch fa-spin"></i> Memuat Lupa Presensi...</div>
+                    <div id="rincian-salah" class="mb-2 pb-2 border-bottom text-center text-muted"><i class="fas fa-circle-notch fa-spin"></i> Memuat Salah Presensi...</div>
+                </div>
             </div>
         </div>
 
@@ -192,11 +197,14 @@
 
 <script>
 // ==========================================
-// 1. GLOBAL VARIABLES
+// 1. GLOBAL VARIABLES & RESET STATE
 // ==========================================
+// KUNCI SOLUSI: Mengubah sistem penjumlahan menjadi sistem "Loker Terpisah"
 var GLOBAL_STATS = {
-    proses: 0, revisi: 0, setuju: 0, tolak: 0,
-    done: { cuti: false, dinas: false, lupa: false, salah: false }
+    cuti:  { proses: 0, revisi: 0, setuju: 0, tolak: 0 },
+    dinas: { proses: 0, revisi: 0, setuju: 0, tolak: 0 },
+    lupa:  { proses: 0, revisi: 0, setuju: 0, tolak: 0 },
+    salah: { proses: 0, revisi: 0, setuju: 0, tolak: 0 }
 };
 var pieChartInstance = null;
 
@@ -205,18 +213,32 @@ var pieChartInstance = null;
 // ==========================================
 $(document).ready(function() {
     if (typeof Chart === 'undefined') {
-        setTimeout(startDashboardEngine, 500);
+        $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js", function() {
+            startDashboardEngine();
+        });
     } else {
         startDashboardEngine();
     }
 });
 
 function startDashboardEngine() {
+    initFiltersBelumLengkap(); 
     loadDashboardData();
-    initFiltersBelumLengkap(); // Init Card Baru
 }
 
 function loadDashboardData() {
+    // Kosongkan loker sebelum memuat ulang
+    GLOBAL_STATS = {
+        cuti:  { proses: 0, revisi: 0, setuju: 0, tolak: 0 },
+        dinas: { proses: 0, revisi: 0, setuju: 0, tolak: 0 },
+        lupa:  { proses: 0, revisi: 0, setuju: 0, tolak: 0 },
+        salah: { proses: 0, revisi: 0, setuju: 0, tolak: 0 }
+    };
+    
+    if (pieChartInstance) {
+        pieChartInstance.destroy();
+    }
+    
     showLoadingState(); 
     
     fetchMetric('cuti', 'totalCuti', 'bulanCuti', 'fa-calendar-alt', 'chartTrendCuti');
@@ -229,7 +251,15 @@ function loadDashboardData() {
 }
 
 function showLoadingState() {
-    $('#rincianContainer').html('<div class="d-flex align-items-center justify-content-center h-100 text-muted"><div class="text-center"><i class="fas fa-circle-notch fa-spin fa-2x mb-2"></i><br>Sinkronisasi Data...</div></div>');
+    $('#totalCuti, #totalDinas, #totalLupa, #totalSalah').html('<i class="fas fa-spinner fa-spin f-20"></i>');
+    $('#bulanCuti, #bulanDinas, #bulanLupa, #bulanSalah').text('-');
+
+    $('#rincian-cuti').html('<i class="fas fa-circle-notch fa-spin"></i> Memuat Cuti...').addClass('text-center text-muted mb-2 pb-2 border-bottom');
+    $('#rincian-dinas').html('<i class="fas fa-circle-notch fa-spin"></i> Memuat Perjalanan Dinas...').addClass('text-center text-muted mb-2 pb-2 border-bottom');
+    $('#rincian-lupa').html('<i class="fas fa-circle-notch fa-spin"></i> Memuat Lupa Presensi...').addClass('text-center text-muted mb-2 pb-2 border-bottom');
+    $('#rincian-salah').html('<i class="fas fa-circle-notch fa-spin"></i> Memuat Salah Presensi...').addClass('text-center text-muted mb-2 pb-2 border-bottom');
+
+    $('#wrap-chartTrendCuti, #wrap-chartTrendDinas, #wrap-chartTrendLupa, #wrap-chartTrendSalah').html('<div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
 }
 
 // ==========================================
@@ -244,25 +274,26 @@ function fetchMetric(type, idTotal, idBulan, icon, idChart) {
             $('#' + idTotal).text(data.total).hide().fadeIn();
             $('#' + idBulan).text(data.bulanIni);
 
-            var html = createSlimVisualRow(capitalize(type), icon, data);
-            
-            if($('#rincianContainer').find('.fa-spin').length > 0) {
-                $('#rincianContainer').empty();
-            }
-            $('#rincianContainer').append(html);
+            var html = createSlimVisualRow(capitalize(type), icon, data, type);
+            $('#rincian-' + type).html(html).removeClass('text-center text-muted');
 
             renderSpecificChart(idChart, data.trend);
 
-            GLOBAL_STATS.proses += (data.proses || 0);
-            GLOBAL_STATS.revisi += (data.revisi || 0);
-            GLOBAL_STATS.setuju += (data.setuju || 0);
-            GLOBAL_STATS.tolak  += (data.tolak || 0);
-            GLOBAL_STATS.done[type] = true;
+            // KUNCI PERBAIKAN: Gunakan Assignment (=), BUKAN Penjumlahan (+=)
+            // Jadi jika fungsi ini kepanggil 2 kali, angkanya akan ditimpa, bukan ditambah!
+            GLOBAL_STATS[type] = {
+                proses: data.proses || 0,
+                revisi: data.revisi || 0,
+                setuju: data.setuju || 0,
+                tolak:  data.tolak  || 0
+            };
+            
             updatePieChart();
         })
         .withFailureHandler(function(e) {
             console.log("Error " + type, e);
             $('#' + idTotal).html('<small class="text-danger">Err</small>');
+            $('#rincian-' + type).html('<div class="text-danger text-center"><i class="fas fa-exclamation-triangle"></i> Gagal memuat data</div>');
         })
         .getSiabaMetric(type);
 }
@@ -279,20 +310,17 @@ function loadChartTrend() {
 // ==========================================
 
 function initFiltersBelumLengkap() {
-    // Populate Dropdown Tahun (3 Tahun Terakhir)
     var now = new Date();
     var curYear = now.getFullYear();
-    var curMonth = now.getMonth(); // 0-11
+    var curMonth = now.getMonth(); 
     
-    // Logic: Default Bulan Lalu
     var defMonthIdx = curMonth - 1; 
     var defYear = curYear;
-    if(defMonthIdx < 0) { // Jika Januari, mundur ke Desember tahun lalu
+    if(defMonthIdx < 0) { 
         defMonthIdx = 11;
         defYear = curYear - 1;
     }
 
-    // Isi Tahun
     var $th = $('#filterTahunDash');
     for(var i=0; i<3; i++) {
         var y = curYear - i;
@@ -300,20 +328,17 @@ function initFiltersBelumLengkap() {
     }
     $th.val(defYear);
 
-    // Isi Bulan
     var months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
     var $bl = $('#filterBulanDash');
-    months.forEach((m, i) => {
+    months.forEach((m) => {
         $bl.append(`<option value="${m}">${m}</option>`);
     });
     $bl.val(months[defMonthIdx]);
 
-    // Listener Change
     $('#filterTahunDash, #filterBulanDash').change(function() {
         loadDataBelumLengkap();
     });
 
-    // Load Data Awal
     loadDataBelumLengkap();
 }
 
@@ -338,25 +363,17 @@ function loadDataBelumLengkap() {
                 return;
             }
 
-            // Grouping by Unit Kerja & Count
             var unitCounts = {};
             data.rows.forEach(function(row) {
-                // Asumsi Unit Kerja ada di Kolom Terakhir (Hidden di getSiabaTidakData)
-                // Atau Kolom ke-3 (Index 2) di tampilan tabel aslinya
-                // Mari kita cek struktur data getSiabaTidakData:
-                // Header: [No, Nama, Unit Kerja, ...] 
-                // Row API: [Nama, NIP, ..., UnitKerja]
-                
-                var unit = row[row.length - 1]; // Unit Kerja disimpan di elemen terakhir array oleh API
+                var unit = row[row.length - 1]; 
                 if(unit) {
                     unitCounts[unit] = (unitCounts[unit] || 0) + 1;
                 }
             });
 
-            // Convert to Array & Sort
             var sortedUnits = Object.keys(unitCounts).map(function(key) {
                 return { unit: key, count: unitCounts[key] };
-            }).sort(function(a, b) { return b.count - a.count; }); // Urut Terbanyak
+            }).sort(function(a, b) { return b.count - a.count; }); 
 
             var html = "";
             sortedUnits.forEach(function(item) {
@@ -386,8 +403,12 @@ function loadDataBelumLengkap() {
 function initPieChart() {
     var ctxElement = document.getElementById('chartGabungan');
     if (!ctxElement) return;
-
     var ctx = ctxElement.getContext('2d');
+
+    if (pieChartInstance) {
+        pieChartInstance.destroy();
+    }
+
     if (typeof Chart !== 'undefined') {
         pieChartInstance = new Chart(ctx, {
             type: 'doughnut',
@@ -409,14 +430,24 @@ function initPieChart() {
 
 function updatePieChart() {
     if(!pieChartInstance) return;
-    var s = GLOBAL_STATS;
-    pieChartInstance.data.datasets[0].data = [s.proses, s.revisi, s.setuju, s.tolak];
+    
+    // Hitung ulang akumulasi murni dari setiap loker
+    var tProses = 0, tRevisi = 0, tSetuju = 0, tTolak = 0;
+    
+    ['cuti', 'dinas', 'lupa', 'salah'].forEach(function(k) {
+        tProses += GLOBAL_STATS[k].proses;
+        tRevisi += GLOBAL_STATS[k].revisi;
+        tSetuju += GLOBAL_STATS[k].setuju;
+        tTolak  += GLOBAL_STATS[k].tolak;
+    });
+
+    pieChartInstance.data.datasets[0].data = [tProses, tRevisi, tSetuju, tTolak];
     pieChartInstance.update();
-    renderProgressBar(s.proses, s.revisi, s.setuju, s.tolak);
+    renderProgressBar(tProses, tRevisi, tSetuju, tTolak);
 }
 
 function renderBarChart(data) {
-    $('#wrap-chartBarDisiplin').html('<canvas id="chartBarDisiplin"></canvas>');
+    $('#wrap-chartBarDisiplin').empty().html('<canvas id="chartBarDisiplin"></canvas>');
     var ctxElement = document.getElementById('chartBarDisiplin');
     if (!ctxElement) return;
 
@@ -444,7 +475,7 @@ function renderBarChart(data) {
 }
 
 function renderSpecificChart(canvasId, dataset) {
-    $('#wrap-' + canvasId).html('<canvas id="' + canvasId + '"></canvas>');
+    $('#wrap-' + canvasId).empty().html('<canvas id="' + canvasId + '"></canvas>');
     var ctxElement = document.getElementById(canvasId);
     if (!ctxElement) return;
 
@@ -501,15 +532,17 @@ function progressItem(lbl, val, pct, color) {
     <div class="progress progress-xs mb-2"><div class="progress-bar bg-${color}" style="width: ${pct}"></div></div>`;
 }
 
-function createSlimVisualRow(label, icon, data) {
+function createSlimVisualRow(label, icon, data, type) {
     var displayLabel = label;
     if(label === 'Cuti') displayLabel = 'Pengajuan Cuti';
     if(label === 'Dinas') displayLabel = 'Perjalanan Dinas';
     if(label === 'Lupa') displayLabel = 'Lupa Presensi';
     if(label === 'Salah') displayLabel = 'Salah Presensi';
 
+    var borderClass = (type === 'salah') ? '' : 'border-bottom mb-2 pb-2';
+
     return `
-    <div class="mb-2 pb-2 border-bottom animated fadeIn">
+    <div class="animated fadeIn ${borderClass}">
         <div class="d-flex align-items-center mb-1">
             <i class="fas ${icon} text-secondary mr-2" style="font-size: 0.9rem;"></i>
             <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">${displayLabel}</span>
@@ -536,6 +569,5 @@ function capitalize(s) { return s && s[0].toUpperCase() + s.slice(1); }
 <style>
     .f-20 { font-size: 1.25rem; }
     .small-box h3, canvas { transition: all 0.3s ease; }
-    /* Table Scroll */
     .table-head-fixed th { position: sticky; top: 0; background: #fff; z-index: 10; border-top: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 </style>
