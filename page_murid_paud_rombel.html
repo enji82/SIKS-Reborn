@@ -18,18 +18,17 @@
 
         <div class="card-sultan mb-3">
           <div class="card-body py-2 px-3 border-left-dark">
-            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
-                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" data-toggle="collapse" data-target="#paudrombel_infoCollapse">
               <div class="d-flex align-items-center text-maroon font-weight-bold">
                 <i class="fas fa-info-circle mr-2"></i> Informasi
               </div>
               <i class="fas fa-chevron-down text-muted icon-sm"></i>
             </div>
-            <div id="infoCollapse" class="collapse">
+            <div id="paudrombel_infoCollapse" class="collapse">
               <div class="mt-2 pt-2 border-top small text-muted">
                 <ul class="mb-0 pl-3">
                   <li class="mb-1">Data bersumber dari laporan bulan yang terakhir diunggah.</li>
-                  <li>Gunakan filter <b>Jenjang</b> untuk menyaring unit kerja (TK/KB/SPS/TPA).</li>
+                  <li class="mb-1">Agar data Anda valid, unggah laporan bulan tepat waktu.</li>
                   <li>Kolom <b>Total</b> menjumlahkan kategori Usia dan Kelas masing-masing.</li>
                 </ul>
               </div>
@@ -38,80 +37,87 @@
         </div>
 
         <div class="card-sultan p-3 mb-3">
-            <div class="d-flex-gap align-items-center">
-                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="loadMuridRombel()" title="Refresh Data">
-                   <i class="fas fa-sync-alt text-maroon"></i>
-                </button>
-
-                <select id="filterJenjang" class="form-control form-control-sultan input-auto-width" onchange="updateFilterUnit()">
+            <div class="d-flex-gap align-items-center flex-wrap">
+                
+                <select id="paudrombel_filterJenjang" class="form-control form-control-sultan input-auto-width min-w-150 border-maroon">
                     <option value="SEMUA">- Semua Jenjang -</option>
                 </select>
 
-                <select id="filterUnit" class="form-control form-control-sultan input-auto-width max-w-250">
-                    <option value="SEMUA">- Semua Unit Kerja -</option>
-                </select>
+                <div id="paudrombel_filterContainer" style="display: none;" class="d-flex align-items-center">
+                    <select id="paudrombel_filterUnit" class="form-control form-control-sultan input-auto-width min-w-250 font-weight-bold text-maroon bg-light" disabled>
+                        <option value="">- Memvalidasi Akses... -</option>
+                    </select>
+                </div>
 
-                <div class="divider-vertical"></div>
+                <div class="divider-vertical d-none d-md-block"></div>
 
-                <button type="button" id="btnCari" class="btn btn-maroon shadow-sm" onclick="filterTampilan()" title="Terapkan Filter">
-                    <i class="fas fa-search text-white"></i>
+                <button type="button" id="paudrombel_btnRefresh" class="btn bg-white border shadow-sm text-secondary" title="Segarkan Data dari Server">
+                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
             </div>
         </div>
 
         <div class="card-sultan w-100 overflow-hidden">
-          <div class="card-body p-0 w-100">
-            <div class="table-responsive" style="overflow-x: auto; max-height: 70vh; position: relative;">
-              <table class="table table-bordered table-hover table-sm text-nowrap mb-0 text-center" style="width:100%; font-size: 0.85rem;">
-                
-                <thead id="headData" class="font-weight-bold text-dark" style="display:none;">
-                  <tr>
-                    <th rowspan="2" class="align-middle bg-white text-maroon text-left pl-3" 
-                        style="position:sticky; left:0; z-index:50; min-width:250px; border-right: 2px solid #dee2e6; border-bottom: 2px solid #800000;">Unit Kerja</th>
-                    
-                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">NPSN</th>
-                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Jenjang</th>
-                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Bulan</th>
-                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Tahun</th>
-                    <th rowspan="2" class="align-middle bg-white" style="border-bottom: 2px solid #800000;">Rombel</th>
-
-                    <th colspan="8" class="align-middle" style="background-color: #e8f5e9; border-bottom: 1px solid #a5d6a7;">Jumlah Menurut Usia</th>
-                    
-                    <th colspan="3" class="align-middle" style="background-color: #e3f2fd; border-bottom: 1px solid #90caf9;">Jumlah Menurut Kelas</th>
-                  </tr>
-
-                  <tr class="small">
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">0-1 Th</th>
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">1-2 Th</th>
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">2-3 Th</th>
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">3-4 Th</th>
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">4-5 Th</th>
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">5-6 Th</th>
-                    <th style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">>6 Th</th>
-                    <th style="background-color: #c8e6c9; border-bottom: 2px solid #800000; font-weight: bold;">TOTAL</th>
-
-                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Kelas A</th>
-                    <th style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Kelas B</th>
-                    <th style="background-color: #bbdefb; border-bottom: 2px solid #800000; font-weight: bold;">TOTAL</th>
-                  </tr>
-                </thead>
-
-                <tbody id="bodyData">
-                    <tr>
-                        <td class="text-center td-spinner" colspan="100%">
-                            <div class="sultan-loading-container">
-                                <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
-                                <h6 class="text-muted font-weight-bold">Menyiapkan data...</h6>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-
-                <tfoot id="footData" class="bg-light font-weight-bold" style="border-top: 3px solid #800000; display:none;">
-                    </tfoot>
-              </table>
+          <div class="card-body p-3 w-100">
+            
+            <div id="paudrombel_loadingState">
+                <div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 50vh;">
+                    <div class="sultan-loading-container text-center">
+                        <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                        <h6 class="text-muted font-weight-bold mt-3" id="paudrombel_loadingText">Mempersiapkan Akses Server...</h6>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <div id="paudrombel_tableState" style="display: none;">
+                <table id="paudrombel_tabelUtama" class="table table-bordered table-hover table-sm table-premium table-sultan-compact text-nowrap mb-0 w-100" style="font-size: 0.85rem;">
+                    
+                    <thead class="font-weight-bold text-dark bg-light">
+                      <tr>
+                        <th rowspan="2" class="align-middle bg-white text-maroon text-left pl-3 py-1" style="position:sticky; left:0; z-index:50; min-width:250px; border-right: 2px solid #dee2e6; border-bottom: 2px solid #800000;">Unit Kerja</th>
+                        <th rowspan="2" class="align-middle bg-white text-center py-1" style="border-bottom: 2px solid #800000;">NPSN</th>
+                        <th rowspan="2" class="align-middle bg-white text-center py-1" style="border-bottom: 2px solid #800000;">Jenjang</th>
+                        <th rowspan="2" class="align-middle bg-white text-center py-1" style="border-bottom: 2px solid #800000;">Bulan</th>
+                        <th rowspan="2" class="align-middle bg-white text-center py-1" style="border-bottom: 2px solid #800000;">Tahun</th>
+                        <th rowspan="2" class="align-middle bg-white text-center py-1" style="border-bottom: 2px solid #800000;">Rombel</th>
+    
+                        <th colspan="8" class="align-middle text-center py-1" style="background-color: #e8f5e9; border-bottom: 1px solid #a5d6a7;">Jumlah Menurut Usia</th>
+                        
+                        <th colspan="3" class="align-middle text-center border-right-0 py-1" style="background-color: #e3f2fd; border-bottom: 1px solid #90caf9;">Jumlah Menurut Kelas</th>
+                      </tr>
+                      <tr>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">0-1 Th</th>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">1-2 Th</th>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">2-3 Th</th>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">3-4 Th</th>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">4-5 Th</th>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">5-6 Th</th>
+                        <th class="text-center py-1" style="background-color: #e8f5e9; border-bottom: 2px solid #800000;">&gt;6 Th</th>
+                        <th class="text-center border-right py-1" style="background-color: #c8e6c9; border-bottom: 2px solid #800000; font-weight: bold;">TOTAL</th>
+    
+                        <th class="text-center py-1" style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Kelas A</th>
+                        <th class="text-center py-1" style="background-color: #e3f2fd; border-bottom: 2px solid #800000;">Kelas B</th>
+                        <th class="text-center border-right-0 py-1" style="background-color: #bbdefb; border-bottom: 2px solid #800000; font-weight: bold;">TOTAL</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                    
+                    <tfoot class="bg-light font-weight-bold" style="border-top: 3px solid #800000;">
+                        <tr>
+                            <th class="border-right text-right bg-white text-maroon pr-3 align-middle py-2" style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">TOTAL KESELURUHAN</th>
+                            <th class="py-2"></th><th class="py-2"></th><th class="py-2"></th><th class="py-2"></th>
+                            <th class="text-center text-dark py-2"></th>
+                            <th class="text-center py-2"></th><th class="text-center py-2"></th><th class="text-center py-2"></th>
+                            <th class="text-center py-2"></th><th class="text-center py-2"></th><th class="text-center py-2"></th><th class="text-center py-2"></th>
+                            <th class="text-center text-maroon border-right py-2"></th>
+                            <th class="text-center py-2"></th><th class="text-center py-2"></th>
+                            <th class="text-center text-maroon border-right-0 py-2"></th>
+                        </tr>
+                    </tfoot>
+                  </table>
+              </div>
+
+            </div>
         </div>
 
       </div>
@@ -120,174 +126,297 @@
 </section>
 
 <script>
-var RAW_DATA_MURID = [];
+// ======================================================================
+// ISOLASI VARIABEL GLOBAL (MASTER BLUEPRINT V8)
+// ======================================================================
+var PAUDROMBEL_CACHE_DATA = [];
+var PAUDROMBEL_TABEL_INSTANCE = null;
 
+var PAUDROMBEL_USER_AKTIF = "";
+var PAUDROMBEL_IS_ADMIN = false;
+var PAUDROMBEL_UNIT_TERKUNCI = "";
+var PAUDROMBEL_NPSN_TERKUNCI = "";
+
+// =================================================================
+// 1. INITIALIZATION & DELEGATION
+// =================================================================
 $(document).ready(function() {
-    loadMuridRombel();
+    PAUDROMBEL_TABEL_INSTANCE = null;
+    $('#paudrombel_tableState').hide();
+    $('#paudrombel_loadingState').show();
+    $('#paudrombel_filterContainer').hide();
+
+    try {
+        var user = typeof getSesiUser === 'function' ? getSesiUser() : {};
+        PAUDROMBEL_USER_AKTIF = user.nama_lengkap || user.fullname || user.nama || user.username || "User Web";
+        PAUDROMBEL_IS_ADMIN = (user.role || "").toLowerCase().includes("admin");
+        PAUDROMBEL_NPSN_TERKUNCI = user.npsn || user.username || ""; 
+    } catch(e) { PAUDROMBEL_NPSN_TERKUNCI = ""; PAUDROMBEL_IS_ADMIN = false; }
+
+    $(document).off('click', '#paudrombel_btnRefresh').on('click', '#paudrombel_btnRefresh', paudrombel_tarikDataServer);
+    $(document).off('change', '#paudrombel_filterJenjang').on('change', '#paudrombel_filterJenjang', paudrombel_updateFilterUnit);
+    $(document).off('change', '#paudrombel_filterUnit').on('change', '#paudrombel_filterUnit', paudrombel_terapkanFilterLokal);
+
+    paudrombel_validasiAksesUser();
 });
 
-function loadMuridRombel() {
-    $('#headData').hide();
-    $('#footData').hide();
-    
-    var loadingHtml = '<tr><td class="text-center td-spinner" colspan="100%">' + 
-                      '<div class="sultan-loading-container">' + 
-                      '<i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>' + 
-                      '<h6 class="text-muted font-weight-bold">Mengambil data server...</h6>' + 
-                      '</div></td></tr>';
-    
-    $('#bodyData').html(loadingHtml);
-    $('#btnCari').prop('disabled', true);
+// =================================================================
+// 2. GATEKEEPER & FETCH
+// =================================================================
+function paudrombel_validasiAksesUser() {
+    if (PAUDROMBEL_IS_ADMIN) {
+        $('#paudrombel_filterContainer').show();
+        $('#paudrombel_loadingText').html('Mempersiapkan Akses Admin...');
+        $('#paudrombel_filterUnit').empty().append('<option value="SEMUA">- Semua Unit Kerja -</option>').prop('disabled', false).removeClass('bg-light text-maroon font-weight-bold');
+        paudrombel_tarikDataServer(); 
+    } else {
+        if (!PAUDROMBEL_NPSN_TERKUNCI) {
+            $('#paudrombel_filterUnit').empty().append('<option value="">AKSES DITOLAK</option>');
+            $('#paudrombel_loadingText').html('<span class="text-danger"><i class="fas fa-ban mb-2"></i><br>Akses ditolak: Sesi login tidak valid.</span>');
+            return;
+        }
 
-    google.script.run
-        .withSuccessHandler(function(data) {
-            $('#btnCari').prop('disabled', false);
-            RAW_DATA_MURID = data || [];
-            
-            populateFilterFromData();
-            filterTampilan();
-        })
-        .withFailureHandler(function(err) {
-            $('#btnCari').prop('disabled', false);
-            $('#bodyData').html(`<tr><td class="text-center text-danger p-5 font-weight-bold" colspan="100%"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${err.message}</td></tr>`);
-        })
-        .getDataMuridPAUDRombel();
+        google.script.run
+            .withSuccessHandler(function(resUnit) {
+                var dataUnit = JSON.parse(resUnit);
+                if (dataUnit.error) {
+                    $('#paudrombel_filterUnit').empty().append('<option value="">AKSES DITOLAK</option>');
+                    $('#paudrombel_loadingText').html(`<span class="text-danger"><i class="fas fa-exclamation-triangle mb-2"></i><br>${paudrombel_escapeHtml(dataUnit.error)}</span>`);
+                    return;
+                }
+
+                PAUDROMBEL_UNIT_TERKUNCI = dataUnit.unitKerja;
+                $('#paudrombel_filterUnit').empty().append($('<option>', {value: PAUDROMBEL_UNIT_TERKUNCI, text: PAUDROMBEL_UNIT_TERKUNCI})).prop('disabled', true);
+                
+                paudrombel_tarikDataServer();
+            })
+            .withFailureHandler(function(err) {
+                $('#paudrombel_filterUnit').empty().append('<option value="">ERROR SERVER</option>');
+                $('#paudrombel_loadingText').html(`<span class="text-danger"><i class="fas fa-wifi mb-2"></i><br>Koneksi Terputus: ${paudrombel_escapeHtml(err.message)}</span>`);
+            })
+            .getUnitKerjaByNpsnPTK(PAUDROMBEL_NPSN_TERKUNCI);
+    }
 }
 
-function populateFilterFromData() {
-    var uniqueJenjang = new Set();
-    RAW_DATA_MURID.forEach(row => {
-        var j = row[2] ? String(row[2]).trim() : ""; // Col C (Index 2) = Jenjang
-        if(j) uniqueJenjang.add(j);
-    });
+function paudrombel_tarikDataServer() {
+    var btn = $('#paudrombel_btnRefresh');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin text-maroon"></i>');
 
-    var sortedJenjang = Array.from(uniqueJenjang).sort();
-    var jHtml = '<option value="SEMUA">- Semua Jenjang -</option>';
-    sortedJenjang.forEach(j => jHtml += `<option value="${j}">${j}</option>`);
-    $('#filterJenjang').html(jHtml);
-    
-    updateFilterUnit();
+    if (!$.fn.DataTable.isDataTable('#paudrombel_tabelUtama')) {
+        $('#paudrombel_tableState').hide();
+        $('#paudrombel_loadingText').html('Mengambil Laporan Rombel PAUD Server...');
+        $('#paudrombel_loadingState').show();
+    }
+
+    google.script.run.withSuccessHandler(function(dataArray) {
+        btn.prop('disabled', false).html('<i class="fas fa-sync-alt text-maroon"></i>');
+        
+        if (!Array.isArray(dataArray)) {
+            $('#paudrombel_loadingText').html('<span class="text-danger"><i class="fas fa-times-circle mb-2"></i><br>Gagal memproses struktur JSON Server.</span>');
+            return;
+        }
+
+        try {
+            PAUDROMBEL_CACHE_DATA = dataArray;
+
+            if (PAUDROMBEL_IS_ADMIN) {
+                var uniqueJenjang = new Set();
+                PAUDROMBEL_CACHE_DATA.forEach(function(row) {
+                    var j = String(row[2] || "").trim(); 
+                    if(j) uniqueJenjang.add(j);
+                });
+                
+                var selJenjang = $('#paudrombel_filterJenjang'); var curJ = selJenjang.val();
+                selJenjang.empty().append('<option value="SEMUA">- Semua Jenjang -</option>');
+                Array.from(uniqueJenjang).sort().forEach(function(j) { selJenjang.append($('<option>', {value: j, text: j})); });
+                if(curJ && uniqueJenjang.has(curJ)) selJenjang.val(curJ);
+
+                paudrombel_updateFilterUnit();
+            }
+
+            if (!$.fn.DataTable.isDataTable('#paudrombel_tabelUtama')) {
+                paudrombel_initDataTables();
+            }
+
+            paudrombel_terapkanFilterLokal();
+
+            $('#paudrombel_loadingState').hide();
+            $('#paudrombel_tableState').show();
+            if(PAUDROMBEL_TABEL_INSTANCE) { setTimeout(function() { PAUDROMBEL_TABEL_INSTANCE.columns.adjust(); }, 150); }
+
+        } catch (e) {
+            $('#paudrombel_loadingText').html('<span class="text-danger"><i class="fas fa-exclamation-triangle mb-2"></i><br>Gagal merakit tabel: ' + paudrombel_escapeHtml(e.message) + '</span>');
+        }
+
+    }).withFailureHandler(function(e) {
+        btn.prop('disabled', false).html('<i class="fas fa-sync-alt text-maroon"></i>');
+        $('#paudrombel_loadingText').html('<span class="text-danger"><i class="fas fa-wifi mb-2"></i><br>Koneksi Server Terputus.</span>');
+    }).getDataMuridPAUDRombel(); 
 }
 
-function updateFilterUnit() {
-    var selectedJenjang = $('#filterJenjang').val();
+function paudrombel_updateFilterUnit() {
+    if(!PAUDROMBEL_IS_ADMIN) return;
+
+    var selJenjang = $('#paudrombel_filterJenjang').val();
     var uniqueUnit = new Set();
     
-    RAW_DATA_MURID.forEach(row => {
-        var rUnit = row[0]; 
-        var rJenjang = row[2]; 
+    PAUDROMBEL_CACHE_DATA.forEach(function(row) {
+        var u = String(row[0] || "").trim(); 
+        var j = String(row[2] || "").trim(); 
         
-        if (selectedJenjang === "SEMUA" || rJenjang === selectedJenjang) {
-            if(rUnit) uniqueUnit.add(rUnit);
+        if (selJenjang === "SEMUA" || j === selJenjang) {
+            if(u) uniqueUnit.add(u);
         }
     });
+
+    var selUnit = $('#paudrombel_filterUnit'); var curU = selUnit.val();
+    selUnit.empty().append('<option value="SEMUA">- Semua Unit Kerja -</option>');
+    Array.from(uniqueUnit).sort().forEach(function(u) { selUnit.append($('<option>', {value: u, text: u})); });
     
-    var sortedUnit = Array.from(uniqueUnit).sort();
-    var uHtml = '<option value="SEMUA">- Semua Unit Kerja -</option>';
-    sortedUnit.forEach(u => uHtml += `<option value="${u}">${u}</option>`);
-    $('#filterUnit').html(uHtml);
+    if(curU && uniqueUnit.has(curU)) selUnit.val(curU);
+    else selUnit.val('SEMUA');
+
+    paudrombel_terapkanFilterLokal();
 }
 
-function filterTampilan() {
-    var fJenjang = $('#filterJenjang').val();
-    var fUnit = $('#filterUnit').val();
-    
-    var filteredData = RAW_DATA_MURID.filter(row => {
-        var passJenjang = (fJenjang === "SEMUA" || row[2] === fJenjang);
-        var passUnit = (fUnit === "SEMUA" || row[0] === fUnit);
-        return passJenjang && passUnit;
-    });
-
-    renderTable(filteredData);
-}
-
-function renderTable(data) {
-    var tbody = $('#bodyData');
-    var tfoot = $('#footData');
-    var thead = $('#headData');
-    
-    tbody.empty();
-    tfoot.empty();
-
-    if (data.length === 0) {
-        thead.show();
-        tbody.html('<tr><td class="text-center p-5 text-muted" colspan="100%">Data tidak ditemukan.</td></tr>');
-        return;
-    }
-
-    var $tbl = $('#bodyData').parent('table');
-    $tbl.css({ 'border-right': 'none', 'border-left': 'none', 'border-top': 'none', 'border-bottom': 'none' });
-
-    // Index Kolom Data: G(6) s.d Q(16)
-    // 0:Unit, 1:NPSN, 2:Jenjang, 3:Bulan, 4:Tahun, 5:Rombel
-    // Usia: 6,7,8,9,10,11,12, 13(Total)
-    // Kelas: 14,15, 16(Total)
-    var colTotals = new Array(17).fill(0); 
-
-    var html = "";
-    data.forEach(function(row) {
-        html += '<tr class="tr-animasi">';
+// =================================================================
+// 3. INISIALISASI DATATABLES
+// =================================================================
+function paudrombel_initDataTables() {
+    PAUDROMBEL_TABEL_INSTANCE = $('#paudrombel_tabelUtama').DataTable({
+        "destroy": true, 
+        "ordering": false, 
+        "pageLength": 15, 
+        "autoWidth": false,
+        "deferRender": true, 
+        "dom": "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+               "<'row'<'col-sm-12'<'table-responsive sultan-scroll'tr>>>" +
+               "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "columnDefs": [ 
+            { "targets": 0, "width": "auto", "className": "col-sticky-left bg-white align-middle border-right text-left font-weight-bold text-dark text-nowrap" }, 
+            { "targets": [1,3,4], "width": "1%", "className": "text-center align-middle text-nowrap" },
+            { "targets": 2, "width": "1%", "className": "text-center align-middle font-weight-bold text-maroon text-nowrap" },
+            { "targets": 5, "width": "1%", "className": "text-center align-middle font-weight-bold text-dark text-nowrap" },
+            { "targets": [6,7,8,9,10,11,12,13,14,15,16], "width": "1%", "className": "text-center align-middle text-nowrap" }
+        ],
+        "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "emptyTable": "Tidak ada data Murid PAUD untuk filter yang dipilih." },
         
-        // STATIC COLS
-        html += `<td class="font-weight-bold bg-white text-dark text-left pl-3 align-middle" 
-                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">${row[0] || '-'}</td>`;
-        html += `<td class="text-center align-middle">${row[1] || '-'}</td>`;
-        html += `<td class="text-center align-middle font-weight-bold text-maroon">${row[2] || '-'}</td>`;
-        html += `<td class="text-center align-middle">${row[3] || '-'}</td>`;
-        html += `<td class="text-center align-middle">${row[4] || '-'}</td>`;
-        html += `<td class="text-center align-middle font-weight-bold">${row[5] || '0'}</td>`; // Rombel
+        "createdRow": function(row, data, dataIndex) {
+             var tds = row.children;
+             for (var i = 0; i < tds.length; i++) {
+                 var cell = tds[i];
+                 var rawVal = cell.textContent.trim();
 
-        // LOOP DATA (6 s.d 16)
-        for (var i = 6; i <= 16; i++) {
-            var val = parseInt(row[i]) || 0;
-            colTotals[i] += val; 
+                 if (i === 0) {
+                     cell.style.position = 'sticky'; cell.style.left = '0'; cell.style.zIndex = '2'; cell.style.backgroundColor = '#ffffff';
+                 } 
+                 else if (i >= 6) { 
+                     if (i >= 6 && i <= 12) cell.style.backgroundColor = '#e8f5e9'; 
+                     if (i === 13) cell.style.backgroundColor = '#c8e6c9'; 
+                     if (i >= 14 && i <= 15) cell.style.backgroundColor = '#e3f2fd'; 
+                     if (i === 16) cell.style.backgroundColor = '#bbdefb'; 
 
-            var display = (val === 0) ? '<span class="text-black-50" style="opacity:0.2">-</span>' : val;
-            var weight = (val > 0) ? 'font-weight-bold text-dark' : '';
+                     if (rawVal === "0" || rawVal === "-" || rawVal === "") {
+                         cell.innerHTML = '<span class="text-muted opacity-50">-</span>';
+                     } else {
+                         cell.classList.add('font-weight-bold', 'text-dark');
+                         if (i === 13 || i === 16) cell.classList.replace('text-dark', 'text-maroon'); 
+                     }
+                 }
+             }
+        },
+
+        "footerCallback": function(row, data, start, end, display) {
+            var api = this.api();
+            if (api.data().length === 0) return;
+
+            var extractNumber = function (str) { 
+                if (typeof str === 'number') return str;
+                if (!str) return 0;
+                var cleanStr = String(str).replace(/(<([^>]+)>)/gi, ""); 
+                var num = parseInt(cleanStr.replace(/[^0-9]/g, ''), 10); 
+                return isNaN(num) ? 0 : num; 
+            };
             
-            // WARNA BACKGROUND
-            var bgColor = "#ffffff";
-            if (i >= 6 && i <= 13) bgColor = "#e8f5e9"; // Hijau Muda (Usia)
-            if (i === 13) bgColor = "#c8e6c9"; // Total Usia (Hijau Tuaan)
-            
-            if (i >= 14 && i <= 16) bgColor = "#e3f2fd"; // Biru Muda (Kelas)
-            if (i === 16) bgColor = "#bbdefb"; // Total Kelas (Biru Tuaan)
+            for (var i = 5; i <= 16; i++) {
+                var total = api.column(i, {page: 'current'}).data().reduce(function(a, b) {
+                    return extractNumber(a) + extractNumber(b);
+                }, 0);
 
-            html += `<td class="text-center align-middle ${weight}" style="background-color: ${bgColor};">${display}</td>`;
+                var cell = $(api.column(i).footer());
+                cell.html(total === 0 ? '-' : total.toLocaleString('id-ID'));
+                
+                var cellDom = cell[0];
+                if(cellDom) {
+                    cellDom.style.color = '#800000'; 
+                    if (i >= 6 && i <= 12) cellDom.style.backgroundColor = '#e8f5e9';
+                    if (i === 13) cellDom.style.backgroundColor = '#c8e6c9';
+                    if (i >= 14 && i <= 15) cellDom.style.backgroundColor = '#e3f2fd';
+                    if (i === 16) cellDom.style.backgroundColor = '#bbdefb';
+                }
+            }
         }
-        html += '</tr>';
+    });
+}
+
+// =================================================================
+// 4. FILTER LOKAL & INJEKSI DATA
+// =================================================================
+function paudrombel_terapkanFilterLokal() {
+    if (!PAUDROMBEL_TABEL_INSTANCE) return;
+
+    var fJenjang = $('#paudrombel_filterJenjang').val() || "SEMUA";
+    var fUnit = PAUDROMBEL_IS_ADMIN ? String($('#paudrombel_filterUnit').val() || "SEMUA").trim().toUpperCase() : String(PAUDROMBEL_UNIT_TERKUNCI).trim().toUpperCase();
+    
+    var hasil = PAUDROMBEL_CACHE_DATA.filter(function(row) {
+        var rUnit = String(row[0] || "").trim().toUpperCase(); 
+        var rJenjang = String(row[2] || "").trim();
+
+        if (PAUDROMBEL_IS_ADMIN) {
+            if (fUnit !== "SEMUA" && fUnit !== "" && rUnit !== fUnit) return false;
+        } else {
+            if (rUnit !== fUnit) return false;
+        }
+
+        if (fJenjang !== "SEMUA" && fJenjang !== "" && rJenjang !== fJenjang) return false;
+
+        return true;
+    });
+    
+    paudrombel_renderTabel(hasil);
+}
+
+function paudrombel_renderTabel(dataRows) {
+    var dtArray = [];
+
+    dataRows.forEach(function(row) {
+        var arrRow = [];
+        
+        arrRow.push(paudrombel_escapeHtml(row[0] || "-")); 
+        arrRow.push(paudrombel_escapeHtml(row[1] || "-"));
+        arrRow.push(paudrombel_escapeHtml(row[2] || "-"));
+        arrRow.push(paudrombel_escapeHtml(row[3] || "-"));
+        arrRow.push(paudrombel_escapeHtml(row[4] || "-"));
+        
+        var rombelVal = (row[5] === undefined || row[5] === null || String(row[5]).trim() === "" || String(row[5]).trim() === "-") ? "0" : String(row[5]).trim();
+        arrRow.push(paudrombel_escapeHtml(rombelVal));
+
+        for (var c = 6; c <= 16; c++) {
+            var val = (row[c] === undefined || row[c] === null || String(row[c]).trim() === "" || String(row[c]).trim() === "-") ? "0" : String(row[c]).trim();
+            arrRow.push(paudrombel_escapeHtml(val));
+        }
+
+        dtArray.push(arrRow);
     });
 
-    tbody.html(html);
+    PAUDROMBEL_TABEL_INSTANCE.clear().rows.add(dtArray).draw(false);
+}
 
-    // --- RENDER FOOTER ---
-    var footHtml = '<tr>';
-    footHtml += `<td class="bg-light text-maroon text-right font-weight-bold pr-3 align-middle" 
-                     style="position:sticky; left:0; z-index:40; border-right: 2px solid #dee2e6;">TOTAL</td>`;
-    
-    // Kosongkan B, C, D, E
-    footHtml += `<td class="bg-light"></td><td class="bg-light"></td><td class="bg-light"></td><td class="bg-light"></td>`;
-    
-    // Total Rombel (Col F / 5) -> Opsional, tapi data rombel biasanya bukan sum murni jika barisnya banyak
-    // Kita kosongkan saja atau hitung jika perlu. Di sini kita kosongkan.
-    footHtml += `<td class="bg-light"></td>`;
-
-    for (var i = 6; i <= 16; i++) {
-        var val = colTotals[i];
-        var bgColor = "#f8f9fa"; // Default Footer
-        var txtColor = "text-maroon";
-
-        if (i >= 6 && i <= 13) bgColor = "#e8f5e9"; 
-        if (i === 13) bgColor = "#c8e6c9"; 
-        if (i >= 14 && i <= 16) bgColor = "#e3f2fd"; 
-        if (i === 16) bgColor = "#bbdefb"; 
-
-        footHtml += `<td class="text-center align-middle font-weight-bold ${txtColor}" style="background-color: ${bgColor};">${val}</td>`;
-    }
-    footHtml += '</tr>';
-    tfoot.html(footHtml);
-
-    thead.show();
-    tfoot.show();
+// =================================================================
+// 5. HELPER UTILITIES
+// =================================================================
+function paudrombel_escapeHtml(text) { 
+    if (!text) return ""; 
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); 
 }
 </script>

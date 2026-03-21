@@ -18,20 +18,21 @@
 
         <div class="card-sultan mb-3">
           <div class="card-body py-2 px-3 border-left-dark">
-            <div class="d-flex align-items-center justify-content-between cursor-pointer" 
-                 data-toggle="collapse" data-target="#infoCollapse" aria-expanded="false">
+            <div class="d-flex align-items-center justify-content-between cursor-pointer" data-toggle="collapse" data-target="#tugas_infoCollapse" aria-expanded="false">
               <div class="d-flex align-items-center text-maroon font-weight-bold">
                 <i class="fas fa-info-circle mr-2"></i> Informasi
               </div>
               <i class="fas fa-chevron-down text-muted icon-sm"></i>
             </div>
-            <div id="infoCollapse" class="collapse">
+            <div id="tugas_infoCollapse" class="collapse">
               <div class="mt-2 pt-2 border-top small text-muted">
                 <ul class="mb-0 pl-3 text-dark mt-2" style="font-size: 14px; line-height: 1.6;">
                     <li>Halaman ini digunakan untuk mengelola data SK Pembagian Tugas.</li>
-                    <li>Klik tombol <b><i class="fas fa-plus text-primary"></i> Tambah</b> untuk mengunggah data SK baru.</li>
-                    <li>Klik tombol di kolom <b>Aksi</b> untuk mengelola data SK.</li>
-                    <li>File yang diunggah adalah format <b class="text-danger">PDF</b> dengan ukuran maksimal <b>1 MB</b>, yang merupakan hasil scan dokumen SK Pembagian Tugas asli yang sudah ditandatangani.</li>
+                    <li>Klik tombol <b>+ Tambah</b> untuk mengunggah data SK baru.</li>
+                    <li>Unggah SK Pembagian Tugas di setiap awal semester atau setiap membuat SK baru.</li>
+                    <li>Satu sekolah hanya dapat memiliki 1 SK untuk kombinasi <b>Tahun Ajaran, Semester, dan Kriteria</b> yang sama.</li>
+                    <li>File yang diunggah adalah format <b class="text-danger">PDF</b> dengan ukuran maksimal <b>1 MB</b>.</li>
+                    <li>Klik tombol <span class="badge badge-outline-danger">💬 Baca Catatan</span> untuk melihat alasan admin jika SK direvisi/ditolak.</li>
                 </ul>
               </div>
             </div>
@@ -39,21 +40,21 @@
         </div>
         
         <div class="card-sultan p-3 mb-3">
-            <div class="d-flex-gap align-items-center">
-                
-                <button type="button" class="btn border-tegas shadow-sm bg-white" onclick="refreshDataServer()" title="Refresh Data">
-                   <i class="fas fa-sync-alt text-maroon"></i>
-                </button>
+            <div class="d-flex-gap align-items-center flex-wrap">
 
-                <select id="filterTahun" class="form-control form-control-sultan input-auto-width min-w-80"></select>
+                <select id="tugas_filterUnit" class="form-control form-control-sultan input-auto-width min-w-250 font-weight-bold text-maroon bg-light" disabled>
+                    <option value="">- Memvalidasi Akses... -</option>
+                </select>
+
+                <select id="tugas_filterTahun" class="form-control form-control-sultan input-auto-width min-w-80"></select>
                 
-                <select id="filterSemester" class="form-control form-control-sultan input-auto-width">
+                <select id="tugas_filterSemester" class="form-control form-control-sultan input-auto-width">
                     <option value="">- Semua Semester -</option>
                     <option value="Semester 1">Semester 1</option>
                     <option value="Semester 2">Semester 2</option>
                 </select>
 
-                <select id="filterStatus" class="form-control form-control-sultan input-auto-width">
+                <select id="tugas_filterStatus" class="form-control form-control-sultan input-auto-width">
                     <option value="">- Semua Status -</option>
                     <option value="Diproses">Diproses</option>
                     <option value="Revisi">Revisi</option>
@@ -61,23 +62,15 @@
                     <option value="Ditolak">Ditolak</option>
                 </select>
 
-                <select id="filterSD" class="form-control form-control-sultan input-auto-width max-w-250">
-                    <option value="">- Semua Sekolah -</option>
-                </select>
+                <div class="divider-vertical d-none d-md-block"></div>
 
-                <div class="divider-vertical"></div>
-
-                <button type="button" id="btnCariSK" class="btn btn-maroon shadow-sm" onclick="jalankanFilterLokal()" title="Cari Data">
-                    <i class="fas fa-search text-white"></i>
+                <button type="button" id="tugas_btnCari" class="btn bg-white border shadow-sm text-secondary" title="Terapkan Filter / Refresh" disabled>
+                    <i class="fas fa-sync-alt text-maroon"></i>
                 </button>
 
                 <div class="ml-auto d-none d-md-block"></div>
 
-                <button class="btn btn-warning font-weight-bold shadow-sm mr-2 d-none" id="btnBukaSampah" onclick="bukaTongSampah()">
-                    <i class="fas fa-trash-restore mr-1"></i>
-                </button>
-
-                <button type="button" class="btn btn-primary font-weight-bold shadow-sm" onclick="tambahDataSK()">
+                <button type="button" id="tugas_btnTambah" class="btn btn-maroon text-white font-weight-bold shadow-sm" disabled>
                     <i class="fas fa-plus mr-1"></i> Tambah
                 </button>
 
@@ -86,34 +79,38 @@
 
         <div class="card-sultan">
           <div class="card-body p-3">
-            <table id="tabelDataSK" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100">
-              <thead id="headTabelSK" style="display:none;">
-                <tr>
-                  <th class="col-sticky-left" style="min-width: 250px;">Nama Sekolah</th>
-                  <th class="text-nowrap text-center">Th. Ajaran</th>
-                  <th class="text-nowrap text-center">Sem.</th>
-                  <th class="text-nowrap text-center">Nomor SK</th>
-                  <th class="text-center text-nowrap">Tgl SK</th>
-                  <th class="text-center text-nowrap">Kriteria</th>
-                  <th class="text-center text-nowrap">File</th>
-                  <th class="text-center text-nowrap">Status</th>
-                  <th class="text-center text-nowrap">Aksi</th>
-                  <th class="small text-muted text-nowrap text-center">Dikirim</th>
-                  <th class="small text-muted text-nowrap text-center">Diubah</th>
-                  <th class="small text-muted text-nowrap text-center">Verifikasi</th>
-                </tr>
-              </thead>
-              <tbody id="bodyTabelSK">
-                  <tr>
-                      <td class="text-center td-spinner" colspan="100%">
-                          <div class="sultan-loading-container">
-                              <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
-                              <h6 class="text-muted font-weight-bold">Menyiapkan tabel...</h6>
-                          </div>
-                      </td>
-                  </tr>
-              </tbody>
-            </table>
+            
+            <div id="tugas_loadingState">
+                <div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 50vh;">
+                    <div class="sultan-loading-container text-center">
+                        <i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i>
+                        <h6 class="text-muted font-weight-bold mt-3" id="tugas_loadingText">Mempersiapkan Akses Server...</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tugas_tableState" style="display: none;">
+                <table id="tugas_tabelUtama" class="table table-bordered table-hover table-premium table-sultan-compact mb-0 w-100 text-nowrap">
+                  <thead class="bg-light">
+                    <tr>
+                      <th class="col-sticky-left border-right text-center align-middle" style="width: 1%; white-space: nowrap; z-index: 5;">Aksi</th>
+                      <th class="text-left align-middle">Nama Sekolah</th>
+                      <th class="text-center align-middle">Th. Ajaran</th>
+                      <th class="text-center align-middle">Sem.</th>
+                      <th class="text-left align-middle">Nomor SK</th>
+                      <th class="text-center align-middle">Tgl SK</th>
+                      <th class="text-left align-middle">Kriteria</th>
+                      <th class="text-center align-middle">Dokumen</th>
+                      <th class="text-left align-middle">Status</th>
+                      <th class="text-left align-middle">Dikirim</th>
+                      <th class="text-left align-middle">Diubah</th>
+                      <th class="text-left align-middle">Verifikasi</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+            </div>
+
           </div>
         </div>
       </div>
@@ -121,60 +118,41 @@
   </div>
 </section>
 
-<div class="modal fade" id="modalEditSK" tabindex="-1" role="dialog" data-backdrop="static">
+<div class="modal fade" id="tugas_modalForm" tabindex="-1" role="dialog" data-backdrop="static">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content border-0 shadow-lg modal-content-sultan">
       
-      <div class="modal-header bg-maroon text-white">
-        <h5 class="modal-title font-weight-bold">
-            <i class="fas fa-file-signature mr-2"></i> Form Data SK
-        </h5>
-        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+      <div class="modal-header bg-maroon text-white" id="tugas_headerModalForm">
+        <h5 class="modal-title font-weight-bold" id="tugas_judulModalForm"><i class="fas fa-file-signature mr-2"></i> Form Data SK Pembagian Tugas</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" id="tugas_closeModalForm"><span>&times;</span></button>
       </div>
       
-      <form id="formEditSK" onsubmit="handleSimpanEdit(event)">
-        <div class="modal-body bg-light">
-          <input type="hidden" id="editRowId" name="editRowId">
-          <input type="hidden" id="originalRowId" name="originalRowId">
+      <form id="tugas_formUtama">
+        <div class="modal-body bg-light p-4">
+          <input type="hidden" id="tugas_editRowId">
           
-          <div id="alertDuplikat" class="alert alert-warning d-none"></div>
-          <div id="alertLocked" class="alert alert-danger d-none">
-              <i class="fas fa-lock mr-1"></i> Data sudah <b>DISETUJUI</b> dan tidak dapat diubah lagi.
+          <div id="tugas_alertInfo" class="alert alert-info border-info shadow-sm mb-3">
+              <i class="fas fa-info-circle mr-1"></i> Tentukan <b>Sekolah, Tahun, Semester,</b> dan <b>Kriteria</b> untuk memulai pengisian data SK.
           </div>
 
-          <div class="form-group">
-            <label class="form-label-sultan">Nomor SK <span class="text-danger">*</span></label>
-            <div class="input-group">
-                <input type="text" class="form-control form-control-sultan" id="editNoSk" name="editNoSk" required placeholder="Ketik Nomor SK lalu klik tombol Cek..." onchange="cekNomorSK(this.value)">
-                <div class="input-group-append">
-                    <button class="btn btn-maroon" type="button" onclick="cekNomorSK($('#editNoSk').val())" id="btnCekSK">
-                        <i class="fas fa-search"></i> Cek
-                    </button>
-                </div>
-            </div>
-            <small id="helpNoSk" class="text-muted font-italic mt-1 d-block">
-                Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.
-            </small>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label-sultan">Nama Sekolah <span class="text-danger">*</span></label>
-            <select class="form-control form-control-sultan font-weight-bold" id="editNamaSd" name="editNamaSd" required>
-                <option value="">- Pilih Sekolah -</option>
-            </select>
+          <div class="form-group mb-3">
+              <label class="form-label-sultan small font-weight-bold text-muted text-uppercase">Nama Sekolah <span class="text-danger">*</span></label>
+              <select id="tugas_inputNamaSd" class="form-control form-control-sultan font-weight-bold text-dark" required>
+                  <option value="">- Memuat Data -</option>
+              </select>
           </div>
           
           <div class="row">
             <div class="col-md-6">
-              <div class="form-group">
-                <label class="form-label-sultan">Tahun Ajaran <span class="text-danger">*</span></label>
-                <select class="form-control form-control-sultan" id="editTahun" name="editTahun" required></select>
+              <div class="form-group mb-3">
+                <label class="form-label-sultan small font-weight-bold text-muted text-uppercase">Tahun Ajaran <span class="text-danger">*</span></label>
+                <select id="tugas_inputTahun" class="form-control form-control-sultan" required></select>
               </div>
             </div>
             <div class="col-md-6">
-              <div class="form-group">
-                <label class="form-label-sultan">Semester <span class="text-danger">*</span></label>
-                <select class="form-control form-control-sultan" id="editSemester" name="editSemester" required>
+              <div class="form-group mb-3">
+                <label class="form-label-sultan small font-weight-bold text-muted text-uppercase">Semester <span class="text-danger">*</span></label>
+                <select id="tugas_inputSemester" class="form-control form-control-sultan" required>
                     <option value="Semester 1">Semester 1</option>
                     <option value="Semester 2">Semester 2</option>
                 </select>
@@ -182,17 +160,10 @@
             </div>
           </div>
 
-          <div class="row">
-             <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label-sultan">Tanggal SK <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control form-control-sultan" id="editTglSk" name="editTglSk" required>
-                </div>
-             </div>
-             <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label-sultan">Kriteria SK <span class="text-danger">*</span></label>
-                  <select class="form-control form-control-sultan" id="editKriteria" name="editKriteria" required>
+          <div class="form-group mb-4">
+              <label class="form-label-sultan small font-weight-bold text-muted text-uppercase">Kriteria SK <span class="text-danger">*</span></label>
+              <div class="input-group">
+                  <select id="tugas_inputKriteria" class="form-control form-control-sultan border-maroon font-weight-bold text-dark" required>
                       <option value="">- Pilih Kriteria -</option>
                       <option value="Awal Semester">Awal Semester</option>
                       <option value="Perubahan ke 1">Perubahan ke 1</option>
@@ -201,84 +172,93 @@
                       <option value="Perubahan ke 4">Perubahan ke 4</option>
                       <option value="Perubahan ke 5">Perubahan ke 5</option>
                   </select>
-                </div>
-             </div>
+                  <div class="input-group-append">
+                      <button class="btn btn-maroon text-white font-weight-bold px-3" type="button" id="tugas_btnCekSlot"><i class="fas fa-search mr-1"></i> CEK SLOT</button>
+                  </div>
+              </div>
           </div>
-          
-          <div class="form-group border p-3 rounded bg-white mt-2 shadow-sm">
-            <label class="form-label-sultan mb-2" id="labelWajibFile"><i class="fas fa-file-pdf text-danger mr-1"></i> Unggah File</label>
-            
-            <div id="linkFileLama" class="mb-2 d-none">
-                <a href="#" target="_blank" class="btn btn-sm btn-info shadow-sm"><i class="fas fa-eye mr-1"></i> Lihat Dokumen Tersimpan</a>
-            </div>
 
-            <div class="custom-file">
-              <input type="file" class="custom-file-input" id="editFileSk" accept="application/pdf">
-              <label class="custom-file-label text-truncate" for="editFileSk">Pilih file PDF...</label>
-            </div>
-            <div class="alert alert-secondary mt-2 mb-0 py-2 px-3 small">
-                <i class="fas fa-info-circle mr-1"></i> Scan dokumen asli yang sudah ditandatangani berformat <b>PDF</b> dengan ukuran maksimal <b>1 MB</b>.
-            </div>
-          </div>
+          <fieldset id="tugas_areaTerkunci" disabled style="opacity: 0.5;">
+              <div class="row">
+                 <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label class="form-label-sultan small font-weight-bold text-muted text-uppercase">Nomor SK <span class="text-danger">*</span></label>
+                      <input type="text" id="tugas_inputNoSk" class="form-control form-control-sultan font-weight-bold" required placeholder="000/000/SD/2026">
+                    </div>
+                 </div>
+                 <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label class="form-label-sultan small font-weight-bold text-muted text-uppercase">Tanggal SK <span class="text-danger">*</span></label>
+                      <input type="date" id="tugas_inputTglSk" class="form-control form-control-sultan" required>
+                    </div>
+                 </div>
+              </div>
+              
+              <div class="form-group border p-3 rounded bg-white shadow-sm mb-0">
+                <label class="form-label-sultan small font-weight-bold text-muted text-uppercase mb-2" id="tugas_labelFile"><i class="fas fa-file-pdf text-danger mr-1"></i> Unggah Dokumen Asli</label>
+                
+                <div id="tugas_linkFileLama" class="mb-2 d-none">
+                    <a href="#" id="tugas_btnLihatDokumenLama" class="btn btn-sm btn-outline-info font-weight-bold shadow-sm"><i class="fas fa-eye mr-1"></i> Lihat Dokumen Tersimpan</a>
+                </div>
+
+                <div class="custom-file">
+                  <input type="file" class="custom-file-input" id="tugas_inputFile" accept="application/pdf">
+                  <label class="custom-file-label text-truncate" for="tugas_inputFile">Pilih file PDF...</label>
+                </div>
+                <div class="alert alert-secondary mt-2 mb-0 py-2 px-3 small">
+                    <i class="fas fa-info-circle mr-1"></i> Scan dokumen asli yang sudah ditandatangani berformat <b>PDF</b> dengan ukuran maksimal <b>1 MB</b>.
+                </div>
+              </div>
+          </fieldset>
         </div>
 
-        <div class="modal-footer bg-white justify-content-between">
-          <button type="button" class="btn btn-default shadow-sm font-weight-bold" data-dismiss="modal">
-              <i class="fas fa-times mr-1"></i> Batal
-          </button>
-          <button type="submit" id="btnSimpanSK" class="btn btn-maroon font-weight-bold shadow-sm px-4" style="display:none;">
-              <i class="fas fa-save mr-1"></i> SIMPAN DATA
-          </button>
+        <div class="modal-footer bg-white justify-content-between p-3">
+          <button type="button" class="btn btn-default shadow-sm font-weight-bold px-4" data-dismiss="modal">Batal</button>
+          <button type="submit" id="tugas_btnSimpanForm" class="btn btn-maroon text-white font-weight-bold shadow-sm px-4" style="display:none;"><i class="fas fa-save mr-1"></i> SIMPAN DOKUMEN</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalVerifikasiSK" tabindex="-1" role="dialog" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 98%; width: 98%; margin: auto;">
-        <div class="modal-content border-0 shadow-lg" style="height: 95vh;">
-            <div class="modal-header bg-maroon text-white py-2">
-                <h5 class="modal-title font-weight-bold" style="font-size: 16px;">
-                    <i class="fas fa-clipboard-check mr-2"></i>Verifikasi SK Pembagian Tugas
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+<div class="modal fade" id="tugas_modalVerif" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-sultan-verif" role="document">
+        <div class="modal-content border-0 shadow-lg d-flex flex-column modal-content-sultan" style="height: 90vh;">
+            <div class="modal-header bg-primary text-white py-2 flex-shrink-0">
+                <h5 class="modal-title font-weight-bold h6 mb-0"><i class="fas fa-clipboard-check mr-2"></i>Verifikasi SK Pembagian Tugas</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form id="formVerifSK" onsubmit="handleSimpanVerifikasi(event)" class="h-100 p-0 m-0">
-                <div class="modal-body p-0 bg-light h-100">
+            <form id="tugas_formVerif" class="d-flex flex-column flex-grow-1 overflow-hidden m-0 p-0">
+                <div class="modal-body p-0 bg-light flex-grow-1 overflow-hidden">
                     <div class="row no-gutters h-100">
-                        <div class="col-lg-8 bg-dark d-flex align-items-center justify-content-center position-relative border-right">
-                            <iframe id="verifFrame" style="width:100%; height:100%; border:none; display:none;"></iframe>
-                            <div id="verifNoFile" class="text-center text-white-50">
-                                <i class="fas fa-file-pdf fa-4x mb-3"></i>
-                                <p class="mb-0">Pratinjau dokumen tidak tersedia.</p>
+                        <div class="col-md-7 border-right d-flex flex-column bg-dark h-100 position-relative align-items-center justify-content-center">
+                            <div id="tugas_verifLoader" class="text-center text-white-50 position-absolute">
+                                <i class="fas fa-circle-notch fa-spin fa-3x mb-3"></i><p>Memuat Dokumen...</p>
+                            </div>
+                            <iframe id="tugas_verifFrame" class="d-none w-100 h-100 border-0" src=""></iframe>
+                            <div id="tugas_verifNoFile" class="text-center text-white-50 position-absolute d-none">
+                                <i class="fas fa-file-pdf fa-4x mb-3"></i><p class="mb-0">Dokumen tidak terdeteksi atau rusak.</p>
                             </div>
                         </div>
-                        <div class="col-lg-4 bg-white d-flex flex-column h-100">
-                            <div class="p-3 overflow-auto" style="flex: 1;">
-                                <input type="hidden" id="verifRowId">
-                                <h6 class="text-maroon font-weight-bold border-bottom pb-2 mb-3">
-                                    <i class="fas fa-school mr-1"></i> Data Sekolah
-                                </h6>
-                                <table class="table table-sm table-borderless small mb-3 text-dark" style="font-size: 14px;">
-                                    <tr><td class="text-muted font-weight-bold" width="35%">Unit Kerja</td><td class="font-weight-bold text-dark" id="vNamaSd">-</td></tr>
-                                    <tr><td class="text-muted font-weight-bold">Nomor SK</td><td class="font-weight-bold text-primary" id="vNoSk" style="word-break: break-all;">-</td></tr>
-                                    <tr><td class="text-muted font-weight-bold">Tanggal SK</td><td id="vTglSk">-</td></tr>
+                        <div class="col-md-5 d-flex flex-column bg-white h-100">
+                            <div class="p-4 flex-grow-1 overflow-auto">
+                                <input type="hidden" id="tugas_verifRowId">
+                                <h6 class="text-primary font-weight-bold border-bottom pb-2 mb-3"><i class="fas fa-school mr-1"></i> Data Identitas SK</h6>
+                                <table class="table table-sm table-borderless small mb-4 text-dark" style="font-size: 14px;">
+                                    <tr><td class="text-muted font-weight-bold" width="35%">Unit Kerja</td><td class="font-weight-bold text-dark" id="tugas_vNamaSd">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Tahun Ajaran</td><td class="font-weight-bold" id="tugas_vTahun">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Semester</td><td id="tugas_vSemester">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Jenis SK</td><td><span class="badge badge-sultan badge-sultan-light-info" id="tugas_vKriteria">-</span></td></tr>
                                     <tr><td colspan="2"><hr class="my-1 dashed"></td></tr>
-                                    <tr><td class="text-muted font-weight-bold">Tahun Ajaran</td><td class="font-weight-bold" id="vTahun">-</td></tr>
-                                    <tr><td class="text-muted font-weight-bold">Semester</td><td id="vSemester">-</td></tr>
-                                    <tr><td class="text-muted font-weight-bold">Jenis SK</td><td><span class="badge badge-sultan badge-sultan-light-info" id="vKriteria">-</span></td></tr>
+                                    <tr><td class="text-muted font-weight-bold align-middle">Nomor SK</td><td class="font-weight-bold text-primary align-middle text-wrap" id="tugas_vNoSk" style="word-break: break-all;">-</td></tr>
+                                    <tr><td class="text-muted font-weight-bold">Tanggal SK</td><td id="tugas_vTglSk">-</td></tr>
                                 </table>
-                                <a id="btnUnduhFileVerif" href="#" target="_blank" class="btn btn-outline-primary btn-sm btn-block mb-4 shadow-sm font-weight-bold rounded-pill">
-                                    <i class="fas fa-download mr-2"></i>Unduh Dokumen PDF
-                                </a>
+                                
                                 <div class="card bg-light border-0 shadow-sm">
                                     <div class="card-body p-3">
                                         <div class="form-group mb-3">
-                                            <label class="font-weight-bold text-maroon small mb-1">Keputusan Verifikasi <span class="text-danger">*</span></label>
-                                            <select class="form-control form-control-sultan font-weight-bold text-dark" id="verifStatus" required onchange="cekStatusVerif(this.value)">
+                                            <label class="form-label-sultan small font-weight-bold text-muted text-uppercase" style="font-size:12px; letter-spacing: 0.5px;">Keputusan Verifikasi <span class="text-danger">*</span></label>
+                                            <select class="form-control form-control-sultan font-weight-bold text-dark" id="tugas_verifStatus" required style="font-size: 16px; height: auto !important; padding: 10px 15px;">
                                                 <option value="">-- Pilih Status --</option>
                                                 <option value="Disetujui">✅ Disetujui</option>
                                                 <option value="Revisi">🔄 Revisi</option>
@@ -286,20 +266,18 @@
                                             </select>
                                         </div>
                                         <div class="form-group mb-0">
-                                            <label class="font-weight-bold text-dark small mb-1">Catatan Admin</label>
-                                            <textarea class="form-control form-control-sultan" id="verifKeterangan" rows="3" placeholder="Tulis catatan..."></textarea>
-                                            <small class="text-danger d-none font-weight-bold mt-1" id="verifWajibCatatan">
-                                                <i class="fas fa-exclamation-circle mr-1"></i> Wajib mengisi alasan!
+                                            <label class="form-label-sultan small font-weight-bold text-muted text-uppercase" style="font-size:12px; letter-spacing: 0.5px;">Catatan Admin</label>
+                                            <textarea class="form-control form-control-sultan" id="tugas_verifKeterangan" rows="3" placeholder="Catatan opsional..." style="font-size: 15px; padding: 10px 15px;"></textarea>
+                                            <small class="text-danger d-none font-weight-bold mt-1" id="tugas_verifWajibCatatan">
+                                                <i class="fas fa-exclamation-circle mr-1"></i> Wajib mengisi alasan penolakan/revisi!
                                             </small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-3 bg-white border-top shadow-lg d-flex justify-content-between" style="z-index: 10;">
-                                <button type="button" class="btn btn-secondary px-4 font-weight-bold shadow-sm" data-dismiss="modal">Batal</button>
-                                <button type="submit" id="btnSimpanVerif" class="btn btn-maroon px-4 font-weight-bold shadow">
-                                    <i class="fas fa-save mr-2"></i> SIMPAN
-                                </button>
+                            <div class="p-3 bg-white border-top shadow-lg d-flex justify-content-between flex-shrink-0 z-index-10">
+                                <button type="button" class="btn btn-default px-4 font-weight-bold shadow-sm" data-dismiss="modal">Tutup</button>
+                                <button type="submit" id="tugas_btnSimpanVerif" class="btn btn-primary px-4 font-weight-bold shadow-sm"><i class="fas fa-check-double mr-2"></i> Eksekusi</button>
                             </div>
                         </div>
                     </div>
@@ -309,729 +287,732 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalPreviewSK" tabindex="-1" role="dialog">
+<div class="modal fade" id="tugas_modalPreview" tabindex="-1" role="dialog" data-backdrop="static">
     <div class="modal-dialog modal-dialog-full" role="document">
-        <div class="modal-content modal-content-full-height border-0 shadow-lg">
-            <div class="modal-header bg-maroon py-2">
-                <h6 class="modal-title font-weight-bold text-white"><i class="fas fa-file-alt mr-2"></i>Pratinjau Dokumen</h6>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        <div class="modal-content modal-content-full-height border-0 shadow-lg modal-content-sultan">
+            <div class="modal-header bg-danger text-white py-2">
+                <h6 class="modal-title font-weight-bold"><i class="fas fa-file-pdf mr-2"></i>Pratinjau Dokumen SK</h6>
+                <div class="ml-auto">
+                    <a href="#" id="tugas_btnFullDownload" target="_blank" class="btn btn-xs btn-light text-danger font-weight-bold shadow-sm mr-2 rounded-pill px-3">
+                        <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
+                    </a>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
             </div>
-            <div class="modal-body modal-body-full">
-                <iframe id="framePreview" class="iframe-full" src=""></iframe>
-            </div>
-            <div class="modal-footer justify-content-between bg-light py-2" style="flex-shrink: 0;">
-                <button type="button" class="btn border-tegas shadow-sm" data-dismiss="modal">Tutup</button>
-                <a id="btnUnduh" href="#" class="btn-unduh-preview" download><i class="fas fa-download mr-2"></i> UNDUH</a>
+            <div class="modal-body modal-body-full bg-dark position-relative p-0" style="height: calc(100vh - 55px);">
+                <iframe id="tugas_framePreviewFull" class="w-100 h-100 border-0 d-none" src=""></iframe>
+                <div id="tugas_loadingPreviewPDF" class="d-flex h-100 align-items-center justify-content-center text-white-50 position-absolute w-100">
+                    <div class="text-center"><i class="fas fa-circle-notch fa-spin fa-3x mb-3"></i><p>Memuat Dokumen...</p></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalHapusSK" tabindex="-1" role="dialog" data-backdrop="static">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="tugas_modalHapus" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
         <div class="modal-content border-0 shadow-lg modal-content-sultan">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title font-weight-bold">
-                    <i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus
-                </h5>
+            <div class="modal-header bg-danger text-white py-2">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i>Konfirmasi Hapus Permanen</h5>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form id="formHapusSK" onsubmit="handleSimpanHapus(event)">
-                <div class="modal-body bg-light">
-                    <input type="hidden" id="hapusRowId" name="hapusRowId">
-                    <div class="alert alert-warning shadow-sm">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> Anda akan menghapus data SK Nomor: <br>
-                        <strong id="infoHapusNoSk" class="text-dark" style="font-size: 1.1em;">-</strong>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label-sultan">Alasan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="hapusAlasan" name="hapusAlasan" rows="2" required placeholder="Contoh: Salah upload file, Data ganda, dll..."></textarea>
+            <form id="tugas_formHapus">
+                <div class="modal-body bg-white p-4">
+                    <input type="hidden" id="tugas_hapusRowId">
+                    <div class="alert alert-warning text-dark border-warning shadow-sm mb-3">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle mt-1 mr-3 fa-lg"></i>
+                            <div>
+                                <strong>Peringatan!</strong><br>
+                                Anda akan menghapus data SK dan File PDF secara permanen:<br>
+                                <span id="tugas_hapusViewNomor" class="font-weight-bold text-uppercase" style="font-size: 1.1em; color: #000;">-</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group mb-0">
-                        <label class="form-label-sultan">Kode Keamanan <span class="text-danger">*</span></label>
+                        <label class="form-label-sultan small font-weight-bold text-uppercase text-muted">Kode Keamanan <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white"><i class="fas fa-key text-danger"></i></span>
-                            </div>
-                            <input type="password" class="form-control" id="hapusKode" name="hapusKode" required placeholder="Hubungi admin Korwil untuk kode hapus." autocomplete="off">
+                            <div class="input-group-prepend"><span class="input-group-text bg-light border-right-0"><i class="fas fa-key text-danger"></i></span></div>
+                            <input type="password" id="tugas_inputKodeHapus" class="form-control form-control-sultan border-left-0 text-center font-weight-bold letter-spacing-1" placeholder="Ketik kode validasi..." required autocomplete="off">
                         </div>
-                        <small class="text-muted font-italic mt-1 d-block">Kode keamanan berubah setiap hari.</small>
                     </div>
                 </div>
-                <div class="modal-footer bg-white justify-content-between">
-                    <button type="button" class="btn btn-default shadow-sm font-weight-bold" data-dismiss="modal">Batal</button>
-                    <button type="submit" id="btnEksekusiHapus" class="btn btn-danger font-weight-bold shadow-sm px-4">
-                        <i class="fas fa-trash mr-1"></i> HAPUS DATA
-                    </button>
+                <div class="modal-footer bg-light justify-content-between p-3">
+                    <button type="button" class="btn btn-default border shadow-sm px-4 font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" id="tugas_btnEksekusiHapus" class="btn btn-danger shadow-sm font-weight-bold px-4"><i class="fas fa-trash mr-1"></i> Hapus Permanen</button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modalTongSampah" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content modal-content-sultan border-0 shadow-lg">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title font-weight-bold">
-                    <i class="fas fa-trash-restore mr-2"></i>Tong Sampah (Data Dihapus)
-                </h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
-            <div class="modal-body bg-light p-4">
-                <div class="alert alert-info border-0 shadow-sm mb-3">
-                    <i class="fas fa-info-circle mr-1"></i> Data di sini adalah data yang dihapus sementara. Klik tombol <b>Pulihkan</b> untuk mengembalikannya ke tabel utama.
-                </div>
-                <div class="table-responsive bg-white rounded shadow-sm p-0">
-                    <table class="table table-hover table-striped mb-0" id="tabelSampah" width="100%">
-                        <thead class="bg-dark text-white text-uppercase small">
-                            <tr>
-                                <th>No</th>
-                                <th>Sekolah</th>
-                                <th>Nomor SK</th>
-                                <th>Dihapus Oleh</th>
-                                <th>Alasan</th>
-                                <th>Waktu Hapus</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodySampah" class="text-dark"></tbody>
-                    </table>
-                </div>
-                <div id="loadingSampah" class="text-center py-5 d-none">
-                    <div class="spinner-border text-warning" role="status"></div>
-                    <p class="mt-2 text-muted font-weight-bold">Menggali tumpukan sampah...</p>
-                </div>
-                <div id="kosongSampah" class="text-center py-5 d-none">
-                    <i class="fas fa-trash-alt fa-3x text-black-50 mb-3"></i>
-                    <p class="text-muted">Tong sampah bersih! Tidak ada data yang dihapus.</p>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-// =================================================================
-// 1. GLOBAL VARIABLES & INIT
-// =================================================================
-var GLOBAL_CACHE_DATA = []; 
-var GLOBAL_DATA_MAP = {}; 
-var CURRENT_FILE_URL = ""; 
+// ======================================================================
+// ISOLASI VARIABEL GLOBAL (MASTER BLUEPRINT V8 - FULL COMPLIANCE)
+// ======================================================================
+var TUGAS_DATA_MASTER = {}; 
+var TUGAS_CACHE_DATA = []; 
+var TUGAS_TABEL_INSTANCE = null; 
 
+var TUGAS_USER_AKTIF = "";
+var TUGAS_IS_ADMIN = false;
+var TUGAS_USER_NPSN = "";
+var TUGAS_UNIT_TERKUNCI = "";
+
+var TUGAS_CURRENT_FILE_URL = "";
+
+// =================================================================
+// 1. INITIALIZATION & SPA VACCINE (BAB I)
+// =================================================================
 $(document).ready(function() {
-    initFilterDefaults(); 
-    checkUserRole(); 
-    $('body').tooltip({selector: '[data-toggle="tooltip"]'});
-    refreshDataServer();  
+    TUGAS_TABEL_INSTANCE = null;
+    $('#tugas_tableState').hide();
+    $('#tugas_loadingState').show();
+
+    try {
+        var user = typeof getSesiUser === 'function' ? getSesiUser() : {};
+        TUGAS_USER_AKTIF = user.nama_lengkap || user.fullname || user.nama || user.username || "User Web";
+        TUGAS_IS_ADMIN = (user.role || "").toLowerCase().includes("admin");
+        TUGAS_USER_NPSN = user.npsn || user.username || ""; 
+    } catch(e) { TUGAS_USER_NPSN = ""; TUGAS_IS_ADMIN = false; }
+
+    tugas_initFilterTahun();
+
+    // VAKSINASI EVENT DELEGATION (ANTI MEMORY LEAK)
+    $(document).off('change', '#tugas_filterUnit, #tugas_filterTahun, #tugas_filterSemester, #tugas_filterStatus').on('change', '#tugas_filterUnit, #tugas_filterTahun, #tugas_filterSemester, #tugas_filterStatus', tugas_terapkanFilterLokal);
     
-    $(document).on('change', '#editFileSk', function(e) {
+    // VAKSIN TOMBOL CARI: Kini memanggil tugas_tarikDataServer secara mutlak (Bypass Cache)
+    $(document).off('click', '#tugas_btnCari').on('click', '#tugas_btnCari', tugas_tarikDataServer);
+    
+    $(document).off('click', '#tugas_btnTambah').on('click', '#tugas_btnTambah', tugas_bukaModalTambah);
+    $(document).off('change', '#tugas_inputNamaSd, #tugas_inputTahun, #tugas_inputSemester, #tugas_inputKriteria').on('change', '#tugas_inputNamaSd, #tugas_inputTahun, #tugas_inputSemester, #tugas_inputKriteria', tugas_cekKetersediaanSlot);
+    $(document).off('click', '#tugas_btnCekSlot').on('click', '#tugas_btnCekSlot', tugas_cekKetersediaanSlot);
+    $(document).off('submit', '#tugas_formUtama').on('submit', '#tugas_formUtama', tugas_handleSimpan);
+    $(document).off('submit', '#tugas_formVerif').on('submit', '#tugas_formVerif', tugas_handleSimpanVerifikasi);
+    $(document).off('submit', '#tugas_formHapus').on('submit', '#tugas_formHapus', tugas_handleSimpanHapus);
+    $(document).off('change', '#tugas_verifStatus').on('change', '#tugas_verifStatus', function(){ tugas_cekStatusVerif($(this).val()); });
+
+    $(document).off('click', '#tugas_btnLihatDokumenLama').on('click', '#tugas_btnLihatDokumenLama', function(e){
+        e.preventDefault();
+        tugas_bukaPreview(TUGAS_CURRENT_FILE_URL);
+    });
+
+    $(document).off('change', '#tugas_inputFile').on('change', '#tugas_inputFile', function(e) {
         var fileName = e.target.files[0] ? e.target.files[0].name : 'Pilih file PDF...';
-        $(this).next('.custom-file-label').html(fileName);
+        $(this).next('.custom-file-label').html('<i class="fas fa-check text-success mr-1"></i> ' + fileName).addClass('font-weight-bold text-success');
     });
-    
-    $('#modalPreviewSK, #modalVerifikasiSK').on('hidden.bs.modal', function () { 
-        $('iframe').attr('src', ''); 
-    });
+
+    // Reset Modal (SPA Clean Up)
+    $('#tugas_modalPreview').on('hidden.bs.modal', function () { $('#tugas_framePreviewFull').addClass('d-none').attr('src', ''); $('#tugas_loadingPreviewPDF').removeClass('d-none'); });
+    $('#tugas_modalVerif').on('hidden.bs.modal', function () { $('#tugas_verifFrame').addClass('d-none').attr('src', ''); $('#tugas_verifNoFile').removeClass('d-none'); });
+
+    tugas_validasiAksesUser(); 
 });
 
-// =================================================================
-// 2. DATA SERVER & FILTER
-// =================================================================
-function refreshDataServer() {
-    var curTahun = $('#filterTahun').val();
-    var curSmt = $('#filterSemester').val();
-    var curStat = $('#filterStatus').val();
-    var curUnit = $('#filterSD').val();
+function tugas_initFilterTahun() {
+    var now = new Date(); var curYear = now.getFullYear(); var curMonth = now.getMonth(); 
+    var htmlTahun = '<option value="">- Semua Tahun -</option>';
+    var formTahun = '<option value="">- Pilih Tahun Ajaran -</option>';
 
-    if ($.fn.DataTable.isDataTable('#tabelDataSK')) { $('#tabelDataSK').DataTable().destroy(); }
-    $('#headTabelSK').hide(); 
-    $('#bodyTabelSK').html('<tr><td class="text-center td-spinner" colspan="100%"><div class="sultan-loading-container"><i class="fas fa-spinner fa-spin fa-3x text-maroon mb-3"></i><h6 class="text-muted font-weight-bold">Sinkronisasi Data...</h6></div></td></tr>');
-    $('#btnCariSK').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    for (var y = 2021; y <= curYear + 1; y++) { 
+        var thnAjaran = y + "/" + (y + 1); 
+        htmlTahun += '<option value="' + thnAjaran + '">' + thnAjaran + '</option>'; 
+        formTahun += '<option value="' + thnAjaran + '">' + thnAjaran + '</option>'; 
+    }
 
-    google.script.run
-        .withSuccessHandler(function(data) {
-            $('#btnCariSK').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
-            GLOBAL_CACHE_DATA = data || [];
-            
-            populasiDropdownUnit(GLOBAL_CACHE_DATA); 
-            
-            if(curTahun) $('#filterTahun').val(curTahun);
-            if(curSmt) $('#filterSemester').val(curSmt);
-            if(curStat) $('#filterStatus').val(curStat);
-            if(curUnit) $('#filterSD').val(curUnit);
-
-            jalankanFilterLokal();
-        })
-        .withFailureHandler(function(e){
-            $('#btnCariSK').prop('disabled', false).html('<i class="fas fa-search text-white"></i>');
-            Sultan.notif.gagal('Gagal memuat data: ' + e.message);
-        })
-        .getDaftarSK(); 
+    $('#tugas_filterTahun').html(htmlTahun).val(""); 
+    $('#tugas_filterSemester').val("");
+    $('#tugas_filterStatus').val("");
+    $('#tugas_inputTahun').html(formTahun);
 }
 
-function jalankanFilterLokal() {
-    var th = ($('#filterTahun').val() || "").trim();
-    var sm = ($('#filterSemester').val() || "").trim();
-    var st = ($('#filterStatus').val() || "").trim().toLowerCase();
-    var sd = ($('#filterSD').val() || "").trim();
+// =================================================================
+// 2. GATEKEEPER & AUTO-FILTER LOGIC
+// =================================================================
+function tugas_validasiAksesUser() {
+    if (TUGAS_IS_ADMIN) {
+        $('#tugas_loadingText').html('Mempersiapkan Database Admin...');
+        $('#tugas_filterUnit').empty().append('<option value="SEMUA">- Semua Unit Kerja -</option>').prop('disabled', false).removeClass('bg-light text-maroon font-weight-bold');
+        
+        // AUTO-SET DEFAULT FILTER UNTUK ADMIN
+        var now = new Date(); var curYear = now.getFullYear(); var curMonth = now.getMonth(); 
+        var currentTa = (curMonth >= 6) ? curYear + '/' + (curYear + 1) : (curYear - 1) + '/' + curYear;
+        var currentSmt = (curMonth >= 6) ? "Semester 1" : "Semester 2";
+        $('#tugas_filterTahun').val(currentTa);
+        $('#tugas_filterSemester').val(currentSmt);
 
-    var hasil = GLOBAL_CACHE_DATA.filter(function(row) {
+        $('#tugas_btnCari, #tugas_btnTambah').prop('disabled', false);
+        tugas_tarikDataServer(); 
+    } else {
+        if (!TUGAS_USER_NPSN) {
+            $('#tugas_filterUnit').empty().append('<option value="">AKSES DITOLAK (NPSN KOSONG)</option>');
+            $('#tugas_loadingText').html('<span class="text-danger"><i class="fas fa-ban mb-2"></i><br>Akses ditolak: Sesi login tidak valid.</span>');
+            return;
+        }
+        google.script.run.withSuccessHandler(function(resUnit) {
+            var dataUnit = JSON.parse(resUnit);
+            if (dataUnit.error) {
+                $('#tugas_filterUnit').empty().append('<option value="">AKSES DITOLAK</option>');
+                $('#tugas_loadingText').html('<span class="text-danger"><i class="fas fa-exclamation-triangle mb-2"></i><br>' + tugas_escapeHtml(dataUnit.error) + '</span>');
+                return;
+            }
+            TUGAS_UNIT_TERKUNCI = dataUnit.unitKerja;
+            $('#tugas_filterUnit').empty().append('<option value="' + tugas_escapeHtml(TUGAS_UNIT_TERKUNCI) + '">' + tugas_escapeHtml(TUGAS_UNIT_TERKUNCI) + '</option>').prop('disabled', true);
+            $('#tugas_btnCari, #tugas_btnTambah').prop('disabled', false);
+            tugas_tarikDataServer();
+        }).withFailureHandler(function(err) {
+            $('#tugas_filterUnit').empty().append('<option value="">ERROR SERVER</option>');
+            $('#tugas_loadingText').html('<span class="text-danger"><i class="fas fa-wifi mb-2"></i><br>Koneksi Terputus: ' + tugas_escapeHtml(err.message) + '</span>');
+        }).getUnitKerjaByNpsnPTK(TUGAS_USER_NPSN); 
+    }
+}
+
+// =================================================================
+// 3. FETCH DATA & FILTER (BAB VII - Turbo Seamless)
+// =================================================================
+function tugas_tarikDataServer() {
+    var btn = $('#tugas_btnCari');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin text-maroon"></i>');
+    
+    if (!$.fn.DataTable.isDataTable('#tugas_tabelUtama')) {
+        $('#tugas_tableState').hide();
+        $('#tugas_loadingText').html('Menyinkronkan data dari server...');
+        $('#tugas_loadingState').show();
+    }
+
+    google.script.run.withSuccessHandler(function(dataRes) {
+        btn.prop('disabled', false).html('<i class="fas fa-sync-alt text-maroon"></i>');
+        
+        try {
+            TUGAS_CACHE_DATA = dataRes || [];
+            
+            // Inisialisasi DataTables (Turbo Seamless)
+            if (!$.fn.DataTable.isDataTable('#tugas_tabelUtama')) {
+                TUGAS_TABEL_INSTANCE = $('#tugas_tabelUtama').DataTable({
+                    "destroy": true, "ordering": false, "pageLength": 10, "autoWidth": false,
+                    "deferRender": true, 
+                    "dom": "<'row mb-2'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                           "<'row'<'col-sm-12'<'table-responsive sultan-scroll'tr>>>" +
+                           "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                    "columnDefs": [ 
+                        { "targets": 0, "className": "col-sticky-left bg-white align-middle border-right text-center" }, 
+                        { "targets": [1,4,6,8,9,10,11], "className": "text-left align-middle" },
+                        { "targets": [2,3,5,7], "className": "text-center align-middle" }
+                    ],
+                    "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", "emptyTable": "Tidak ditemukan data SK untuk filter tersebut." }
+                });
+            }
+
+            tugas_populateFilterOptions(); 
+            tugas_terapkanFilterLokal(); 
+            
+            // THE MAGIC SWITCH (Tanpa Animasi, Cegah Micro-Blink)
+            $('#tugas_loadingState').hide();
+            $('#tugas_tableState').show();
+            if(TUGAS_TABEL_INSTANCE) { 
+                setTimeout(function(){ TUGAS_TABEL_INSTANCE.columns.adjust(); }, 50); 
+            }
+
+        } catch (e) {
+            $('#tugas_tableState').hide();
+            $('#tugas_loadingState').show();
+            $('#tugas_loadingText').html('<span class="text-danger"><i class="fas fa-exclamation-triangle mb-2"></i><br>Gagal merakit tabel: ' + tugas_escapeHtml(e.message) + '</span>');
+        }
+    }).withFailureHandler(function(e){
+        btn.prop('disabled', false).html('<i class="fas fa-sync-alt text-maroon"></i>');
+        $('#tugas_tableState').hide();
+        $('#tugas_loadingState').show();
+        $('#tugas_loadingText').html('<span class="text-danger"><i class="fas fa-wifi mb-2"></i><br>Koneksi Terputus.</span>');
+    }).getDaftarSK(); 
+}
+
+function tugas_populateFilterOptions() {
+    var uniqueUnits = new Set();
+    
+    if (typeof DROPDOWN_STATIS !== 'undefined' && DROPDOWN_STATIS["NamaSD"]) {
+        DROPDOWN_STATIS["NamaSD"].forEach(function(u){ uniqueUnits.add(u); });
+    } else {
+        TUGAS_CACHE_DATA.forEach(row => { if(row.namaSd) uniqueUnits.add(String(row.namaSd).trim()); });
+    }
+
+    var sortedUnits = Array.from(uniqueUnits).sort();
+    
+    if (TUGAS_IS_ADMIN) {
+        var uHtml = '<option value="SEMUA">- Semua Sekolah -</option>';
+        sortedUnits.forEach(u => uHtml += '<option value="' + tugas_escapeHtml(u) + '">' + tugas_escapeHtml(u) + '</option>');
+        var curUnit = $('#tugas_filterUnit').val();
+        $('#tugas_filterUnit').html(uHtml);
+        if(curUnit && uniqueUnits.has(curUnit)) $('#tugas_filterUnit').val(curUnit);
+    }
+
+    var formHtml = '<option value="">- Pilih Sekolah -</option>';
+    sortedUnits.forEach(u => formHtml += '<option value="' + tugas_escapeHtml(u) + '">' + tugas_escapeHtml(u) + '</option>');
+    $('#tugas_inputNamaSd').html(formHtml);
+    if (!TUGAS_IS_ADMIN && TUGAS_UNIT_TERKUNCI) {
+        $('#tugas_inputNamaSd').val(TUGAS_UNIT_TERKUNCI).prop('disabled', true);
+    }
+}
+
+// =================================================================
+// 4. INJEKSI DATA (Sorting Last Activity via Cache & Render)
+// =================================================================
+function tugas_terapkanFilterLokal() {
+    if (!TUGAS_TABEL_INSTANCE) return;
+
+    var fTh = String($('#tugas_filterTahun').val() || "");
+    var fSm = String($('#tugas_filterSemester').val() || "");
+    var fSt = String($('#tugas_filterStatus').val() || "").toLowerCase();
+    
+    var tAdminUnit = TUGAS_IS_ADMIN ? String($('#tugas_filterUnit').val() || "").toUpperCase() : "";
+    var tUnitUser  = String(TUGAS_UNIT_TERKUNCI || "").trim().toUpperCase();
+
+    var hasil = TUGAS_CACHE_DATA.filter(function(row) {
         var rTh = String(row.tahun || "").trim();
         var rSm = String(row.semester || "").trim();
         var rSt = String(row.status || "").trim().toLowerCase();
-        var rSd = String(row.namaSd || "").trim();
+        var rSd = String(row.namaSd || "").trim().toUpperCase();
 
-        var matchTh = (th === "" || rTh === th);
-        var matchSm = (sm === "" || rSm === sm);
-        var matchSd = (sd === "" || rSd === sd);
+        var passUnit = false;
+        if (TUGAS_IS_ADMIN) { passUnit = (tAdminUnit === "SEMUA" || tAdminUnit === "" || rSd === tAdminUnit); } 
+        else { passUnit = (rSd === tUnitUser); }
+
+        var passTh = (fTh === "" || rTh === fTh);
+        var passSm = (fSm === "" || rSm === fSm);
         
-        var matchSt = true;
-        if (st !== "") {
-            if (st === "ok") matchSt = (rSt.includes("ok") || rSt.includes("setuju") || rSt.includes("valid"));
-            else if (st === "diproses") matchSt = (rSt === "" || rSt === "diproses");
-            else matchSt = rSt.includes(st);
+        var passSt = true;
+        if (fSt !== "") {
+            if (fSt === "ok") passSt = (rSt.includes("ok") || rSt.includes("setuju") || rSt.includes("valid"));
+            else if (fSt === "diproses") passSt = (rSt === "" || rSt === "diproses");
+            else passSt = rSt.includes(fSt);
         }
 
-        return matchTh && matchSm && matchSd && matchSt;
+        return passUnit && passTh && passSm && passSt;
     });
 
-    renderTabel(hasil);
+    tugas_renderTabel(hasil);
 }
 
-// =================================================================
-// 3. RENDER TABEL
-// =================================================================
-function renderTabel(data) {
-    if ($.fn.DataTable.isDataTable('#tabelDataSK')) { $('#tabelDataSK').DataTable().clear().destroy(); }
-    $('#bodyTabelSK').empty();
-    GLOBAL_DATA_MAP = {}; 
+function tugas_renderTabel(data) {
+    var dtArray = []; TUGAS_DATA_MASTER = {}; 
 
-    if (!data || data.length === 0) {
-        $('#headTabelSK').show(); 
-        initDataTableStandard('#tabelDataSK', true); 
-        return;
-    }
-
-    var sesi = localStorage.getItem("siksUser"); 
-    var isAdmin = sesi && sesi.toLowerCase().includes('admin');
-
+    // Pengurutan Tambahan di Frontend
     data.sort(function(a, b) {
-        var timeA = Math.max(
-            parseDateTime(a.tglUnggah), 
-            parseDateTime(a.tglUpdate), 
-            parseDateTime(a.tglVerval)
-        );
-        var timeB = Math.max(
-            parseDateTime(b.tglUnggah), 
-            parseDateTime(b.tglUpdate), 
-            parseDateTime(b.tglVerval)
-        );
+        var timeA = Math.max(tugas_parseDateTime(a.tglUnggah), tugas_parseDateTime(a.tglUpdate), tugas_parseDateTime(a.tglVerval));
+        var timeB = Math.max(tugas_parseDateTime(b.tglUnggah), tugas_parseDateTime(b.tglUpdate), tugas_parseDateTime(b.tglVerval));
         return timeB - timeA; 
     });
 
-    var html = "";
-    for (var i = 0; i < data.length; i++) {
-        var row = data[i];
-        GLOBAL_DATA_MAP[row.rowBaris] = row;
+    data.forEach(function(row) {
+        var id = String(row.rowBaris);
+        TUGAS_DATA_MASTER[id] = row; 
         
-        var safeId = String(row.rowBaris);
-        var noSk = row.noSk || "-";
-
-        var rawStatus = String(row.status || "Diproses").trim();
-        var stLower = rawStatus.toLowerCase();
+        var safeNoSk = tugas_cleanText(row.noSk || "-"); 
+        var safeUrl = String(row.fileUrl||"").replace(/'/g, "%27").replace(/"/g, "%22");
+        var safeUrlJs = tugas_escapeJs(safeUrl);
+        var stButton = String(row.status || "").toLowerCase();
         
-        var badgeStyle = 'badge-sultan-light-warning'; 
-        var iconClass = 'clock'; 
-        var labelStatus = "DIPROSES"; 
+        var badgeStatus = tugas_buildBadgeStatus(row.status, row.keterangan);
 
-        if (stLower.includes('ok') || stLower.includes('setuju') || stLower.includes('valid')) {
-            badgeStyle = 'badge-sultan-light-success'; 
-            iconClass = 'check-circle'; 
-            labelStatus = "DISETUJUI";
-        } else if (stLower.includes('revisi')) {
-            badgeStyle = 'badge-sultan-light-info'; 
-            iconClass = 'sync-alt'; 
-            labelStatus = "REVISI";
-        } else if (stLower.includes('tolak')) {
-            badgeStyle = 'badge-sultan-light-danger'; 
-            iconClass = 'times-circle'; 
-            labelStatus = "DITOLAK";
-        }
+        var isLocked = (stButton.includes('setuju') || stButton.includes('acc') || stButton.includes('ok') || stButton.includes('valid'));
+        var attrDis = isLocked ? 'disabled style="cursor:not-allowed; opacity:0.6; filter: grayscale(100%);"' : '';
+        
+        // BAB III: UI TOMBOL DINAMIS (Admin = Icon Only, User = Icon + Text)
+        var txtEdit = TUGAS_IS_ADMIN ? "" : " Edit";
+        var txtHapus = TUGAS_IS_ADMIN ? "" : " Hapus";
+        var marginIcon = TUGAS_IS_ADMIN ? "" : "mr-1";
 
-        var infoTooltip = "";
-        if (row.keterangan && row.keterangan.trim().length > 2) {
-             var safeKet = row.keterangan.replace(/"/g, '&quot;');
-             infoTooltip = `<i class="fas fa-info-circle text-dark ml-2" title="${safeKet}" data-toggle="tooltip" style="cursor:help; opacity:0.6;"></i>`;
-        }
+        var btnAdmin = TUGAS_IS_ADMIN ? `<button class="btn btn-sm btn-primary font-weight-bold shadow-sm" onclick="tugas_bukaModalVerif('${id}')" title="Verifikasi SK"><i class="fas fa-clipboard-check"></i></button>` : '';
+        var btnDetail = `<button class="btn btn-sm btn-warning text-dark font-weight-bold shadow-sm" onclick="tugas_bukaModalEdit('${id}')" title="Edit SK" ${attrDis}><i class="fas fa-pencil-alt ${marginIcon}"></i>${txtEdit}</button>`;
+        var btnHapus = `<button class="btn btn-sm btn-danger font-weight-bold shadow-sm" onclick="tugas_bukaModalHapus('${id}')" title="Hapus SK" ${attrDis}><i class="fas fa-trash-alt ${marginIcon}"></i>${txtHapus}</button>`;
+        
+        // VAKSIN TATA LETAK: flex-nowrap memastikan tombol tidak pernah jatuh/stack ke bawah
+        var groupAksi = `<div class="d-flex flex-nowrap justify-content-center" style="gap:5px;">${btnAdmin}${btnDetail}${btnHapus}</div>`;
 
-        var badgeHtml = `<span class="badge badge-sultan ${badgeStyle}"><i class="fas fa-${iconClass} mr-1"></i>${rawStatus}</span>${infoTooltip}`;
-
-        var isLocked = (labelStatus === "DISETUJUI");
-        var attrDis = isLocked ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
-        var evtEdit = isLocked ? '' : `onclick="editSK('${safeId}')"`;
-        var evtHapus = isLocked ? '' : `onclick="hapusSK('${safeId}','${noSk}')"`;
-
-        var btnDoc = row.fileUrl ? `<button class="btn-icon-sultan btn-icon-sultan-info" onclick="previewPDF('${row.fileUrl}')" title="Lihat"><i class="fas fa-eye"></i></button>` : '-';
-        var btnVerif = isAdmin ? `<button class="btn-icon-sultan btn-icon-sultan-success" onclick="verifikasiSK('${safeId}')" title="Verif"><i class="fas fa-check"></i></button>` : '';
-        var btnEdit = `<button class="btn-icon-sultan btn-icon-sultan-warning" ${evtEdit} ${attrDis} title="Edit"><i class="fas fa-pencil-alt"></i></button>`;
-        var btnHapus = `<button class="btn-icon-sultan btn-icon-sultan-danger" ${evtHapus} ${attrDis} title="Hapus"><i class="fas fa-trash"></i></button>`;
-
-        function metaBlock(date, user) {
-            return `<div style="line-height:1.2; font-size:11px;">
-                        <span class="d-block font-weight-bold text-dark text-nowrap">${date||'-'}</span>
-                        <span class="d-block text-muted text-nowrap small">${user||'-'}</span>
-                    </div>`;
+        var btnFile = '-';
+        if(safeUrl.length > 5) {
+            btnFile = `<button class="btn btn-sm btn-outline-danger font-weight-bold shadow-sm" onclick="tugas_bukaPreview('${safeUrlJs}')" title="Lihat SK"><i class="fas fa-file-pdf mr-1"></i> SK</button>`;
         }
         
         var tglSkDisplay = row.tglSkDisplay || row.tglSk || "-";
-        if(tglSkDisplay.match(/^\d{4}-\d{2}-\d{2}$/)) { var p = tglSkDisplay.split('-'); tglSkDisplay = `${p[2]}-${p[1]}-${p[0]}`; }
+        if(tglSkDisplay.match(/^\d{4}-\d{2}-\d{2}$/)) { var p = tglSkDisplay.split('-'); tglSkDisplay = p[2] + '-' + p[1] + '-' + p[0]; }
 
-        html += `<tr class="tr-animasi">
-            <td class="col-sticky-left font-weight-bold text-dark bg-white align-middle">${row.namaSd || '-'}</td>
-            <td class="text-center align-middle">${row.tahun || '-'}</td>
-            <td class="text-center align-middle small">${row.semester || '-'}</td>
-            <td class="align-middle">${noSk}</td>
-            <td class="text-center align-middle">${tglSkDisplay}</td>
-            <td class="align-middle small">${row.kriteria || '-'}</td>
-            <td class="text-center align-middle">${btnDoc}</td>
-            <td class="text-center align-middle">${badgeHtml}</td>
-            <td class="text-center align-middle"><div class="d-flex justify-content-center" style="gap:4px">${btnVerif}${btnEdit}${btnHapus}</div></td>
-            <td class="text-center align-middle">${metaBlock(row.tglUnggah, row.userInput)}</td>
-            <td class="text-center align-middle">${metaBlock(row.tglUpdate, row.userUpdate)}</td>
-            <td class="text-center align-middle">${metaBlock(row.tglVerval, row.verifikator)}</td>
-        </tr>`;
-    }
+        var metaInput = `<div style="line-height:1.2; font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglUnggah||'-'}</span><span class="d-block text-muted text-nowrap">${tugas_cleanText(row.userInput)}</span></div>`;
+        var metaUpdate = `<div style="line-height:1.2; font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglUpdate||'-'}</span><span class="d-block text-muted text-nowrap">${tugas_cleanText(row.userUpdate)}</span></div>`;
+        var metaVerif = `<div style="line-height:1.2; font-size:11px;"><span class="d-block font-weight-bold text-dark text-nowrap">${row.tglVerval||'-'}</span><span class="d-block text-muted text-nowrap">${tugas_cleanText(row.verifikator)}</span></div>`;
 
-    $('#bodyTabelSK').html(html);
-    $('#headTabelSK').show(); 
-    setTimeout(function() { initDataTableStandard('#tabelDataSK'); }, 10);
+        // KEPATUHAN MUTLAK: Kolom NPSN dihapus seluruhnya karena tidak ada di Database SK.
+        var uiUnit = `<div class="font-weight-bold text-dark text-nowrap">${tugas_cleanText(row.namaSd)}</div>`;
+
+        dtArray.push([ 
+            groupAksi, 
+            uiUnit,
+            tugas_cleanText(row.tahun), 
+            tugas_cleanText(row.semester),
+            `<div class="text-wrap">${safeNoSk}</div>`, 
+            tglSkDisplay, 
+            tugas_cleanText(row.kriteria),
+            btnFile, 
+            badgeStatus, 
+            metaInput, 
+            metaUpdate, 
+            metaVerif 
+        ]);
+    });
+
+    TUGAS_TABEL_INSTANCE.clear().rows.add(dtArray).draw(false);
 }
 
 // =================================================================
-// 4. HELPER FORM: TAMBAH & EDIT (MURNI MANUAL DROPDOWN)
+// 5. LOGIKA MODAL FORM & VALIDASI (BAB V)
 // =================================================================
+function tugas_bukaModalTambah() { 
+  $('#tugas_formUtama')[0].reset(); 
+  $('#tugas_editRowId').val(''); 
+  TUGAS_CURRENT_FILE_URL = "";
+  
+  var now = new Date(); var curYear = now.getFullYear(); var curMonth = now.getMonth(); 
+  var currentTa = (curMonth >= 6) ? curYear + '/' + (curYear + 1) : (curYear - 1) + '/' + curYear;
+  var currentSmt = (curMonth >= 6) ? "Semester 1" : "Semester 2";
+  
+  // BAB V: Warna Header Maroon untuk Tambah
+  $('#tugas_headerModalForm').removeClass('bg-warning').addClass('bg-maroon');
+  $('#tugas_judulModalForm').css('color', '#fff').html('<i class="fas fa-file-signature mr-2"></i> Form Tambah SK');
+  $('#tugas_closeModalForm').removeClass('text-dark').addClass('text-white');
+  $('#tugas_btnSimpanForm').removeClass('btn-warning text-dark').addClass('btn-maroon text-white');
 
-function tambahDataSK() {
-    $('#formEditSK')[0].reset(); 
-    $('#editRowId').val(''); 
-    $('#originalRowId').val(''); 
-    
-    $('#alertDuplikat, #alertLocked').addClass('d-none');
-    $('#alertDuplikat').removeClass('alert-warning alert-danger');
-    $('.is-invalid').removeClass('is-invalid');
-    
-    // 1. Kunci form (Kecuali SK) sampai pengecekan selesai
-    $('#formEditSK input, #formEditSK select').prop('disabled', true);
-    $('#editNoSk').prop('disabled', false).prop('readonly', false);
-    $('#btnCekSK').prop('disabled', false);
-    $('#btnSimpanSK').hide().prop('disabled', true); 
-    
-    // 2. Reset Teks Bantuan 
-    $('#helpNoSk').html('Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.')
-                  .removeClass('text-success text-danger font-weight-bold')
-                  .addClass('text-muted');
-    
-    $('#labelWajibFile').html('Unggah File PDF <span class="text-danger">*</span>');
-    $('.custom-file-label').html('Pilih file PDF...');
-    
-    // 3. KOSONGKAN NAMA SEKOLAH, BIARKAN USER MEMILIH SENDIRI
-    $('#editNamaSd').val(""); 
-
-    $('#modalEditSK').modal('show'); 
+  $('#tugas_inputTahun').val(currentTa);
+  $('#tugas_inputSemester').val(currentSmt);
+  
+  if (!TUGAS_IS_ADMIN && TUGAS_UNIT_TERKUNCI) { $('#tugas_inputNamaSd').val(TUGAS_UNIT_TERKUNCI); }
+  
+  $('#tugas_areaTerkunci').prop('disabled', true).css('opacity', '0.5');
+  $('#tugas_inputNamaSd, #tugas_inputTahun, #tugas_inputSemester, #tugas_inputKriteria').prop('disabled', false).removeClass('bg-light');
+  $('#tugas_btnCekSlot').prop('disabled', false);
+  $('#tugas_btnSimpanForm').hide().prop('disabled', true); 
+  
+  $('#tugas_alertInfo').removeClass('alert-danger alert-success').addClass('alert-info border-info').html('<i class="fas fa-info-circle mr-1"></i> Tentukan <b>Sekolah, Tahun, Semester,</b> dan <b>Kriteria</b> untuk memulai pengisian data SK.');
+  
+  $('#tugas_labelFile').html('<i class="fas fa-file-pdf text-danger mr-1"></i> Unggah Dokumen Asli <span class="text-danger">*</span>');
+  $('.custom-file-label').removeClass("selected text-success font-weight-bold").html('Pilih file PDF...'); 
+  $('#tugas_linkFileLama').addClass('d-none'); 
+  
+  $('#tugas_modalForm').modal('show'); 
 }
 
-function editSK(id) {
-    var d = GLOBAL_DATA_MAP[id];
-    if (!d) return;
+function tugas_cekKetersediaanSlot() {
+    var vSd = $('#tugas_inputNamaSd').val();
+    var vTh = $('#tugas_inputTahun').val();
+    var vSm = $('#tugas_inputSemester').val();
+    var vKr = $('#tugas_inputKriteria').val();
 
-    $('#editRowId').val(id);
-    $('#originalRowId').val(id);
-
-    $('#alertDuplikat, #alertLocked').addClass('d-none');
-    $('#formEditSK input, #formEditSK select').prop('disabled', false);
-    
-    // Mode Edit: Tombol Simpan langsung aktif
-    $('#btnSimpanSK').show().prop('disabled', false);
-    
-    // Mode Edit: Ubah Helper Teks
-    $('#helpNoSk').html('<i class="fas fa-info-circle"></i> Anda sedang dalam mode Edit Data.')
-                  .removeClass('text-success text-danger')
-                  .addClass('text-muted font-weight-bold');
-
-    var cleanNoSk = (d.noSk || "").replace(/\s+/g, ''); 
-    $('#editNoSk').val(cleanNoSk); 
-
-    // Set nilai sekolah (hanya bisa diubah di mode edit)
-    $('#editNamaSd').val(d.namaSd);
-    
-    $('#editTahun').val(d.tahun);
-    $('#editSemester').val(d.semester);
-    $('#editTglSk').val(formatDateForInput(d.tglSk));
-    $('#editKriteria').val(d.kriteria);
-
-    // KUNCI HANYA NOMOR SK & SEKOLAH agar riwayat data tidak tumpang tindih
-    $('#editNoSk, #editNamaSd').prop('disabled', true);
-    $('#btnCekSK').prop('disabled', true);
-
-    CURRENT_FILE_URL = d.fileUrl || "";
-    if (d.fileUrl && d.fileUrl.length > 5) {
-        $('#linkFileLama').removeClass('d-none');
-        $('#linkFileLama a').attr('onclick', `previewPDF('${d.fileUrl}'); return false;`);
-        $('.custom-file-label').html('Biarkan kosong jika tidak ganti...');
-        $('#labelWajibFile').html('Unggah File PDF');
-    } else {
-        $('#linkFileLama').addClass('d-none');
-        $('.custom-file-label').html('Pilih file PDF...');
-        $('#labelWajibFile').html('Unggah File PDF <span class="text-danger">*</span>');
-    }
-
-    $('#modalEditSK').modal('show');
-}
-
-// =================================================================
-// 5. PENGECEKAN NOMOR SK (DINAMIS UI)
-// =================================================================
-function cekNomorSK(val) {
-    $('#alertDuplikat').addClass('d-none').removeClass('alert-warning alert-danger');
-    
-    if (!val) {
-        $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
-        $('#btnSimpanSK').hide().prop('disabled', true); 
-        $('#helpNoSk').html('Sistem akan mengecek ketersediaan data berdasarkan Nomor SK.')
-                      .removeClass('text-success text-danger font-weight-bold').addClass('text-muted');
+    if(!vSd || !vTh || !vSm || !vKr) {
+        $('#tugas_areaTerkunci').prop('disabled', true).css('opacity', '0.5');
+        $('#tugas_btnSimpanForm').hide().prop('disabled', true);
+        $('#tugas_alertInfo').removeClass('alert-danger alert-success').addClass('alert-info border-info').html('<i class="fas fa-info-circle mr-1"></i> Harap lengkapi semua kolom di atas.');
         return;
     }
 
-    if (val.indexOf(' ') >= 0) {
-        $('#helpNoSk').html('<i class="fas fa-times-circle"></i> FORMAT SALAH: Hapus spasi pada Nomor SK!')
-                      .removeClass('text-muted text-success').addClass('text-danger font-weight-bold');
-        $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
-        $('#btnSimpanSK').hide().prop('disabled', true); 
-        return; 
-    }
-
-    if (val.length < 3) return; 
-
-    var btn = $('#btnCekSK'); var txt = btn.html();
+    var btn = $('#tugas_btnCekSlot'); var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-    
-    // Status Loading
-    $('#helpNoSk').html('<i class="fas fa-circle-notch fa-spin"></i> Sedang memeriksa database...')
-                  .removeClass('text-danger text-success font-weight-bold').addClass('text-muted');
+    $('#tugas_alertInfo').removeClass('alert-danger alert-success').addClass('alert-info border-info').html('<i class="fas fa-spinner fa-spin mr-1"></i> Mengecek ketersediaan slot di server...');
+
+    var payload = { namaSd: vSd, tahunAjaran: vTh, semester: vSm, kriteria: vKr };
 
     google.script.run.withSuccessHandler(function(res) {
         btn.prop('disabled', false).html(txt);
-        var currentId = $('#editRowId').val();
+        var currentId = $('#tugas_editRowId').val();
 
         if (res.found) {
             if (currentId && String(res.data.rowId) === String(currentId)) {
-                 // Edit punya sendiri (Aman)
-                 $('#helpNoSk').html('<i class="fas fa-check-circle"></i> Nomor SK Valid (Milik Sendiri).')
-                               .removeClass('text-muted text-danger').addClass('text-success font-weight-bold');
-                 
-                 $('#formEditSK input, #formEditSK select').prop('disabled', false);
-                 $('#btnSimpanSK').show().prop('disabled', false);
-                 $('#editNoSk, #editNamaSd').prop('disabled', true);
+                 $('#tugas_areaTerkunci').prop('disabled', false).css('opacity', '1');
+                 $('#tugas_btnSimpanForm').show().prop('disabled', false).html('<i class="fas fa-save mr-1"></i> UPDATE DATA');
+                 $('#tugas_alertInfo').removeClass('alert-info alert-danger').addClass('alert-success border-success').html('<i class="fas fa-check-circle mr-1"></i> Mode Edit aktif.');
             } else {
-                 // Duplikat (Gagal)
-                 $('#helpNoSk').html('<i class="fas fa-exclamation-triangle"></i> Gagal: Nomor SK ini sudah terdaftar!')
-                               .removeClass('text-muted text-success').addClass('text-danger font-weight-bold');
-                 
-                 $('#alertDuplikat').removeClass('d-none').addClass('alert-warning')
-                                    .html('<i class="fas fa-exclamation-triangle mr-1"></i> <b>Data Ditemukan.</b> Gunakan tombol Edit di tabel jika ini data Anda.');
-                 
-                 $('#formEditSK input, #formEditSK select').not('#editNoSk').prop('disabled', true);
-                 $('#btnSimpanSK').hide().prop('disabled', true);
+                 $('#tugas_areaTerkunci').prop('disabled', true).css('opacity', '0.5');
+                 $('#tugas_btnSimpanForm').hide().prop('disabled', true);
+                 $('#tugas_alertInfo').removeClass('alert-info alert-success').addClass('alert-danger border-danger').html('<i class="fas fa-times-circle mr-1"></i> <b>SLOT PENUH:</b> Sekolah ini sudah memiliki SK untuk ' + vKr + ' pada ' + vSm + ' TA ' + vTh + '.');
+                 Sultan.alert('warning', 'Data Ganda', 'Satu sekolah hanya boleh memiliki 1 SK untuk kombinasi Tahun, Semester, dan Kriteria yang sama.');
             }
         } else {
-            // DATA BARU (SUKSES)
-            $('#helpNoSk').html('<i class="fas fa-check-circle"></i> Nomor SK Tersedia! Silakan isi formulir di bawah.')
-                          .removeClass('text-muted text-danger').addClass('text-success font-weight-bold');
-            
-            // 1. BUKA SEMUA KUNCI TERMASUK NAMA SEKOLAH (Manual Pilih)
-            $('#formEditSK input, #formEditSK select').prop('disabled', false);
-            $('#btnSimpanSK').show().prop('disabled', false);
-            
-            // 2. Auto fill TAHUN dan SEMESTER
-            var curTahun = $('#filterTahun').val();
-            var curSmt = $('#filterSemester').val();
-            if(curTahun) $('#editTahun').val(curTahun);
-            if(curSmt) $('#editSemester').val(curSmt);
+            $('#tugas_areaTerkunci').prop('disabled', false).css('opacity', '1');
+            $('#tugas_btnSimpanForm').show().prop('disabled', false).html('<i class="fas fa-save mr-1"></i> SIMPAN DOKUMEN');
+            $('#tugas_alertInfo').removeClass('alert-info alert-danger').addClass('alert-success border-success').html('<i class="fas fa-check-circle mr-1"></i> <b>SLOT TERSEDIA:</b> Silakan lanjutkan pengisian Nomor SK dan unggah dokumen.');
+            if(!currentId) $('#tugas_inputNoSk').focus();
         }
-    }).cekDuplikatSK(val);
+    }).cekDuplikatSK(payload); 
 }
 
-function handleSimpanEdit(e) {
-    e.preventDefault();
-    var rawNoSk = $('#editNoSk').val();
-    var cleanNoSk = rawNoSk.replace(/\s+/g, '');
-    $('#editNoSk').val(cleanNoSk);
-    
-    var rowId = $('#editRowId').val();
-    var fileInput = document.getElementById('editFileSk');
-    var hasFile = fileInput.files.length > 0;
-    var valTgl = $('#editTglSk').val(); 
+function tugas_bukaModalEdit(rowId) { 
+    var d = TUGAS_DATA_MASTER[rowId];
+    if(!d) return;
 
-    if (rowId === "" && !hasFile) { 
-        Sultan.notif.gagal('FILE KOSONG: Wajib upload dokumen PDF!'); 
-        return; 
-    }
+    tugas_bukaModalTambah(); 
+    $('#tugas_editRowId').val(rowId); 
     
-    var btn = $('#btnSimpanSK'); var txt = btn.html();
+    // BAB V: Warna Header Warning untuk Edit
+    $('#tugas_headerModalForm').removeClass('bg-maroon').addClass('bg-warning');
+    $('#tugas_judulModalForm').css('color', '#343a40').html('<i class="fas fa-pencil-alt mr-2"></i> Edit SK Pembagian Tugas');
+    $('#tugas_closeModalForm').removeClass('text-white').addClass('text-dark');
+    $('#tugas_btnSimpanForm').removeClass('btn-maroon text-white').addClass('btn-warning text-dark');
+
+    $('#tugas_inputNamaSd').val(d.namaSd);
+    $('#tugas_inputTahun').val(d.tahun);
+    $('#tugas_inputSemester').val(d.semester);
+    $('#tugas_inputKriteria').val(d.kriteria);
+
+    $('#tugas_inputNamaSd, #tugas_inputTahun, #tugas_inputSemester, #tugas_inputKriteria').prop('disabled', true).addClass('bg-light');
+    $('#tugas_btnCekSlot').prop('disabled', true);
+
+    $('#tugas_areaTerkunci').prop('disabled', false).css('opacity', '1');
+    $('#tugas_alertInfo').removeClass('alert-info alert-danger').addClass('alert-success border-success').html('<i class="fas fa-pencil-alt mr-1"></i> Mode Edit (Tahun, Semester, Kriteria dikunci).');
+
+    var cleanNoSk = (d.noSk || "").replace(/\s+/g, ''); 
+    $('#tugas_inputNoSk').val(cleanNoSk); 
+    $('#tugas_inputTglSk').val(tugas_formatDateForInput(d.tglSk));
+
+    TUGAS_CURRENT_FILE_URL = d.fileUrl || "";
+    if (TUGAS_CURRENT_FILE_URL.length > 5) {
+        $('#tugas_linkFileLama').removeClass('d-none');
+        var safeUrlJs = tugas_escapeJs(TUGAS_CURRENT_FILE_URL);
+        // Bind URL to view button
+        $('#tugas_linkFileLama a').attr('onclick', `tugas_bukaPreview('${safeUrlJs}'); return false;`);
+        $('.custom-file-label').html('Biarkan kosong jika tidak ganti...');
+        $('#tugas_labelFile').html('<i class="fas fa-file-pdf text-danger mr-1"></i> Perbarui Dokumen (Opsional)');
+    }
+
+    $('#tugas_btnSimpanForm').show().prop('disabled', false).html('<i class="fas fa-save mr-1"></i> UPDATE DATA');
+    $('#tugas_modalForm').modal('show');
+}
+
+function tugas_handleSimpan(e) {
+    e.preventDefault();
+    var rawNoSk = $('#tugas_inputNoSk').val();
+    var cleanNoSk = rawNoSk.replace(/\s+/g, '');
+    $('#tugas_inputNoSk').val(cleanNoSk);
+    
+    var rowId = $('#tugas_editRowId').val();
+    var fileInput = document.getElementById('tugas_inputFile');
+    var hasFile = fileInput.files.length > 0;
+
+    if (rowId === "" && !hasFile) { Sultan.notif.gagal('FILE KOSONG: Wajib upload dokumen PDF!'); return; }
+    if (hasFile && fileInput.files[0].size > 1024 * 1024) { Sultan.notif.gagal("Maksimal ukuran file 1 MB!"); return; }
+    
+    var btn = $('#tugas_btnSimpanForm'); var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
 
     var formData = {
         editRowId: rowId, 
-        namaSd: $('#editNamaSd').val(),
-        tahunAjaran: $('#editTahun').val(),
-        semester: $('#editSemester').val(),
-        kriteriaSk: $('#editKriteria').val(),
+        namaSd: $('#tugas_inputNamaSd').val(),
+        tahunAjaran: $('#tugas_inputTahun').val(),
+        semester: $('#tugas_inputSemester').val(),
+        kriteriaSk: $('#tugas_inputKriteria').val(),
         nomorSk: cleanNoSk,
-        tanggalSk: valTgl, 
+        tanggalSk: $('#tugas_inputTglSk').val(), 
         status: 'Diproses', 
-        userInput: (function() {
-            var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
-            return u.nama_lengkap || u.fullname || u.nama || u.username || "User";
-        })(),
-        userUpdate: (function() {
-            var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
-            return u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
-        })(),
-        editNoSk: cleanNoSk, editTglSk: valTgl, editKriteria: $('#editKriteria').val()
+        userInput: TUGAS_USER_AKTIF,
+        userUpdate: TUGAS_USER_AKTIF
     };
 
     var onSuccess = function(res) {
         btn.prop('disabled', false).html(txt);
         if(res && res.success) {
-            $('#modalEditSK').modal('hide');
-            Sultan.notif.sukses(res.message);
-            refreshDataServer(); 
-        } else {
-            Sultan.notif.gagal(res.message || "Gagal menyimpan.");
-        }
+            $('#tugas_modalForm').modal('hide'); Sultan.notif.sukses(res.message); tugas_tarikDataServer(); 
+        } else { Sultan.notif.gagal(res.message || "Gagal menyimpan."); }
     };
 
     if (hasFile) {
         var reader = new FileReader();
         reader.onload = function(ev) {
-            formData.fileData = { 
-                data: ev.target.result.split(',')[1], 
-                mimeType: fileInput.files[0].type, 
-                name: fileInput.files[0].name 
-            };
+            formData.fileData = { data: ev.target.result.split(',')[1], mimeType: fileInput.files[0].type, name: fileInput.files[0].name };
             if (rowId === "") google.script.run.withSuccessHandler(onSuccess).processManualForm(formData); 
             else google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
-        if (rowId === "") google.script.run.withSuccessHandler(onSuccess).processManualForm(formData);
-        else google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
+        google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData); 
     }
 }
 
 // =================================================================
-// 6. FUNGSI VERIFIKASI (ADMIN)
+// 6. PRATINJAU DOKUMEN FULL SCREEN (VAKSIN LOAD IFRAME)
 // =================================================================
-function verifikasiSK(id) {
-    var d = GLOBAL_DATA_MAP[id];
-    if (!d) return;
-
-    $('#verifRowId').val(d.rowBaris);
-    $('#vNamaSd').text(d.namaSd || '-');
-    $('#vNoSk').text(d.noSk || '-');
-    $('#vTglSk').text(d.tglSkDisplay || d.tglSk || '-'); 
-    $('#vTahun').text(d.tahun || '-');
-    $('#vSemester').text(d.semester || '-');
-    $('#vKriteria').text(d.kriteria || '-');
-
-    $('#verifStatus').val(''); 
-    $('#verifKeterangan').val(d.keterangan || '').attr('placeholder', 'Catatan opsional...'); 
-    $('#verifWajibCatatan').addClass('d-none');
-    $('#btnSimpanVerif').prop('disabled', false).html('<i class="fas fa-save mr-2"></i> SIMPAN');
-
-    var url = d.fileUrl;
-    $('#verifFrame').hide().attr('src', ''); 
-    $('#verifNoFile').removeClass('d-none').show();
-    $('#btnUnduhFileVerif').addClass('disabled').attr('href', '#');
-
-    if (url && url.length > 10) {
-        $('#btnUnduhFileVerif').removeClass('disabled').attr('href', url);
-        var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
-        var fileId = match ? match[1] : null;
-
-        if (fileId) {
-            var cleanUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
-            $('#verifFrame').attr('src', cleanUrl).show();
-            $('#verifNoFile').hide();
-        }
-    }
-    $('#modalVerifikasiSK').modal('show');
-}
-
-function cekStatusVerif(val) {
-    var isNegatif = (val === 'Revisi' || val === 'Ditolak');
-    if (isNegatif) {
-        $('#verifKeterangan').attr('placeholder', 'Jelaskan alasan revisi/penolakan kepada user...').focus();
-        $('#verifWajibCatatan').removeClass('d-none');
-    } else {
-        $('#verifKeterangan').attr('placeholder', 'Catatan opsional (misal: Data sudah sesuai).');
-        $('#verifWajibCatatan').addClass('d-none');
-    }
-}
-
-function handleSimpanVerifikasi(e) {
-    e.preventDefault();
-    var rowId = $('#verifRowId').val();
-    var status = $('#verifStatus').val();
-    var ket = $('#verifKeterangan').val().trim();
-    var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
-    var admin = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
-
-    if (!status) { Swal.fire({icon: 'warning', title: 'Pilih Status', text: 'Tentukan status verifikasi.', confirmButtonColor: '#d33'}); return; }
-    if ((status === 'Revisi' || status === 'Ditolak') && ket === "") { Swal.fire({icon: 'warning', title: 'Catatan Wajib', text: 'Wajib mengisi catatan alasan.', confirmButtonColor: '#d33'}); $('#verifKeterangan').focus(); return; }
-
-    var btn = $('#btnSimpanVerif'); var txt = btn.html();
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...');
-
-    google.script.run.withSuccessHandler(function(res) {
-        btn.prop('disabled', false).html(txt);
-        if (res.success) {
-            $('#modalVerifikasiSK').modal('hide');
-            Swal.fire({ title: 'Berhasil', html: `Status menjadi <b class="text-maroon">${status}</b>.`, icon: 'success', showConfirmButton: false, timer: 2500});
-            refreshDataServer(); 
-        } else {
-            Swal.fire({title: 'Gagal', text: res.message, icon: 'error', confirmButtonColor: '#d33'});
-        }
-    }).verifikasiDataSK({verifRowId: rowId, verifStatus: status, verifKeterangan: ket, verifikator: admin});
-}
-
-// =================================================================
-// 7. UTILITIES LAINNYA
-// =================================================================
-function checkUserRoleIsAdmin() {
-    try {
-        var userStr = localStorage.getItem("siksUser");
-        if (!userStr) return false;
-        var user = JSON.parse(userStr);
-        var role = (user.role || "").toLowerCase();
-        if (role === 'admin' || role === 'admin korwil' || role === 'verifikator') return true;
-        return false;
-    } catch (e) { return false; }
-}
-
-function checkUserRole() {
-    var userStr = localStorage.getItem("siksUser");
-    var user = JSON.parse(userStr || "{}");
-    if (user.role === 'Admin' || user.role === 'Admin Korwil' || user.role === 'Operator') $('#btnTambahData').removeClass('d-none');
-    else $('#btnTambahData').addClass('d-none');
+function tugas_bukaPreview(url) { 
+    if (!url) { Sultan.notif.gagal("Link file kosong."); return; } 
+    var previewUrl = url; 
+    if (url.includes('drive.google.com') && url.includes('/view')) { previewUrl = url.replace(/\/view.*/, '/preview'); } 
     
-    if (user.role === 'Admin' || user.role === 'Admin Korwil' || user.role === 'Verifikator') $('#btnBukaSampah').removeClass('d-none'); 
-    else $('#btnBukaSampah').addClass('d-none');
+    $('#tugas_loadingPreviewPDF').removeClass('d-none');
+    $('#tugas_framePreviewFull').addClass('d-none').attr('src', previewUrl); 
+    $('#tugas_btnFullDownload').attr('href', url); 
+    $('#tugas_modalPreview').modal('show'); 
+    
+    $('#tugas_framePreviewFull').off('load').on('load', function() { 
+        $('#tugas_loadingPreviewPDF').addClass('d-none'); 
+        $(this).removeClass('d-none'); 
+    });
+
+    // Fallback jika iframe lambat
+    setTimeout(function() {
+        $('#tugas_loadingPreviewPDF').addClass('d-none');
+        $('#tugas_framePreviewFull').removeClass('d-none');
+    }, 2500);
 }
 
-function previewPDF(u){ $('#framePreview').attr('src',u.replace('/view','/preview')); $('#modalPreviewSK').modal('show'); }
-function initDataTableStandard(id, empty){ if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().clear().destroy(); $(id).DataTable({ ordering:false, pageLength:10, autoWidth:false, language:{url:"//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json", emptyTable: empty?"Silakan cari data":"Data kosong"}, initComplete: function(){ if(!$(id).parent().hasClass('table-scroll-wrapper')) $(id).wrap('<div class="table-scroll-wrapper" style="overflow-x: auto; width:100%"></div>'); setTimeout(()=>$(id).DataTable().columns.adjust(), 300); }}); }
-function formatDateForInput(s){ if(!s) return ""; if(typeof s==='string'&&s.match(/^\d{4}-\d{2}-\d{2}$/)) return s; var d=new Date(s); return isNaN(d)?s:d.toISOString().split('T')[0]; }
-function parseDateTime(str) { 
+// =================================================================
+// 7. VERIFIKASI ADMIN (SPLIT SCREEN)
+// =================================================================
+function tugas_bukaModalVerif(rowId) { 
+    var d = TUGAS_DATA_MASTER[rowId]; if(!d) return; 
+
+    $('#tugas_verifRowId').val(rowId); 
+    $('#tugas_vNamaSd').text(d.namaSd || '-');
+    $('#tugas_vNoSk').text(d.noSk || '-');
+    $('#tugas_vTglSk').text(d.tglSkDisplay || d.tglSk || '-'); 
+    $('#tugas_vTahun').text(d.tahun || '-');
+    $('#tugas_vSemester').text(d.semester || '-');
+    $('#tugas_vKriteria').text(d.kriteria || '-');
+
+    $('#tugas_verifStatus').val(''); $('#tugas_verifKeterangan').val(d.keterangan !== "-" ? d.keterangan : "");
+    $('#tugas_verifWajibCatatan').addClass('d-none');
+    
+    var url = d.fileUrl || ""; 
+
+    $('#tugas_verifLoader').removeClass('d-none'); 
+    $('#tugas_verifFrame, #tugas_verifNoFile').addClass('d-none');
+
+    if (url.length > 10) { 
+        var previewUrl = url.includes('/view') ? url.replace(/\/view.*/, '/preview') : url; 
+        $('#tugas_verifFrame').attr('src', previewUrl);
+        $('#tugas_verifFrame').off('load').on('load', function() { $('#tugas_verifLoader').addClass('d-none'); $(this).removeClass('d-none'); });
+        setTimeout(function(){ $('#tugas_verifLoader').addClass('d-none'); $('#tugas_verifFrame').removeClass('d-none'); }, 2000);
+    } else {
+        $('#tugas_verifLoader').addClass('d-none'); $('#tugas_verifNoFile').removeClass('d-none'); 
+    } 
+    $('#tugas_modalVerif').modal('show'); 
+}
+
+function tugas_cekStatusVerif(val) {
+    if (val === 'Revisi' || val === 'Ditolak') {
+        $('#tugas_verifKeterangan').attr('placeholder', 'Jelaskan alasan revisi/penolakan kepada user...').focus();
+        $('#tugas_verifWajibCatatan').removeClass('d-none');
+    } else {
+        $('#tugas_verifKeterangan').attr('placeholder', 'Catatan opsional (misal: Data sudah sesuai).');
+        $('#tugas_verifWajibCatatan').addClass('d-none');
+    }
+}
+
+function tugas_handleSimpanVerifikasi(e) { 
+    e.preventDefault();
+    var rowId = $('#tugas_verifRowId').val(); 
+    var st = $('#tugas_verifStatus').val();
+    var ket = $('#tugas_verifKeterangan').val().trim(); 
+    
+    if(!st) { Sultan.alert('warning', 'Pilih Status', 'Tentukan status verifikasi.'); return; }
+    if ((st === 'Revisi' || st === 'Ditolak') && ket === "") { Sultan.alert('warning', 'Catatan Wajib', 'Mohon tulis alasan revisi/penolakan agar user mengerti.'); return; } 
+    
+    var btn = $('#tugas_btnSimpanVerif'); var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Eksekusi...');
+    
+    var payload = { verifRowId: rowId, verifStatus: st, verifKeterangan: ket, verifikator: TUGAS_USER_AKTIF };
+    google.script.run.withSuccessHandler(function(res){ 
+        btn.prop('disabled', false).html(txt);
+        if(res.success) { 
+            $('#tugas_modalVerif').modal('hide'); Sultan.notif.sukses('Keputusan ' + st + ' tersimpan!');
+            tugas_tarikDataServer(); 
+        } else { Sultan.alert('error', 'Gagal', res.message); } 
+    }).verifikasiDataSK(payload); 
+}
+
+// =================================================================
+// 8. REAL HAPUS PERMANEN (V5)
+// =================================================================
+function tugas_bukaModalHapus(rowId) {
+    var row = TUGAS_DATA_MASTER[rowId];
+    if(!row) return;
+    $('#tugas_hapusRowId').val(rowId);
+    $('#tugas_hapusViewNomor').text(row.noSk);
+    $('#tugas_inputKodeHapus').val('');
+    $('#tugas_modalHapus').modal('show');
+}
+
+function tugas_handleSimpanHapus(e) {
+    e.preventDefault();
+    var rowBaris = $('#tugas_hapusRowId').val();
+    var kodeInput = $('#tugas_inputKodeHapus').val().trim();
+    
+    var d = new Date(); var kd = d.getFullYear()+""+String(d.getMonth()+1).padStart(2,'0')+""+String(d.getDate()).padStart(2,'0');
+    if (kodeInput !== kd) { Sultan.notif.gagal('Kode Keamanan salah!'); return; }
+
+    var btn = $('#tugas_btnEksekusiHapus'); var txt = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...');
+
+    var payload = { hapusRowId: rowBaris, hapusKode: kodeInput, userDelete: TUGAS_USER_AKTIF };
+    google.script.run.withSuccessHandler(function(res){
+        btn.prop('disabled', false).html(txt);
+        if(res.success) {
+            $('#tugas_modalHapus').modal('hide'); Sultan.notif.sukses(res.message); tugas_tarikDataServer();
+        } else if (res.message === "KODE_SALAH") {
+             Sultan.notif.gagal('Kode Keamanan salah!');
+        } else { Sultan.alert('error', 'Gagal Menghapus', res.message); }
+    }).hapusDataSK(payload); 
+}
+
+// =================================================================
+// HELPER UTILITIES: PEMBERSIH XSS & POP-UP CATATAN (Hukum Ke-5 & 6)
+// =================================================================
+function tugas_cleanText(text) { if (text == null) return ""; return String(text).replace(/(\r\n|\n|\r)/gm, " ").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+function tugas_escapeHtml(text) { if (!text) return ""; return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+function tugas_escapeJs(str) { if (!str) return ""; return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/(\r\n|\n|\r)/gm, " "); }
+
+function tugas_lihatCatatanSultan(pesan) {
+    Swal.fire({
+        title: '<i class="fas fa-comment-dots text-maroon mb-2"></i><br>Catatan Verifikasi',
+        html: '<div class="text-left bg-light p-3 rounded border text-dark" style="font-size:15px; line-height:1.5;">' + pesan + '</div>',
+        showConfirmButton: true,
+        confirmButtonText: 'Saya Mengerti',
+        confirmButtonColor: '#85144b',
+        width: '400px'
+    });
+}
+
+function tugas_buildBadgeStatus(status, ket) { 
+    var s = String(status || "Diproses").toLowerCase(); 
+    var style = 'badge-sultan-light-warning'; 
+    var icon = 'clock'; 
+    var label = "DIPROSES";
+    
+    if (s.includes('ok') || s.includes('setuju') || s.includes('valid')) { 
+        style = 'badge-sultan-light-success'; icon = 'check-circle'; label = "DISETUJUI"; 
+    } 
+    else if (s.includes('revisi')) { 
+        style = 'badge-sultan-light-info'; icon = 'sync-alt'; label = "REVISI"; 
+    } 
+    else if (s.includes('tolak')) { 
+        style = 'badge-sultan-light-danger'; icon = 'times-circle'; label = "DITOLAK"; 
+    } 
+    
+    var badgeHtml = `<span class="badge badge-sultan ${style}"><i class="fas fa-${icon} mr-1"></i>${label}</span>`;
+
+    if (ket && ket.trim().length > 2 && (s.includes('revisi') || s.includes('tolak'))) {
+        var safeKet = tugas_escapeJs(ket);
+        var btnCatatan = `<div class="mt-2"><button class="btn btn-xs btn-outline-danger font-weight-bold shadow-sm" style="font-size:10px; border-radius:4px;" onclick="tugas_lihatCatatanSultan('${safeKet}')"><i class="fas fa-comment-dots mr-1"></i> Baca Catatan</button></div>`;
+        return badgeHtml + btnCatatan;
+    }
+
+    return badgeHtml; 
+}
+
+function tugas_formatDateForInput(s){ if(!s) return ""; if(typeof s==='string'&&s.match(/^\d{4}-\d{2}-\d{2}$/)) return s; var d=new Date(s); return isNaN(d)?s:d.toISOString().split('T')[0]; }
+function tugas_parseDateTime(str) { 
     if (!str || str === '-' || str === '') return 0; 
     try { 
-        var p = str.toString().split(' '); var dateParts = p[0].split('-'); var timeParts = (p[1] || "00:00:00").split(':');
+        var cleanStr = String(str).replace(/'/g, "").trim();
+        var p = cleanStr.split(' '); var dateParts = p[0].split(/[-/]/); var timeParts = (p[1] || "00:00:00").split(':');
         var y, m, d;
         if(dateParts[0].length === 4) { y = parseInt(dateParts[0]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[2]); } 
         else { y = parseInt(dateParts[2]); m = parseInt(dateParts[1])-1; d = parseInt(dateParts[0]); }
         var hr = parseInt(timeParts[0] || 0); var mn = parseInt(timeParts[1] || 0); var sc = parseInt(timeParts[2] || 0);
         return new Date(y, m, d, hr, mn, sc).getTime(); 
     } catch(e) { return 0; } 
-}
-
-function initFilterDefaults() {
-    var now = new Date(); var curYear = now.getFullYear(); var curMonth = now.getMonth(); 
-    var htmlTahun = '<option value="">- Semua Tahun -</option>';
-    for (var y = 2021; y <= curYear + 1; y++) { var thnAjaran = y + "/" + (y + 1); htmlTahun += `<option value="${thnAjaran}">${thnAjaran}</option>`; }
-    $('#filterTahun, #editTahun').html(htmlTahun); 
-    var currentTa = (curMonth >= 6) ? curYear + '/' + (curYear + 1) : (curYear - 1) + '/' + curYear;
-    var currentSmt = (curMonth >= 6) ? "Semester 1" : "Semester 2";
-    $('#filterSemester').val(currentSmt);
-    if ($(`#filterTahun option[value='${currentTa}']`).length > 0) { $('#filterTahun').val(currentTa); } else { $('#filterTahun').val(""); }
-}
-
-// AMBIL DAFTAR SEKOLAH DARI KULKAS (DROPDOWN_STATIS)
-function populasiDropdownUnit(d){ 
-    var daftarSekolah = [];
-    if (typeof DROPDOWN_STATIS !== 'undefined' && DROPDOWN_STATIS["NamaSD"]) {
-        daftarSekolah = DROPDOWN_STATIS["NamaSD"];
-    } else {
-        // Fallback jika tidak ditemukan
-        var u=new Set(); d.forEach(r=>{if(r.namaSd)u.add(r.namaSd)}); 
-        daftarSekolah = Array.from(u).sort();
-    }
-    
-    var htmlFilter = '<option value="">- Semua Sekolah -</option>'; 
-    daftarSekolah.forEach(function(unit) { htmlFilter += `<option value="${unit}">${unit}</option>`; });
-    $('#filterSD').html(htmlFilter); 
-
-    var htmlForm = '<option value="">- Pilih Sekolah -</option>';
-    daftarSekolah.forEach(function(unit) { htmlForm += `<option value="${unit}">${unit}</option>`; });
-    $('#editNamaSd').html(htmlForm);
-}
-
-function hapusSK(id, noSk) { $('#hapusRowId').val(id); $('#infoHapusNoSk').text(noSk); $('#hapusAlasan').val(''); $('#hapusKode').val(''); $('#btnEksekusiHapus').prop('disabled', false).html('<i class="fas fa-trash mr-1"></i> HAPUS DATA'); $('#modalHapusSK').modal('show'); }
-function handleSimpanHapus(e) {
-    e.preventDefault();
-    var inputKode = $('#hapusKode').val().trim();
-    var d = new Date(); var yyyy = d.getFullYear(); var mm = String(d.getMonth() + 1).padStart(2, '0'); var dd = String(d.getDate()).padStart(2, '0');
-    var kodeHariIni = yyyy + mm + dd;
-    if (inputKode !== kodeHariIni) { Sultan.notif.gagal('Kode Keamanan SALAH! Silakan hubungi Admin.'); $('#hapusKode').addClass('is-invalid').focus(); return; } 
-    else { $('#hapusKode').removeClass('is-invalid'); }
-
-    var btn = $('#btnEksekusiHapus'); var txt = btn.html();
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...');
-    var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
-    var userLogin = u.nama_lengkap || u.fullname || u.nama || u.username || "User";
-
-    var formData = { hapusRowId: $('#hapusRowId').val(), hapusAlasan: $('#hapusAlasan').val(), hapusKode: inputKode, userDelete: userLogin };
-    google.script.run.withSuccessHandler(function(res) {
-        btn.prop('disabled', false).html(txt);
-        if (res.success) { $('#modalHapusSK').modal('hide'); Sultan.notif.sukses(res.message); refreshDataServer(); } 
-        else { Sultan.notif.gagal(res.message); }
-    }).hapusDataSK(formData);
-}
-
-function bukaTongSampah() { $('#modalTongSampah').modal('show'); loadDataSampah(); }
-function loadDataSampah() {
-    $('#tbodySampah').empty(); $('#loadingSampah').removeClass('d-none'); $('#kosongSampah').addClass('d-none');
-    google.script.run.withSuccessHandler(function(data) {
-        $('#loadingSampah').addClass('d-none');
-        if (!data || data.length === 0) { $('#kosongSampah').removeClass('d-none'); return; }
-        var html = '';
-        data.forEach(function(item, index) {
-            html += `<tr>
-                    <td class="text-center align-middle">${index + 1}</td>
-                    <td class="align-middle font-weight-bold">${item.namaSd || '-'}</td>
-                    <td class="align-middle text-nowrap">${item.noSk || '-'}</td>
-                    <td class="align-middle text-center"><span class="badge badge-secondary px-2 py-1">${item.userHapus || 'Admin'}</span></td>
-                    <td class="align-middle text-danger font-italic small text-wrap" style="max-width: 200px;">"${item.alasanHapus || '-'}"</td>
-                    <td class="align-middle small text-center text-muted">${item.tglHapus || '-'}</td>
-                    <td class="text-center align-middle">
-                        <button class="btn btn-sm btn-success shadow-sm font-weight-bold" onclick="restoreSK(${item.rowBaris}, '${item.namaSd}')"><i class="fas fa-undo-alt mr-1"></i> Pulihkan</button>
-                    </td></tr>`;
-        });
-        $('#tbodySampah').html(html);
-    }).getTrashSK();
-}
-function restoreSK(rowId, namaSd) {
-    Swal.fire({ title: 'Pulihkan Data?', text: "Data " + namaSd + " akan dikembalikan ke tabel aktif.", icon: 'question', showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#d33', confirmButtonText: 'Ya, Pulihkan!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({title: 'Memulihkan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            var u = JSON.parse(localStorage.getItem("siksUser") || "{}");
-            var userLogin = u.nama_lengkap || u.fullname || u.nama || u.username || "Admin";
-            google.script.run.withSuccessHandler(function(res) {
-                if(res.success) { Swal.fire('Berhasil!', res.message, 'success'); $('#modalTongSampah').modal('hide'); refreshDataServer(); } 
-                else { Swal.fire('Gagal!', res.message, 'error'); }
-            }).restoreDataSK({ rowId: rowId, userRestore: userLogin });
-        }
-    });
 }
 </script>

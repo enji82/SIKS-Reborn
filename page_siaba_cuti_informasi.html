@@ -36,6 +36,7 @@
                                 <span class="badge badge-light border mr-1 mb-1">Cuti Besar</span>
                                 <span class="badge badge-light border mr-1 mb-1">Cuti di Luar Tanggungan Negara</span>
                                 <span class="badge badge-light border mr-1 mb-1">Cuti Bersama</span>
+                                <span class="badge badge-light border mr-1 mb-1">Cuti Umroh</span>
                             </div>
                         </li>
                         
@@ -46,6 +47,7 @@
                                 <span class="badge badge-light border mr-1 mb-1">Cuti Sakit</span>
                                 <span class="badge badge-light border mr-1 mb-1">Cuti Melahirkan</span>
                                 <span class="badge badge-light border mr-1 mb-1">Cuti Bersama</span>
+                                <span class="badge badge-light border mr-1 mb-1">Cuti Umroh</span>
                             </div>
                         </li>
 
@@ -76,7 +78,7 @@
                                     </li>
                                     <li><strong>Pengiriman Berkas:</strong>
                                         <ul class="pl-3 text-muted">
-                                            <li>Dikirim ke Korwil Disdikbud Kec. Secang (Rangkap dua).</li>
+                                            <li>Dikirim ke Korwil Disdikbud Kec. Secang <strong>(Rangkap kalih).</strong></li>
                                             <li>Gunakan penjepit trigonal (jangan staples).</li>
                                             <li>Tempelkan <i>post-it</i> pada lembar tanda tangan atasan.</li>
                                             <li>Dikirim paling lambat <strong>2 minggu</strong> sebelum pelaksanaan (untuk cuti terencana).</li>
@@ -100,11 +102,11 @@
                             <div class="card-body">
                                 <h6 class="font-weight-bold text-dark mb-3">Peraturan PNS</h6>
                                 <div class="d-flex flex-column gap-2">
-                                    <button class="btn-unduh-preview mb-2 text-left" onclick="previewDokumen('https://drive.google.com/file/d/1u3lvzGHJKhBs932zdFykLjp5t0Di8Dx8/view?usp=drive_link')">
-                                        <i class="fas fa-file-pdf mr-2"></i> Peraturan BKN No. 24 Tahun 2017
+                                    <button class="btn-unduh-preview mb-2 text-left" onclick="infoCutiPreviewDokumen('https://drive.google.com/file/d/1u3lvzGHJKhBs932zdFykLjp5t0Di8Dx8/view?usp=drive_link')">
+                                        <i class="fas fa-file-pdf mr-2 text-danger"></i> Peraturan BKN No. 24 Tahun 2017
                                     </button>
-                                    <button class="btn-unduh-preview text-left" onclick="previewDokumen('https://drive.google.com/file/d/1zzxrQtNwxUqmtaqDAuikyy1PpIFAHJ56/view?usp=drive_link')">
-                                        <i class="fas fa-file-pdf mr-2"></i> Peraturan BKN No. 7 Tahun 2021
+                                    <button class="btn-unduh-preview text-left" onclick="infoCutiPreviewDokumen('https://drive.google.com/file/d/1zzxrQtNwxUqmtaqDAuikyy1PpIFAHJ56/view?usp=drive_link')">
+                                        <i class="fas fa-file-pdf mr-2 text-danger"></i> Peraturan BKN No. 7 Tahun 2021
                                     </button>
                                 </div>
                             </div>
@@ -116,8 +118,8 @@
                             <div class="card-body">
                                 <h6 class="font-weight-bold text-dark mb-3">Peraturan PPPK</h6>
                                 <div class="d-flex flex-column gap-2">
-                                    <button class="btn-unduh-preview text-left" onclick="previewDokumen('https://drive.google.com/file/d/1eyuBzZbdRGSr8khT1oLdyWMD-V_T3xAq/view?usp=drive_link')">
-                                        <i class="fas fa-file-pdf mr-2"></i> Peraturan BKN No. 7 Tahun 2022
+                                    <button class="btn-unduh-preview text-left" onclick="infoCutiPreviewDokumen('https://drive.google.com/file/d/1eyuBzZbdRGSr8khT1oLdyWMD-V_T3xAq/view?usp=drive_link')">
+                                        <i class="fas fa-file-pdf mr-2 text-danger"></i> Peraturan BKN No. 7 Tahun 2022
                                     </button>
                                 </div>
                             </div>
@@ -135,39 +137,56 @@
   </div>
 </section>
 
-<div class="modal fade" id="modalInfoPreview" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-full" role="document">
-        <div class="modal-content modal-content-h90">
-            <div class="modal-header bg-maroon text-white py-2">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-book-open mr-2"></i>Baca Peraturan</h5>
-                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+<div class="modal fade" id="infoCutiModalPreview" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+        <div class="modal-content border-0 shadow-lg bg-dark">
+            
+            <div class="modal-header bg-maroon py-2 text-white border-bottom-0">
+                <h6 class="modal-title font-weight-bold"><i class="fas fa-book-open mr-2"></i>Baca Peraturan</h6>
+                <div class="ml-auto">
+                    <a href="#" id="infoCutiBtnUnduhPDF" target="_blank" class="btn btn-xs btn-light text-maroon font-weight-bold shadow-sm mr-2 rounded-pill px-3">
+                        <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
+                    </a>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
             </div>
-            <div class="modal-body p-0 iframe-viewer-container">
-                <iframe id="frameInfoPreview" src="" class="iframe-viewer"></iframe>
+            
+            <div class="modal-body p-0" style="height: 85vh;">
+                <iframe id="infoCutiFramePreview" src="" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    // Style Tambahan Khusus Halaman Ini (Optional, jika belum ada di css_sultan)
-    // Menggunakan class btn-unduh-preview yang sudah ada di css_sultan.html
+    // =================================================================
+    // ISOLASI FUNGSI (GOLDEN STANDARD V2)
+    // =================================================================
     
-    function previewDokumen(url) {
+    $(document).ready(function() {
+        // Vaksin pembersihan saat modal ditutup
+        $('#infoCutiModalPreview').on('hidden.bs.modal', function () {
+            $('#infoCutiFramePreview').attr('src', '');
+            
+            // Vaksin Bootstrap Stuck
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('padding-right', '');
+        });
+    });
+
+    function infoCutiPreviewDokumen(url) {
         if(!url) return;
         
-        // Ubah link view menjadi preview agar bisa embed
         var cleanUrl = url;
+        // Hanya mengubah view ke preview, biarkan parameter utuh
         if (url.includes('drive.google.com') && url.includes('/view')) {
             cleanUrl = url.replace('/view', '/preview');
         }
         
-        $('#frameInfoPreview').attr('src', cleanUrl);
-        $('#modalInfoPreview').modal('show');
+        // Tembak URL dan Buka Modal (Iframe akan merentang 100% dari 85vh)
+        $('#infoCutiBtnUnduhPDF').attr('href', url);
+        $('#infoCutiFramePreview').attr('src', cleanUrl);
+        $('#infoCutiModalPreview').modal('show');
     }
-
-    // Reset iframe saat modal tutup
-    $('#modalInfoPreview').on('hidden.bs.modal', function () {
-        $('#frameInfoPreview').attr('src', '');
-    });
 </script>
