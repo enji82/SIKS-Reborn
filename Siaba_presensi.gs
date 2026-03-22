@@ -43,17 +43,22 @@ function getSiabaPresensiHarian(filterTahun, filterBulan, filterUnit) {
     var ssLookup = SpreadsheetApp.openById(ID_DB);
     var sheetLookup = ssLookup.getSheetByName("Lookup Siaba");
     
-    // Validasi BAB VIII
+    // ✅ OPTIMIZE: Use Map for O(1) lookup instead of linear search O(n)
     var dataLookup = sheetLookup.getDataRange().getDisplayValues();
-    var targetId = "", customSheet = "";
+    var lookupMap = {};
     
     for (var i = 1; i < dataLookup.length; i++) {
-        if (dataLookup[i][0] == filterTahun && dataLookup[i][1] == filterBulan) {
-            targetId = dataLookup[i][2];
-            customSheet = dataLookup[i][3];     
-            break; 
-        }
+        var key = String(dataLookup[i][0]) + "|" + String(dataLookup[i][1]);
+        lookupMap[key] = {
+            id: dataLookup[i][2],
+            sheet: dataLookup[i][3]
+        };
     }
+    
+    var lookupKey = String(filterTahun) + "|" + String(filterBulan);
+    var lookup = lookupMap[lookupKey];
+    var targetId = lookup ? lookup.id : "";
+    var customSheet = lookup ? lookup.sheet : "";
     
     if (!targetId) return JSON.stringify({ error: "Data Periode " + filterBulan + " " + filterTahun + " belum tersedia." });
 

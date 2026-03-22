@@ -820,11 +820,14 @@ function tugas_handleSimpan(e) {
         } else { Sultan.notif.gagal(res.message || "Gagal menyimpan."); }
     };
 
+    var token = getSessionToken();
+    if (!token) return; // Session validation already redirects if invalid
+
     if (hasFile) {
         var reader = new FileReader();
         reader.onload = function(ev) {
             formData.fileData = { data: ev.target.result.split(',')[1], mimeType: fileInput.files[0].type, name: fileInput.files[0].name };
-            if (rowId === "") google.script.run.withSuccessHandler(onSuccess).processManualForm(formData); 
+            if (rowId === "") google.script.run.withSuccessHandler(onSuccess).processManualForm(token, formData); 
             else google.script.run.withSuccessHandler(onSuccess).simpanPerubahanSK(formData);
         };
         reader.readAsDataURL(fileInput.files[0]);
@@ -913,6 +916,9 @@ function tugas_handleSimpanVerifikasi(e) {
     var btn = $('#tugas_btnSimpanVerif'); var txt = btn.html();
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Eksekusi...');
     
+    var token = getSessionToken();
+    if (!token) return; // Session validation already redirects if invalid
+    
     var payload = { verifRowId: rowId, verifStatus: st, verifKeterangan: ket, verifikator: TUGAS_USER_AKTIF };
     google.script.run.withSuccessHandler(function(res){ 
         btn.prop('disabled', false).html(txt);
@@ -920,7 +926,7 @@ function tugas_handleSimpanVerifikasi(e) {
             $('#tugas_modalVerif').modal('hide'); Sultan.notif.sukses('Keputusan ' + st + ' tersimpan!');
             tugas_tarikDataServer(); 
         } else { Sultan.alert('error', 'Gagal', res.message); } 
-    }).verifikasiDataSK(payload); 
+    }).verifikasiDataSK(token, payload); 
 }
 
 // =================================================================

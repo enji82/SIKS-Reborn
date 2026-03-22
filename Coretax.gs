@@ -6,6 +6,10 @@
 var CORETX_SPREADSHEET_ID = "1Zp8TpS3_qls7Lbpcc5pULht7gAJOHYLR9uZXk5cll2M";
 var CORETX_SHEET_NAME = "input_coretax";
 
+// ✅ OPTIMIZE: Cache pegawai data for 30 minutes to reduce API calls
+var PEGAWAI_CACHE = { timestamp: 0, data: {} };
+var PEGAWAI_CACHE_TIMEOUT = 30 * 60 * 1000;  // 30 minutes in ms
+
 function getCoretaxData(filterUnit) {
   var result = [];
   try {
@@ -64,15 +68,19 @@ function getCoretaxMasterPegawai(unitKerja, npsn) {
     }
     
     if (sheetMaster) {
-        var data = sheetMaster.getDataRange().getDisplayValues();
-        var qUnit = String(unitKerja || "").trim().toUpperCase().replace(/\s+/g, ' ');
-        var qNpsn = String(npsn || "").trim();
-        
-        for (var i = 1; i < data.length; i++) {
-            var rUnit = String(data[i][0] || "").trim().toUpperCase().replace(/\s+/g, ' ');
-            var rNip = String(data[i][1] || "").trim();
-            var rNama = String(data[i][2] || "").trim();
-            var rNpsn = String(data[i][3] || "").trim();
+        // ✅ OPTIMIZE: Cache getLastRow() and limit range
+        var lastRow = sheetMaster.getLastRow();
+        if (lastRow > 1) {
+            var data = sheetMaster.getRange(2, 1, lastRow - 1, 4).getDisplayValues();
+            var qUnit = String(unitKerja || "").trim().toUpperCase().replace(/\s+/g, ' ');
+            var qNpsn = String(npsn || "").trim();
+            
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                var rUnit = String(row[0] || "").trim().toUpperCase().replace(/\s+/g, ' ');
+                var rNip = String(row[1] || "").trim();
+                var rNama = String(row[2] || "").trim();
+                var rNpsn = String(row[3] || "").trim();
             
             var isMatch = false;
             if (qNpsn !== "" && rNpsn !== "") {
@@ -89,6 +97,12 @@ function getCoretaxMasterPegawai(unitKerja, npsn) {
   } catch(e) { Logger.log("Master Pegawai Error: " + e.message); }
   
   listPegawai.sort(function(a, b) { return a.nama.localeCompare(b.nama); });
+  
+  // ✅ Cache the result for future queries
+  var cacheKey = String(unitKerja || "") + "|" + String(npsn || "");
+  PEGAWAI_CACHE.data[cacheKey] = listPegawai;
+  PEGAWAI_CACHE.timestamp = new Date().getTime();
+  
   return listPegawai;
 }
 

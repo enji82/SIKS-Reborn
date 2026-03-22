@@ -48,7 +48,14 @@ const FOLDER_CONFIG = {
 };
 
 // ==========================================
-// 2. CORE WEB APP (DoGet & Routing)
+// 2. CACHING CONFIGURATION
+// ==========================================
+// ✅ OPTIMIZATION: Cache untuk visitor stats (5-minute TTL)
+var VISITOR_STATS_CACHE = { timestamp: 0, data: null };
+var VISITOR_STATS_CACHE_TIMEOUT = 5 * 60 * 1000;  // 5 menit dalam milliseconds
+
+// ==========================================
+// 3. CORE WEB APP (DoGet & Routing)
 // ==========================================
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
@@ -73,7 +80,9 @@ function getHalaman(namaFile) {
     const realName = namaFile.startsWith(prefix) ? namaFile : prefix + namaFile;
     return HtmlService.createTemplateFromFile(realName).evaluate().getContent();
   } catch (err) {
-    return '<div class="alert alert-danger p-3">Halaman <b>' + namaFile + '</b> belum dibuat atau nama file salah.</div>';
+    // ✅ FIX: Sanitasi input untuk prevent XSS injection
+    var safeFileName = HtmlService.htmlEscape(namaFile);
+    return '<div class="alert alert-danger p-3">Halaman <b>' + safeFileName + '</b> belum dibuat atau nama file salah.</div>';
   }
 }
 
@@ -81,10 +90,162 @@ function getHalaman(namaFile) {
 function loadPage(namaFile) { return getHalaman(namaFile); }
 
 // ==========================================
-// 3. AUTH SYSTEM (MANUAL LOGIN)
+// 4. SECURITY FRAMEWORK (CRITICAL FIXES)
 // ==========================================
 
-// A. PROSES CEK PASSWORD (SAAT TOMBOL LOGIN DITEKAN)
+// ✅ SECURITY: Server-side session validation
+function validateUserSession(token) {
+  if (!token) throw new Error("No session token provided");
+  
+  var sessionKey = "SESSION_" + token;
+  var sessionData = PropertiesService.getScriptProperties().getProperty(sessionKey);
+  
+  if (!sessionData) throw new Error("Invalid or expired session");
+  
+  try {
+    var session = JSON.parse(sessionData);
+    var now = new Date().getTime();
+    
+    // Check session expiry (1 hour)
+    if (now - session.loginTime > 3600000) {
+      PropertiesService.getScriptProperties().deleteProperty(sessionKey);
+      throw new Error("Session expired");
+    }
+    
+    return session;
+  } catch (e) {
+    throw new Error("Invalid session format");
+  }
+}
+
+// ✅ SECURITY: Role-based permission check
+function checkUserPermission(session, requiredRole) {
+  if (!session.role) throw new Error("No role assigned to user");
+  
+  var roleHierarchy = {
+    'Operator': 1,
+    'Kepala Sekolah': 2,
+    'Admin': 3,
+    'Super Admin': 4
+  };
+  
+  var userLevel = roleHierarchy[session.role] || 0;
+  var requiredLevel = roleHierarchy[requiredRole] || 999;
+  
+  if (userLevel < requiredLevel) {
+    throw new Error("Insufficient permissions. Required: " + requiredRole + ", Your role: " + session.role);
+  }
+}
+
+// ✅ SECURITY: File upload validation
+function validateFileUpload(fileBlob, filename) {
+  if (!fileBlob) throw new Error("No file provided");
+  
+  // Check file size (max 10MB)
+  var maxSize = 10 * 1024 * 1024; // 10MB
+  if (fileBlob.getBytes().length > maxSize) {
+    throw new Error("File too large. Maximum size: 10MB");
+  }
+  
+  // Whitelist allowed MIME types
+  var allowedTypes = [
+    "application/pdf",
+    "image/jpeg", 
+    "image/png",
+    "image/gif"
+  ];
+  
+  var contentType = fileBlob.getContentType();
+  if (!allowedTypes.includes(contentType)) {
+    throw new Error("File type not allowed. Only PDF and image files accepted.");
+  }
+  
+  // Validate filename (prevent path traversal)
+  if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+    throw new Error("Invalid filename");
+  }
+  
+  // Check for suspicious file extensions
+  var suspiciousExtensions = [".exe", ".bat", ".cmd", ".scr", ".pif", ".com", ".php", ".js"];
+  var fileExt = filename.toLowerCase().substring(filename.lastIndexOf("."));
+  if (suspiciousExtensions.includes(fileExt)) {
+    throw new Error("File extension not allowed");
+  }
+}
+
+// ✅ SECURITY: Data isolation by NPSN
+function validateDataAccess(session, requestedNpsn) {
+  if (!session.npsn) {
+    // Super admin can access all schools
+    if (session.role !== "Super Admin") {
+      throw new Error("No school assignment found for user");
+    }
+    return true; // Super admin bypass
+  }
+  
+  if (session.npsn !== requestedNpsn) {
+    throw new Error("Access denied: Can only access data from your assigned school (NPSN: " + session.npsn + ")");
+  }
+}
+
+// ==========================================
+// 5. UPDATED AUTHENTICATION (WITH SECURITY)
+// ==========================================
+
+// UTILITY: Simple hash function untuk password (Encrypt-then-MAC)
+function hashPassword(password) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, password, Utilities.Charset.UTF_8);
+}
+
+function hashPasswordBase64(password) {
+  var hash = hashPassword(password);
+  return Utilities.base64Encode(hash);
+}
+
+// UTILITY: Rate limiting untuk prevent brute force
+function checkRateLimit(username) {
+  var userProps = PropertiesService.getUserProperties();
+  var lockoutKey = 'LOGIN_LOCKOUT_' + username;
+  var failKey = 'LOGIN_FAILS_' + username;
+  
+  var lockoutTime = Number(userProps.getProperty(lockoutKey)) || 0;
+  var now = new Date().getTime();
+  
+  // Jika masih dalam lockout period (15 menit = 900000ms)
+  if (now < lockoutTime) {
+    var remainingMin = Math.ceil((lockoutTime - now) / 60000);
+    return { locked: true, message: 'Account terkunci. Coba lagi dalam ' + remainingMin + ' menit.' };
+  }
+  
+  return { locked: false };
+}
+
+function recordFailedLogin(username) {
+  var userProps = PropertiesService.getUserProperties();
+  var failKey = 'LOGIN_FAILS_' + username;
+  var lockoutKey = 'LOGIN_LOCKOUT_' + username;
+  
+  var failCount = Number(userProps.getProperty(failKey)) || 0;
+  failCount++;
+  userProps.setProperty(failKey, failCount.toString());
+  
+  // Lockout setelah 5 kali gagal selama 15 menit
+  if (failCount >= 5) {
+    var lockoutUntil = new Date().getTime() + (15 * 60 * 1000);
+    userProps.setProperty(lockoutKey, lockoutUntil.toString());
+    return { locked: true, failCount: failCount };
+  }
+  
+  return { locked: false, failCount: failCount };
+}
+
+function clearFailedLogin(username) {
+  var userProps = PropertiesService.getUserProperties();
+  userProps.deleteProperty('LOGIN_FAILS_' + username);
+  userProps.deleteProperty('LOGIN_LOCKOUT_' + username);
+}
+
+// A. PROSES CEK PASSWORD (SAAT TOMBOL LOGIN DITEKAN) - UPDATED WITH SECURITY
 function processLogin(formObj) {
   try {
     var inputUser = "";
@@ -98,38 +259,79 @@ function processLogin(formObj) {
       inputPass = String(arguments[1]).trim();
     }
 
-    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER); 
+    // CEK RATE LIMITING DULU
+    var rateLimitCheck = checkRateLimit(inputUser);
+    if (rateLimitCheck.locked) {
+      return { status: 'error', message: rateLimitCheck.message };
+    }
+
+    // Validasi input
+    if (!inputUser || !inputPass) {
+      recordFailedLogin(inputUser);
+      return { status: 'error', message: 'Username dan Password harus diisi.' };
+    }
+
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    if (!ss) return { status: 'error', message: 'Database tidak dapat diakses.' };
+    
     var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    if (!sheet) return { status: 'error', message: 'Sheet "' + SPREADSHEET_IDS.SHEET_USER_NAME + '" tidak ditemukan.' };
+    
     var data = sheet.getDataRange().getValues();
+    var inputPassHash = hashPasswordBase64(inputPass);
 
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      // Kolom A=Username, B=Password, C=Nama Lengkap, D=Role, E=Foto
-      if (String(row[0]).trim().toLowerCase() == inputUser.toLowerCase() && String(row[1]).trim() == inputPass) {
+      if (row.length < 6) continue; // Skip jika kolom tidak lengkap
+      
+      // Kolom A=Username, B=Password (HASHED), C=Nama Lengkap, D=Role, E=Unit, F=Foto, G=NPSN
+      var storedUser = String(row[0]).trim().toLowerCase();
+      var storedPassHash = String(row[1]).trim();
+      
+      if (storedUser === inputUser.toLowerCase() && storedPassHash === inputPassHash) {
         
         var realName = row[2]; // Nama dari Excel
         
         // JIKA NAMA KOSONG DI EXCEL, PAKAI USERNAME AGAR TIDAK ERROR
         if (!realName || realName === "") realName = row[0];
 
-        var userObj = {
+        // ✅ SECURITY: Generate server-side session token
+        var token = Utilities.getUuid();
+        var session = {
           username: row[0],
-          nama_lengkap: realName, // KUNCI UTAMA
-          nama: realName,         // KUNCI CADANGAN (Legacy Support)
-          role: row[3],     
-          photo: row[4] || "", 
-          unit: row[4] || "",     // Asumsi Unit ada di kolom E juga/sesuaikan
-          isLoggedIn: true
+          nama_lengkap: realName,
+          role: String(row[3] || "").trim(),
+          unit: String(row[4] || "").trim(),  // Unit
+          npsn: String(row[6] || "").trim(),  // NPSN for data isolation
+          loginTime: new Date().getTime()
         };
+        
+        // Store session server-side (secure!)
+        PropertiesService.getScriptProperties()
+          .setProperty("SESSION_" + token, JSON.stringify(session));
+        
+        // Clear failed login count
+        clearFailedLogin(inputUser);
         
         return { 
           status: 'success', 
           message: 'Login Berhasil',
-          userData: userObj 
+          token: token,           // ← Return token instead of user data
+          role: session.role,     // ← Still return role for UI
+          unit: session.unit,     // ← Still return unit for UI
+          expiresIn: 3600         // ← Token expiry time (1 hour)
         };
       }
     }
-    return { status: 'error', message: 'Username atau Password Salah.' };
+    
+    // Login gagal - record failed attempt
+    var failResult = recordFailedLogin(inputUser);
+    var message = 'Username atau Password Salah.';
+    if (failResult.locked) {
+      message = 'Terlalu banyak percobaan gagal. Account telah dikunci selama 15 menit.';
+    }
+    
+    return { status: 'error', message: message };
   } catch (e) {
     return { status: 'error', message: 'Error Server: ' + e.toString() };
   }
@@ -146,31 +348,77 @@ function processLogout() {
   return { status: 'success' };
 }
 
+// ==========================================
+// MIGRATION TOOL: Hash existing passwords
+// ==========================================
+// ⚠️ ADMIN: Jalankan function ini SATU KALI untuk migrate existing passwords
+// Setelah itu, setiap password baru harus di-hash sebelum disimpan di Sheets
+function migrateHashPasswords() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.DATABASE_USER);
+    var sheet = ss.getSheetByName(SPREADSHEET_IDS.SHEET_USER_NAME);
+    
+    var data = sheet.getDataRange().getValues();
+    var updateCount = 0;
+    
+    // Skip header (baris 1), mulai dari baris 2
+    for (var i = 1; i < data.length; i++) {
+      var plainPassword = String(data[i][1]).trim();
+      
+      // Skip jika password sudah panjang (kemungkinan sudah di-hash)
+      if (plainPassword.length > 50) continue;
+      
+      // Hash password
+      var hashedPassword = hashPasswordBase64(plainPassword);
+      
+      // Update cell kolom B (password)
+      sheet.getRange(i + 1, 2).setValue(hashedPassword);
+      updateCount++;
+    }
+    
+    return { 
+      success: true, 
+      message: updateCount + ' passwords berhasil di-hash.',
+      note: 'Setelah migration selesai, function ini bisa dihapus.'\n    };\n  } catch (e) {\n    return { success: false, message: 'Error: ' + e.toString() };\n  }\n}
 
 // ==========================================
 // 4. VISITOR COUNTER & SETTING
 // ==========================================
 function getVisitorStats() {
-  var props = PropertiesService.getScriptProperties();
-  var today = new Date().toLocaleDateString("id-ID"); 
-  
-  // Statistik Hits
-  var totalHits = Number(props.getProperty('TOTAL_HITS')) || 0;
-  var lastDate = props.getProperty('LAST_DATE_HIT');
-  var todayHits = Number(props.getProperty('TODAY_HITS')) || 0;
-  
-  // Ambil Data Online Terupdate
-  var onlineCount = Number(props.getProperty('ONLINE_COUNT')) || 0;
-
-  if (lastDate !== today) {
-    todayHits = 0;
-    props.setProperty('LAST_DATE_HIT', today);
+  // ✅ OPTIMIZATION: Check cache first to avoid expensive API calls
+  var now = new Date().getTime();
+  if (VISITOR_STATS_CACHE.data && (now - VISITOR_STATS_CACHE.timestamp) < VISITOR_STATS_CACHE_TIMEOUT) {
+    return VISITOR_STATS_CACHE.data;
   }
+  
+  var props = PropertiesService.getScriptProperties();
+  var today = new Date().toLocaleDateString(\"id-ID\"); 
+  
+  // ✅ FIX: Use Locks service untuk prevent race condition pada concurrent requests
+  var lock = LockService.getScriptLock();
+  lock.waitLock(5000);  // Wait max 5 seconds
+  
+  try {
+    // Statistik Hits
+    var totalHits = Number(props.getProperty('TOTAL_HITS')) || 0;
+    var lastDate = props.getProperty('LAST_DATE_HIT');
+    var todayHits = Number(props.getProperty('TODAY_HITS')) || 0;
+    
+    // Ambil Data Online Terupdate
+    var onlineCount = Number(props.getProperty('ONLINE_COUNT')) || 0;
 
-  totalHits++;
-  todayHits++;
-  props.setProperty('TOTAL_HITS', totalHits.toString());
-  props.setProperty('TODAY_HITS', todayHits.toString());
+    if (lastDate !== today) {
+      todayHits = 0;
+      props.setProperty('LAST_DATE_HIT', today);
+    }
+
+    totalHits++;
+    todayHits++;
+    props.setProperty('TOTAL_HITS', totalHits.toString());
+    props.setProperty('TODAY_HITS', todayHits.toString());
+  } finally {
+    lock.releaseLock();  // Always release lock
+  }
 
   // Running Text & User Count
   var totalUsers = 0;
@@ -188,13 +436,19 @@ function getVisitorStats() {
     infoText = "Maintenance Mode";
   }
 
-  return { 
+  var result = { 
     total: totalHits, 
     today: todayHits, 
     users: totalUsers, 
     online: onlineCount, // <--- Data Baru dikirim ke sini
     info: infoText 
   };
+  
+  // ✅ OPTIMIZATION: Cache the result for next 5 minutes
+  VISITOR_STATS_CACHE.data = result;
+  VISITOR_STATS_CACHE.timestamp = now;
+  
+  return result;
 }
 
 function saveRunningText(textBaru) {

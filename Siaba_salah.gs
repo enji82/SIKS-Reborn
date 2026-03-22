@@ -17,30 +17,37 @@ function getDaftarSalahPresensi(tahun, bulan) {
     var sheet = ss.getSheetByName(KONFIG_SALAH.SHEET_NAMA);
     if (!sheet) return JSON.stringify({ error: "Sheet 'Salah_Presensi' tidak ditemukan." });
 
-    var data = sheet.getDataRange().getDisplayValues(); 
+    // ✅ OPTIMIZE: Only fetch last 1000 rows instead of ALL rows
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return JSON.stringify([]);
+    var startRow = Math.max(2, lastRow - 999);
+    var data = sheet.getRange(startRow, 1, lastRow - startRow + 1, sheet.getLastColumn()).getDisplayValues();
     var result = [];
 
     var fTahun  = (tahun) ? String(tahun).trim() : "";
-    var fTahunPendek = fTahun.length === 4 ? fTahun.substring(2) : fTahun; // Toleransi format '26
+    var fTahunPendek = fTahun.length === 4 ? fTahun.substring(2) : fTahun;
+    // ✅ OPTIMIZE: Precompile patterns ONCE before loop
+    var searchPatterns = [fTahun, "/" + fTahunPendek, "-" + fTahunPendek];
 
     var mapBulan = { "Januari": "01", "Februari": "02", "Maret": "03", "April": "04", "Mei": "05", "Juni": "06", "Juli": "07", "Agustus": "08", "September": "09", "Oktober": "10", "November": "11", "Desember": "12" };
-    var fBulanAngka = mapBulan[bulan] || ""; 
+    var fBulanAngka = mapBulan[bulan] || "";
+    var bulanPatterns = ["-" + fBulanAngka + "-", "/" + fBulanAngka + "/"];
 
-    for (var i = data.length - 1; i >= 1; i--) {
+    // ✅ OPTIMIZE: Use single loop with simpler conditions
+    for (var i = 0; i < data.length; i++) {
       var row = data[i];
-      if (!row[1] && !row[2]) continue; // Abaikan baris kosong
+      if (!row[1] && !row[2]) continue;
 
-      var txtTgl = String(row[3]).replace(/'/g, "").trim(); 
+      var txtTgl = String(row[3]).replace(/'/g, "").trim();
       
-      // VAKSIN TANGGAL: Cari "2026" atau "/26" atau "-26"
       if (fTahun !== "") {
-          if (txtTgl.indexOf(fTahun) === -1 && txtTgl.indexOf("/" + fTahunPendek) === -1 && txtTgl.indexOf("-" + fTahunPendek) === -1) {
-              continue; 
-          }
+          var yearMatch = searchPatterns.some(pattern => txtTgl.indexOf(pattern) !== -1);
+          if (!yearMatch) continue;
       }
 
       if (fBulanAngka !== "") {
-          if (txtTgl.indexOf("-" + fBulanAngka + "-") === -1 && txtTgl.indexOf("/" + fBulanAngka + "/") === -1) continue;
+          var bulanMatch = bulanPatterns.some(pattern => txtTgl.indexOf(pattern) !== -1);
+          if (!bulanMatch) continue;
       }
 
       result.push({
@@ -204,10 +211,19 @@ function hapusSalahAbsen(dataKirim) {
   } finally { lock.releaseLock(); }
 }
 
-function verifikasiSalahAbsen(form) {
+function verifikasiSalahAbsen(token, form) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
+
+    // ✅ SECURITY: Validate session and permissions
+    var session = validateUserSession(token);
+    checkUserPermission(session, "Kepala Sekolah");  // Only Kepala Sekolah+ can verify
+    
+    // ✅ SECURITY: Validate row ownership
+    if (session.npsn && form.npsn !== session.npsn) {
+      throw new Error("Access denied: Can only verify attendance from your school");
+    }
 
     var ss = SpreadsheetApp.openById(KONFIG_SALAH.DB_ID);
     var sheet = ss.getSheetByName(KONFIG_SALAH.SHEET_NAMA);

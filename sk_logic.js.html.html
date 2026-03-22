@@ -104,7 +104,7 @@ function handleFormSubmit(e) {
                btn.prop('disabled', false).html(originalText);
                if(typeof showToast === 'function') showToast('error', 'Error Sistem', err.message);
           })
-          .processManualForm(formData); 
+          .processManualForm(getSessionToken(), formData); 
     };
     reader.readAsDataURL(file);
 }

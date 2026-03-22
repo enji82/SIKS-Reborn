@@ -72,28 +72,61 @@ function toast(pesan, tipe) { NotifSultan.toast(tipe, pesan); }
 function tampilkanNotif(pesan, tipe) { NotifSultan.toast(tipe, pesan); }
 
 /* =============================================================
-   2. SISTEM MANAJEMEN SESI & ROLE
+   2. SISTEM MANAJEMEN SESI & ROLE (SECURE VERSION)
    ============================================================= */
-function getSesiUser() {
-    var raw = localStorage.getItem("siksUser");
-    if (!raw || raw === "null" || raw === "undefined") return null;
-    try { 
-        var parsed = JSON.parse(raw); 
-        if (typeof parsed === 'string') parsed = JSON.parse(parsed); 
-        return parsed;
-    } catch (e) { return null; }
+
+// ✅ SECURITY: Validate session token
+function validateToken() {
+  var token = localStorage.getItem("SESSION_TOKEN");
+  var expiry = localStorage.getItem("TOKEN_EXPIRY");
+  
+  if (!token || !expiry) {
+    return false;
+  }
+  
+  if (Date.now() > parseInt(expiry)) {
+    // Token expired - clear session
+    localStorage.removeItem("SESSION_TOKEN");
+    localStorage.removeItem("TOKEN_EXPIRY");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userUnit");
+    return false;
+  }
+  
+  return true;
+}
+
+// ✅ SECURITY: Get current session token
+function getSessionToken() {
+  if (!validateToken()) {
+    // Redirect to login if session invalid
+    window.location.href = "page_login.html";
+    return null;
+  }
+  return localStorage.getItem("SESSION_TOKEN");
+}
+
+function getUserRole() {
+  return localStorage.getItem("userRole") || "";
+}
+
+function getUserUnit() {
+  return localStorage.getItem("userUnit") || "";
 }
 
 function checkUserRoleIsAdmin() {
     try {
-        var user = getSesiUser();
-        if (!user) return false;
-        var role = String(user.role || "").toLowerCase();
+        var role = getUserRole().toLowerCase();
         
         // VAKSIN 1: Gunakan .includes() agar "Administrator", "Admin Korwil", dll bisa lolos
         if (role.includes('admin') || role.includes('verifikator') || role.includes('korwil')) return true;
         return false;
     } catch (e) { return false; }
+}
+
+// ✅ SECURITY: Auto-redirect if session invalid
+if (!validateToken() && window.location.pathname !== "/page_login.html") {
+  window.location.href = "page_login.html";
 }
 
 /* =============================================================
@@ -196,8 +229,14 @@ function handleLoginV2(event) {
   google.script.run
     .withSuccessHandler(function(response) {
       if (response.status === "success") {
-        var userBersih = response.userData ? response.userData : response;
-        localStorage.setItem("siksUser", JSON.stringify(userBersih));
+        // ✅ SECURITY: Store session token instead of user data
+        localStorage.setItem("SESSION_TOKEN", response.token);
+        localStorage.setItem("TOKEN_EXPIRY", Date.now() + (response.expiresIn * 1000));
+        
+        // Still store role/unit for UI display (but not sensitive data)
+        localStorage.setItem("userRole", response.role);
+        localStorage.setItem("userUnit", response.unit);
+        
         Sultan.notif.sukses('Login Berhasil!');
         setTimeout(function() { 
             btn.innerText = "MASUK"; btn.disabled = false;

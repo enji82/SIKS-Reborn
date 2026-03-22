@@ -720,6 +720,9 @@ function salah_submitVerifikasi(e){
     
     var payload = { recId: formAktif.find('#salah_verifIdData').val(), status: st, keterangan: ket, user_verif: SALAH_USER_AKTIF };
     
+    var token = getSessionToken();
+    if (!token) return; // Session validation already redirects if invalid
+    
     google.script.run
         .withSuccessHandler(function(res){ 
             btn.prop('disabled', false).html(txt); 
@@ -729,7 +732,7 @@ function salah_submitVerifikasi(e){
             } else { Sultan.alert('error', 'Gagal Verifikasi', res); }
         })
         .withFailureHandler(function(err){ btn.prop('disabled', false).html(txt); Sultan.alert('error', 'Koneksi Terputus', err.message); })
-        .verifikasiSalahAbsen(payload);
+        .verifikasiSalahAbsen(token, payload);
 }
 
 // =================================================================

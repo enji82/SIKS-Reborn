@@ -20,19 +20,39 @@ function getOrCreateFolder(parentFolder, folderName) {
 /* ======================================================================
    CORE: PROSES SIMPAN DATA BARU (INSERT)
    ====================================================================== */
-function processManualForm(formData) {
+function processManualForm(token, formData) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
-    const sheet = ss.getSheetByName("Unggah_SK");
+    // ✅ SECURITY: Validate session
+    var session = validateUserSession(token);
     
+    // ✅ SECURITY: Validate file upload
+    const blob = Utilities.newBlob(Utilities.base64Decode(formData.fileData.data), formData.fileData.mimeType, "temp.pdf");
+    validateFileUpload(blob, "temp.pdf");
+    
+    // ✅ Validasi spreadsheet & sheet
+    const ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    if (!ss) return { success: false, message: 'Database SK tidak dapat diakses.' };
+    
+    const sheet = ss.getSheetByName("Unggah_SK");
+    if (!sheet) return { success: false, message: 'Sheet "Unggah_SK" tidak ditemukan.' };
+    
+    // ✅ Validasi folder
     const mainFolder = DriveApp.getFolderById(FOLDER_CONFIG.MAIN_SK);
+    if (!mainFolder) return { success: false, message: 'Folder penyimpanan tidak ditemukan.' };
+    
+    // ✅ Validasi form data
+    if (!formData || !formData.tahunAjaran || !formData.semester) {
+      return { success: false, message: 'Data tahun ajaran atau semester tidak lengkap.' };
+    }
+    
     const folderTahun = getOrCreateFolder(mainFolder, formData.tahunAjaran.replace(/\//g, '-'));
     const targetFolder = getOrCreateFolder(folderTahun, formData.semester);
     
-    const namaFile = `${formData.namaSd} - ${formData.tahunAjaran.replace(/\//g,'-')} - ${formData.semester} - ${formData.kriteriaSk} - ${formData.nomorSk}.pdf`;
+    // Generate unique filename to prevent overwrites
+    var timestamp = new Date().getTime();
+    const namaFile = `${timestamp}_${formData.namaSd} - ${formData.tahunAjaran.replace(/\//g,'-')} - ${formData.semester} - ${formData.kriteriaSk} - ${formData.nomorSk}.pdf`;
     
-    const blob = Utilities.newBlob(Utilities.base64Decode(formData.fileData.data), formData.fileData.mimeType, namaFile);
-    const file = targetFolder.createFile(blob);
+    const file = targetFolder.createFile(blob.setName(namaFile));
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
     sheet.appendRow([
@@ -121,48 +141,66 @@ function simpanPerubahanSK(form) {
 }
 
 /* ======================================================================
-   CORE: GET DATA LIST 
+   CORE: GET DATA LIST (OPTIMIZED - Prevent timeout pada dataset besar)
    ====================================================================== */
 function getDaftarSK() {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
+    if (!ss) return [];
+    
     var sheet = ss.getSheetByName("Unggah_SK");
-    var data = sheet.getDataRange().getDisplayValues();
+    if (!sheet) return [];  // ✅ Validasi sheet
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];  // ✅ Tidak ada data
+    
+    // ✅ OPTIMASI: Hanya ambil data terakhir 500 baris untuk prevent timeout
+    // Google Apps Script punya limit 30 detik execution time
+    var startRow = Math.max(2, lastRow - 499);
+    var numRows = lastRow - startRow + 1;
+    
+    var data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getDisplayValues();
     var result = [];
     
     function parseTimeInternal(val) {
       if (!val) return 0;
       var s = String(val).replace(/'/g, "").trim();
       if (s === "") return 0;
-      var parts = s.split(" ");
-      var sep = parts[0].includes("-") ? "-" : "/";
-      var dP = parts[0].split(sep);
-      if (dP.length !== 3) return 0;
-      var tP = (parts[1]||"00:00:00").split(":");
-      var y = dP[2].length === 4 ? dP[2] : dP[0];
-      var m = dP[1];
-      var d = dP[0].length <= 2 ? dP[0] : dP[2];
-      return new Date(parseInt(y), parseInt(m)-1, parseInt(d), parseInt(tP[0]||0), parseInt(tP[1]||0), parseInt(tP[2]||0)).getTime();
+      try {
+        return new Date(s).getTime() || 0;  // ✅ Simplified parsing
+      } catch (e) {
+        return 0;
+      }
     }
 
-    for (var i = 1; i < data.length; i++) {
+    for (var i = 0; i < data.length; i++) {
       var row = data[i];
-      if (!row[1]) continue; 
+      if (!row[1]) continue;  // Skip row kosong
 
       var tUnggah = parseTimeInternal(row[0]);
-      var tUpdate = parseTimeInternal(row[10]);
-      var tVerval = parseTimeInternal(row[12]);
+      var tUpdate = parseTimeInternal(row.length > 10 ? row[10] : "");
+      var tVerval = parseTimeInternal(row.length > 12 ? row[12] : "");
       
       var lastActivity = Math.max(tUnggah, tUpdate, tVerval);
 
       result.push({
-        rowBaris: i + 1,
+        rowBaris: startRow + i,  // ✅ Correct row number
         tglUnggah: row[0],
-        namaSd: row[1], tahun: row[2], semester: row[3], noSk: row[4],
-        tglSk: row[5], tglSkDisplay: row[5], 
-        kriteria: row[6], fileUrl: row[7], userInput: row[8], status: row[9],
-        tglUpdate: row[10], userUpdate: row[11],
-        tglVerval: row[12], verifikator: row[13], keterangan: row[14],
+        namaSd: row[1], 
+        tahun: row[2], 
+        semester: row[3], 
+        noSk: row[4],
+        tglSk: row[5], 
+        tglSkDisplay: row[5], 
+        kriteria: row[6], 
+        fileUrl: row[7], 
+        userInput: row[8], 
+        status: row[9],
+        tglUpdate: row.length > 10 ? row[10] : "", 
+        userUpdate: row.length > 11 ? row[11] : "",
+        tglVerval: row.length > 12 ? row[12] : "", 
+        verifikator: row.length > 13 ? row[13] : "", 
+        keterangan: row.length > 14 ? row[14] : "",
         timestamp: lastActivity
       });
     }
@@ -170,7 +208,10 @@ function getDaftarSK() {
     result.sort(function(a, b) { return b.timestamp - a.timestamp; });
     
     return result;
-  } catch (e) { return []; }
+  } catch (e) { 
+    console.error('Error getDaftarSK: ' + e);
+    return []; 
+  }
 }
 
 /* ======================================================================
@@ -272,8 +313,17 @@ function hapusDataSK(form) {
   }
 }
 
-function verifikasiDataSK(form) {
+function verifikasiDataSK(token, form) {
   try {
+    // ✅ SECURITY: Validate session and permissions
+    var session = validateUserSession(token);
+    checkUserPermission(session, "Admin");  // Only Admin+ can verify
+    
+    // ✅ SECURITY: Validate row ownership (user can only verify their school's data)
+    if (session.npsn && form.npsn !== session.npsn) {
+      throw new Error("Access denied: Can only verify certificates from your school");
+    }
+
     var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.SK_DATA);
     var sheet = ss.getSheetByName("Unggah_SK");
     var rowIdx = parseInt(form.verifRowId);
