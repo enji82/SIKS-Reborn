@@ -240,16 +240,29 @@
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.status === 'success') {
-          // --- SUKSES: JANGAN PAKAI ALERT, GANTI TAMPILAN KARTU ---
+          // --- SUKSES: Simpan session token ---
           console.log("✅ Login Sukses");
           
-          // 1. Simpan Session
-          var fullName = "User";
-          if (res.userData) {
-             fullName = res.userData.nama_lengkap || res.userData.username;
-             if(!res.userData.nama_lengkap) res.userData.nama_lengkap = res.userData.username;
-             localStorage.setItem("siksUser", JSON.stringify(res.userData));
+          // ✅ SECURITY: Store session token securely
+          if (res.token) {
+            localStorage.setItem("SESSION_TOKEN", res.token);
+            localStorage.setItem("TOKEN_EXPIRY", (Date.now() + (res.expiresIn * 1000)).toString());
+            localStorage.setItem("userRole", res.role || "");
+            localStorage.setItem("userUnit", res.unit || "");
           }
+          
+          // Create minimal user object for UI
+          var userData = {
+            username: u,
+            nama_lengkap: u, // Will be updated later
+            role: res.role || "",
+            unit: res.unit || "",
+            isLoggedIn: true
+          };
+          
+          // 1. Simpan Session (legacy support)
+          var fullName = userData.nama_lengkap;
+          localStorage.setItem("siksUser", JSON.stringify(userData));
 
           // 2. Jalankan Kembang Api
           runFireworks();

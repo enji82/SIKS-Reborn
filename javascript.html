@@ -96,14 +96,31 @@ function validateToken() {
   return true;
 }
 
-// ✅ SECURITY: Get current session token
-function getSessionToken() {
-  if (!validateToken()) {
-    // Redirect to login if session invalid
-    window.location.href = "page_login.html";
-    return null;
+// ✅ SECURITY: Secure API call wrapper
+function secureApiCall(functionName, params, successHandler, failureHandler) {
+  var token = getSessionToken();
+  if (!token) {
+    if (failureHandler) failureHandler({ message: "Session expired. Please login again." });
+    return;
   }
-  return localStorage.getItem("SESSION_TOKEN");
+  
+  // Add token to params
+  var secureParams = Array.isArray(params) ? params : [params];
+  secureParams.push(token);
+  
+  // Call with token
+  google.script.run
+    .withSuccessHandler(successHandler || function(res) { 
+      if (res && res.error) {
+        Sultan.notif.gagal(res.error);
+      } else {
+        Sultan.notif.sukses(res.message || "Berhasil!");
+      }
+    })
+    .withFailureHandler(failureHandler || function(err) {
+      Sultan.notif.gagal("Terjadi kesalahan: " + (err.message || "Unknown error"));
+    })
+    [functionName].apply(null, secureParams);
 }
 
 function getUserRole() {
@@ -267,7 +284,11 @@ function handleLogout() {
     }).then((result) => {
         if (result.isConfirmed) {
             
-            // 1. Hapus memori user dari Local Storage
+            // ✅ SECURITY: Clear all session data
+            localStorage.removeItem("SESSION_TOKEN");
+            localStorage.removeItem("TOKEN_EXPIRY");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("userUnit");
             localStorage.removeItem("siksUser");
             
             // 2. Sembunyikan Dashboard dan bersihkan sisa konten

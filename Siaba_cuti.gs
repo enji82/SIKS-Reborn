@@ -9,6 +9,53 @@ const KONFIG_CUTI = {
   SHEET_DB: "Database Cuti"
 };
 
+// ✅ FIX: Robust Indonesian date parsing
+function parseIndonesianDate(dateStr) {
+  if (!dateStr) return null;
+  
+  // Handle various formats: "12 Januari 2026", "2026-01-12", "01/12/2026"
+  const monthMap = {
+    "januari": 1, "februari": 2, "maret": 3, "april": 4,
+    "mei": 5, "juni": 6, "juli": 7, "agustus": 8,
+    "september": 9, "oktober": 10, "november": 11, "desember": 12
+  };
+  
+  var str = String(dateStr).replace(/'/g, "").trim().toLowerCase();
+  
+  // Try Indonesian format first: "12 januari 2026"
+  var words = str.split(/[\s\-\/]+/);
+  if (words.length >= 3) {
+    var monthName = words[1];
+    if (monthMap[monthName]) {
+      var day = parseInt(words[0]);
+      var year = parseInt(words[2]);
+      if (day && year) return { day: day, month: monthMap[monthName], year: year };
+    }
+  }
+  
+  // Try ISO format: "2026-01-12"
+  var isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    return { 
+      day: parseInt(isoMatch[3]), 
+      month: parseInt(isoMatch[2]), 
+      year: parseInt(isoMatch[1]) 
+    };
+  }
+  
+  // Try DD/MM/YYYY format: "12/01/2026"
+  var slashMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashMatch) {
+    return { 
+      day: parseInt(slashMatch[1]), 
+      month: parseInt(slashMatch[2]), 
+      year: parseInt(slashMatch[3]) 
+    };
+  }
+  
+  return null; // Failed to parse
+}
+
 /* ======================================================================
    0. SISTEM KEAMANAN NPSN & MASTER DATABASE
    ====================================================================== */
@@ -88,19 +135,18 @@ function getDataCuti(tahun, bulan, unitFilter) {
       var rowTxt = dataDisplay[i];
       if (!rowTxt[1] && !rowTxt[2]) continue;
       
-      var rawTglMulai = String(rowTxt[4]).replace(/'/g, "").trim().toLowerCase(); 
-      var rTahun = "";
-      var parts = rawTglMulai.split(/[-/\s]/); 
+      // ✅ FIX: Use robust date parsing
+      var parsedDate = parseIndonesianDate(rowTxt[4]);
+      if (!parsedDate) continue; // Skip if date cannot be parsed
       
-      for(var p=0; p<parts.length; p++) {
-         var chunk = parts[p].trim();
-         if(chunk.length === 4 && !isNaN(chunk)) {
-             rTahun = chunk;
-             break;
-         }
-      }
+      // Apply filters
+      if (fTahun !== "" && parsedDate.year != fTahun) continue;
       
-      if (fTahun !== "" && rTahun !== fTahun) continue; 
+      // Convert bulan filter to number for comparison
+      var bulanMap = { "januari": 1, "februari": 2, "maret": 3, "april": 4, "mei": 5, "juni": 6, 
+                      "juli": 7, "agustus": 8, "september": 9, "oktober": 10, "november": 11, "desember": 12 };
+      var fBulanNum = bulanMap[fBulan];
+      if (fBulanNum && parsedDate.month != fBulanNum) continue; 
 
       var tInput = parseTime(rowTxt[13]); 
       var tEdit  = parseTime(rowTxt[15]); 

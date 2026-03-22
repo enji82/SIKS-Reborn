@@ -79,9 +79,16 @@ function getDaftarSalahPresensi(tahun, bulan) {
 // 3. FUNGSI TULIS DATA (SIMPAN KOLOM O & RESET STATUS)
 // =================================================================
 
-function simpanSalahAbsen(form) {
-  var lock = LockService.getScriptLock();
+function simpanSalahAbsen(form, token) {
   try {
+    // ✅ SECURITY: Validate session and permissions
+    var session = validateUserSession(token);
+    checkUserPermission(session, 'Operator'); // Minimum role required
+    
+    // ✅ SECURITY: Validate data access (NPSN isolation)
+    validateDataAccess(session, form.npsn);
+    
+    var lock = LockService.getScriptLock();
     lock.waitLock(10000); 
     
     var ss = SpreadsheetApp.openById(KONFIG_SALAH.DB_ID);
@@ -95,7 +102,7 @@ function simpanSalahAbsen(form) {
        jamSimpan = String(jamParts[0]).padStart(2, '0') + ":" + String(jamParts[1]).padStart(2, '0');
     }
 
-    var namaUser = form.user_login || "Guest";
+    var namaUser = session.username; // ✅ Use server-side username
     var tglKirim = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy HH:mm:ss");
     
     // Cek Bentrok (Mencegah submit ganda)
@@ -138,9 +145,16 @@ function simpanSalahAbsen(form) {
   } finally { lock.releaseLock(); }
 }
 
-function updateSalahAbsen(form) {
-  var lock = LockService.getScriptLock();
+function updateSalahAbsen(form, token) {
   try {
+    // ✅ SECURITY: Validate session and permissions
+    var session = validateUserSession(token);
+    checkUserPermission(session, 'Operator');
+    
+    // ✅ SECURITY: Validate data access (NPSN isolation)
+    validateDataAccess(session, form.npsn);
+    
+    var lock = LockService.getScriptLock();
     lock.waitLock(10000); 
 
     var ss = SpreadsheetApp.openById(KONFIG_SALAH.DB_ID);
@@ -178,8 +192,8 @@ function updateSalahAbsen(form) {
 
     // Catat Jejak Edit & NPSN
     sheet.getRange(barisKetemu, 11).setValue("'" + tglEdit);       
-    sheet.getRange(barisKetemu, 12).setValue(form.user_login); 
-    sheet.getRange(barisKetemu, 15).setValue(form.npsn); // <--- KOLOM O DIUPDATE!
+    sheet.getRange(barisKetemu, 12).setValue(session.username); // ✅ Use server-side username
+    sheet.getRange(barisKetemu, 15).setValue(form.npsn);
 
     return "Sukses Data Berhasil Diupdate";
   } catch (e) {
@@ -187,9 +201,16 @@ function updateSalahAbsen(form) {
   } finally { lock.releaseLock(); }
 }
 
-function hapusSalahAbsen(dataKirim) {
-  var lock = LockService.getScriptLock();
+function hapusSalahAbsen(dataKirim, token) {
   try {
+    // ✅ SECURITY: Validate session and permissions
+    var session = validateUserSession(token);
+    checkUserPermission(session, 'Operator');
+    
+    // ✅ SECURITY: Validate data access (NPSN isolation)
+    validateDataAccess(session, dataKirim.npsn);
+    
+    var lock = LockService.getScriptLock();
     lock.waitLock(10000);
 
     var ss = SpreadsheetApp.openById(KONFIG_SALAH.DB_ID);
